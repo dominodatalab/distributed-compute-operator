@@ -18,8 +18,19 @@ jobs:
       with:
         go-version: 1.15
 
+    - name: Go modules caching
+      uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
     - name: Build
-      run: go build -v ./...
+      run: make manager
+
+    - name: Lint
+      run: make lint
 
     - name: Test
-      run: go test -v ./...
+      run: make test
