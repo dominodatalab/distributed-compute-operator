@@ -50,10 +50,10 @@ type RayClusterSpec struct {
 	// +kubebuilder:default=true
 	EnablePodSecurityPolicy bool `json:"enablePodSecurityPolicy"`
 
-	// Labels additionally applied to cluster nodes.
+	// Labels additionally applied to cluster pods.
 	Labels map[string]string `json:"labels"`
 
-	// Annotations applied to cluster nodes.
+	// Annotations applied to cluster pods.
 	Annotations map[string]string `json:"annotations"`
 
 	// Resources requested and limits applied to cluster nodes.

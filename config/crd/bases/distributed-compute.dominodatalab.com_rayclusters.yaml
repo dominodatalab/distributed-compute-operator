@@ -42,7 +42,7 @@ spec:
               annotations:
                 additionalProperties:
                   type: string
-                description: Annotations applied to cluster nodes.
+                description: Annotations applied to cluster pods.
                 type: object
               dashboardPort:
                 default: 8265
@@ -1173,7 +1173,7 @@ spec:
               labels:
                 additionalProperties:
                   type: string
-                description: Labels additionally applied to cluster nodes.
+                description: Labels additionally applied to cluster pods.
                 type: object
               nodeManagerPort:
                 default: 2385
