@@ -89,7 +89,7 @@ func (in *RayClusterSpec) DeepCopyInto(out *RayClusterSpec) {
 	out.Image = in.Image
 	if in.RedisShardPorts != nil {
 		in, out := &in.RedisShardPorts, &out.RedisShardPorts
-		*out = make([]int, len(*in))
+		*out = make([]int32, len(*in))
 		copy(*out, *in)
 	}
 	if in.Labels != nil {

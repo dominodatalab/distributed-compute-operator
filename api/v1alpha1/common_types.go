@@ -5,7 +5,8 @@ import corev1 "k8s.io/api/core/v1"
 // OCIImageDefinition describes where and when to fetch a container image.
 type OCIImageDefinition struct {
 	// Registry where the container image is hosted.
-	Registry string `json:"registry,omitempty"`
+	// +kubebuilder:validation:Optional
+	Registry string `json:"registry"`
 
 	// Repository where the container image is stored.
 	Repository string `json:"repository"`
@@ -14,5 +15,6 @@ type OCIImageDefinition struct {
 	Tag string `json:"tag"`
 
 	// PullPolicy used to fetch container image.
-	PullPolicy corev1.PullPolicy `json:"pullPolicy,omitempty"`
+	// +kubebuilder:validation:Optional
+	PullPolicy corev1.PullPolicy `json:"pullPolicy"`
 }

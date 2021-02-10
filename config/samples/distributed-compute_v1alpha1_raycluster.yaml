@@ -3,5 +3,5 @@ kind: RayCluster
 metadata:
   name: raycluster-sample
 spec:
-  # Add fields here
-  foo: bar
+  # set the total number of worker pods
+  workerReplicaCount: 2
