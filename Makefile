@@ -34,8 +34,8 @@ SHELL = /bin/bash
 
 # Image URL to use all building/pushing image targets
 IMG ?= controller:latest
-# Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
-CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
+# Produce CRDs that work with Kubernetes 1.16+ and support defaulting, version conversion, and field pruning
+CRD_OPTIONS ?= "crd:crdVersions=v1,preserveUnknownFields=false"
 
 # Custom variables
 GOLANGCI_LINT_VERSION=v1.36.0
