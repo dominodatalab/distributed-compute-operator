@@ -34,3 +34,4 @@ jobs:
 
     - name: Test
       run: make test
+      shell: bash
