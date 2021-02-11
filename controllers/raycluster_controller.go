@@ -2,16 +2,21 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-logr/logr"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	distributedcomputev1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
+	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
+	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/ray"
 )
 
-// RayClusterReconciler reconciles a RayCluster object
+// RayClusterReconciler reconciles RayCluster objects.
 type RayClusterReconciler struct {
 	client.Client
 	Log    logr.Logger
@@ -22,26 +27,65 @@ type RayClusterReconciler struct {
 // +kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=rayclusters/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=rayclusters/finalizers,verbs=update
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the RayCluster object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.7.0/pkg/reconcile
+// Reconcile implements state reconciliation logic for RayCluster objects.
 func (r *RayClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = r.Log.WithValues("raycluster", req.NamespacedName)
+	log := r.Log.WithValues("raycluster", req.NamespacedName)
+	rc := &dcv1alpha1.RayCluster{}
 
-	// your logic here
+	if err := r.Get(ctx, req.NamespacedName, rc); err != nil {
+		if apierrors.IsNotFound(err) {
+			log.Info("RayCluster resource not found, assuming object was deleted")
+			return ctrl.Result{}, nil
+		}
+
+		log.Error(err, "Failed to get RayCluster")
+		return ctrl.Result{}, err
+	}
+
+	if err := r.ProcessResources(ctx, rc); err != nil {
+		log.Error(err, "Failed to reconcile cluster resources")
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
+}
+
+// ProcessResources manages the creation and updates of resources that collectively comprise a Ray cluster.
+// Each resource is controlled by a parent RayCluster object so that full cleanup occurs during a delete operation.
+func (r *RayClusterReconciler) ProcessResources(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
+	// manage supporting resources
+	sa := ray.NewServiceAccount(rc)
+	if err := r.createOwnedResource(ctx, rc, sa); err != nil {
+		return fmt.Errorf("failed to create service account: %w", err)
+	}
+
+	// TODO: service, network policy, pod security policy
+
+	// manage deployments
+
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *RayClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&distributedcomputev1alpha1.RayCluster{}).
+		For(&dcv1alpha1.RayCluster{}).
 		Complete(r)
+}
+
+func (r *RayClusterReconciler) createOwnedResource(ctx context.Context, owner v1.Object, controlled client.Object) error {
+	objKey := types.NamespacedName{Name: controlled.GetName(), Namespace: controlled.GetNamespace()}
+	err := r.Get(ctx, objKey, controlled)
+
+	if err == nil {
+		return nil
+	}
+	if !apierrors.IsNotFound(err) {
+		return err
+	}
+	if err := ctrl.SetControllerReference(owner, controlled, r.Scheme); err != nil {
+		return err
+	}
+
+	return r.Create(ctx, controlled)
 }
