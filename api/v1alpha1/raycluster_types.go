@@ -92,6 +92,14 @@ type RayClusterSpec struct {
 	// InitContainers added to cluster node pods.
 	// +kubebuilder:validation:Optional
 	InitContainers []corev1.Container `json:"initContainers"`
+
+	// Volumes added to cluster pod deployments.
+	// +kubebuilder:validation:Optional
+	Volumes []corev1.Volume `json:"volumes"`
+
+	// VolumeMounts added to cluster pod deployments.
+	// +kubebuilder:validation:Optional
+	VolumeMounts []corev1.VolumeMount `json:"volumeMounts"`
 }
 
 // RayClusterStatus defines the observed state of a RayCluster resource.
