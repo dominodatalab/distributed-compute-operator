@@ -8,7 +8,7 @@ import (
 // RayClusterSpec defines the desired state of a RayCluster resource.
 type RayClusterSpec struct {
 	// Image used to launch head and worker nodes.
-	// +kubebuilder:default={repository: "ray-project/ray-ml", tag: "1.2.0-cpu"}
+	// +kubebuilder:default={repository: "rayproject/ray-ml", tag: "1.2.0-cpu"}
 	// +kubebuilder:validation:Optional
 	Image OCIImageDefinition `json:"image"`
 
@@ -72,7 +72,7 @@ type RayClusterSpec struct {
 	// +kubebuilder:validation:Optional
 	EnablePodSecurityPolicy bool `json:"enablePodSecurityPolicy"`
 
-	// Labels additionally applied to cluster pods.
+	// Labels applied to cluster resources in addition to stock labels.
 	// +kubebuilder:validation:Optional
 	Labels map[string]string `json:"labels"`
 
@@ -80,24 +80,32 @@ type RayClusterSpec struct {
 	// +kubebuilder:validation:Optional
 	Annotations map[string]string `json:"annotations"`
 
-	// Resources requested and limits applied to cluster nodes.
+	// NodeSelector applied to cluster pods.
+	// +kubebuilder:validation:Optional
+	NodeSelector map[string]string `json:"nodeSelector"`
+
+	// Affinity applied to cluster pods.
+	// +kubebuilder:validation:Optional
+	Affinity *corev1.Affinity `json:"affinity"`
+
+	// Resources requested and limits applied to all ray containers.
 	// +kubebuilder:default={requests: {cpu: "100m", memory: "512Mi"}}
 	// +kubebuilder:validation:Optional
 	Resources corev1.ResourceRequirements `json:"resources"`
 
-	// Tolerations applied to cluster nodes.
+	// Tolerations applied to cluster pods.
 	// +kubebuilder:validation:Optional
 	Tolerations []corev1.Toleration `json:"tolerations"`
 
-	// InitContainers added to cluster node pods.
+	// InitContainers added to cluster pods.
 	// +kubebuilder:validation:Optional
 	InitContainers []corev1.Container `json:"initContainers"`
 
-	// Volumes added to cluster pod deployments.
+	// Volumes added to cluster pods.
 	// +kubebuilder:validation:Optional
 	Volumes []corev1.Volume `json:"volumes"`
 
-	// VolumeMounts added to cluster pod deployments.
+	// VolumeMounts added to all ray containers.
 	// +kubebuilder:validation:Optional
 	VolumeMounts []corev1.VolumeMount `json:"volumeMounts"`
 }
