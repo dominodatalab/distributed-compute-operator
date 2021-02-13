@@ -10,7 +10,7 @@ type RayClusterSpec struct {
 	// Image used to launch head and worker nodes.
 	// +kubebuilder:default={repository: "rayproject/ray-ml", tag: "1.2.0-cpu"}
 	// +kubebuilder:validation:Optional
-	Image OCIImageDefinition `json:"image"`
+	Image *OCIImageDefinition `json:"image"`
 
 	// WorkerReplicaCount configures the total number of workers in the cluster.
 	// +kubebuilder:default=1
@@ -47,7 +47,7 @@ type RayClusterSpec struct {
 
 	// ObjectStoreMemoryBytes is initial amount of memory with which to start the object store.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Minimum=78643200
 	ObjectStoreMemoryBytes int32 `json:"objectStoreMemoryBytes"`
 
 	// DashboardPort is the port used by the dashboard server.
