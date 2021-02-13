@@ -154,7 +154,7 @@ func processArgs(rc *dcv1alpha1.RayCluster, comp Component) []string {
 		fmt.Sprintf("--node-manager-port=%d", rc.Spec.NodeManagerPort),
 	}
 
-	if rc.Spec.ObjectStoreMemoryBytes != 0 {
+	if rc.Spec.ObjectStoreMemoryBytes != nil {
 		cmdArgs = append(cmdArgs, fmt.Sprintf("--object-store-memory=%d", rc.Spec.ObjectStoreMemoryBytes))
 	}
 

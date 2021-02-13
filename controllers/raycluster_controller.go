@@ -5,16 +5,22 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/ray"
 )
+
+const rayClusterFinalizer = "distributed-compute.dominodatalab.com/finalizer"
 
 // RayClusterReconciler reconciles RayCluster objects.
 type RayClusterReconciler struct {
@@ -42,7 +48,32 @@ func (r *RayClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
-	if err := r.ProcessResources(ctx, rc); err != nil {
+	if rc.DeletionTimestamp != nil {
+		if controllerutil.ContainsFinalizer(rc, rayClusterFinalizer) {
+			if err := r.finalizeRayCluster(ctx, rc); err != nil {
+				log.Error(err, "Failed to run finalization")
+				return ctrl.Result{}, err
+			}
+
+			controllerutil.RemoveFinalizer(rc, rayClusterFinalizer)
+			if err := r.Update(ctx, rc); err != nil {
+				log.Error(err, "Failed to remove finalizer")
+				return ctrl.Result{}, err
+			}
+		}
+
+		return ctrl.Result{}, nil
+	}
+
+	if !controllerutil.ContainsFinalizer(rc, rayClusterFinalizer) {
+		controllerutil.AddFinalizer(rc, rayClusterFinalizer)
+		if err := r.Update(ctx, rc); err != nil {
+			log.Error(err, "Failed to add finalizer")
+			return ctrl.Result{}, err
+		}
+	}
+
+	if err := r.processResources(ctx, rc); err != nil {
 		log.Error(err, "Failed to reconcile cluster resources")
 		return ctrl.Result{}, err
 	}
@@ -50,23 +81,58 @@ func (r *RayClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	return ctrl.Result{}, nil
 }
 
-// ProcessResources manages the creation and updates of resources that collectively comprise a Ray cluster.
-// Each resource is controlled by a parent RayCluster object so that full cleanup occurs during a delete operation.
-func (r *RayClusterReconciler) ProcessResources(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
+// SetupWithManager sets up the controller with the Manager.
+func (r *RayClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&dcv1alpha1.RayCluster{}).
+		Owns(&corev1.Service{}).
+		Owns(&corev1.ServiceAccount{}).
+		Owns(&appsv1.Deployment{}).
+		Owns(&networkingv1.NetworkPolicy{}).
+		Complete(r)
+}
+
+// processResources manages the creation and updates of resources that
+// collectively comprise a Ray cluster. Each resource is controlled by a parent
+// RayCluster object so that full cleanup occurs during a delete operation.
+func (r *RayClusterReconciler) processResources(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
 	// manage supporting resources
+
 	sa := ray.NewServiceAccount(rc)
 	if err := r.createOwnedResource(ctx, rc, sa); err != nil {
 		return fmt.Errorf("failed to create service account: %w", err)
 	}
 
-	headSvc := ray.NewHeadService(rc)
-	if err := r.createOwnedResource(ctx, rc, headSvc); err != nil {
+	svc := ray.NewHeadService(rc)
+	if err := r.createOwnedResource(ctx, rc, svc); err != nil {
 		return fmt.Errorf("failed to create head service: %w", err)
 	}
 
-	// TODO: network policy, pod security policy, hpa
+	if rc.Spec.EnableNetworkPolicy {
+		np := ray.NewNetworkPolicy(rc)
+		if err := r.createOwnedResource(ctx, rc, np); err != nil {
+			return fmt.Errorf("failed to create network policy: %w", err)
+		}
+	}
+
+	if rc.Spec.EnablePodSecurityPolicy {
+		psp, role, binding := ray.NewPodSecurityPolicy(rc)
+
+		if err := r.createClusterResource(ctx, psp); err != nil {
+			return fmt.Errorf("failed to create pod security policy: %w", err)
+		}
+
+		if err := r.createOwnedResource(ctx, rc, role); err != nil {
+			return fmt.Errorf("failed to create role: %w", err)
+		}
+
+		if err := r.createOwnedResource(ctx, rc, binding); err != nil {
+			return fmt.Errorf("failed to create role binding: %w", err)
+		}
+	}
 
 	// manage deployments
+
 	head, err := ray.NewDeployment(rc, ray.ComponentHead)
 	if err != nil {
 		return err
@@ -86,13 +152,25 @@ func (r *RayClusterReconciler) ProcessResources(ctx context.Context, rc *dcv1alp
 	return nil
 }
 
-// SetupWithManager sets up the controller with the Manager.
-func (r *RayClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&dcv1alpha1.RayCluster{}).
-		Complete(r)
+// createClusterResource should be used to create cluster-scoped objects.
+// These will need to be cleaned up using the finalizer hook.
+func (r *RayClusterReconciler) createClusterResource(ctx context.Context, obj client.Object) error {
+	objKey := types.NamespacedName{Name: obj.GetName()}
+	err := r.Get(ctx, objKey, obj)
+
+	if err == nil {
+		return nil
+	}
+	if !apierrors.IsNotFound(err) {
+		return err
+	}
+
+	return r.Create(ctx, obj)
 }
 
+// createOwnedResource should be used to create namespace-scoped object.
+// The CR will become the "owner" of the "controlled" object and cleanup will
+// occur automatically when the CR is deleted.
 func (r *RayClusterReconciler) createOwnedResource(ctx context.Context, owner v1.Object, controlled client.Object) error {
 	objKey := types.NamespacedName{Name: controlled.GetName(), Namespace: controlled.GetNamespace()}
 	err := r.Get(ctx, objKey, controlled)
@@ -108,4 +186,24 @@ func (r *RayClusterReconciler) createOwnedResource(ctx context.Context, owner v1
 	}
 
 	return r.Create(ctx, controlled)
+}
+
+// finalizeRayCluster blocks the deletion of the CR until all cleanup steps are complete.
+func (r *RayClusterReconciler) finalizeRayCluster(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
+	psp, _, _ := ray.NewPodSecurityPolicy(rc)
+	err := r.Get(ctx, types.NamespacedName{Name: psp.Name}, psp)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil
+		}
+
+		return err
+	}
+
+	err = r.Delete(ctx, psp)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

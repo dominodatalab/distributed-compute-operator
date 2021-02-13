@@ -7,8 +7,6 @@ import (
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources"
 )
 
-const ApplicationName = "ray"
-
 type Component string
 
 const (
@@ -16,12 +14,18 @@ const (
 	ComponentWorker Component = "worker"
 )
 
+const ApplicationName = "ray"
+
 func MetadataLabels(rc *dcv1alpha1.RayCluster) map[string]string {
 	return resources.MetadataLabels(ApplicationName, rc.Name, rc.Spec.Image.Tag)
 }
 
 func MetadataLabelsWithComponent(rc *dcv1alpha1.RayCluster, comp Component) map[string]string {
 	return resources.MetadataLabelsWithComponent(ApplicationName, rc.Name, rc.Spec.Image.Tag, string(comp))
+}
+
+func SelectorLabels(rc *dcv1alpha1.RayCluster) map[string]string {
+	return resources.SelectorLabels(ApplicationName, rc.Name)
 }
 
 func SelectorLabelsWithComponent(rc *dcv1alpha1.RayCluster, comp Component) map[string]string {

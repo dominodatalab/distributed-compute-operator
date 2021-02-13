@@ -8,6 +8,8 @@ const (
 	ApplicationManagedByLabelKey = "app.kubernetes.io/managed-by"
 
 	ManagerLabelValue = "distributed-compute-operator"
+
+	DescriptionAnnotationKey = "distributed-compute.dominodatalab.com/description"
 )
 
 func MetadataLabels(name, instance, version string) map[string]string {
