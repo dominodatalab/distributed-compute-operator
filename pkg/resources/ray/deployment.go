@@ -11,7 +11,7 @@ import (
 	"k8s.io/utils/pointer"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
-	"github.com/dominodatalab/distributed-compute-operator/pkg/resources"
+	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
 )
 
 var (
@@ -75,7 +75,7 @@ func NewDeployment(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Deploymen
 		return nil, fmt.Errorf("invalid ray component: %q", comp)
 	}
 
-	imageRef, err := resources.ParseImageDefinition(rc.Spec.Image)
+	imageRef, err := util.ParseImageDefinition(rc.Spec.Image)
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +190,7 @@ func processPorts(rc *dcv1alpha1.RayCluster, comp Component) []corev1.ContainerP
 func processLabels(rc *dcv1alpha1.RayCluster, comp Component) map[string]string {
 	labels := MetadataLabelsWithComponent(rc, comp)
 	if rc.Spec.Labels != nil {
-		labels = resources.MergeStringMaps(rc.Spec.Labels, labels)
+		labels = util.MergeStringMaps(rc.Spec.Labels, labels)
 	}
 
 	return labels
@@ -217,7 +217,7 @@ func addHeadCmdArgs(rc *dcv1alpha1.RayCluster, args []string) []string {
 	headArgs := []string{
 		"--head",
 		fmt.Sprintf("--port=%d", rc.Spec.HeadPort),
-		fmt.Sprintf("--redis-shard-ports=%s", strings.Join(resources.IntsToStrings(rc.Spec.RedisShardPorts), ",")),
+		fmt.Sprintf("--redis-shard-ports=%s", strings.Join(util.IntsToStrings(rc.Spec.RedisShardPorts), ",")),
 	}
 
 	if rc.Spec.EnableDashboard {
