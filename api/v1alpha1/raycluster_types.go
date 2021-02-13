@@ -55,7 +55,7 @@ type RayClusterSpec struct {
 	// ObjectStoreMemoryBytes is initial amount of memory with which to start the object store.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=78643200
-	ObjectStoreMemoryBytes *int32 `json:"objectStoreMemoryBytes"`
+	ObjectStoreMemoryBytes *int64 `json:"objectStoreMemoryBytes"`
 
 	// DashboardPort is the port used by the dashboard server.
 	// +kubebuilder:default=8265

@@ -1800,7 +1800,7 @@ spec:
               objectStoreMemoryBytes:
                 description: ObjectStoreMemoryBytes is initial amount of memory with
                   which to start the object store.
-                format: int32
+                format: int64
                 minimum: 78643200
                 type: integer
               port:

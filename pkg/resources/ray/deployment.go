@@ -155,7 +155,7 @@ func processArgs(rc *dcv1alpha1.RayCluster, comp Component) []string {
 	}
 
 	if rc.Spec.ObjectStoreMemoryBytes != nil {
-		cmdArgs = append(cmdArgs, fmt.Sprintf("--object-store-memory=%d", rc.Spec.ObjectStoreMemoryBytes))
+		cmdArgs = append(cmdArgs, fmt.Sprintf("--object-store-memory=%d", *rc.Spec.ObjectStoreMemoryBytes))
 	}
 
 	switch comp {

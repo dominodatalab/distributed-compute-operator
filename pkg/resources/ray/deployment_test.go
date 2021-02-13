@@ -323,7 +323,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 
 	t.Run("object_store_memory", func(t *testing.T) {
 		rc := rayClusterFixture()
-		rc.Spec.ObjectStoreMemoryBytes = 100 * 1 << 20
+		rc.Spec.ObjectStoreMemoryBytes = pointer.Int64Ptr(100 * 1 << 20)
 
 		actual, err := NewDeployment(rc, comp)
 		require.NoError(t, err)
