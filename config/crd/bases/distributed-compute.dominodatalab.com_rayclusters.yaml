@@ -635,6 +635,14 @@ spec:
                   type: string
                 description: Annotations applied to cluster pods.
                 type: object
+              clientServerPort:
+                default: 10001
+                description: ClientServerPort is the port number to which the ray
+                  client server will bind.
+                format: int32
+                maximum: 65353
+                minimum: 0
+                type: integer
               dashboardPort:
                 default: 8265
                 description: DashboardPort is the port used by the dashboard server.
@@ -658,7 +666,7 @@ spec:
                 type: boolean
               image:
                 default:
-                  repository: rayproject/ray-ml
+                  repository: rayproject/ray
                   tag: 1.2.0-cpu
                 description: Image used to launch head and worker nodes.
                 properties:
@@ -1797,7 +1805,7 @@ spec:
                 type: integer
               port:
                 default: 6379
-                description: HeadPort is the port of the head ray process.
+                description: Port is the port of the head ray process.
                 format: int32
                 maximum: 65353
                 minimum: 0

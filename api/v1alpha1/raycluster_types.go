@@ -8,7 +8,7 @@ import (
 // RayClusterSpec defines the desired state of a RayCluster resource.
 type RayClusterSpec struct {
 	// Image used to launch head and worker nodes.
-	// +kubebuilder:default={repository: "rayproject/ray-ml", tag: "1.2.0-cpu"}
+	// +kubebuilder:default={repository: "rayproject/ray", tag: "1.2.0-cpu"}
 	// +kubebuilder:validation:Optional
 	Image *OCIImageDefinition `json:"image"`
 
@@ -18,18 +18,25 @@ type RayClusterSpec struct {
 	// +kubebuilder:validation:Minimum=1
 	WorkerReplicaCount int32 `json:"workerReplicaCount"`
 
-	// HeadPort is the port of the head ray process.
+	// Port is the port of the head ray process.
 	// +kubebuilder:default=6379
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=65353
-	HeadPort int32 `json:"port"`
+	Port int32 `json:"port"`
 
 	// RedisShardPorts is a list of ports for non-primary Redis shards.
 	// +kubebuilder:default={6380,6381}
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:MinItems=1
 	RedisShardPorts []int32 `json:"redisShardPorts"`
+
+	// ClientServerPort is the port number to which the ray client server will bind.
+	// +kubebuilder:default=10001
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65353
+	ClientServerPort int32 `json:"clientServerPort"`
 
 	// ObjectManagerPort is the raylet port for the object manager.
 	// +kubebuilder:default=2384

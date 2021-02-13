@@ -200,7 +200,7 @@ func addHeadContainerPorts(rc *dcv1alpha1.RayCluster, ports []corev1.ContainerPo
 	redisPorts := []corev1.ContainerPort{
 		{
 			Name:          "redis-primary",
-			ContainerPort: rc.Spec.HeadPort,
+			ContainerPort: rc.Spec.Port,
 		},
 	}
 	for idx, port := range rc.Spec.RedisShardPorts {
@@ -216,7 +216,8 @@ func addHeadContainerPorts(rc *dcv1alpha1.RayCluster, ports []corev1.ContainerPo
 func addHeadCmdArgs(rc *dcv1alpha1.RayCluster, args []string) []string {
 	headArgs := []string{
 		"--head",
-		fmt.Sprintf("--port=%d", rc.Spec.HeadPort),
+		fmt.Sprintf("--ray-client-server-port=%d", rc.Spec.ClientServerPort),
+		fmt.Sprintf("--port=%d", rc.Spec.Port),
 		fmt.Sprintf("--redis-shard-ports=%s", strings.Join(util.IntsToStrings(rc.Spec.RedisShardPorts), ",")),
 	}
 
@@ -233,5 +234,5 @@ func addHeadCmdArgs(rc *dcv1alpha1.RayCluster, args []string) []string {
 }
 
 func addWorkerCmdArgs(rc *dcv1alpha1.RayCluster, args []string) []string {
-	return append(args, fmt.Sprintf("--address=%s:%d", HeadServiceName(rc.Name), rc.Spec.HeadPort))
+	return append(args, fmt.Sprintf("--address=%s:%d", HeadServiceName(rc.Name), rc.Spec.Port))
 }

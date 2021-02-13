@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -18,7 +17,7 @@ import (
 
 func TestNewDeployment(t *testing.T) {
 	t.Run("invalid_component", func(t *testing.T) {
-		rc := testFixture()
+		rc := rayClusterFixture()
 		_, err := NewDeployment(rc, Component("garbage"))
 		assert.Error(t, err)
 	})
@@ -27,7 +26,7 @@ func TestNewDeployment(t *testing.T) {
 		testCommonFeatures(t, ComponentHead)
 
 		t.Run("default_values", func(t *testing.T) {
-			rc := testFixture()
+			rc := rayClusterFixture()
 			actual, err := NewDeployment(rc, ComponentHead)
 			require.NoError(t, err)
 
@@ -78,6 +77,7 @@ func TestNewDeployment(t *testing.T) {
 										"--object-manager-port=2384",
 										"--node-manager-port=2385",
 										"--head",
+										"--ray-client-server-port=10001",
 										"--port=6379",
 										"--redis-shard-ports=6380,6381",
 									},
@@ -165,7 +165,7 @@ func TestNewDeployment(t *testing.T) {
 		})
 
 		t.Run("enable_dashboard", func(t *testing.T) {
-			rc := testFixture()
+			rc := rayClusterFixture()
 			rc.Spec.EnableDashboard = true
 			rc.Spec.DashboardPort = 8265
 
@@ -185,7 +185,7 @@ func TestNewDeployment(t *testing.T) {
 		testCommonFeatures(t, ComponentWorker)
 
 		t.Run("default_values", func(t *testing.T) {
-			rc := testFixture()
+			rc := rayClusterFixture()
 			actual, err := NewDeployment(rc, ComponentWorker)
 			require.NoError(t, err)
 
@@ -310,36 +310,11 @@ func TestNewDeployment(t *testing.T) {
 	})
 }
 
-func testFixture() *dcv1alpha1.RayCluster {
-	return &dcv1alpha1.RayCluster{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-id",
-			Namespace: "fake-ns",
-		},
-		Spec: dcv1alpha1.RayClusterSpec{
-			Image: &dcv1alpha1.OCIImageDefinition{
-				Registry:   "fake-reg",
-				Repository: "fake-repo",
-				Tag:        "fake-tag",
-				PullPolicy: v1.PullIfNotPresent,
-			},
-			WorkerReplicaCount: 5,
-			HeadPort:           6379,
-			RedisShardPorts: []int32{
-				6380,
-				6381,
-			},
-			ObjectManagerPort: 2384,
-			NodeManagerPort:   2385,
-		},
-	}
-}
-
 func testCommonFeatures(t *testing.T, comp Component) {
 	t.Helper()
 
 	t.Run("invalid_image", func(t *testing.T) {
-		rc := testFixture()
+		rc := rayClusterFixture()
 		rc.Spec.Image = &dcv1alpha1.OCIImageDefinition{}
 
 		_, err := NewDeployment(rc, comp)
@@ -347,7 +322,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 	})
 
 	t.Run("object_store_memory", func(t *testing.T) {
-		rc := testFixture()
+		rc := rayClusterFixture()
 		rc.Spec.ObjectStoreMemoryBytes = 100 * 1 << 20
 
 		actual, err := NewDeployment(rc, comp)
@@ -357,7 +332,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 	})
 
 	t.Run("extra_labels", func(t *testing.T) {
-		rc := testFixture()
+		rc := rayClusterFixture()
 		rc.Spec.Labels = map[string]string{
 			"thou": "shalt write tests",
 		}
@@ -374,7 +349,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 	})
 
 	t.Run("annotations", func(t *testing.T) {
-		rc := testFixture()
+		rc := rayClusterFixture()
 		rc.Spec.Annotations = map[string]string{
 			"dominodatalab.com/inject-tooling": "true",
 		}
@@ -386,7 +361,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 	})
 
 	t.Run("volumes_and_mounts", func(t *testing.T) {
-		rc := testFixture()
+		rc := rayClusterFixture()
 		rc.Spec.Volumes = []corev1.Volume{
 			{
 				Name: "extra-vol",
@@ -406,7 +381,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 	})
 
 	t.Run("resource_requirements", func(t *testing.T) {
-		rc := testFixture()
+		rc := rayClusterFixture()
 		rc.Spec.Resources = corev1.ResourceRequirements{
 			Limits: corev1.ResourceList{
 				corev1.ResourceCPU:    resource.MustParse("1"),
@@ -425,7 +400,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 	})
 
 	t.Run("node_selector", func(t *testing.T) {
-		rc := testFixture()
+		rc := rayClusterFixture()
 		rc.Spec.NodeSelector = map[string]string{
 			"nodeType": "gpu",
 		}
@@ -437,13 +412,13 @@ func testCommonFeatures(t *testing.T, comp Component) {
 	})
 
 	t.Run("affinity", func(t *testing.T) {
-		rc := testFixture()
+		rc := rayClusterFixture()
 		rc.Spec.Affinity = &corev1.Affinity{
 			PodAntiAffinity: &corev1.PodAntiAffinity{
-				PreferredDuringSchedulingIgnoredDuringExecution: []v1.WeightedPodAffinityTerm{
+				PreferredDuringSchedulingIgnoredDuringExecution: []corev1.WeightedPodAffinityTerm{
 					{
 						Weight: 1,
-						PodAffinityTerm: v1.PodAffinityTerm{
+						PodAffinityTerm: corev1.PodAffinityTerm{
 							LabelSelector: &metav1.LabelSelector{
 								MatchExpressions: []metav1.LabelSelectorRequirement{
 									{
@@ -469,13 +444,13 @@ func testCommonFeatures(t *testing.T, comp Component) {
 	})
 
 	t.Run("tolerations", func(t *testing.T) {
-		rc := testFixture()
+		rc := rayClusterFixture()
 		rc.Spec.Tolerations = []corev1.Toleration{
 			{
 				Key:      "test-key",
 				Value:    "test-value",
-				Effect:   v1.TaintEffectNoSchedule,
-				Operator: v1.TolerationOpEqual,
+				Effect:   corev1.TaintEffectNoSchedule,
+				Operator: corev1.TolerationOpEqual,
 			},
 		}
 
@@ -486,7 +461,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 	})
 
 	t.Run("init_containers", func(t *testing.T) {
-		rc := testFixture()
+		rc := rayClusterFixture()
 		rc.Spec.InitContainers = []corev1.Container{
 			{
 				Name: "ray-init",

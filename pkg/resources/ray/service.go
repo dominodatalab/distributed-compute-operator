@@ -1,34 +1,30 @@
 package ray
 
 import (
-	"fmt"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 )
 
+// NewHeadService creates a ClusterIP service that points to the head node.
+// Dashboard port is exposed when enabled.
 func NewHeadService(rc *dcv1alpha1.RayCluster) *corev1.Service {
 	ports := []corev1.ServicePort{
 		{
+			Name: "client",
+			Port: rc.Spec.ClientServerPort,
+		},
+		{
 			Name: "redis-primary",
-			Port: rc.Spec.HeadPort,
-		},
-		{
-			Name: "object-manager",
-			Port: rc.Spec.ObjectManagerPort,
-		},
-		{
-			Name: "node-manager",
-			Port: rc.Spec.NodeManagerPort,
+			Port: rc.Spec.Port,
 		},
 	}
 
-	for idx, port := range rc.Spec.RedisShardPorts {
+	if rc.Spec.EnableDashboard {
 		ports = append(ports, corev1.ServicePort{
-			Name: fmt.Sprintf("redis-shard-%d", idx),
-			Port: port,
+			Name: "dashboard",
+			Port: rc.Spec.DashboardPort,
 		})
 	}
 
