@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
+	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 )
 
 func TestIntsToStrings(t *testing.T) {
@@ -35,12 +35,12 @@ func TestIntsToStrings(t *testing.T) {
 
 func TestParseImageDefinition(t *testing.T) {
 	testcases := []struct {
-		input    *v1alpha1.OCIImageDefinition
+		input    *dcv1alpha1.OCIImageDefinition
 		expected string
 		invalid  bool
 	}{
 		{
-			input: &v1alpha1.OCIImageDefinition{
+			input: &dcv1alpha1.OCIImageDefinition{
 				Registry:   "test-reg:5000",
 				Repository: "test-repo",
 				Tag:        "test-tag",
@@ -48,33 +48,33 @@ func TestParseImageDefinition(t *testing.T) {
 			expected: "test-reg:5000/test-repo:test-tag",
 		},
 		{
-			input: &v1alpha1.OCIImageDefinition{
+			input: &dcv1alpha1.OCIImageDefinition{
 				Repository: "test-repo",
 				Tag:        "test-tag",
 			},
 			expected: "docker.io/library/test-repo:test-tag",
 		},
 		{
-			input: &v1alpha1.OCIImageDefinition{
+			input: &dcv1alpha1.OCIImageDefinition{
 				Repository: "test-repo",
 			},
 			expected: "docker.io/library/test-repo:latest",
 		},
 		{
-			input: &v1alpha1.OCIImageDefinition{
+			input: &dcv1alpha1.OCIImageDefinition{
 				Registry: "test-reg:5000",
 				Tag:      "test-tag",
 			},
 			invalid: true,
 		},
 		{
-			input: &v1alpha1.OCIImageDefinition{
+			input: &dcv1alpha1.OCIImageDefinition{
 				Repository: "!*@~",
 			},
 			invalid: true,
 		},
 		{
-			input:   &v1alpha1.OCIImageDefinition{},
+			input:   &dcv1alpha1.OCIImageDefinition{},
 			invalid: true,
 		},
 	}

@@ -17,6 +17,14 @@ func IntsToStrings(is []int32) (ss []string) {
 	return
 }
 
+// MergeStringMaps merges the src map into the dst.
+func MergeStringMaps(src, dst map[string]string) map[string]string {
+	for k, v := range src {
+		dst[k] = v
+	}
+	return dst
+}
+
 // ParseImageDefinition generates a fully-qualified image reference to an OCI image.
 // An error will be returned when the image definition is invalid.
 func ParseImageDefinition(def *v1alpha1.OCIImageDefinition) (string, error) {

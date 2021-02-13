@@ -59,9 +59,29 @@ func (r *RayClusterReconciler) ProcessResources(ctx context.Context, rc *dcv1alp
 		return fmt.Errorf("failed to create service account: %w", err)
 	}
 
-	// TODO: service, network policy, pod security policy
+	headSvc := ray.NewHeadService(rc)
+	if err := r.createOwnedResource(ctx, rc, headSvc); err != nil {
+		return fmt.Errorf("failed to create head service: %w", err)
+	}
+
+	// TODO: network policy, pod security policy, hpa
 
 	// manage deployments
+	head, err := ray.NewDeployment(rc, ray.ComponentHead)
+	if err != nil {
+		return err
+	}
+	if err := r.createOwnedResource(ctx, rc, head); err != nil {
+		return fmt.Errorf("failed to create head deployment: %w", err)
+	}
+
+	worker, err := ray.NewDeployment(rc, ray.ComponentWorker)
+	if err != nil {
+		return err
+	}
+	if err := r.createOwnedResource(ctx, rc, worker); err != nil {
+		return fmt.Errorf("failed to create worker deployment: %w", err)
+	}
 
 	return nil
 }
