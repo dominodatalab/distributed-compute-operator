@@ -74,10 +74,9 @@ type RayClusterSpec struct {
 	// +kubebuilder:validation:Optional
 	EnableNetworkPolicy bool `json:"enableNetworkPolicy"`
 
-	// EnablePodSecurityPolicy will create a pod security policy that enforces secure execution of the ray process.
-	// +kubebuilder:default=true
+	// PodSecurityPolicy name can be provided to govern execution of the ray processes within pods.
 	// +kubebuilder:validation:Optional
-	EnablePodSecurityPolicy bool `json:"enablePodSecurityPolicy"`
+	PodSecurityPolicy string `json:"podSecurityPolicy"`
 
 	// Labels applied to cluster resources in addition to stock labels.
 	// +kubebuilder:validation:Optional

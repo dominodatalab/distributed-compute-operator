@@ -659,11 +659,6 @@ spec:
                 description: EnableNetworkPolicy will create a network policy that
                   restricts ingress to the cluster.
                 type: boolean
-              enablePodSecurityPolicy:
-                default: true
-                description: EnablePodSecurityPolicy will create a pod security policy
-                  that enforces secure execution of the ray process.
-                type: boolean
               image:
                 default:
                   repository: rayproject/ray
@@ -1803,6 +1798,10 @@ spec:
                 format: int64
                 minimum: 78643200
                 type: integer
+              podSecurityPolicy:
+                description: PodSecurityPolicy name can be provided to govern execution
+                  of the ray processes within pods.
+                type: string
               port:
                 default: 6379
                 description: Port is the port of the head ray process.

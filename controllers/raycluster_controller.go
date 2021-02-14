@@ -8,13 +8,13 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
+	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/ray"
@@ -46,31 +46,6 @@ func (r *RayClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 		log.Error(err, "Failed to get RayCluster")
 		return ctrl.Result{}, err
-	}
-
-	if rc.DeletionTimestamp != nil {
-		if controllerutil.ContainsFinalizer(rc, rayClusterFinalizer) {
-			if err := r.finalizeRayCluster(ctx, rc); err != nil {
-				log.Error(err, "Failed to run finalization")
-				return ctrl.Result{}, err
-			}
-
-			controllerutil.RemoveFinalizer(rc, rayClusterFinalizer)
-			if err := r.Update(ctx, rc); err != nil {
-				log.Error(err, "Failed to remove finalizer")
-				return ctrl.Result{}, err
-			}
-		}
-
-		return ctrl.Result{}, nil
-	}
-
-	if !controllerutil.ContainsFinalizer(rc, rayClusterFinalizer) {
-		controllerutil.AddFinalizer(rc, rayClusterFinalizer)
-		if err := r.Update(ctx, rc); err != nil {
-			log.Error(err, "Failed to add finalizer")
-			return ctrl.Result{}, err
-		}
 	}
 
 	if err := r.processResources(ctx, rc); err != nil {
@@ -115,12 +90,13 @@ func (r *RayClusterReconciler) processResources(ctx context.Context, rc *dcv1alp
 		}
 	}
 
-	if rc.Spec.EnablePodSecurityPolicy {
-		psp, role, binding := ray.NewPodSecurityPolicy(rc)
-
-		if err := r.createClusterResource(ctx, psp); err != nil {
-			return fmt.Errorf("failed to create pod security policy: %w", err)
+	if rc.Spec.PodSecurityPolicy != "" {
+		err := r.Get(ctx, types.NamespacedName{Name: rc.Spec.PodSecurityPolicy}, &policyv1beta1.PodSecurityPolicy{})
+		if err != nil {
+			return fmt.Errorf("cannot verify pod security policy: %w", err)
 		}
+
+		role, binding := ray.NewPodSecurityPolicyRBAC(rc)
 
 		if err := r.createOwnedResource(ctx, rc, role); err != nil {
 			return fmt.Errorf("failed to create role: %w", err)
@@ -152,26 +128,10 @@ func (r *RayClusterReconciler) processResources(ctx context.Context, rc *dcv1alp
 	return nil
 }
 
-// createClusterResource should be used to create cluster-scoped objects.
-// These will need to be cleaned up using the finalizer hook.
-func (r *RayClusterReconciler) createClusterResource(ctx context.Context, obj client.Object) error {
-	objKey := types.NamespacedName{Name: obj.GetName()}
-	err := r.Get(ctx, objKey, obj)
-
-	if err == nil {
-		return nil
-	}
-	if !apierrors.IsNotFound(err) {
-		return err
-	}
-
-	return r.Create(ctx, obj)
-}
-
 // createOwnedResource should be used to create namespace-scoped object.
 // The CR will become the "owner" of the "controlled" object and cleanup will
 // occur automatically when the CR is deleted.
-func (r *RayClusterReconciler) createOwnedResource(ctx context.Context, owner v1.Object, controlled client.Object) error {
+func (r *RayClusterReconciler) createOwnedResource(ctx context.Context, owner metav1.Object, controlled client.Object) error {
 	objKey := types.NamespacedName{Name: controlled.GetName(), Namespace: controlled.GetNamespace()}
 	err := r.Get(ctx, objKey, controlled)
 
@@ -186,24 +146,4 @@ func (r *RayClusterReconciler) createOwnedResource(ctx context.Context, owner v1
 	}
 
 	return r.Create(ctx, controlled)
-}
-
-// finalizeRayCluster blocks the deletion of the CR until all cleanup steps are complete.
-func (r *RayClusterReconciler) finalizeRayCluster(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
-	psp, _, _ := ray.NewPodSecurityPolicy(rc)
-	err := r.Get(ctx, types.NamespacedName{Name: psp.Name}, psp)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil
-		}
-
-		return err
-	}
-
-	err = r.Delete(ctx, psp)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
