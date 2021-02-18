@@ -20,8 +20,8 @@ func rayClusterFixture() *dcv1alpha1.RayCluster {
 				Tag:        "fake-tag",
 				PullPolicy: v1.PullIfNotPresent,
 			},
-			WorkerReplicaCount: 5,
-			Port:               6379,
+			WorkerReplicas: 5,
+			Port:           6379,
 			RedisShardPorts: []int32{
 				6380,
 				6381,

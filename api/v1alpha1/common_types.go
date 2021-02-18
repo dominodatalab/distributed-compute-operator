@@ -2,6 +2,17 @@ package v1alpha1
 
 import corev1 "k8s.io/api/core/v1"
 
+// Autoscaling configuration for scalable workloads.
+type Autoscaling struct {
+	// MaxReplicas is the upper limit for the number of replicas to which the autoscaler can scale up.
+	// It cannot be less than the replica count for your workload.
+	MaxReplicas int32 `json:"maxReplicas"`
+
+	// AverageUtilization is the target value of the average of the resource metric across all relevant pods.
+	// This is represented as a percentage of the requested value of the resource for the pods.
+	AverageUtilization int32 `json:"averageUtilization"`
+}
+
 // OCIImageDefinition describes where and when to fetch a container image.
 type OCIImageDefinition struct {
 	// Registry where the container image is hosted.

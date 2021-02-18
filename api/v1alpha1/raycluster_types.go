@@ -12,11 +12,15 @@ type RayClusterSpec struct {
 	// +kubebuilder:validation:Optional
 	Image *OCIImageDefinition `json:"image"`
 
-	// WorkerReplicaCount configures the total number of workers in the cluster.
+	// Autoscaling blah blah
+	// +kubebuilder:validation:Optional
+	Autoscaling *Autoscaling `json:"autoscaling"`
+
+	// WorkerReplicas configures the total number of workers in the cluster.
 	// +kubebuilder:default=1
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=1
-	WorkerReplicaCount int32 `json:"workerReplicaCount"`
+	WorkerReplicas int32 `json:"workerReplicas"`
 
 	// Port is the port of the head ray process.
 	// +kubebuilder:default=6379
@@ -94,11 +98,6 @@ type RayClusterSpec struct {
 	// +kubebuilder:validation:Optional
 	Affinity *corev1.Affinity `json:"affinity"`
 
-	// Resources requested and limits applied to all ray containers.
-	// +kubebuilder:default={requests: {cpu: "100m", memory: "512Mi"}}
-	// +kubebuilder:validation:Optional
-	Resources corev1.ResourceRequirements `json:"resources"`
-
 	// Tolerations applied to cluster pods.
 	// +kubebuilder:validation:Optional
 	Tolerations []corev1.Toleration `json:"tolerations"`
@@ -114,6 +113,16 @@ type RayClusterSpec struct {
 	// VolumeMounts added to all ray containers.
 	// +kubebuilder:validation:Optional
 	VolumeMounts []corev1.VolumeMount `json:"volumeMounts"`
+
+	// Resources requested and limits applied to head ray containers.
+	// +kubebuilder:default={requests: {cpu: "500m", memory: "512Mi"}}
+	// +kubebuilder:validation:Optional
+	HeadResources corev1.ResourceRequirements `json:"headResources"`
+
+	// Resources requested and limits applied to worker ray containers.
+	// +kubebuilder:default={requests: {cpu: "100m", memory: "250Mi"}}
+	// +kubebuilder:validation:Optional
+	WorkerResources corev1.ResourceRequirements `json:"workerResources"`
 }
 
 // RayClusterStatus defines the observed state of a RayCluster resource.
@@ -125,6 +134,9 @@ type RayClusterStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:scope=Namespaced,shortName=ray
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Worker Count",type=integer,JSONPath=".spec.workerReplicas"
+// +kubebuilder:printcolumn:name="Image",type=string,JSONPath=".spec.image"
+// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=".metadata.creationTimestamp"
 
 // RayCluster is the Schema for the rayclusters API.
 type RayCluster struct {

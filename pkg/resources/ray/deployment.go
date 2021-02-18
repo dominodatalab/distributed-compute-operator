@@ -18,10 +18,6 @@ var (
 	defaultCmd = []string{ApplicationName}
 	defaultEnv = []corev1.EnvVar{
 		{
-			Name:  "GLOG_logtostderr",
-			Value: "1",
-		},
-		{
 			Name: "MY_POD_IP",
 			ValueFrom: &corev1.EnvVarSource{
 				FieldRef: &corev1.ObjectFieldSelector{
@@ -61,16 +57,20 @@ const sharedMemoryVolumeName = "dshm"
 // NewDeployment generates a Deployment configured to manage Ray cluster nodes.
 // The configuration is based the provided spec and the desired Component workload.
 func NewDeployment(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Deployment, error) {
-	// TODO: need to figure out how the update strategy for head and worker pods
-	// 	- do we need to "recreate" the head to ensure only 1 instance is running at a time?
-	// 	- how the workers behave when the head goes down and comes back up?
+	var replicas int32
+	var strategy appsv1.DeploymentStrategy
+	var resources corev1.ResourceRequirements
 
-	var replicaCount int32
 	switch comp {
 	case ComponentHead:
-		replicaCount = 1
+		replicas = 1
+		resources = rc.Spec.HeadResources
+		strategy = appsv1.DeploymentStrategy{
+			Type: appsv1.RecreateDeploymentStrategyType,
+		}
 	case ComponentWorker:
-		replicaCount = rc.Spec.WorkerReplicaCount
+		replicas = rc.Spec.WorkerReplicas
+		resources = rc.Spec.WorkerResources
 	default:
 		return nil, fmt.Errorf("invalid ray component: %q", comp)
 	}
@@ -93,7 +93,7 @@ func NewDeployment(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Deploymen
 			Labels:    labels,
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: pointer.Int32Ptr(replicaCount),
+			Replicas: pointer.Int32Ptr(replicas),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: SelectorLabelsWithComponent(rc, comp),
 			},
@@ -118,7 +118,7 @@ func NewDeployment(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Deploymen
 							Ports:           ports,
 							Env:             defaultEnv,
 							VolumeMounts:    volumeMounts,
-							Resources:       rc.Spec.Resources,
+							Resources:       resources,
 							LivenessProbe: &corev1.Probe{
 								Handler: corev1.Handler{
 									TCPSocket: &corev1.TCPSocketAction{
@@ -138,6 +138,7 @@ func NewDeployment(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Deploymen
 					Volumes: volumes,
 				},
 			},
+			Strategy: strategy,
 		},
 	}
 

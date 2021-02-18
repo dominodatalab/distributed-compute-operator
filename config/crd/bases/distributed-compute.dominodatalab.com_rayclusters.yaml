@@ -18,7 +18,17 @@ spec:
     singular: raycluster
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.workerReplicas
+      name: Worker Count
+      type: integer
+    - jsonPath: .spec.image
+      name: Image
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: RayCluster is the Schema for the rayclusters API.
@@ -635,6 +645,26 @@ spec:
                   type: string
                 description: Annotations applied to cluster pods.
                 type: object
+              autoscaling:
+                description: Autoscaling blah blah
+                properties:
+                  averageUtilization:
+                    description: AverageUtilization is the target value of the average
+                      of the resource metric across all relevant pods. This is represented
+                      as a percentage of the requested value of the resource for the
+                      pods.
+                    format: int32
+                    type: integer
+                  maxReplicas:
+                    description: MaxReplicas is the upper limit for the number of
+                      replicas to which the autoscaler can scale up. It cannot be
+                      less than the replica count for your workload.
+                    format: int32
+                    type: integer
+                required:
+                - averageUtilization
+                - maxReplicas
+                type: object
               clientServerPort:
                 default: 10001
                 description: ClientServerPort is the port number to which the ray
@@ -659,6 +689,36 @@ spec:
                 description: EnableNetworkPolicy will create a network policy that
                   restricts ingress to the cluster.
                 type: boolean
+              headResources:
+                default:
+                  requests:
+                    cpu: 500m
+                    memory: 512Mi
+                description: Resources requested and limits applied to head ray containers.
+                properties:
+                  limits:
+                    additionalProperties:
+                      anyOf:
+                      - type: integer
+                      - type: string
+                      pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                      x-kubernetes-int-or-string: true
+                    description: 'Limits describes the maximum amount of compute resources
+                      allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                    type: object
+                  requests:
+                    additionalProperties:
+                      anyOf:
+                      - type: integer
+                      - type: string
+                      pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                      x-kubernetes-int-or-string: true
+                    description: 'Requests describes the minimum amount of compute
+                      resources required. If Requests is omitted for a container,
+                      it defaults to Limits if that is explicitly specified, otherwise
+                      to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                    type: object
+                type: object
               image:
                 default:
                   repository: rayproject/ray
@@ -1820,36 +1880,6 @@ spec:
                   type: integer
                 minItems: 1
                 type: array
-              resources:
-                default:
-                  requests:
-                    cpu: 100m
-                    memory: 512Mi
-                description: Resources requested and limits applied to all ray containers.
-                properties:
-                  limits:
-                    additionalProperties:
-                      anyOf:
-                      - type: integer
-                      - type: string
-                      pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                      x-kubernetes-int-or-string: true
-                    description: 'Limits describes the maximum amount of compute resources
-                      allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
-                    type: object
-                  requests:
-                    additionalProperties:
-                      anyOf:
-                      - type: integer
-                      - type: string
-                      pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                      x-kubernetes-int-or-string: true
-                    description: 'Requests describes the minimum amount of compute
-                      resources required. If Requests is omitted for a container,
-                      it defaults to Limits if that is explicitly specified, otherwise
-                      to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
-                    type: object
-                type: object
               tolerations:
                 description: Tolerations applied to cluster pods.
                 items:
@@ -3367,13 +3397,44 @@ spec:
                   - name
                   type: object
                 type: array
-              workerReplicaCount:
+              workerReplicas:
                 default: 1
-                description: WorkerReplicaCount configures the total number of workers
+                description: WorkerReplicas configures the total number of workers
                   in the cluster.
                 format: int32
                 minimum: 1
                 type: integer
+              workerResources:
+                default:
+                  requests:
+                    cpu: 100m
+                    memory: 250Mi
+                description: Resources requested and limits applied to worker ray
+                  containers.
+                properties:
+                  limits:
+                    additionalProperties:
+                      anyOf:
+                      - type: integer
+                      - type: string
+                      pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                      x-kubernetes-int-or-string: true
+                    description: 'Limits describes the maximum amount of compute resources
+                      allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                    type: object
+                  requests:
+                    additionalProperties:
+                      anyOf:
+                      - type: integer
+                      - type: string
+                      pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                      x-kubernetes-int-or-string: true
+                    description: 'Requests describes the minimum amount of compute
+                      resources required. If Requests is omitted for a container,
+                      it defaults to Limits if that is explicitly specified, otherwise
+                      to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                    type: object
+                type: object
             type: object
           status:
             description: RayClusterStatus defines the observed state of a RayCluster

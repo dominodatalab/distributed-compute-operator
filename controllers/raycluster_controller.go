@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
@@ -19,8 +20,6 @@ import (
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/ray"
 )
-
-const rayClusterFinalizer = "distributed-compute.dominodatalab.com/finalizer"
 
 // RayClusterReconciler reconciles RayCluster objects.
 type RayClusterReconciler struct {
@@ -64,6 +63,7 @@ func (r *RayClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&corev1.ServiceAccount{}).
 		Owns(&appsv1.Deployment{}).
 		Owns(&networkingv1.NetworkPolicy{}).
+		Owns(&autoscalingv2beta2.HorizontalPodAutoscaler{}).
 		Complete(r)
 }
 
@@ -104,6 +104,13 @@ func (r *RayClusterReconciler) processResources(ctx context.Context, rc *dcv1alp
 
 		if err := r.createOwnedResource(ctx, rc, binding); err != nil {
 			return fmt.Errorf("failed to create role binding: %w", err)
+		}
+	}
+
+	if rc.Spec.Autoscaling != nil {
+		hpa := ray.NewHorizontalPodAutoscaler(rc)
+		if err := r.createOwnedResource(ctx, rc, hpa); err != nil {
+			return fmt.Errorf("failed to create horizontal pod autoscaler: %w", err)
 		}
 	}
 

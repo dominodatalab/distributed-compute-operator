@@ -83,10 +83,6 @@ func TestNewDeployment(t *testing.T) {
 									},
 									Env: []corev1.EnvVar{
 										{
-											Name:  "GLOG_logtostderr",
-											Value: "1",
-										},
-										{
 											Name: "MY_POD_IP",
 											ValueFrom: &corev1.EnvVarSource{
 												FieldRef: &corev1.ObjectFieldSelector{
@@ -159,6 +155,7 @@ func TestNewDeployment(t *testing.T) {
 							},
 						},
 					},
+					Strategy: appsv1.DeploymentStrategy{Type: appsv1.RecreateDeploymentStrategyType},
 				},
 			}
 			assert.Equal(t, expected, actual, "head deployment not correctly generated")
@@ -238,10 +235,6 @@ func TestNewDeployment(t *testing.T) {
 										"--address=test-id-ray-head:6379",
 									},
 									Env: []corev1.EnvVar{
-										{
-											Name:  "GLOG_logtostderr",
-											Value: "1",
-										},
 										{
 											Name: "MY_POD_IP",
 											ValueFrom: &corev1.EnvVarSource{
@@ -382,21 +375,38 @@ func testCommonFeatures(t *testing.T, comp Component) {
 
 	t.Run("resource_requirements", func(t *testing.T) {
 		rc := rayClusterFixture()
-		rc.Spec.Resources = corev1.ResourceRequirements{
-			Limits: corev1.ResourceList{
-				corev1.ResourceCPU:    resource.MustParse("1"),
-				corev1.ResourceMemory: resource.MustParse("1G"),
-			},
-			Requests: corev1.ResourceList{
-				corev1.ResourceCPU:    resource.MustParse("500m"),
-				corev1.ResourceMemory: resource.MustParse("512Mi"),
-			},
+
+		var expected corev1.ResourceRequirements
+		if comp == ComponentHead {
+			rc.Spec.HeadResources = corev1.ResourceRequirements{
+				Limits: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("1"),
+					corev1.ResourceMemory: resource.MustParse("1Gi"),
+				},
+				Requests: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("500m"),
+					corev1.ResourceMemory: resource.MustParse("512Mi"),
+				},
+			}
+			expected = rc.Spec.HeadResources
+		} else {
+			rc.Spec.WorkerResources = corev1.ResourceRequirements{
+				Limits: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("500m"),
+					corev1.ResourceMemory: resource.MustParse("512Mi"),
+				},
+				Requests: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("250m"),
+					corev1.ResourceMemory: resource.MustParse("256Mi"),
+				},
+			}
+			expected = rc.Spec.WorkerResources
 		}
 
 		actual, err := NewDeployment(rc, comp)
 		require.NoError(t, err)
 
-		assert.Equal(t, rc.Spec.Resources, actual.Spec.Template.Spec.Containers[0].Resources)
+		assert.Equal(t, expected, actual.Spec.Template.Spec.Containers[0].Resources)
 	})
 
 	t.Run("node_selector", func(t *testing.T) {

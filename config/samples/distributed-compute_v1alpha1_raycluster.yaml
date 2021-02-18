@@ -1,7 +1,101 @@
 apiVersion: distributed-compute.dominodatalab.com/v1alpha1
 kind: RayCluster
 metadata:
-  name: raycluster-sample
+  name: example
 spec:
-  # set the total number of worker pods
-  workerReplicaCount: 2
+#  # image used by head and worker pods
+#  image:
+#    registry: ""
+#    repository: rayproject/ray
+#    tag: nightly
+#    pullPolicy: IfNotPresent
+
+#  # enable autoscaling (worker cpu requests also required)
+#  autoscaling:
+#    maxReplicas: 5
+#    averageUtilization: 50
+
+#  # the total number of worker pods
+#  workerReplicas: 3
+
+#  # redis port and addition redis shard ports used by head node
+#  port: 1234
+#  redisShardPorts:
+#    - 6380
+#    - 6381
+
+#  # port used to connect clients to ray
+#  clientServerPort: 10001
+
+#  # enable dashboard ui and set port
+#  dashboardPort: 8265
+#  enableDashboard: true
+
+#  # set the object store's port and initial memory
+#  objectManagerPort: 2384
+#  objectStoreMemoryBytes: 52428800
+
+#  # internal port overrides
+#  nodeManagerPort: 2385
+
+#  # control the creation of network policies
+#  enableNetworkPolicy: true
+
+#  # bind cluster to existing psp
+#  podSecurityPolicy: privileged
+
+#  # set head node resource requirements
+#  headResources:
+#    requests:
+#      cpu: 500m
+#      memory: 512Mi
+
+#  # set worker node's resource requirements (required by hpa)
+#  workerResources:
+#    requests:
+#      cpu: 100m
+#      memory: 250Mi
+#    limits:
+#      cpu: 500m
+#      memory: 512Mi
+
+#  # attach additional init containers to cluster deployments
+#  initContainers:
+#    - name: busybox
+#      command: sleep 3600
+
+# the following fields control various metadata attached to head/worker nodes
+
+#  labels:
+#    environment: production
+#
+#  annotations:
+#    non-identifying-metadata: "true"
+#
+#  nodeSelector:
+#    disktype: ssd
+#
+#  affinity:
+#    nodeAffinity:
+#      preferredDuringSchedulingIgnoredDuringExecution:
+#      - weight: 1
+#        preference:
+#          matchExpressions:
+#          - key: another-node-label-key
+#            operator: In
+#            values:
+#            - another-node-label-value
+#
+#  tolerations:
+#  - key: example-key
+#    operator: Equal
+#    value: example-value
+#    effect: NoSchedule
+#
+#  volumes:
+#    - name: example-vol
+#      emptyDir: {}
+#
+#  volumeMounts:
+#    - name: example-vol
+#      mountPath: /mnt/more/space
