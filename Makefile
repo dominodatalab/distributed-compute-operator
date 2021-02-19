@@ -33,7 +33,7 @@ SHELL = /bin/bash
 .SHELLFLAGS = -e -o pipefail -c
 
 # Image URL to use all building/pushing image targets
-IMG ?= controller:latest
+IMG ?= distributed-compute-operator:latest
 # Produce CRDs that work with Kubernetes 1.16+ and support defaulting, version conversion, and field pruning
 CRD_OPTIONS ?= "crd:crdVersions=v1,preserveUnknownFields=false"
 
