@@ -34,3 +34,15 @@ jobs:
 
     - name: Test
       run: make test
+
+    - name: Set up Docker buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Build and push Docker image
+      id: docker_build
+      uses: docker/build-push-action@v2
+      with:
+        push: true
+        tags: ghcr.io/dominodatalab/distributed-compute-operator:${{ github.sha }}
+        cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+        cache-from: type=local,src=/tmp/.buildx-cache
