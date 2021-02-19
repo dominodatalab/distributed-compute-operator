@@ -3,14 +3,22 @@ package ray
 import (
 	"fmt"
 
+	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources"
 )
 
-func NewNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.NetworkPolicy {
+var ClientAccessLabels = map[string]string{
+	"ray-client": "true",
+}
+
+// NewClusterNetworkPolicy generates a network policy that allows all nodes
+// within a single cluster to communicate on all ports.
+func NewClusterNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.NetworkPolicy {
 	labelSelector := metav1.LabelSelector{
 		MatchLabels: SelectorLabels(rc),
 	}
@@ -31,6 +39,54 @@ func NewNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.NetworkPolicy {
 					From: []networkingv1.NetworkPolicyPeer{
 						{
 							PodSelector: &labelSelector,
+						},
+					},
+				},
+			},
+			PolicyTypes: []networkingv1.PolicyType{
+				networkingv1.PolicyTypeIngress,
+			},
+		},
+	}
+}
+
+// NewHeadNetworkPolicy generates a network policy that allows client/dashboard
+// port access to any pods that have been appointed with the ClientAccessLabels.
+func NewHeadNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.NetworkPolicy {
+	proto := corev1.ProtocolTCP
+	clientPort := intstr.FromInt(int(rc.Spec.ClientServerPort))
+	dashboardPort := intstr.FromInt(int(rc.Spec.DashboardPort))
+
+	return &networkingv1.NetworkPolicy{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fmt.Sprintf("%s-client", rc.Name),
+			Namespace: rc.Namespace,
+			Labels:    MetadataLabelsWithComponent(rc, ComponentHead),
+			Annotations: map[string]string{
+				resources.DescriptionAnnotationKey: "Allows client ingress traffic to head node",
+			},
+		},
+		Spec: networkingv1.NetworkPolicySpec{
+			PodSelector: metav1.LabelSelector{
+				MatchLabels: SelectorLabelsWithComponent(rc, ComponentHead),
+			},
+			Ingress: []networkingv1.NetworkPolicyIngressRule{
+				{
+					Ports: []networkingv1.NetworkPolicyPort{
+						{
+							Protocol: &proto,
+							Port:     &clientPort,
+						},
+						{
+							Protocol: &proto,
+							Port:     &dashboardPort,
+						},
+					},
+					From: []networkingv1.NetworkPolicyPeer{
+						{
+							PodSelector: &metav1.LabelSelector{
+								MatchLabels: ClientAccessLabels,
+							},
 						},
 					},
 				},

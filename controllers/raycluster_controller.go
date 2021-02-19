@@ -71,8 +71,6 @@ func (r *RayClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 // collectively comprise a Ray cluster. Each resource is controlled by a parent
 // RayCluster object so that full cleanup occurs during a delete operation.
 func (r *RayClusterReconciler) processResources(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
-	// manage supporting resources
-
 	sa := ray.NewServiceAccount(rc)
 	if err := r.createOwnedResource(ctx, rc, sa); err != nil {
 		return fmt.Errorf("failed to create service account: %w", err)
@@ -84,9 +82,14 @@ func (r *RayClusterReconciler) processResources(ctx context.Context, rc *dcv1alp
 	}
 
 	if rc.Spec.EnableNetworkPolicy {
-		np := ray.NewNetworkPolicy(rc)
-		if err := r.createOwnedResource(ctx, rc, np); err != nil {
-			return fmt.Errorf("failed to create network policy: %w", err)
+		netpol := ray.NewClusterNetworkPolicy(rc)
+		if err := r.createOwnedResource(ctx, rc, netpol); err != nil {
+			return fmt.Errorf("failed to create cluster network policy: %w", err)
+		}
+
+		netpol = ray.NewHeadNetworkPolicy(rc)
+		if err := r.createOwnedResource(ctx, rc, netpol); err != nil {
+			return fmt.Errorf("failed to create head network policy: %w", err)
 		}
 	}
 
