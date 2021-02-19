@@ -646,7 +646,8 @@ spec:
                 description: Annotations applied to cluster pods.
                 type: object
               autoscaling:
-                description: Autoscaling blah blah
+                description: Autoscaling parameters used to scale up/down ray worker
+                  nodes.
                 properties:
                   averageUtilization:
                     description: AverageUtilization is the target value of the average
@@ -659,6 +660,14 @@ spec:
                     description: MaxReplicas is the upper limit for the number of
                       replicas to which the autoscaler can scale up. It cannot be
                       less than the replica count for your workload.
+                    format: int32
+                    type: integer
+                  scaleDownStabilizationWindowSeconds:
+                    description: ScaleDownStabilizationWindowSeconds is the number
+                      of seconds for which past recommendations should be considered
+                      when scaling down. A shorter window will trigger scale down
+                      events quicker, but too short a window may cause replica flapping
+                      when metrics used for scaling keep fluctuating.
                     format: int32
                     type: integer
                 required:
@@ -694,7 +703,8 @@ spec:
                   requests:
                     cpu: 500m
                     memory: 512Mi
-                description: Resources requested and limits applied to head ray containers.
+                description: HeadResources are the requests and limits applied to
+                  head ray containers.
                 properties:
                   limits:
                     additionalProperties:
@@ -741,6 +751,19 @@ spec:
                 - repository
                 - tag
                 type: object
+              imagePullSecrets:
+                description: ImagePullSecrets are references to secrets with credentials
+                  to private registries used to pull images.
+                items:
+                  description: LocalObjectReference contains enough information to
+                    let you locate the referenced object inside the same namespace.
+                  properties:
+                    name:
+                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                        TODO: Add other useful fields. apiVersion, kind, uid?'
+                      type: string
+                  type: object
+                type: array
               initContainers:
                 description: InitContainers added to cluster pods.
                 items:
@@ -3409,8 +3432,8 @@ spec:
                   requests:
                     cpu: 100m
                     memory: 250Mi
-                description: Resources requested and limits applied to worker ray
-                  containers.
+                description: WorkerResources are the requests and limits applied to
+                  worker ray containers.
                 properties:
                   limits:
                     additionalProperties:
@@ -3446,6 +3469,8 @@ spec:
                   type: string
                 type: array
             type: object
+        required:
+        - spec
         type: object
     served: true
     storage: true

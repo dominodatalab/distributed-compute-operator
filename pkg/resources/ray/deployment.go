@@ -108,6 +108,7 @@ func NewDeployment(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Deploymen
 					Affinity:           rc.Spec.Affinity,
 					Tolerations:        rc.Spec.Tolerations,
 					InitContainers:     rc.Spec.InitContainers,
+					ImagePullSecrets:   rc.Spec.ImagePullSecrets,
 					Containers: []corev1.Container{
 						{
 							Name:            ApplicationName,

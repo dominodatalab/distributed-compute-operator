@@ -3,6 +3,9 @@ kind: RayCluster
 metadata:
   name: example
 spec:
+  # total number of worker pods
+  workerReplicas: 2
+
 #  # image used by head and worker pods
 #  image:
 #    registry: ""
@@ -14,9 +17,7 @@ spec:
 #  autoscaling:
 #    maxReplicas: 5
 #    averageUtilization: 50
-
-#  # the total number of worker pods
-#  workerReplicas: 3
+#    scaleDownStabilizationWindowSeconds: 60
 
 #  # redis port and addition redis shard ports used by head node
 #  port: 1234
@@ -99,3 +100,6 @@ spec:
 #  volumeMounts:
 #    - name: example-vol
 #      mountPath: /mnt/more/space
+#
+#  imagePullSecrets:
+#    - name: docker-registry-credentials

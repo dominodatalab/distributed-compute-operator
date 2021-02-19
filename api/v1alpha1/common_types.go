@@ -11,6 +11,12 @@ type Autoscaling struct {
 	// AverageUtilization is the target value of the average of the resource metric across all relevant pods.
 	// This is represented as a percentage of the requested value of the resource for the pods.
 	AverageUtilization int32 `json:"averageUtilization"`
+
+	// ScaleDownStabilizationWindowSeconds is the number of seconds for which past recommendations should be considered
+	// when scaling down. A shorter window will trigger scale down events quicker, but too short a window may cause
+	// replica flapping when metrics used for scaling keep fluctuating.
+	// +kubebuilder:validation:Optional
+	ScaleDownStabilizationWindowSeconds *int32 `json:"scaleDownStabilizationWindowSeconds"`
 }
 
 // OCIImageDefinition describes where and when to fetch a container image.

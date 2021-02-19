@@ -14,8 +14,9 @@ import (
 func TestNewHorizontalPodAutoscaler(t *testing.T) {
 	rc := rayClusterFixture()
 	rc.Spec.Autoscaling = &dcv1alpha1.Autoscaling{
-		MaxReplicas:        10,
-		AverageUtilization: 50,
+		MaxReplicas:                         10,
+		AverageUtilization:                  50,
+		ScaleDownStabilizationWindowSeconds: pointer.Int32Ptr(60),
 	}
 	hpa := NewHorizontalPodAutoscaler(rc)
 

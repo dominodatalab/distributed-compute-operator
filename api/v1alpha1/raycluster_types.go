@@ -12,7 +12,7 @@ type RayClusterSpec struct {
 	// +kubebuilder:validation:Optional
 	Image *OCIImageDefinition `json:"image"`
 
-	// Autoscaling blah blah
+	// Autoscaling parameters used to scale up/down ray worker nodes.
 	// +kubebuilder:validation:Optional
 	Autoscaling *Autoscaling `json:"autoscaling"`
 
@@ -114,15 +114,19 @@ type RayClusterSpec struct {
 	// +kubebuilder:validation:Optional
 	VolumeMounts []corev1.VolumeMount `json:"volumeMounts"`
 
-	// Resources requested and limits applied to head ray containers.
+	// HeadResources are the requests and limits applied to head ray containers.
 	// +kubebuilder:default={requests: {cpu: "500m", memory: "512Mi"}}
 	// +kubebuilder:validation:Optional
 	HeadResources corev1.ResourceRequirements `json:"headResources"`
 
-	// Resources requested and limits applied to worker ray containers.
+	// WorkerResources are the requests and limits applied to worker ray containers.
 	// +kubebuilder:default={requests: {cpu: "100m", memory: "250Mi"}}
 	// +kubebuilder:validation:Optional
 	WorkerResources corev1.ResourceRequirements `json:"workerResources"`
+
+	// ImagePullSecrets are references to secrets with credentials to private registries used to pull images.
+	// +kubebuilder:validation:Optional
+	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets"`
 }
 
 // RayClusterStatus defines the observed state of a RayCluster resource.
@@ -143,7 +147,7 @@ type RayCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   RayClusterSpec   `json:"spec,omitempty"`
+	Spec   RayClusterSpec   `json:"spec"`
 	Status RayClusterStatus `json:"status,omitempty"`
 }
 
