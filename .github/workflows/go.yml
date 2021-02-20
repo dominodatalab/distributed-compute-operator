@@ -26,6 +26,9 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-
 
+    - name: Build
+      run: make manager
+
     - name: Lint
       run: make lint
 
