@@ -38,7 +38,7 @@ IMG ?= distributed-compute-operator:latest
 CRD_OPTIONS ?= "crd:crdVersions=v1,preserveUnknownFields=false"
 
 # Custom variables
-GOLANGCI_LINT_VERSION=v1.36.0
+GOLANGCI_LINT_VERSION=v1.37.1
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
