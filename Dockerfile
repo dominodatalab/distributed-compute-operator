@@ -12,6 +12,7 @@ RUN go mod download
 COPY main.go main.go
 COPY cmd/ cmd/
 COPY api/ api/
+COPY config/crd/ config/crd/
 COPY controllers/ controllers/
 COPY pkg/ pkg/
 
