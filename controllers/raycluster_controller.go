@@ -117,8 +117,10 @@ func (r *RayClusterReconciler) processResources(ctx context.Context, rc *dcv1alp
 		}
 	}
 
-	// manage deployments
+	return r.reconcileDeployments(ctx, rc)
+}
 
+func (r *RayClusterReconciler) reconcileDeployments(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
 	head, err := ray.NewDeployment(rc, ray.ComponentHead)
 	if err != nil {
 		return err
