@@ -123,7 +123,7 @@ func (r *RayClusterReconciler) processResources(ctx context.Context, rc *dcv1alp
 	if err != nil {
 		return err
 	}
-	if err := r.createOwnedResource(ctx, rc, head); err != nil {
+	if err = r.createOwnedResource(ctx, rc, head); err != nil {
 		return fmt.Errorf("failed to create head deployment: %w", err)
 	}
 
@@ -131,7 +131,7 @@ func (r *RayClusterReconciler) processResources(ctx context.Context, rc *dcv1alp
 	if err != nil {
 		return err
 	}
-	if err := r.createOwnedResource(ctx, rc, worker); err != nil {
+	if err = r.createOwnedResource(ctx, rc, worker); err != nil {
 		return fmt.Errorf("failed to create worker deployment: %w", err)
 	}
 
