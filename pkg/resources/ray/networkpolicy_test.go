@@ -59,6 +59,11 @@ func TestNewClusterNetworkPolicy(t *testing.T) {
 
 func TestNewHeadNetworkPolicy(t *testing.T) {
 	rc := rayClusterFixture()
+	rc.Spec.NetworkPolicyClientLabels = []map[string]string{
+		{
+			"ray-client": "true",
+		},
+	}
 	netpol := NewHeadNetworkPolicy(rc)
 
 	tcpProto := v1.ProtocolTCP

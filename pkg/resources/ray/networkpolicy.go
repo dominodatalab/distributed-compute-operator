@@ -12,10 +12,6 @@ import (
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources"
 )
 
-var ClientAccessLabels = map[string]string{
-	"ray-client": "true",
-}
-
 // NewClusterNetworkPolicy generates a network policy that allows all nodes
 // within a single cluster to communicate on all ports.
 func NewClusterNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.NetworkPolicy {
@@ -57,6 +53,15 @@ func NewHeadNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.NetworkPolicy
 	clientPort := intstr.FromInt(int(rc.Spec.ClientServerPort))
 	dashboardPort := intstr.FromInt(int(rc.Spec.DashboardPort))
 
+	var policyPeers []networkingv1.NetworkPolicyPeer
+	for _, labels := range rc.Spec.NetworkPolicyClientLabels {
+		policyPeers = append(policyPeers, networkingv1.NetworkPolicyPeer{
+			PodSelector: &metav1.LabelSelector{
+				MatchLabels: labels,
+			},
+		})
+	}
+
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-client", rc.Name),
@@ -82,13 +87,7 @@ func NewHeadNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.NetworkPolicy
 							Port:     &dashboardPort,
 						},
 					},
-					From: []networkingv1.NetworkPolicyPeer{
-						{
-							PodSelector: &metav1.LabelSelector{
-								MatchLabels: ClientAccessLabels,
-							},
-						},
-					},
+					From: policyPeers,
 				},
 			},
 			PolicyTypes: []networkingv1.PolicyType{

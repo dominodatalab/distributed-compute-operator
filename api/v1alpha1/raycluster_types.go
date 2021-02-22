@@ -78,6 +78,13 @@ type RayClusterSpec struct {
 	// +kubebuilder:validation:Optional
 	EnableNetworkPolicy bool `json:"enableNetworkPolicy"`
 
+	// NetworkPolicyClientLabels will create a pod selector clause for each set of labels.
+	// This is used to grant ingress access to one or more groups of external pods and is
+	// only applicable when EnableNetworkPolicy is true.
+	// +kubebuilder:default={{"ray-client": "true"}}
+	// +kubebuilder:validation:Optional
+	NetworkPolicyClientLabels []map[string]string `json:"networkPolicyClientLabels"`
+
 	// PodSecurityPolicy name can be provided to govern execution of the ray processes within pods.
 	// +kubebuilder:validation:Optional
 	PodSecurityPolicy string `json:"podSecurityPolicy"`
