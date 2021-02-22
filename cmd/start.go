@@ -10,6 +10,7 @@ import (
 )
 
 var (
+	namespace            string
 	probeAddr            string
 	metricsAddr          string
 	enableLeaderElection bool
@@ -24,6 +25,7 @@ var startCmd = &cobra.Command{
 	Short: "Start the controller manager",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg := &manager.Config{
+			Namespace:            namespace,
 			MetricsAddr:          metricsAddr,
 			HealthProbeAddr:      probeAddr,
 			EnableLeaderElection: enableLeaderElection,
@@ -41,6 +43,7 @@ func init() {
 	zapOpts.BindFlags(fs)
 	startCmd.Flags().AddGoFlagSet(fs)
 
+	startCmd.Flags().StringVar(&namespace, "namespace", "default", "Reconcile clusters resources in this namespace")
 	startCmd.Flags().StringVar(&metricsAddr, "metrics-bind-address", ":8080",
 		"Metrics endpoint will bind to this address")
 	startCmd.Flags().StringVar(&probeAddr, "health-probe-bind-address", ":8081",

@@ -1,0 +1,88 @@
+{{- if .Values.rbac.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "distributed-compute-operator.fullname" . }}-manager
+  labels:
+    {{- include "distributed-compute-operator.labels" . | nindent 4 }}
+rules:
+- apiGroups:
+  - distributed-compute.dominodatalab.com
+  resources:
+  - rayclusters
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - serviceaccounts
+  verbs:
+  - create
+  - list
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - create
+  - list
+  - watch
+- apiGroups:
+  - autoscaling
+  resources:
+  - horizontalpodautoscalers
+  verbs:
+  - create
+  - list
+  - watch
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - networkpolicies
+  verbs:
+  - create
+  - list
+  - watch
+{{- if .Values.config.enableLeaderElection }}
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - create
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - create
+  - update
+{{- end }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "distributed-compute-operator.fullname" . }}-manager
+  labels:
+    {{- include "distributed-compute-operator.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "distributed-compute-operator.fullname" . }}-manager
+subjects:
+- kind: ServiceAccount
+  name: {{ include "distributed-compute-operator.serviceAccountName" . }}
+{{- end }}
