@@ -1856,6 +1856,18 @@ spec:
                 description: Labels applied to cluster resources in addition to stock
                   labels.
                 type: object
+              networkPolicyClientLabels:
+                default:
+                - ray-client: "true"
+                description: NetworkPolicyClientLabels will create a pod selector
+                  clause for each set of labels. This is used to grant ingress access
+                  to one or more groups of external pods and is only applicable when
+                  EnableNetworkPolicy is true.
+                items:
+                  additionalProperties:
+                    type: string
+                  type: object
+                type: array
               nodeManagerPort:
                 default: 2385
                 description: NodeManagerPort is the raylet port for the node manager.
