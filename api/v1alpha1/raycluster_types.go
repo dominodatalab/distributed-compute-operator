@@ -5,6 +5,61 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// RayClusterNode defines attributes common to all ray node types.
+type RayClusterNode struct {
+	// Labels applied to ray pods in addition to stock labels.
+	// +kubebuilder:validation:Optional
+	Labels map[string]string `json:"labels"`
+
+	// Annotations applied to ray pods.
+	// +kubebuilder:validation:Optional
+	Annotations map[string]string `json:"annotations"`
+
+	// NodeSelector applied to ray pods.
+	// +kubebuilder:validation:Optional
+	NodeSelector map[string]string `json:"nodeSelector"`
+
+	// Affinity applied to ray pods.
+	// +kubebuilder:validation:Optional
+	Affinity *corev1.Affinity `json:"affinity"`
+
+	// Tolerations applied to ray pods.
+	// +kubebuilder:validation:Optional
+	Tolerations []corev1.Toleration `json:"tolerations"`
+
+	// InitContainers added to ray pods.
+	// +kubebuilder:validation:Optional
+	InitContainers []corev1.Container `json:"initContainers"`
+
+	// Volumes added to ray pods.
+	// +kubebuilder:validation:Optional
+	Volumes []corev1.Volume `json:"volumes"`
+
+	// VolumeMounts added to ray containers.
+	// +kubebuilder:validation:Optional
+	VolumeMounts []corev1.VolumeMount `json:"volumeMounts"`
+
+	// Resources are the requests and limits applied to ray containers.
+	// +kubebuilder:validation:Optional
+	Resources corev1.ResourceRequirements `json:"resources"`
+}
+
+// RayClusterHead defines head-specific pod settings.
+type RayClusterHead struct {
+	RayClusterNode `json:",inline"`
+}
+
+// RayClusterWorker defines worker-specific pod settings.
+type RayClusterWorker struct {
+	RayClusterNode `json:",inline"`
+
+	// Replicas configures the total number of workers in the cluster.
+	// +kubebuilder:default=1
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Minimum=1
+	Replicas int32 `json:"replicas"`
+}
+
 // RayClusterSpec defines the desired state of a RayCluster resource.
 type RayClusterSpec struct {
 	// Image used to launch head and worker nodes.
@@ -15,12 +70,6 @@ type RayClusterSpec struct {
 	// Autoscaling parameters used to scale up/down ray worker nodes.
 	// +kubebuilder:validation:Optional
 	Autoscaling *Autoscaling `json:"autoscaling"`
-
-	// WorkerReplicas configures the total number of workers in the cluster.
-	// +kubebuilder:default=1
-	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Minimum=1
-	WorkerReplicas int32 `json:"workerReplicas"`
 
 	// Port is the port of the head ray process.
 	// +kubebuilder:default=6379
@@ -89,51 +138,18 @@ type RayClusterSpec struct {
 	// +kubebuilder:validation:Optional
 	PodSecurityPolicy string `json:"podSecurityPolicy"`
 
-	// Labels applied to cluster resources in addition to stock labels.
-	// +kubebuilder:validation:Optional
-	Labels map[string]string `json:"labels"`
-
-	// Annotations applied to cluster pods.
-	// +kubebuilder:validation:Optional
-	Annotations map[string]string `json:"annotations"`
-
-	// NodeSelector applied to cluster pods.
-	// +kubebuilder:validation:Optional
-	NodeSelector map[string]string `json:"nodeSelector"`
-
-	// Affinity applied to cluster pods.
-	// +kubebuilder:validation:Optional
-	Affinity *corev1.Affinity `json:"affinity"`
-
-	// Tolerations applied to cluster pods.
-	// +kubebuilder:validation:Optional
-	Tolerations []corev1.Toleration `json:"tolerations"`
-
-	// InitContainers added to cluster pods.
-	// +kubebuilder:validation:Optional
-	InitContainers []corev1.Container `json:"initContainers"`
-
-	// Volumes added to cluster pods.
-	// +kubebuilder:validation:Optional
-	Volumes []corev1.Volume `json:"volumes"`
-
-	// VolumeMounts added to all ray containers.
-	// +kubebuilder:validation:Optional
-	VolumeMounts []corev1.VolumeMount `json:"volumeMounts"`
-
-	// HeadResources are the requests and limits applied to head ray containers.
-	// +kubebuilder:default={requests: {cpu: "500m", memory: "512Mi"}}
-	// +kubebuilder:validation:Optional
-	HeadResources corev1.ResourceRequirements `json:"headResources"`
-
-	// WorkerResources are the requests and limits applied to worker ray containers.
-	// +kubebuilder:default={requests: {cpu: "100m", memory: "250Mi"}}
-	// +kubebuilder:validation:Optional
-	WorkerResources corev1.ResourceRequirements `json:"workerResources"`
-
 	// ImagePullSecrets are references to secrets with credentials to private registries used to pull images.
 	// +kubebuilder:validation:Optional
 	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets"`
+
+	// Head node configuration parameters.
+	// +kubebuilder:validation:Optional
+	Head RayClusterHead `json:"head"`
+
+	// Worker node configuration parameters.
+	// +kubebuilder:default={replicas: 1}
+	// +kubebuilder:validation:Optional
+	Worker RayClusterWorker `json:"worker"`
 }
 
 // RayClusterStatus defines the observed state of a RayCluster resource.

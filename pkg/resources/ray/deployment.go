@@ -58,19 +58,19 @@ const sharedMemoryVolumeName = "dshm"
 // The configuration is based the provided spec and the desired Component workload.
 func NewDeployment(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Deployment, error) {
 	var replicas int32
+	var nodeAttrs dcv1alpha1.RayClusterNode
 	var strategy appsv1.DeploymentStrategy
-	var resources corev1.ResourceRequirements
 
 	switch comp {
 	case ComponentHead:
 		replicas = 1
-		resources = rc.Spec.HeadResources
+		nodeAttrs = rc.Spec.Head.RayClusterNode
 		strategy = appsv1.DeploymentStrategy{
 			Type: appsv1.RecreateDeploymentStrategyType,
 		}
 	case ComponentWorker:
-		replicas = rc.Spec.WorkerReplicas
-		resources = rc.Spec.WorkerResources
+		replicas = rc.Spec.Worker.Replicas
+		nodeAttrs = rc.Spec.Worker.RayClusterNode
 	default:
 		return nil, fmt.Errorf("invalid ray component: %q", comp)
 	}
@@ -82,9 +82,9 @@ func NewDeployment(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Deploymen
 
 	args := processArgs(rc, comp)
 	ports := processPorts(rc, comp)
-	labels := processLabels(rc, comp)
-	volumes := append(defaultVolumes, rc.Spec.Volumes...)
-	volumeMounts := append(defaultVolumeMounts, rc.Spec.VolumeMounts...)
+	labels := processLabels(rc, comp, nodeAttrs.Labels)
+	volumes := append(defaultVolumes, nodeAttrs.Volumes...)
+	volumeMounts := append(defaultVolumeMounts, nodeAttrs.VolumeMounts...)
 
 	deploy := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -100,14 +100,14 @@ func NewDeployment(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Deploymen
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      labels,
-					Annotations: rc.Spec.Annotations,
+					Annotations: nodeAttrs.Annotations,
 				},
 				Spec: corev1.PodSpec{
 					ServiceAccountName: rc.Name,
-					NodeSelector:       rc.Spec.NodeSelector,
-					Affinity:           rc.Spec.Affinity,
-					Tolerations:        rc.Spec.Tolerations,
-					InitContainers:     rc.Spec.InitContainers,
+					NodeSelector:       nodeAttrs.NodeSelector,
+					Affinity:           nodeAttrs.Affinity,
+					Tolerations:        nodeAttrs.Tolerations,
+					InitContainers:     nodeAttrs.InitContainers,
 					ImagePullSecrets:   rc.Spec.ImagePullSecrets,
 					Containers: []corev1.Container{
 						{
@@ -119,7 +119,7 @@ func NewDeployment(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Deploymen
 							Ports:           ports,
 							Env:             defaultEnv,
 							VolumeMounts:    volumeMounts,
-							Resources:       resources,
+							Resources:       nodeAttrs.Resources,
 							LivenessProbe: &corev1.Probe{
 								Handler: corev1.Handler{
 									TCPSocket: &corev1.TCPSocketAction{
@@ -189,10 +189,10 @@ func processPorts(rc *dcv1alpha1.RayCluster, comp Component) []corev1.ContainerP
 	return ports
 }
 
-func processLabels(rc *dcv1alpha1.RayCluster, comp Component) map[string]string {
+func processLabels(rc *dcv1alpha1.RayCluster, comp Component, extraLabels map[string]string) map[string]string {
 	labels := MetadataLabelsWithComponent(rc, comp)
-	if rc.Spec.Labels != nil {
-		labels = util.MergeStringMaps(rc.Spec.Labels, labels)
+	if extraLabels != nil {
+		labels = util.MergeStringMaps(extraLabels, labels)
 	}
 
 	return labels

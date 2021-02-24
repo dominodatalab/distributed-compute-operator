@@ -39,7 +39,7 @@ func NewHorizontalPodAutoscaler(rc *dcv1alpha1.RayCluster) *autoscalingv2beta2.H
 				Kind:       scaleTargetKind,
 				Name:       InstanceObjectName(rc.Name, ComponentWorker),
 			},
-			MinReplicas: pointer.Int32Ptr(rc.Spec.WorkerReplicas),
+			MinReplicas: pointer.Int32Ptr(rc.Spec.Worker.Replicas),
 			MaxReplicas: rc.Spec.Autoscaling.MaxReplicas,
 			Metrics: []autoscalingv2beta2.MetricSpec{
 				{

@@ -326,8 +326,15 @@ func testCommonFeatures(t *testing.T, comp Component) {
 
 	t.Run("extra_labels", func(t *testing.T) {
 		rc := rayClusterFixture()
-		rc.Spec.Labels = map[string]string{
+
+		expected := map[string]string{
 			"thou": "shalt write tests",
+		}
+		switch comp {
+		case ComponentHead:
+			rc.Spec.Head.Labels = expected
+		case ComponentWorker:
+			rc.Spec.Worker.Labels = expected
 		}
 
 		actual, err := NewDeployment(rc, comp)
@@ -343,64 +350,70 @@ func testCommonFeatures(t *testing.T, comp Component) {
 
 	t.Run("annotations", func(t *testing.T) {
 		rc := rayClusterFixture()
-		rc.Spec.Annotations = map[string]string{
+
+		expected := map[string]string{
 			"dominodatalab.com/inject-tooling": "true",
+		}
+		switch comp {
+		case ComponentHead:
+			rc.Spec.Head.Annotations = expected
+		case ComponentWorker:
+			rc.Spec.Worker.Annotations = expected
 		}
 
 		actual, err := NewDeployment(rc, comp)
 		require.NoError(t, err)
 
-		assert.Equal(t, rc.Spec.Annotations, actual.Spec.Template.Annotations)
+		assert.Equal(t, expected, actual.Spec.Template.Annotations)
 	})
 
 	t.Run("volumes_and_mounts", func(t *testing.T) {
 		rc := rayClusterFixture()
-		rc.Spec.Volumes = []corev1.Volume{
+
+		expectedVols := []corev1.Volume{
 			{
 				Name: "extra-vol",
 			},
 		}
-		rc.Spec.VolumeMounts = []corev1.VolumeMount{
+		expectedVolMounts := []corev1.VolumeMount{
 			{
 				Name: "extra-vol-mount",
 			},
+		}
+		switch comp {
+		case ComponentHead:
+			rc.Spec.Head.Volumes = expectedVols
+			rc.Spec.Head.VolumeMounts = expectedVolMounts
+		case ComponentWorker:
+			rc.Spec.Worker.Volumes = expectedVols
+			rc.Spec.Worker.VolumeMounts = expectedVolMounts
 		}
 
 		actual, err := NewDeployment(rc, comp)
 		require.NoError(t, err)
 
-		assert.Subset(t, actual.Spec.Template.Spec.Volumes, rc.Spec.Volumes)
-		assert.Subset(t, actual.Spec.Template.Spec.Containers[0].VolumeMounts, rc.Spec.VolumeMounts)
+		assert.Subset(t, actual.Spec.Template.Spec.Volumes, expectedVols)
+		assert.Subset(t, actual.Spec.Template.Spec.Containers[0].VolumeMounts, expectedVolMounts)
 	})
 
 	t.Run("resource_requirements", func(t *testing.T) {
 		rc := rayClusterFixture()
 
-		var expected corev1.ResourceRequirements
-		if comp == ComponentHead {
-			rc.Spec.HeadResources = corev1.ResourceRequirements{
-				Limits: corev1.ResourceList{
-					corev1.ResourceCPU:    resource.MustParse("1"),
-					corev1.ResourceMemory: resource.MustParse("1Gi"),
-				},
-				Requests: corev1.ResourceList{
-					corev1.ResourceCPU:    resource.MustParse("500m"),
-					corev1.ResourceMemory: resource.MustParse("512Mi"),
-				},
-			}
-			expected = rc.Spec.HeadResources
-		} else {
-			rc.Spec.WorkerResources = corev1.ResourceRequirements{
-				Limits: corev1.ResourceList{
-					corev1.ResourceCPU:    resource.MustParse("500m"),
-					corev1.ResourceMemory: resource.MustParse("512Mi"),
-				},
-				Requests: corev1.ResourceList{
-					corev1.ResourceCPU:    resource.MustParse("250m"),
-					corev1.ResourceMemory: resource.MustParse("256Mi"),
-				},
-			}
-			expected = rc.Spec.WorkerResources
+		expected := corev1.ResourceRequirements{
+			Limits: corev1.ResourceList{
+				corev1.ResourceCPU:    resource.MustParse("1"),
+				corev1.ResourceMemory: resource.MustParse("1Gi"),
+			},
+			Requests: corev1.ResourceList{
+				corev1.ResourceCPU:    resource.MustParse("500m"),
+				corev1.ResourceMemory: resource.MustParse("512Mi"),
+			},
+		}
+		switch comp {
+		case ComponentHead:
+			rc.Spec.Head.Resources = expected
+		case ComponentWorker:
+			rc.Spec.Worker.Resources = expected
 		}
 
 		actual, err := NewDeployment(rc, comp)
@@ -411,19 +424,27 @@ func testCommonFeatures(t *testing.T, comp Component) {
 
 	t.Run("node_selector", func(t *testing.T) {
 		rc := rayClusterFixture()
-		rc.Spec.NodeSelector = map[string]string{
+
+		expected := map[string]string{
 			"nodeType": "gpu",
+		}
+		switch comp {
+		case ComponentHead:
+			rc.Spec.Head.NodeSelector = expected
+		case ComponentWorker:
+			rc.Spec.Worker.NodeSelector = expected
 		}
 
 		actual, err := NewDeployment(rc, comp)
 		require.NoError(t, err)
 
-		assert.Equal(t, rc.Spec.NodeSelector, actual.Spec.Template.Spec.NodeSelector)
+		assert.Equal(t, expected, actual.Spec.Template.Spec.NodeSelector)
 	})
 
 	t.Run("affinity", func(t *testing.T) {
 		rc := rayClusterFixture()
-		rc.Spec.Affinity = &corev1.Affinity{
+
+		expected := &corev1.Affinity{
 			PodAntiAffinity: &corev1.PodAntiAffinity{
 				PreferredDuringSchedulingIgnoredDuringExecution: []corev1.WeightedPodAffinityTerm{
 					{
@@ -446,16 +467,23 @@ func testCommonFeatures(t *testing.T, comp Component) {
 				},
 			},
 		}
+		switch comp {
+		case ComponentHead:
+			rc.Spec.Head.Affinity = expected
+		case ComponentWorker:
+			rc.Spec.Worker.Affinity = expected
+		}
 
 		actual, err := NewDeployment(rc, comp)
 		require.NoError(t, err)
 
-		assert.Equal(t, rc.Spec.Affinity, actual.Spec.Template.Spec.Affinity)
+		assert.Equal(t, expected, actual.Spec.Template.Spec.Affinity)
 	})
 
 	t.Run("tolerations", func(t *testing.T) {
 		rc := rayClusterFixture()
-		rc.Spec.Tolerations = []corev1.Toleration{
+
+		expected := []corev1.Toleration{
 			{
 				Key:      "test-key",
 				Value:    "test-value",
@@ -463,24 +491,37 @@ func testCommonFeatures(t *testing.T, comp Component) {
 				Operator: corev1.TolerationOpEqual,
 			},
 		}
-
-		actual, err := NewDeployment(rc, comp)
-		require.NoError(t, err)
-
-		assert.Equal(t, rc.Spec.Tolerations, actual.Spec.Template.Spec.Tolerations)
-	})
-
-	t.Run("init_containers", func(t *testing.T) {
-		rc := rayClusterFixture()
-		rc.Spec.InitContainers = []corev1.Container{
-			{
-				Name: "ray-init",
-			},
+		switch comp {
+		case ComponentHead:
+			rc.Spec.Head.Tolerations = expected
+		case ComponentWorker:
+			rc.Spec.Worker.Tolerations = expected
 		}
 
 		actual, err := NewDeployment(rc, comp)
 		require.NoError(t, err)
 
-		assert.Equal(t, rc.Spec.InitContainers, actual.Spec.Template.Spec.InitContainers)
+		assert.Equal(t, expected, actual.Spec.Template.Spec.Tolerations)
+	})
+
+	t.Run("init_containers", func(t *testing.T) {
+		rc := rayClusterFixture()
+
+		expected := []corev1.Container{
+			{
+				Name: "ray-init",
+			},
+		}
+		switch comp {
+		case ComponentHead:
+			rc.Spec.Head.InitContainers = expected
+		case ComponentWorker:
+			rc.Spec.Worker.InitContainers = expected
+		}
+
+		actual, err := NewDeployment(rc, comp)
+		require.NoError(t, err)
+
+		assert.Equal(t, expected, actual.Spec.Template.Spec.InitContainers)
 	})
 }
