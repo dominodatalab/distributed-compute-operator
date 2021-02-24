@@ -71,9 +71,11 @@ func (r *RayClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 // collectively comprise a Ray cluster. Each resource is controlled by a parent
 // RayCluster object so that full cleanup occurs during a delete operation.
 func (r *RayClusterReconciler) processResources(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
-	sa := ray.NewServiceAccount(rc)
-	if err := r.createOwnedResource(ctx, rc, sa); err != nil {
-		return fmt.Errorf("failed to create service account: %w", err)
+	if rc.Spec.ServiceAccountName == "" {
+		sa := ray.NewServiceAccount(rc)
+		if err := r.createOwnedResource(ctx, rc, sa); err != nil {
+			return fmt.Errorf("failed to create service account: %w", err)
+		}
 	}
 
 	svc := ray.NewHeadService(rc)

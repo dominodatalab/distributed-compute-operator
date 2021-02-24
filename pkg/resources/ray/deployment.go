@@ -83,8 +83,14 @@ func NewDeployment(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Deploymen
 	args := processArgs(rc, comp)
 	ports := processPorts(rc, comp)
 	labels := processLabels(rc, comp, nodeAttrs.Labels)
+	envVars := append(defaultEnv, rc.Spec.EnvVars...)
 	volumes := append(defaultVolumes, nodeAttrs.Volumes...)
 	volumeMounts := append(defaultVolumeMounts, nodeAttrs.VolumeMounts...)
+
+	serviceAccountName := rc.Name
+	if rc.Spec.ServiceAccountName != "" {
+		serviceAccountName = rc.Spec.ServiceAccountName
+	}
 
 	deploy := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -103,12 +109,13 @@ func NewDeployment(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Deploymen
 					Annotations: nodeAttrs.Annotations,
 				},
 				Spec: corev1.PodSpec{
-					ServiceAccountName: rc.Name,
+					ServiceAccountName: serviceAccountName,
 					NodeSelector:       nodeAttrs.NodeSelector,
 					Affinity:           nodeAttrs.Affinity,
 					Tolerations:        nodeAttrs.Tolerations,
 					InitContainers:     nodeAttrs.InitContainers,
 					ImagePullSecrets:   rc.Spec.ImagePullSecrets,
+					SecurityContext:    rc.Spec.PodSecurityContext,
 					Containers: []corev1.Container{
 						{
 							Name:            ApplicationName,
@@ -117,7 +124,7 @@ func NewDeployment(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Deploymen
 							Image:           imageRef,
 							ImagePullPolicy: rc.Spec.Image.PullPolicy,
 							Ports:           ports,
-							Env:             defaultEnv,
+							Env:             envVars,
 							VolumeMounts:    volumeMounts,
 							Resources:       nodeAttrs.Resources,
 							LivenessProbe: &corev1.Probe{

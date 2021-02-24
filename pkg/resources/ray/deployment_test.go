@@ -524,4 +524,41 @@ func testCommonFeatures(t *testing.T, comp Component) {
 
 		assert.Equal(t, expected, actual.Spec.Template.Spec.InitContainers)
 	})
+
+	t.Run("extra_env_vars", func(t *testing.T) {
+		rc := rayClusterFixture()
+		rc.Spec.EnvVars = []corev1.EnvVar{
+			{
+				Name:  "foo",
+				Value: "bar",
+			},
+		}
+
+		actual, err := NewDeployment(rc, comp)
+		require.NoError(t, err)
+
+		assert.Subset(t, actual.Spec.Template.Spec.Containers[0].Env, rc.Spec.EnvVars)
+	})
+
+	t.Run("security_context", func(t *testing.T) {
+		rc := rayClusterFixture()
+		rc.Spec.PodSecurityContext = &corev1.PodSecurityContext{
+			RunAsUser: pointer.Int64Ptr(0),
+		}
+
+		actual, err := NewDeployment(rc, comp)
+		require.NoError(t, err)
+
+		assert.Equal(t, rc.Spec.PodSecurityContext, actual.Spec.Template.Spec.SecurityContext)
+	})
+
+	t.Run("service_account_override", func(t *testing.T) {
+		rc := rayClusterFixture()
+		rc.Spec.ServiceAccountName = "user-managed-sa"
+
+		actual, err := NewDeployment(rc, comp)
+		require.NoError(t, err)
+
+		assert.Equal(t, rc.Spec.ServiceAccountName, actual.Spec.Template.Spec.ServiceAccountName)
+	})
 }

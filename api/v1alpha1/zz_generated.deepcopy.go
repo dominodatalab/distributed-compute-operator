@@ -197,6 +197,11 @@ func (in *RayClusterSpec) DeepCopyInto(out *RayClusterSpec) {
 		*out = new(OCIImageDefinition)
 		**out = **in
 	}
+	if in.ImagePullSecrets != nil {
+		in, out := &in.ImagePullSecrets, &out.ImagePullSecrets
+		*out = make([]v1.LocalObjectReference, len(*in))
+		copy(*out, *in)
+	}
 	if in.Autoscaling != nil {
 		in, out := &in.Autoscaling, &out.Autoscaling
 		*out = new(Autoscaling)
@@ -225,10 +230,17 @@ func (in *RayClusterSpec) DeepCopyInto(out *RayClusterSpec) {
 			}
 		}
 	}
-	if in.ImagePullSecrets != nil {
-		in, out := &in.ImagePullSecrets, &out.ImagePullSecrets
-		*out = make([]v1.LocalObjectReference, len(*in))
-		copy(*out, *in)
+	if in.PodSecurityContext != nil {
+		in, out := &in.PodSecurityContext, &out.PodSecurityContext
+		*out = new(v1.PodSecurityContext)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.EnvVars != nil {
+		in, out := &in.EnvVars, &out.EnvVars
+		*out = make([]v1.EnvVar, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 	in.Head.DeepCopyInto(&out.Head)
 	in.Worker.DeepCopyInto(&out.Worker)

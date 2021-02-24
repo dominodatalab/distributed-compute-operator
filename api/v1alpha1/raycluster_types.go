@@ -67,6 +67,10 @@ type RayClusterSpec struct {
 	// +kubebuilder:validation:Optional
 	Image *OCIImageDefinition `json:"image"`
 
+	// ImagePullSecrets are references to secrets with credentials to private registries used to pull images.
+	// +kubebuilder:validation:Optional
+	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets"`
+
 	// Autoscaling parameters used to scale up/down ray worker nodes.
 	// +kubebuilder:validation:Optional
 	Autoscaling *Autoscaling `json:"autoscaling"`
@@ -138,9 +142,18 @@ type RayClusterSpec struct {
 	// +kubebuilder:validation:Optional
 	PodSecurityPolicy string `json:"podSecurityPolicy"`
 
-	// ImagePullSecrets are references to secrets with credentials to private registries used to pull images.
+	// PodSecurityContext added to every ray pod.
 	// +kubebuilder:validation:Optional
-	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets"`
+	PodSecurityContext *corev1.PodSecurityContext `json:"podSecurityContext"`
+
+	// ServiceAccountName will disable the creation of a dedicated cluster service account.
+	// The service account referenced by the provided name will be used instead.
+	// +kubebuilder:validation:Optional
+	ServiceAccountName string `json:"serviceAccountName"`
+
+	// EnvVars added to all every ray pod container.
+	// +kubebuilder:validation:Optional
+	EnvVars []corev1.EnvVar `json:"envVars"`
 
 	// Head node configuration parameters.
 	// +kubebuilder:validation:Optional
