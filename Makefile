@@ -66,7 +66,7 @@ manager: generate
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: generate manifests
-	go run ./main.go
+	go run ./main.go start
 
 # Install CRDs into a cluster
 install: manifests kustomize
