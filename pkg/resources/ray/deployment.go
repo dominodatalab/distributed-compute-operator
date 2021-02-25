@@ -167,10 +167,9 @@ func processArgs(rc *dcv1alpha1.RayCluster, comp Component) []string {
 		cmdArgs = append(cmdArgs, fmt.Sprintf("--object-store-memory=%d", *rc.Spec.ObjectStoreMemoryBytes))
 	}
 
-	switch comp {
-	case ComponentHead:
+	if comp == ComponentHead {
 		cmdArgs = addHeadCmdArgs(rc, cmdArgs)
-	case ComponentWorker:
+	} else if comp == ComponentWorker {
 		cmdArgs = addWorkerCmdArgs(rc, cmdArgs)
 	}
 
