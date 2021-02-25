@@ -167,6 +167,10 @@ func processArgs(rc *dcv1alpha1.RayCluster, comp Component) []string {
 		cmdArgs = append(cmdArgs, fmt.Sprintf("--object-store-memory=%d", *rc.Spec.ObjectStoreMemoryBytes))
 	}
 
+	// TODO: the exhaustive linter unveiled a nasty code smell in this set of functions.
+	// 	i think we want to refactor this so that we only check the component "once" in the
+	// 	main routine and leverage a deployment processor type that adheres to a common interface
+	// 	and returns the values based on the implementation (i.e. headDeploymentProcess).
 	if comp == ComponentHead {
 		cmdArgs = addHeadCmdArgs(rc, cmdArgs)
 	} else if comp == ComponentWorker {
