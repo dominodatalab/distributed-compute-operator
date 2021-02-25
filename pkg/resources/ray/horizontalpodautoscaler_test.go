@@ -22,7 +22,7 @@ func TestNewHorizontalPodAutoscaler(t *testing.T) {
 
 		expected := &autoscalingv2beta2.HorizontalPodAutoscaler{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-id",
+				Name:      "test-id-ray-worker",
 				Namespace: "fake-ns",
 				Labels: map[string]string{
 					"app.kubernetes.io/name":       "ray",

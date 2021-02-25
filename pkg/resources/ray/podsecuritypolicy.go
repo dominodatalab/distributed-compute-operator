@@ -16,9 +16,11 @@ var (
 // NewPodSecurityPolicyRBAC generates the role and role binding required to use a pod security policy.
 // The role is bound to the service account used by the ray cluster pods.
 func NewPodSecurityPolicyRBAC(rc *dcv1alpha1.RayCluster) (*rbacv1.Role, *rbacv1.RoleBinding) {
+	name := InstanceObjectName(rc.Name, ComponentNone)
+
 	role := &rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      rc.Name,
+			Name:      name,
 			Namespace: rc.Namespace,
 			Labels:    MetadataLabels(rc),
 		},
@@ -34,7 +36,7 @@ func NewPodSecurityPolicyRBAC(rc *dcv1alpha1.RayCluster) (*rbacv1.Role, *rbacv1.
 
 	binding := &rbacv1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      rc.Name,
+			Name:      name,
 			Namespace: rc.Namespace,
 			Labels:    MetadataLabels(rc),
 		},
@@ -46,7 +48,7 @@ func NewPodSecurityPolicyRBAC(rc *dcv1alpha1.RayCluster) (*rbacv1.Role, *rbacv1.
 		Subjects: []rbacv1.Subject{
 			{
 				Kind:      rbacv1.ServiceAccountKind,
-				Name:      rc.Name,
+				Name:      InstanceObjectName(rc.Name, ComponentNone),
 				Namespace: rc.Namespace,
 			},
 		},

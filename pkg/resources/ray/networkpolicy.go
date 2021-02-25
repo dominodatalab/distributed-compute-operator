@@ -1,8 +1,6 @@
 package ray
 
 import (
-	"fmt"
-
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,7 +19,7 @@ func NewClusterNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.NetworkPol
 
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-cluster", rc.Name),
+			Name:      InstanceObjectName(rc.Name, Component("cluster")),
 			Namespace: rc.Namespace,
 			Labels:    MetadataLabels(rc),
 			Annotations: map[string]string{
@@ -64,7 +62,7 @@ func NewHeadNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.NetworkPolicy
 
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-client", rc.Name),
+			Name:      InstanceObjectName(rc.Name, Component("client")),
 			Namespace: rc.Namespace,
 			Labels:    MetadataLabelsWithComponent(rc, ComponentHead),
 			Annotations: map[string]string{

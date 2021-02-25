@@ -32,9 +32,11 @@ func NewHorizontalPodAutoscaler(rc *dcv1alpha1.RayCluster) *autoscalingv2beta2.H
 		}
 	}
 
+	name := InstanceObjectName(rc.Name, ComponentWorker)
+
 	return &autoscalingv2beta2.HorizontalPodAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      rc.Name,
+			Name:      name,
 			Namespace: rc.Namespace,
 			Labels:    MetadataLabels(rc),
 		},
@@ -42,7 +44,7 @@ func NewHorizontalPodAutoscaler(rc *dcv1alpha1.RayCluster) *autoscalingv2beta2.H
 			ScaleTargetRef: autoscalingv2beta2.CrossVersionObjectReference{
 				APIVersion: appsv1.SchemeGroupVersion.String(),
 				Kind:       scaleTargetKind,
-				Name:       InstanceObjectName(rc.Name, ComponentWorker),
+				Name:       name,
 			},
 			MinReplicas: minReplicas,
 			MaxReplicas: rc.Spec.Autoscaling.MaxReplicas,

@@ -7,6 +7,7 @@ import (
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 )
 
+// rayClusterFixture should be used for all ray unit testing.
 func rayClusterFixture() *dcv1alpha1.RayCluster {
 	return &dcv1alpha1.RayCluster{
 		ObjectMeta: metav1.ObjectMeta{

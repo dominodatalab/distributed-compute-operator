@@ -16,7 +16,7 @@ func TestNewClusterNetworkPolicy(t *testing.T) {
 
 	expected := &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-id-cluster",
+			Name:      "test-id-ray-cluster",
 			Namespace: "fake-ns",
 			Labels: map[string]string{
 				"app.kubernetes.io/name":       "ray",
@@ -71,7 +71,7 @@ func TestNewHeadNetworkPolicy(t *testing.T) {
 	dashboardPort := intstr.FromInt(8265)
 	expected := &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-id-client",
+			Name:      "test-id-ray-client",
 			Namespace: "fake-ns",
 			Labels: map[string]string{
 				"app.kubernetes.io/name":       "ray",
