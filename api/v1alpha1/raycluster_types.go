@@ -54,6 +54,9 @@ type RayClusterWorker struct {
 	RayClusterNode `json:",inline"`
 
 	// Replicas configures the total number of workers in the cluster.
+	// This field behaves differently when Autoscaling is enabled. If Autoscaling.MinReplicas is unspecified, then the
+	// minimum number of replicas will be set to this value. Additionally, you can specify an "initial cluster size" by
+	// setting this field to some value above the minimum number of replicas.
 	// +kubebuilder:default=1
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=1

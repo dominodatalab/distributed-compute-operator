@@ -4,8 +4,13 @@ import corev1 "k8s.io/api/core/v1"
 
 // Autoscaling configuration for scalable workloads.
 type Autoscaling struct {
+	// MinReplicas is the lower limit for the number of replicas to which the autoscaler can scale down.
+	// This value must be greater than zero and less than the MaxReplicas.
+	// +kubebuilder:validation:Optional
+	MinReplicas *int32 `json:"minReplicas"`
+
 	// MaxReplicas is the upper limit for the number of replicas to which the autoscaler can scale up.
-	// It cannot be less than the replica count for your workload.
+	// This value cannot be less than the replica count for your workload.
 	MaxReplicas int32 `json:"maxReplicas"`
 
 	// AverageUtilization is the target value of the average of the resource metric across all relevant pods.

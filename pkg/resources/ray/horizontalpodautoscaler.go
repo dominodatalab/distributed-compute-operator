@@ -18,6 +18,11 @@ const scaleTargetKind = "Deployment"
 // The metrics-server needs to be launched separately and the worker deployment
 // requires cpu resource requests in order for this object to have any effect.
 func NewHorizontalPodAutoscaler(rc *dcv1alpha1.RayCluster) *autoscalingv2beta2.HorizontalPodAutoscaler {
+	minReplicas := pointer.Int32Ptr(rc.Spec.Worker.Replicas)
+	if rc.Spec.Autoscaling.MinReplicas != nil {
+		minReplicas = rc.Spec.Autoscaling.MinReplicas
+	}
+
 	var behavior *autoscalingv2beta2.HorizontalPodAutoscalerBehavior
 	if rc.Spec.Autoscaling.ScaleDownStabilizationWindowSeconds != nil {
 		behavior = &autoscalingv2beta2.HorizontalPodAutoscalerBehavior{
@@ -39,7 +44,7 @@ func NewHorizontalPodAutoscaler(rc *dcv1alpha1.RayCluster) *autoscalingv2beta2.H
 				Kind:       scaleTargetKind,
 				Name:       InstanceObjectName(rc.Name, ComponentWorker),
 			},
-			MinReplicas: pointer.Int32Ptr(rc.Spec.Worker.Replicas),
+			MinReplicas: minReplicas,
 			MaxReplicas: rc.Spec.Autoscaling.MaxReplicas,
 			Metrics: []autoscalingv2beta2.MetricSpec{
 				{

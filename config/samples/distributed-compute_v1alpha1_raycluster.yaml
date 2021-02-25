@@ -18,6 +18,7 @@ spec:
 
 #  # enable autoscaling (worker cpu requests also required)
 #  autoscaling:
+#    minReplicas: 1
 #    maxReplicas: 5
 #    averageUtilization: 50
 #    scaleDownStabilizationWindowSeconds: 60
