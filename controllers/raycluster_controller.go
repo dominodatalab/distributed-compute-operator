@@ -3,6 +3,8 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"sort"
 
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
@@ -29,6 +31,18 @@ type RayClusterReconciler struct {
 	Scheme *runtime.Scheme
 }
 
+// SetupWithManager creates and registers this controller with the manager.
+func (r *RayClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&dcv1alpha1.RayCluster{}).
+		Owns(&corev1.Service{}).
+		Owns(&corev1.ServiceAccount{}).
+		Owns(&appsv1.Deployment{}).
+		Owns(&networkingv1.NetworkPolicy{}).
+		Owns(&autoscalingv2beta2.HorizontalPodAutoscaler{}).
+		Complete(r)
+}
+
 // +kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=rayclusters,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=rayclusters/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=rayclusters/finalizers,verbs=update
@@ -53,19 +67,12 @@ func (r *RayClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
-	return ctrl.Result{}, nil
-}
+	if err := r.updateStatus(ctx, rc); err != nil {
+		log.Error(err, "Failed to update cluster status")
+		return ctrl.Result{}, err
+	}
 
-// SetupWithManager sets up the controller with the Manager.
-func (r *RayClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&dcv1alpha1.RayCluster{}).
-		Owns(&corev1.Service{}).
-		Owns(&corev1.ServiceAccount{}).
-		Owns(&appsv1.Deployment{}).
-		Owns(&networkingv1.NetworkPolicy{}).
-		Owns(&autoscalingv2beta2.HorizontalPodAutoscaler{}).
-		Complete(r)
+	return ctrl.Result{}, nil
 }
 
 // reconcileResources manages the creation and updates of resources that
@@ -260,6 +267,34 @@ func (r *RayClusterReconciler) deleteIfExists(ctx context.Context, objs ...clien
 		}
 		if err = r.Delete(ctx, obj); err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+// updateStatus with a list of pods from both the head and worker deployments.
+func (r *RayClusterReconciler) updateStatus(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
+	podList := &corev1.PodList{}
+	listOpts := []client.ListOption{
+		client.InNamespace(rc.Namespace),
+		client.MatchingLabels(ray.MetadataLabels(rc)),
+	}
+	if err := r.List(ctx, podList, listOpts...); err != nil {
+		return fmt.Errorf("cannot list ray pods: %w", err)
+	}
+
+	var podNames []string
+	for _, pod := range podList.Items {
+		podNames = append(podNames, pod.Name)
+	}
+	sort.Strings(podNames)
+
+	if !reflect.DeepEqual(podNames, rc.Status.Nodes) {
+		rc.Status.Nodes = podNames
+
+		if err := r.Status().Update(ctx, rc); err != nil {
+			return fmt.Errorf("cannot update ray status nodes: %w", err)
 		}
 	}
 
