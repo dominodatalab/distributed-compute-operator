@@ -90,6 +90,8 @@ func (r *RayClusterReconciler) reconcileResources(ctx context.Context, rc *dcv1a
 	return r.reconcileDeployments(ctx, rc)
 }
 
+// reconcileServiceAccount creates a new dedicated service account for a Ray
+// cluster unless a different service account name is provided in the spec.
 func (r *RayClusterReconciler) reconcileServiceAccount(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
 	if rc.Spec.ServiceAccountName != "" {
 		return nil
@@ -103,10 +105,30 @@ func (r *RayClusterReconciler) reconcileServiceAccount(ctx context.Context, rc *
 	return nil
 }
 
+// reconcileHeadService create a service that points to the head Ray pod and
+// applies updates when the parent CR changes.
 func (r *RayClusterReconciler) reconcileHeadService(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
 	svc := ray.NewHeadService(rc)
-	if err := r.createOwnedResource(ctx, rc, svc); err != nil {
-		return fmt.Errorf("failed to create head service: %w", err)
+	found := &corev1.Service{}
+	err := r.Get(ctx, types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, found)
+
+	// create when missing
+	if apierrors.IsNotFound(err) {
+		if err = ctrl.SetControllerReference(rc, svc, r.Scheme); err != nil {
+			return err
+		}
+
+		return r.Create(ctx, svc)
+	}
+
+	// return unexpected errors
+	if err != nil {
+		return err
+	}
+
+	// update when changed
+	if updated := ray.EnsureHeadService(rc, found); updated {
+		return r.Update(ctx, found)
 	}
 
 	return nil
