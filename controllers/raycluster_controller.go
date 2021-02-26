@@ -13,6 +13,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -22,6 +23,13 @@ import (
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/ray"
+)
+
+const LastAppliedConfig = "distributed-compute-operator.dominodatalab.com/last-applied"
+
+var (
+	PatchAnnotator = patch.NewAnnotator(LastAppliedConfig)
+	PatchMaker     = patch.NewPatchMaker(PatchAnnotator)
 )
 
 // RayClusterReconciler reconciles RayCluster objects.
@@ -35,11 +43,27 @@ type RayClusterReconciler struct {
 func (r *RayClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&dcv1alpha1.RayCluster{}).
-		Owns(&corev1.Service{}).
-		Owns(&corev1.ServiceAccount{}).
-		Owns(&appsv1.Deployment{}).
-		Owns(&networkingv1.NetworkPolicy{}).
-		Owns(&autoscalingv2beta2.HorizontalPodAutoscaler{}).
+		Owns(&corev1.Service{
+			TypeMeta: metav1.TypeMeta{APIVersion: "v1", Kind: "Service"},
+		}).
+		Owns(&corev1.ServiceAccount{
+			TypeMeta: metav1.TypeMeta{APIVersion: "v1", Kind: "ServiceAccount"},
+		}).
+		Owns(&appsv1.Deployment{
+			TypeMeta: metav1.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"},
+		}).
+		Owns(&rbacv1.Role{
+			TypeMeta: metav1.TypeMeta{APIVersion: "rbac.authorization.k8s.io/v1", Kind: "Role"},
+		}).
+		Owns(&rbacv1.RoleBinding{
+			TypeMeta: metav1.TypeMeta{APIVersion: "rbac.authorization.k8s.io/v1", Kind: "RoleBinding"},
+		}).
+		Owns(&networkingv1.NetworkPolicy{
+			TypeMeta: metav1.TypeMeta{APIVersion: "networking.k8s.io/v1", Kind: "NetworkPolicy"},
+		}).
+		Owns(&autoscalingv2beta2.HorizontalPodAutoscaler{
+			TypeMeta: metav1.TypeMeta{APIVersion: "autoscaling/v2beta2", Kind: "HorizontalPodAutoscaler"},
+		}).
 		Complete(r)
 }
 
@@ -67,6 +91,10 @@ func (r *RayClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
+	// NOTE: this func will error out during certain update events because of
+	// 	generation version conflicts. the desired state is eventually achieved
+	// 	but this produces a large amount of noise in the logs. we should figure
+	//  out how to remove these errors.
 	if err := r.updateStatus(ctx, rc); err != nil {
 		log.Error(err, "Failed to update cluster status")
 		return ctrl.Result{}, err
@@ -224,7 +252,7 @@ func (r *RayClusterReconciler) createOrUpdateOwnedResource(ctx context.Context, 
 	err := r.Get(ctx, client.ObjectKeyFromObject(controlled), found)
 
 	if apierrors.IsNotFound(err) {
-		if err = patch.DefaultAnnotator.SetLastAppliedAnnotation(controlled); err != nil {
+		if err = PatchAnnotator.SetLastAppliedAnnotation(controlled); err != nil {
 			return err
 		}
 
@@ -234,28 +262,28 @@ func (r *RayClusterReconciler) createOrUpdateOwnedResource(ctx context.Context, 
 		return err
 	}
 
-	patchResult, err := patch.DefaultPatchMaker.Calculate(found, controlled, patch.IgnoreStatusFields())
+	patchResult, err := PatchMaker.Calculate(found, controlled, patch.IgnoreStatusFields())
 	if err != nil {
 		return err
 	}
-	if !patchResult.IsEmpty() {
-		if err = patch.DefaultAnnotator.SetLastAppliedAnnotation(controlled); err != nil {
-			return err
-		}
-		controlled.SetResourceVersion(found.GetResourceVersion())
-
-		if modified, ok := controlled.(*corev1.Service); ok {
-			current := found.(*corev1.Service)
-			modified.Spec.ClusterIP = current.Spec.ClusterIP
-		}
-
-		return r.Update(ctx, controlled)
+	if patchResult.IsEmpty() {
+		return nil
 	}
 
-	return nil
+	if err = PatchAnnotator.SetLastAppliedAnnotation(controlled); err != nil {
+		return err
+	}
+	controlled.SetResourceVersion(found.GetResourceVersion())
+
+	if modified, ok := controlled.(*corev1.Service); ok {
+		current := found.(*corev1.Service)
+		modified.Spec.ClusterIP = current.Spec.ClusterIP
+	}
+
+	return r.Update(ctx, controlled)
 }
 
-// deleteIfExists
+// deleteIfExists will delete one or more Kubernetes objects if they exist.
 func (r *RayClusterReconciler) deleteIfExists(ctx context.Context, objs ...client.Object) error {
 	for _, obj := range objs {
 		err := r.Get(ctx, client.ObjectKeyFromObject(obj), obj)
@@ -290,12 +318,13 @@ func (r *RayClusterReconciler) updateStatus(ctx context.Context, rc *dcv1alpha1.
 	}
 	sort.Strings(podNames)
 
-	if !reflect.DeepEqual(podNames, rc.Status.Nodes) {
-		rc.Status.Nodes = podNames
+	if reflect.DeepEqual(podNames, rc.Status.Nodes) {
+		return nil
+	}
 
-		if err := r.Status().Update(ctx, rc); err != nil {
-			return fmt.Errorf("cannot update ray status nodes: %w", err)
-		}
+	rc.Status.Nodes = podNames
+	if err := r.Status().Update(ctx, rc); err != nil {
+		return fmt.Errorf("cannot update ray status nodes: %w", err)
 	}
 
 	return nil
