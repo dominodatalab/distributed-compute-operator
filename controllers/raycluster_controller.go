@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
@@ -98,63 +99,52 @@ func (r *RayClusterReconciler) reconcileServiceAccount(ctx context.Context, rc *
 	}
 
 	sa := ray.NewServiceAccount(rc)
-	if err := r.createOwnedResource(ctx, rc, sa); err != nil {
-		return fmt.Errorf("failed to create service account: %w", err)
+	if err := r.createOrUpdateOwnedResource(ctx, rc, sa); err != nil {
+		return fmt.Errorf("failed to reconcile service account: %w", err)
 	}
 
 	return nil
 }
 
-// reconcileHeadService create a service that points to the head Ray pod and
+// reconcileHeadService creates a service that points to the head Ray pod and
 // applies updates when the parent CR changes.
 func (r *RayClusterReconciler) reconcileHeadService(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
 	svc := ray.NewHeadService(rc)
-	found := &corev1.Service{}
-	err := r.Get(ctx, types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, found)
-
-	// create when missing
-	if apierrors.IsNotFound(err) {
-		if err = ctrl.SetControllerReference(rc, svc, r.Scheme); err != nil {
-			return err
-		}
-
-		return r.Create(ctx, svc)
-	}
-
-	// return unexpected errors
-	if err != nil {
-		return err
-	}
-
-	// update when changed
-	if updated := ray.EnsureHeadService(rc, found); updated {
-		return r.Update(ctx, found)
+	if err := r.createOrUpdateOwnedResource(ctx, rc, svc); err != nil {
+		return fmt.Errorf("failed to reconcile head service: %w", err)
 	}
 
 	return nil
 }
 
+// reconcileNetworkPolicies optionally creates network policies that control
+// traffic flow between cluster nodes and external clients.
 func (r RayClusterReconciler) reconcileNetworkPolicies(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
+	headNetpol := ray.NewHeadNetworkPolicy(rc)
+	clusterNetpol := ray.NewClusterNetworkPolicy(rc)
+
 	if !rc.Spec.EnableNetworkPolicy {
-		return nil
+		return r.deleteIfExists(ctx, headNetpol, clusterNetpol)
 	}
 
-	netpol := ray.NewClusterNetworkPolicy(rc)
-	if err := r.createOwnedResource(ctx, rc, netpol); err != nil {
-		return fmt.Errorf("failed to create cluster network policy: %w", err)
+	if err := r.createOrUpdateOwnedResource(ctx, rc, clusterNetpol); err != nil {
+		return fmt.Errorf("failed to reconcile cluster network policy: %w", err)
 	}
 
-	netpol = ray.NewHeadNetworkPolicy(rc)
-	if err := r.createOwnedResource(ctx, rc, netpol); err != nil {
-		return fmt.Errorf("failed to create head network policy: %w", err)
+	if err := r.createOrUpdateOwnedResource(ctx, rc, headNetpol); err != nil {
+		return fmt.Errorf("failed to reconcile head network policy: %w", err)
 	}
 
 	return nil
 }
 
+// reconcilePodSecurityPolicyRBAC optionally creates a role and role binding
+// that allows the Ray pods to "use" the specified pod security policy.
 func (r *RayClusterReconciler) reconcilePodSecurityPolicyRBAC(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
+	role, binding := ray.NewPodSecurityPolicyRBAC(rc)
+
 	if rc.Spec.PodSecurityPolicy == "" {
-		return nil
+		return r.deleteIfExists(ctx, role, binding)
 	}
 
 	err := r.Get(ctx, types.NamespacedName{Name: rc.Spec.PodSecurityPolicy}, &policyv1beta1.PodSecurityPolicy{})
@@ -162,37 +152,40 @@ func (r *RayClusterReconciler) reconcilePodSecurityPolicyRBAC(ctx context.Contex
 		return fmt.Errorf("cannot verify pod security policy: %w", err)
 	}
 
-	role, binding := ray.NewPodSecurityPolicyRBAC(rc)
-
-	if err := r.createOwnedResource(ctx, rc, role); err != nil {
+	if err := r.createOrUpdateOwnedResource(ctx, rc, role); err != nil {
 		return fmt.Errorf("failed to create role: %w", err)
 	}
-	if err := r.createOwnedResource(ctx, rc, binding); err != nil {
+	if err := r.createOrUpdateOwnedResource(ctx, rc, binding); err != nil {
 		return fmt.Errorf("failed to create role binding: %w", err)
 	}
 
 	return nil
 }
 
+// reconcileAutoscaler optionally creates a horizontal pod autoscaler that
+// targets Ray worker pods.
 func (r *RayClusterReconciler) reconcileAutoscaler(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
+	hpa := ray.NewHorizontalPodAutoscaler(rc)
+
 	if rc.Spec.Autoscaling == nil {
-		return nil
+		return r.deleteIfExists(ctx, hpa)
 	}
 
-	hpa := ray.NewHorizontalPodAutoscaler(rc)
-	if err := r.createOwnedResource(ctx, rc, hpa); err != nil {
-		return fmt.Errorf("failed to create horizontal pod autoscaler: %w", err)
+	if err := r.createOrUpdateOwnedResource(ctx, rc, hpa); err != nil {
+		return fmt.Errorf("failed to reconcile horizontal pod autoscaler: %w", err)
 	}
 
 	return nil
 }
 
+// reconcileDeployments creates separate Ray head and worker deployments that
+// will collectively comprise the execution agents of the cluster.
 func (r *RayClusterReconciler) reconcileDeployments(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
 	head, err := ray.NewDeployment(rc, ray.ComponentHead)
 	if err != nil {
 		return err
 	}
-	if err = r.createOwnedResource(ctx, rc, head); err != nil {
+	if err = r.createOrUpdateOwnedResource(ctx, rc, head); err != nil {
 		return fmt.Errorf("failed to create head deployment: %w", err)
 	}
 
@@ -200,29 +193,75 @@ func (r *RayClusterReconciler) reconcileDeployments(ctx context.Context, rc *dcv
 	if err != nil {
 		return err
 	}
-	if err = r.createOwnedResource(ctx, rc, worker); err != nil {
+	if err = r.createOrUpdateOwnedResource(ctx, rc, worker); err != nil {
 		return fmt.Errorf("failed to create worker deployment: %w", err)
 	}
 
 	return nil
 }
 
-// createOwnedResource should be used to create namespace-scoped object.
+// createOrUpdateOwnedResource should be used to manage the lifecycle of namespace-scoped objects.
+//
 // The CR will become the "owner" of the "controlled" object and cleanup will
 // occur automatically when the CR is deleted.
-func (r *RayClusterReconciler) createOwnedResource(ctx context.Context, owner metav1.Object, controlled client.Object) error {
-	objKey := types.NamespacedName{Name: controlled.GetName(), Namespace: controlled.GetNamespace()}
-	err := r.Get(ctx, objKey, controlled)
-
-	if err == nil {
-		return nil
-	}
-	if !apierrors.IsNotFound(err) {
-		return err
-	}
+//
+// The controller resource will be created if it's missing.
+// The controller resource will be updated if any changes are applicable.
+// Any unexpected api errors will be reported.
+func (r *RayClusterReconciler) createOrUpdateOwnedResource(ctx context.Context, owner metav1.Object, controlled client.Object) error {
 	if err := ctrl.SetControllerReference(owner, controlled, r.Scheme); err != nil {
 		return err
 	}
 
-	return r.Create(ctx, controlled)
+	found := controlled.DeepCopyObject().(client.Object)
+	err := r.Get(ctx, client.ObjectKeyFromObject(controlled), found)
+
+	if apierrors.IsNotFound(err) {
+		if err = patch.DefaultAnnotator.SetLastAppliedAnnotation(controlled); err != nil {
+			return err
+		}
+
+		return r.Create(ctx, controlled)
+	}
+	if err != nil {
+		return err
+	}
+
+	patchResult, err := patch.DefaultPatchMaker.Calculate(found, controlled, patch.IgnoreStatusFields())
+	if err != nil {
+		return err
+	}
+	if !patchResult.IsEmpty() {
+		if err = patch.DefaultAnnotator.SetLastAppliedAnnotation(controlled); err != nil {
+			return err
+		}
+		controlled.SetResourceVersion(found.GetResourceVersion())
+
+		if modified, ok := controlled.(*corev1.Service); ok {
+			current := found.(*corev1.Service)
+			modified.Spec.ClusterIP = current.Spec.ClusterIP
+		}
+
+		return r.Update(ctx, controlled)
+	}
+
+	return nil
+}
+
+// deleteIfExists
+func (r *RayClusterReconciler) deleteIfExists(ctx context.Context, objs ...client.Object) error {
+	for _, obj := range objs {
+		err := r.Get(ctx, client.ObjectKeyFromObject(obj), obj)
+		if apierrors.IsNotFound(err) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if err = r.Delete(ctx, obj); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

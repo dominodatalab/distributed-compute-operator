@@ -19,7 +19,7 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .spec.workerReplicas
+    - jsonPath: .spec.worker.replicas
       name: Worker Count
       type: integer
     - jsonPath: .spec.image

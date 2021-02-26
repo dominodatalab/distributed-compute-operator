@@ -3,6 +3,7 @@ module github.com/dominodatalab/distributed-compute-operator
 go 1.16
 
 require (
+	github.com/banzaicloud/k8s-objectmatcher v1.5.1
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/go-logr/logr v0.3.0
 	github.com/onsi/ginkgo v1.14.1

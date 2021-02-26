@@ -10,7 +10,10 @@ import (
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 )
 
-const scaleTargetKind = "Deployment"
+const (
+	scaleTargetKind                 = "Deployment"
+	defaultAverageUtilization int32 = 50
+)
 
 // NewHorizontalPodAutoscaler generates an HPA that targets the ray worker deployment.
 // The Autoscaling config from the spec is used to set max replicas and the target average utilization.
@@ -18,22 +21,29 @@ const scaleTargetKind = "Deployment"
 // The metrics-server needs to be launched separately and the worker deployment
 // requires cpu resource requests in order for this object to have any effect.
 func NewHorizontalPodAutoscaler(rc *dcv1alpha1.RayCluster) *autoscalingv2beta2.HorizontalPodAutoscaler {
-	minReplicas := pointer.Int32Ptr(rc.Spec.Worker.Replicas)
-	if rc.Spec.Autoscaling.MinReplicas != nil {
-		minReplicas = rc.Spec.Autoscaling.MinReplicas
-	}
-
 	var behavior *autoscalingv2beta2.HorizontalPodAutoscalerBehavior
-	if rc.Spec.Autoscaling.ScaleDownStabilizationWindowSeconds != nil {
-		behavior = &autoscalingv2beta2.HorizontalPodAutoscalerBehavior{
-			ScaleDown: &autoscalingv2beta2.HPAScalingRules{
-				StabilizationWindowSeconds: rc.Spec.Autoscaling.ScaleDownStabilizationWindowSeconds,
-			},
+	minReplicas := pointer.Int32Ptr(rc.Spec.Worker.Replicas)
+	maxReplicas := *minReplicas
+	avgUtilization := defaultAverageUtilization
+
+	if autoscaling := rc.Spec.Autoscaling; autoscaling != nil {
+		maxReplicas = autoscaling.MaxReplicas
+		avgUtilization = autoscaling.AverageUtilization
+
+		if autoscaling.MinReplicas != nil {
+			minReplicas = rc.Spec.Autoscaling.MinReplicas
+		}
+
+		if autoscaling.ScaleDownStabilizationWindowSeconds != nil {
+			behavior = &autoscalingv2beta2.HorizontalPodAutoscalerBehavior{
+				ScaleDown: &autoscalingv2beta2.HPAScalingRules{
+					StabilizationWindowSeconds: autoscaling.ScaleDownStabilizationWindowSeconds,
+				},
+			}
 		}
 	}
 
 	name := InstanceObjectName(rc.Name, ComponentWorker)
-
 	return &autoscalingv2beta2.HorizontalPodAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -47,7 +57,7 @@ func NewHorizontalPodAutoscaler(rc *dcv1alpha1.RayCluster) *autoscalingv2beta2.H
 				Name:       name,
 			},
 			MinReplicas: minReplicas,
-			MaxReplicas: rc.Spec.Autoscaling.MaxReplicas,
+			MaxReplicas: maxReplicas,
 			Metrics: []autoscalingv2beta2.MetricSpec{
 				{
 					Type: autoscalingv2beta2.ResourceMetricSourceType,
@@ -55,7 +65,7 @@ func NewHorizontalPodAutoscaler(rc *dcv1alpha1.RayCluster) *autoscalingv2beta2.H
 						Name: corev1.ResourceCPU,
 						Target: autoscalingv2beta2.MetricTarget{
 							Type:               autoscalingv2beta2.UtilizationMetricType,
-							AverageUtilization: pointer.Int32Ptr(rc.Spec.Autoscaling.AverageUtilization),
+							AverageUtilization: pointer.Int32Ptr(avgUtilization),
 						},
 					},
 				},
