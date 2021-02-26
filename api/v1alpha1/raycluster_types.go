@@ -177,7 +177,7 @@ type RayClusterStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:scope=Namespaced,shortName=ray
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Worker Count",type=integer,JSONPath=".spec.workerReplicas"
+// +kubebuilder:printcolumn:name="Worker Count",type=integer,JSONPath=".spec.worker.replicas"
 // +kubebuilder:printcolumn:name="Image",type=string,JSONPath=".spec.image"
 // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=".metadata.creationTimestamp"
 
