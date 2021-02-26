@@ -47,7 +47,7 @@ func (r *RayClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
-	if err := r.processResources(ctx, rc); err != nil {
+	if err := r.reconcileResources(ctx, rc); err != nil {
 		log.Error(err, "Failed to reconcile cluster resources")
 		return ctrl.Result{}, err
 	}
@@ -67,59 +67,102 @@ func (r *RayClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-// processResources manages the creation and updates of resources that
+// reconcileResources manages the creation and updates of resources that
 // collectively comprise a Ray cluster. Each resource is controlled by a parent
 // RayCluster object so that full cleanup occurs during a delete operation.
-func (r *RayClusterReconciler) processResources(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
-	if rc.Spec.ServiceAccountName == "" {
-		sa := ray.NewServiceAccount(rc)
-		if err := r.createOwnedResource(ctx, rc, sa); err != nil {
-			return fmt.Errorf("failed to create service account: %w", err)
-		}
+func (r *RayClusterReconciler) reconcileResources(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
+	if err := r.reconcileServiceAccount(ctx, rc); err != nil {
+		return err
+	}
+	if err := r.reconcileHeadService(ctx, rc); err != nil {
+		return err
+	}
+	if err := r.reconcileNetworkPolicies(ctx, rc); err != nil {
+		return err
+	}
+	if err := r.reconcilePodSecurityPolicyRBAC(ctx, rc); err != nil {
+		return err
+	}
+	if err := r.reconcileAutoscaler(ctx, rc); err != nil {
+		return err
 	}
 
+	return r.reconcileDeployments(ctx, rc)
+}
+
+func (r *RayClusterReconciler) reconcileServiceAccount(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
+	if rc.Spec.ServiceAccountName != "" {
+		return nil
+	}
+
+	sa := ray.NewServiceAccount(rc)
+	if err := r.createOwnedResource(ctx, rc, sa); err != nil {
+		return fmt.Errorf("failed to create service account: %w", err)
+	}
+
+	return nil
+}
+
+func (r *RayClusterReconciler) reconcileHeadService(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
 	svc := ray.NewHeadService(rc)
 	if err := r.createOwnedResource(ctx, rc, svc); err != nil {
 		return fmt.Errorf("failed to create head service: %w", err)
 	}
 
-	if rc.Spec.EnableNetworkPolicy {
-		netpol := ray.NewClusterNetworkPolicy(rc)
-		if err := r.createOwnedResource(ctx, rc, netpol); err != nil {
-			return fmt.Errorf("failed to create cluster network policy: %w", err)
-		}
+	return nil
+}
 
-		netpol = ray.NewHeadNetworkPolicy(rc)
-		if err := r.createOwnedResource(ctx, rc, netpol); err != nil {
-			return fmt.Errorf("failed to create head network policy: %w", err)
-		}
+func (r RayClusterReconciler) reconcileNetworkPolicies(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
+	if !rc.Spec.EnableNetworkPolicy {
+		return nil
 	}
 
-	if rc.Spec.PodSecurityPolicy != "" {
-		err := r.Get(ctx, types.NamespacedName{Name: rc.Spec.PodSecurityPolicy}, &policyv1beta1.PodSecurityPolicy{})
-		if err != nil {
-			return fmt.Errorf("cannot verify pod security policy: %w", err)
-		}
-
-		role, binding := ray.NewPodSecurityPolicyRBAC(rc)
-
-		if err := r.createOwnedResource(ctx, rc, role); err != nil {
-			return fmt.Errorf("failed to create role: %w", err)
-		}
-
-		if err := r.createOwnedResource(ctx, rc, binding); err != nil {
-			return fmt.Errorf("failed to create role binding: %w", err)
-		}
+	netpol := ray.NewClusterNetworkPolicy(rc)
+	if err := r.createOwnedResource(ctx, rc, netpol); err != nil {
+		return fmt.Errorf("failed to create cluster network policy: %w", err)
 	}
 
-	if rc.Spec.Autoscaling != nil {
-		hpa := ray.NewHorizontalPodAutoscaler(rc)
-		if err := r.createOwnedResource(ctx, rc, hpa); err != nil {
-			return fmt.Errorf("failed to create horizontal pod autoscaler: %w", err)
-		}
+	netpol = ray.NewHeadNetworkPolicy(rc)
+	if err := r.createOwnedResource(ctx, rc, netpol); err != nil {
+		return fmt.Errorf("failed to create head network policy: %w", err)
 	}
 
-	return r.reconcileDeployments(ctx, rc)
+	return nil
+}
+
+func (r *RayClusterReconciler) reconcilePodSecurityPolicyRBAC(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
+	if rc.Spec.PodSecurityPolicy == "" {
+		return nil
+	}
+
+	err := r.Get(ctx, types.NamespacedName{Name: rc.Spec.PodSecurityPolicy}, &policyv1beta1.PodSecurityPolicy{})
+	if err != nil {
+		return fmt.Errorf("cannot verify pod security policy: %w", err)
+	}
+
+	role, binding := ray.NewPodSecurityPolicyRBAC(rc)
+
+	if err := r.createOwnedResource(ctx, rc, role); err != nil {
+		return fmt.Errorf("failed to create role: %w", err)
+	}
+	if err := r.createOwnedResource(ctx, rc, binding); err != nil {
+		return fmt.Errorf("failed to create role binding: %w", err)
+	}
+
+	return nil
+}
+
+func (r *RayClusterReconciler) reconcileAutoscaler(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
+	if rc.Spec.Autoscaling == nil {
+		return nil
+	}
+
+	hpa := ray.NewHorizontalPodAutoscaler(rc)
+	if err := r.createOwnedResource(ctx, rc, hpa); err != nil {
+		return fmt.Errorf("failed to create horizontal pod autoscaler: %w", err)
+	}
+
+	return nil
 }
 
 func (r *RayClusterReconciler) reconcileDeployments(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
