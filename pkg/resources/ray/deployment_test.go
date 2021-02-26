@@ -62,7 +62,7 @@ func TestNewDeployment(t *testing.T) {
 							},
 						},
 						Spec: corev1.PodSpec{
-							ServiceAccountName: "test-id",
+							ServiceAccountName: "test-id-ray",
 							Containers: []corev1.Container{
 								{
 									Name:            "ray",
@@ -218,7 +218,7 @@ func TestNewDeployment(t *testing.T) {
 							},
 						},
 						Spec: corev1.PodSpec{
-							ServiceAccountName: "test-id",
+							ServiceAccountName: "test-id-ray",
 							Containers: []corev1.Container{
 								{
 									Name:            "ray",
@@ -296,6 +296,7 @@ func TestNewDeployment(t *testing.T) {
 							},
 						},
 					},
+					Strategy: appsv1.DeploymentStrategy{Type: appsv1.RecreateDeploymentStrategyType},
 				},
 			}
 			assert.Equal(t, expected, actual, "worker deployment not correctly generated")

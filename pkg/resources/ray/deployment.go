@@ -59,15 +59,11 @@ const sharedMemoryVolumeName = "dshm"
 func NewDeployment(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Deployment, error) {
 	var replicas int32
 	var nodeAttrs dcv1alpha1.RayClusterNode
-	var strategy appsv1.DeploymentStrategy
 
 	switch comp {
 	case ComponentHead:
 		replicas = 1
 		nodeAttrs = rc.Spec.Head.RayClusterNode
-		strategy = appsv1.DeploymentStrategy{
-			Type: appsv1.RecreateDeploymentStrategyType,
-		}
 	case ComponentWorker:
 		replicas = rc.Spec.Worker.Replicas
 		nodeAttrs = rc.Spec.Worker.RayClusterNode
@@ -87,7 +83,7 @@ func NewDeployment(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Deploymen
 	volumes := append(defaultVolumes, nodeAttrs.Volumes...)
 	volumeMounts := append(defaultVolumeMounts, nodeAttrs.VolumeMounts...)
 
-	serviceAccountName := rc.Name
+	serviceAccountName := InstanceObjectName(rc.Name, ComponentNone)
 	if rc.Spec.ServiceAccountName != "" {
 		serviceAccountName = rc.Spec.ServiceAccountName
 	}
@@ -146,7 +142,9 @@ func NewDeployment(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Deploymen
 					Volumes: volumes,
 				},
 			},
-			Strategy: strategy,
+			Strategy: appsv1.DeploymentStrategy{
+				Type: appsv1.RecreateDeploymentStrategyType,
+			},
 		},
 	}
 
