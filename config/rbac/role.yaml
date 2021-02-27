@@ -7,28 +7,72 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - distributed-compute.dominodatalab.com
+  - ""
   resources:
-  - rayclusters
+  - pods
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts
+  - services
+  verbs:
+  - create
+  - list
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - create
+  - list
+  - update
+  - watch
+- apiGroups:
+  - autoscaling
+  resources:
+  - horizontalpodautoscalers
   verbs:
   - create
   - delete
-  - get
   - list
-  - patch
   - update
   - watch
 - apiGroups:
   - distributed-compute.dominodatalab.com
   resources:
-  - rayclusters/finalizers
+  - rayclusters
   verbs:
-  - update
+  - list
+  - watch
 - apiGroups:
   - distributed-compute.dominodatalab.com
   resources:
   - rayclusters/status
   verbs:
-  - get
-  - patch
   - update
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - networkpolicies
+  verbs:
+  - create
+  - delete
+  - list
+  - update
+  - watch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings
+  - roles
+  verbs:
+  - create
+  - delete
+  - list
+  - update
+  - watch
