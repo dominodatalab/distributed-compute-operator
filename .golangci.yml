@@ -82,4 +82,8 @@ issues:
         - exhaustive
         - gocyclo
         - gomnd
+        - gosec
         - funlen
+    - source: "^// \\+kubebuilder:.+"
+      linters:
+        - lll

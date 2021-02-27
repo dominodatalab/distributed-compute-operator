@@ -12,7 +12,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	distributedcomputev1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
+	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/controllers"
 	// +kubebuilder:scaffold:imports
 )
@@ -47,6 +47,10 @@ func Start(cfg *Config) error {
 		setupLog.Error(err, "unable to create controller", "controller", "RayCluster")
 		return err
 	}
+	if err = (&dcv1alpha1.RayCluster{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "RayCluster")
+		return err
+	}
 	// +kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("health", healthz.Ping); err != nil {
@@ -69,6 +73,6 @@ func Start(cfg *Config) error {
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	utilruntime.Must(distributedcomputev1alpha1.AddToScheme(scheme))
+	utilruntime.Must(dcv1alpha1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }

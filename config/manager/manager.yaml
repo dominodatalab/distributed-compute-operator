@@ -27,9 +27,11 @@ spec:
       containers:
       - command:
         - /manager
+        - start
         args:
         - --leader-elect
         image: controller:latest
+        imagePullPolicy: IfNotPresent # changed to aid development
         name: manager
         securityContext:
           allowPrivilegeEscalation: false
