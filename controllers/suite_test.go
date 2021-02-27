@@ -15,6 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	distributedcomputev1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
+	"github.com/dominodatalab/distributed-compute-operator/test"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -26,8 +27,11 @@ var k8sClient client.Client
 var testEnv *envtest.Environment
 
 func TestAPIs(t *testing.T) {
-	RegisterFailHandler(Fail)
+	if testing.Short() {
+		t.Skip("skipping controller suite in short mode")
+	}
 
+	RegisterFailHandler(Fail)
 	RunSpecsWithDefaultAndCustomReporters(t,
 		"Controller Suite",
 		[]Reporter{printer.NewlineReporter{}})
@@ -38,12 +42,13 @@ var _ = BeforeSuite(func() {
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths: []string{filepath.Join("..", "config", "crd", "bases")},
+		BinaryAssetsDirectory: test.KubebuilderBinaryAssetsDir(),
+		CRDDirectoryPaths:     []string{filepath.Join("..", "config", "crd", "bases")},
 	}
 
 	var err error
 	cfg, err = testEnv.Start()
-	Expect(err).NotTo(HaveOccurred())
+	Expect(err).NotTo(HaveOccurred(), test.MissingAssetsWarning)
 	Expect(cfg).NotTo(BeNil())
 
 	err = distributedcomputev1alpha1.AddToScheme(scheme.Scheme)

@@ -21,6 +21,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+
+	"github.com/dominodatalab/distributed-compute-operator/test"
 )
 
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
@@ -33,8 +35,11 @@ var ctx context.Context
 var cancel context.CancelFunc
 
 func TestAPIs(t *testing.T) {
-	RegisterFailHandler(Fail)
+	if testing.Short() {
+		t.Skip("skipping webhook suite in short mode")
+	}
 
+	RegisterFailHandler(Fail)
 	RunSpecsWithDefaultAndCustomReporters(t,
 		"Webhook Suite",
 		[]Reporter{printer.NewlineReporter{}})
@@ -47,14 +52,15 @@ var _ = BeforeSuite(func() {
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths: []string{filepath.Join("..", "..", "config", "crd", "bases")},
+		BinaryAssetsDirectory: test.KubebuilderBinaryAssetsDir(),
+		CRDDirectoryPaths:     []string{filepath.Join("..", "..", "config", "crd", "bases")},
 		WebhookInstallOptions: envtest.WebhookInstallOptions{
 			Paths: []string{filepath.Join("..", "..", "config", "webhook")},
 		},
 	}
 
 	cfg, err := testEnv.Start()
-	Expect(err).NotTo(HaveOccurred())
+	Expect(err).NotTo(HaveOccurred(), test.MissingAssetsWarning)
 	Expect(cfg).NotTo(BeNil())
 
 	scheme := runtime.NewScheme()

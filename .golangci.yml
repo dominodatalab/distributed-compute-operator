@@ -84,6 +84,9 @@ issues:
         - gomnd
         - gosec
         - funlen
+    - path: test/test.go
+      linters:
+        - dogsled
     - source: "^// \\+kubebuilder:.+"
       linters:
         - lll
