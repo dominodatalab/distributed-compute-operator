@@ -60,3 +60,31 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Webhook service name
+*/}}
+{{- define "distributed-compute-operator.webhook.service" -}}
+{{ include "distributed-compute-operator.fullname" . }}-webhook-server
+{{- end }}
+
+{{/*
+Webhook certificate CA name
+*/}}
+{{- define "distributed-compute-operator.webhook.issuer" -}}
+{{ include "distributed-compute-operator.fullname" . }}-selfsigned-issuer
+{{- end }}
+
+{{/*
+Webhook certificate name
+*/}}
+{{- define "distributed-compute-operator.webhook.certificate" -}}
+{{ include "distributed-compute-operator.fullname" . }}-webhook
+{{- end }}
+
+{{/*
+Webhook certificate secret name
+*/}}
+{{- define "distributed-compute-operator.webhook.secret" -}}
+{{ include "distributed-compute-operator.fullname" . }}-webhook-cert
+{{- end }}

@@ -1,0 +1,30 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: {{ include "distributed-compute-operator.fullname" . }}
+  labels:
+    {{- include "distributed-compute-operator.labels" . | nindent 4 }}
+  annotations:
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "distributed-compute-operator.webhook.certificate" . }}
+webhooks:
+  - admissionReviewVersions:
+      - v1
+      - v1beta1
+    clientConfig:
+      service:
+        name: {{ include "distributed-compute-operator.webhook.service" . }}
+        namespace: {{ .Release.Namespace }}
+        path: /validate-distributed-compute-dominodatalab-com-v1alpha1-raycluster
+    failurePolicy: Fail
+    name: vraycluster.kb.io
+    rules:
+      - apiGroups:
+          - distributed-compute.dominodatalab.com
+        apiVersions:
+          - v1alpha1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - rayclusters
+    sideEffects: None

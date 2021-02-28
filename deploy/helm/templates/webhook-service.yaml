@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "distributed-compute-operator.webhook.service" . }}
+  labels:
+    {{- include "distributed-compute-operator.labels" . | nindent 4 }}
+spec:
+  ports:
+    - port: 443
+      targetPort: 9443
+  selector:
+    {{- include "distributed-compute-operator.selectorLabels" . | nindent 4 }}

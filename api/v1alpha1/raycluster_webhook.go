@@ -170,7 +170,7 @@ func (r *RayCluster) validateAutoscaler() field.ErrorList {
 			errs = append(errs, field.Invalid(
 				fldPath.Child("maxReplicas"),
 				as.MaxReplicas,
-				"should be greater than minReplicas",
+				"should be greater than spec.autoscaling.minReplicas",
 			))
 		}
 	}

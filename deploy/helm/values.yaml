@@ -2,7 +2,12 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+# Number of controller instances to run
 replicaCount: 1
+
+# If true, CRD resources will be installed/uninstalled as part of the Helm chart release
+# Uninstalling CRD resources will DELETE all related custom resources.
+installCRDs: true
 
 # Controller manager configuration
 config:
@@ -22,8 +27,6 @@ image:
   tag: ""
 
 imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -65,6 +68,5 @@ tolerations: []
 
 affinity: {}
 
-rbac:
-  # Creates RBAC resources required by the manager to manipulate Kubernetes objects
-  enabled: true
+nameOverride: ""
+fullnameOverride: ""

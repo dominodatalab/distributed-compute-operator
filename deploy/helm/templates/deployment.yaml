@@ -53,8 +53,17 @@ spec:
             httpGet:
               path: /readyz
               port: health
+          volumeMounts:
+            - name: webhook-cert
+              readOnly: true
+              mountPath: /tmp/k8s-webhook-server/serving-certs
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: webhook-cert
+          secret:
+            secretName: {{ include "distributed-compute-operator.webhook.secret" . }}
+            defaultMode: 420
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

@@ -1,0 +1,24 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "distributed-compute-operator.webhook.issuer" . }}
+  labels:
+    {{- include "distributed-compute-operator.labels" . | nindent 4 }}
+spec:
+  selfSigned: {}
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "distributed-compute-operator.webhook.certificate" . }}
+  labels:
+    {{- include "distributed-compute-operator.labels" . | nindent 4 }}
+spec:
+  dnsNames:
+    - {{ include "distributed-compute-operator.webhook.service" . }}.{{ .Release.Namespace }}.svc
+    - {{ include "distributed-compute-operator.webhook.service" . }}.{{ .Release.Namespace }}.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: {{ include "distributed-compute-operator.webhook.issuer" . }}
+  secretName: {{ include "distributed-compute-operator.webhook.secret" . }}
