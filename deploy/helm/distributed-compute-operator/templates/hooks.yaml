@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ include "distributed-compute-operator.serviceAccountName" . }}-hook
+  name: {{ include "dco.serviceAccountName" . }}-hook
   labels:
-    {{- include "distributed-compute-operator.labels" . | nindent 4 }}
+    {{- include "dco.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade,post-delete
     "helm.sh/hook-weight": "-3"
@@ -16,7 +16,7 @@ kind: ClusterRole
 metadata:
   name: dominodatalab:operator:distributed-compute-operator
   labels:
-    {{- include "distributed-compute-operator.labels" . | nindent 4 }}
+    {{- include "dco.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade,post-delete
     "helm.sh/hook-weight": "-2"
@@ -38,7 +38,7 @@ kind: ClusterRoleBinding
 metadata:
   name: dominodatalab:operator:distributed-compute-operator
   labels:
-    {{- include "distributed-compute-operator.labels" . | nindent 4 }}
+    {{- include "dco.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade,post-delete
     "helm.sh/hook-weight": "-1"
@@ -49,16 +49,16 @@ roleRef:
   name: dominodatalab:operator:distributed-compute-operator
 subjects:
   - kind: ServiceAccount
-    name: {{ include "distributed-compute-operator.serviceAccountName" . }}-hook
+    name: {{ include "dco.serviceAccountName" . }}-hook
     namespace: {{ .Release.Namespace }}
 
 ---
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "distributed-compute-operator.fullname" . }}-crd-apply
+  name: {{ include "dco.fullname" . }}-crd-apply
   labels:
-    {{- include "distributed-compute-operator.labels" . | nindent 4 }}
+    {{- include "dco.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -67,13 +67,13 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "distributed-compute-operator.selectorLabels" . | nindent 8 }}
+        {{- include "dco.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "distributed-compute-operator.serviceAccountName" . }}-hook
+      serviceAccountName: {{ include "dco.serviceAccountName" . }}-hook
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       restartPolicy: Never
@@ -101,9 +101,9 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "distributed-compute-operator.fullname" . }}-crd-delete
+  name: {{ include "dco.fullname" . }}-crd-delete
   labels:
-    {{- include "distributed-compute-operator.labels" . | nindent 4 }}
+    {{- include "dco.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": post-delete
     "helm.sh/hook-delete-policy": hook-succeeded
@@ -112,13 +112,13 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "distributed-compute-operator.selectorLabels" . | nindent 8 }}
+        {{- include "dco.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "distributed-compute-operator.serviceAccountName" . }}-hook
+      serviceAccountName: {{ include "dco.serviceAccountName" . }}-hook
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       restartPolicy: Never

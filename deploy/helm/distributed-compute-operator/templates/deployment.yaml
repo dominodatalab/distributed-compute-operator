@@ -1,14 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "distributed-compute-operator.fullname" . }}
+  name: {{ include "dco.fullname" . }}
   labels:
-    {{- include "distributed-compute-operator.labels" . | nindent 4 }}
+    {{- include "dco.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      {{- include "distributed-compute-operator.selectorLabels" . | nindent 6 }}
+      {{- include "dco.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -16,13 +16,13 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "distributed-compute-operator.selectorLabels" . | nindent 8 }}
+        {{- include "dco.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "distributed-compute-operator.serviceAccountName" . }}
+      serviceAccountName: {{ include "dco.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -62,7 +62,7 @@ spec:
       volumes:
         - name: webhook-cert
           secret:
-            secretName: {{ include "distributed-compute-operator.webhook.secret" . }}
+            secretName: {{ include "dco.webhook.secret" . }}
             defaultMode: 420
       {{- with .Values.nodeSelector }}
       nodeSelector:

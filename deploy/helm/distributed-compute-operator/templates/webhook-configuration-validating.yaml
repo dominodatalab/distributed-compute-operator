@@ -1,18 +1,18 @@
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
-  name: {{ include "distributed-compute-operator.fullname" . }}
+  name: {{ include "dco.fullname" . }}
   labels:
-    {{- include "distributed-compute-operator.labels" . | nindent 4 }}
+    {{- include "dco.labels" . | nindent 4 }}
   annotations:
-    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "distributed-compute-operator.webhook.certificate" . }}
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "dco.webhook.certificate" . }}
 webhooks:
   - admissionReviewVersions:
       - v1
       - v1beta1
     clientConfig:
       service:
-        name: {{ include "distributed-compute-operator.webhook.service" . }}
+        name: {{ include "dco.webhook.service" . }}
         namespace: {{ .Release.Namespace }}
         path: /validate-distributed-compute-dominodatalab-com-v1alpha1-raycluster
     failurePolicy: Fail

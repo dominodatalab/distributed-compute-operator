@@ -7,9 +7,9 @@ To learn more about the release, try:
   $ helm status {{ .Release.Name }}
   $ helm get all {{ .Release.Name }}
 
-To see the available cluster types, try:
+To list the available cluster types this operator manages, try:
 
-  $ kubectl get customresourcedefinitions
+  $ kubectl get crds | grep distributed-compute
 
 See the following samples to learn how to create a new cluster:
 

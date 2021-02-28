@@ -1,9 +1,9 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "distributed-compute-operator.fullname" . }}-manager-psp
+  name: {{ include "dco.fullname" . }}-manager-psp
   labels:
-    {{- include "distributed-compute-operator.labels" . | nindent 4 }}
+    {{- include "dco.labels" . | nindent 4 }}
 rules:
 - apiGroups:
   - policy
@@ -18,25 +18,25 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "distributed-compute-operator.fullname" . }}-manager-psp
+  name: {{ include "dco.fullname" . }}-manager-psp
   labels:
-    {{- include "distributed-compute-operator.labels" . | nindent 4 }}
+    {{- include "dco.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "distributed-compute-operator.fullname" . }}-manager-psp
+  name: {{ include "dco.fullname" . }}-manager-psp
 subjects:
 - kind: ServiceAccount
-  name: {{ include "distributed-compute-operator.serviceAccountName" . }}
+  name: {{ include "dco.serviceAccountName" . }}
   namespace: {{ .Release.Namespace }}
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ include "distributed-compute-operator.fullname" . }}-manager
+  name: {{ include "dco.fullname" . }}-manager
   labels:
-    {{- include "distributed-compute-operator.labels" . | nindent 4 }}
+    {{- include "dco.labels" . | nindent 4 }}
 rules:
 - apiGroups:
   - distributed-compute.dominodatalab.com
@@ -137,13 +137,13 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ include "distributed-compute-operator.fullname" . }}-manager
+  name: {{ include "dco.fullname" . }}-manager
   labels:
-    {{- include "distributed-compute-operator.labels" . | nindent 4 }}
+    {{- include "dco.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: {{ include "distributed-compute-operator.fullname" . }}-manager
+  name: {{ include "dco.fullname" . }}-manager
 subjects:
 - kind: ServiceAccount
-  name: {{ include "distributed-compute-operator.serviceAccountName" . }}
+  name: {{ include "dco.serviceAccountName" . }}
