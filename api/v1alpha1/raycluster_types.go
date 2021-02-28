@@ -9,35 +9,35 @@ import (
 type RayClusterNode struct {
 	// Labels applied to ray pods in addition to stock labels.
 	// +kubebuilder:validation:Optional
-	Labels map[string]string `json:"labels"`
+	Labels map[string]string `json:"labels,omitempty"`
 
 	// Annotations applied to ray pods.
 	// +kubebuilder:validation:Optional
-	Annotations map[string]string `json:"annotations"`
+	Annotations map[string]string `json:"annotations,omitempty"`
 
 	// NodeSelector applied to ray pods.
 	// +kubebuilder:validation:Optional
-	NodeSelector map[string]string `json:"nodeSelector"`
+	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 
 	// Affinity applied to ray pods.
 	// +kubebuilder:validation:Optional
-	Affinity *corev1.Affinity `json:"affinity"`
+	Affinity *corev1.Affinity `json:"affinity,omitempty"`
 
 	// Tolerations applied to ray pods.
 	// +kubebuilder:validation:Optional
-	Tolerations []corev1.Toleration `json:"tolerations"`
+	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
 
 	// InitContainers added to ray pods.
 	// +kubebuilder:validation:Optional
-	InitContainers []corev1.Container `json:"initContainers"`
+	InitContainers []corev1.Container `json:"initContainers,omitempty"`
 
 	// Volumes added to ray pods.
 	// +kubebuilder:validation:Optional
-	Volumes []corev1.Volume `json:"volumes"`
+	Volumes []corev1.Volume `json:"volumes,omitempty"`
 
 	// VolumeMounts added to ray containers.
 	// +kubebuilder:validation:Optional
-	VolumeMounts []corev1.VolumeMount `json:"volumeMounts"`
+	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty"`
 
 	// Resources are the requests and limits applied to ray containers.
 	// +kubebuilder:validation:Optional
@@ -59,7 +59,6 @@ type RayClusterWorker struct {
 	// setting this field to some value above the minimum number of replicas.
 	// +kubebuilder:default=1
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Minimum=1
 	Replicas int32 `json:"replicas"`
 }
 
@@ -68,60 +67,48 @@ type RayClusterSpec struct {
 	// Image used to launch head and worker nodes.
 	// +kubebuilder:default={repository: "rayproject/ray", tag: "1.2.0-cpu"}
 	// +kubebuilder:validation:Optional
-	Image *OCIImageDefinition `json:"image"`
+	Image *OCIImageDefinition `json:"image,omitempty"`
 
 	// ImagePullSecrets are references to secrets with credentials to private registries used to pull images.
 	// +kubebuilder:validation:Optional
-	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets"`
+	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 
 	// Autoscaling parameters used to scale up/down ray worker nodes.
 	// +kubebuilder:validation:Optional
-	Autoscaling *Autoscaling `json:"autoscaling"`
+	Autoscaling *Autoscaling `json:"autoscaling,omitempty"`
 
 	// Port is the port of the head ray process.
 	// +kubebuilder:default=6379
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Minimum=0
-	// +kubebuilder:validation:Maximum=65353
 	Port int32 `json:"port"`
 
 	// RedisShardPorts is a list of ports for non-primary Redis shards.
 	// +kubebuilder:default={6380,6381}
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:MinItems=1
-	RedisShardPorts []int32 `json:"redisShardPorts"`
+	RedisShardPorts []int32 `json:"redisShardPorts,omitempty"`
 
 	// ClientServerPort is the port number to which the ray client server will bind.
 	// +kubebuilder:default=10001
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Minimum=0
-	// +kubebuilder:validation:Maximum=65353
 	ClientServerPort int32 `json:"clientServerPort"`
 
 	// ObjectManagerPort is the raylet port for the object manager.
 	// +kubebuilder:default=2384
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Minimum=0
-	// +kubebuilder:validation:Maximum=65353
 	ObjectManagerPort int32 `json:"objectManagerPort"`
 
 	// NodeManagerPort is the raylet port for the node manager.
 	// +kubebuilder:default=2385
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Minimum=0
-	// +kubebuilder:validation:Maximum=65353
 	NodeManagerPort int32 `json:"nodeManagerPort"`
 
 	// ObjectStoreMemoryBytes is initial amount of memory with which to start the object store.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Minimum=78643200
-	ObjectStoreMemoryBytes *int64 `json:"objectStoreMemoryBytes"`
+	ObjectStoreMemoryBytes *int64 `json:"objectStoreMemoryBytes,omitempty"`
 
 	// DashboardPort is the port used by the dashboard server.
 	// +kubebuilder:default=8265
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Minimum=0
-	// +kubebuilder:validation:Maximum=65353
 	DashboardPort int32 `json:"dashboardPort"`
 
 	// EnableDashboard starts the dashboard web UI.
@@ -139,7 +126,7 @@ type RayClusterSpec struct {
 	// only applicable when EnableNetworkPolicy is true.
 	// +kubebuilder:default={{"ray-client": "true"}}
 	// +kubebuilder:validation:Optional
-	NetworkPolicyClientLabels []map[string]string `json:"networkPolicyClientLabels"`
+	NetworkPolicyClientLabels []map[string]string `json:"networkPolicyClientLabels,omitempty"`
 
 	// PodSecurityPolicy name can be provided to govern execution of the ray processes within pods.
 	// +kubebuilder:validation:Optional
@@ -147,7 +134,7 @@ type RayClusterSpec struct {
 
 	// PodSecurityContext added to every ray pod.
 	// +kubebuilder:validation:Optional
-	PodSecurityContext *corev1.PodSecurityContext `json:"podSecurityContext"`
+	PodSecurityContext *corev1.PodSecurityContext `json:"podSecurityContext,omitempty"`
 
 	// ServiceAccountName will disable the creation of a dedicated cluster service account.
 	// The service account referenced by the provided name will be used instead.
@@ -156,7 +143,7 @@ type RayClusterSpec struct {
 
 	// EnvVars added to all every ray pod container.
 	// +kubebuilder:validation:Optional
-	EnvVars []corev1.EnvVar `json:"envVars"`
+	EnvVars []corev1.EnvVar `json:"envVars,omitempty"`
 
 	// Head node configuration parameters.
 	// +kubebuilder:validation:Optional

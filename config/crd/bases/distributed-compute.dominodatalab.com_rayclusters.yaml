@@ -89,15 +89,11 @@ spec:
                 description: ClientServerPort is the port number to which the ray
                   client server will bind.
                 format: int32
-                maximum: 65353
-                minimum: 0
                 type: integer
               dashboardPort:
                 default: 8265
                 description: DashboardPort is the port used by the dashboard server.
                 format: int32
-                maximum: 65353
-                minimum: 0
                 type: integer
               enableDashboard:
                 default: true
@@ -3612,21 +3608,16 @@ spec:
                 default: 2385
                 description: NodeManagerPort is the raylet port for the node manager.
                 format: int32
-                maximum: 65353
-                minimum: 0
                 type: integer
               objectManagerPort:
                 default: 2384
                 description: ObjectManagerPort is the raylet port for the object manager.
                 format: int32
-                maximum: 65353
-                minimum: 0
                 type: integer
               objectStoreMemoryBytes:
                 description: ObjectStoreMemoryBytes is initial amount of memory with
                   which to start the object store.
                 format: int64
-                minimum: 78643200
                 type: integer
               podSecurityContext:
                 description: PodSecurityContext added to every ray pod.
@@ -3779,8 +3770,6 @@ spec:
                 default: 6379
                 description: Port is the port of the head ray process.
                 format: int32
-                maximum: 65353
-                minimum: 0
                 type: integer
               redisShardPorts:
                 default:
@@ -3791,7 +3780,6 @@ spec:
                 items:
                   format: int32
                   type: integer
-                minItems: 1
                 type: array
               serviceAccountName:
                 description: ServiceAccountName will disable the creation of a dedicated
@@ -5553,7 +5541,6 @@ spec:
                       you can specify an "initial cluster size" by setting this field
                       to some value above the minimum number of replicas.
                     format: int32
-                    minimum: 1
                     type: integer
                   resources:
                     description: Resources are the requests and limits applied to
