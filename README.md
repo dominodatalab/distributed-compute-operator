@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/img/operator_logo.png" alt="Logo" />
+  <img src="docs/img/logo.png" alt="Logo" />
 </p>
 <p align="center">
   <a href="https://github.com/dominodatalab/distributed-compute-operator/releases">
