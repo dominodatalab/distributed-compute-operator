@@ -44,7 +44,7 @@ generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 fmt: goimports ## Run formatter against code.
-	@goimports -d -w -local github.com/dominodatalab/distributed-compute-operator \
+	@$(GOIMPORTS) -d -w -local github.com/dominodatalab/distributed-compute-operator \
 		$(shell find . -type f -name '*.go' -not -iname "zz_generated.*" -not -path "./vendor/*")
 
 lint: golangci-lint ## Run linters against code.
