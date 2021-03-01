@@ -30,9 +30,25 @@ Kubernetes operator providing Ray|Spark|Dask clusters on-demand via [Custom Reso
 
 TODO
 
-## Deployment
+## Installation
 
-TODO
+The easiest way to install DCO is to use the provided Helm chart.
+
+### Prerequisites
+
+Before you get started using the DCO, you need to have a running Kubernetes cluster.
+
+- Access to a Kubernetes cluster version **1.16** or above. This version of the
+  CRD API is stable and supports our required features.
+- Install [helm] client version **3.0.0** or above.
+- Install the [cert-manager] operator. DCO makes extensive use of [webhooks]
+  which require TLS.
+
+### Install
+
+```shell
+$ helm install distributed-compute-operator ./deploy/helm/distributed-compute-operator
+```
 
 ## Development
 
@@ -54,4 +70,7 @@ that can be used to test every feature supported by this operator.
 1. Launch operator
 
 [custom resources]: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/
+[helm]: https://helm.sh/docs/intro/install/
+[cert-manager]: https://cert-manager.io/docs/
+[webhooks]: https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/
 [minikube]: https://minikube.sigs.k8s.io/docs/
