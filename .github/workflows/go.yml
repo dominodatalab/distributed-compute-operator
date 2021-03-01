@@ -27,7 +27,7 @@ jobs:
           ${{ runner.os }}-go-
 
     - name: Build
-      run: make manager
+      run: make build
 
       # TODO: research golangci github action
     - name: Lint
