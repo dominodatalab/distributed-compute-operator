@@ -1,7 +1,13 @@
+# HACK: Fixes "test" target when on a machine where "/bin/sh" is not bash.
+# We can remove this once the controller-runtime setup-envtest.sh script is
+# updated so that it doesn't require sourcing.
+SHELL := /bin/bash
+.SHELLFLAGS := -e -o pipefail -c
 
 # Image URL to use all building/pushing image targets
 IMG ?= ghcr.io/dominodatalab/distributed-compute-operator:latest
-# Produce CRDs that work with Kubernetes 1.16+ and support defaulting, version conversion, and field pruning
+# Produce CRDs that work with Kubernetes 1.16+ and supports defaulting, api
+# version conversion, and field pruning.
 CRD_OPTIONS ?= "crd:crdVersions=v1,preserveUnknownFields=false"
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
