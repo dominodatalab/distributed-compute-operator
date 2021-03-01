@@ -51,17 +51,17 @@ lint: golangci-lint ## Run linters against code.
 	$(GOLANGCI_LINT) run
 
 ENVTEST_ASSETS_DIR = $(shell pwd)/testbin
-test: manifests generate fmt lint ## Run full test suite.
+test: manifests generate fmt ## Run full test suite.
 	mkdir -p ${ENVTEST_ASSETS_DIR}
 	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.7.0/hack/setup-envtest.sh
 	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -race -covermode atomic -coverprofile cover.out
 
 ##@ Build
 
-build: generate fmt lint ## Build manager binary.
+build: generate fmt ## Build manager binary.
 	go build -o bin/manager main.go
 
-run: manifests generate fmt lint ## Run a controller from your host.
+run: manifests generate fmt ## Run a controller from your host.
 	go run ./main.go start
 
 docker-build: test ## Build docker image with the manager.
