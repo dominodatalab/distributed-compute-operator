@@ -6,8 +6,8 @@ require (
 	github.com/banzaicloud/k8s-objectmatcher v1.5.1
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/go-logr/logr v0.3.0
-	github.com/onsi/ginkgo v1.14.1
-	github.com/onsi/gomega v1.10.2
+	github.com/onsi/ginkgo v1.14.2
+	github.com/onsi/gomega v1.10.5
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/spf13/cobra v1.1.3
 	github.com/stretchr/testify v1.7.0
