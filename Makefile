@@ -43,14 +43,15 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
-fmt: ## Run go fmt against code.
-	go fmt ./...
+fmt: goimports ## Run formatter against code.
+	@goimports -d -w -local github.com/dominodatalab/distributed-compute-operator \
+		$(shell find . -type f -name '*.go' -not -iname "zz_generated.*" -not -path "./vendor/*")
 
-lint: golangci-lint ## Run linter suite against code.
+lint: golangci-lint ## Run linters against code.
 	$(GOLANGCI_LINT) run
 
 ENVTEST_ASSETS_DIR = $(shell pwd)/testbin
-test: manifests generate fmt lint ## Run tests.
+test: manifests generate fmt lint ## Run full test suite.
 	mkdir -p ${ENVTEST_ASSETS_DIR}
 	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.7.0/hack/setup-envtest.sh
 	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -race -covermode atomic -coverprofile cover.out
@@ -93,6 +94,10 @@ controller-gen: ## Download controller-gen locally if necessary.
 KUSTOMIZE = $(shell pwd)/bin/kustomize
 kustomize: ## Download kustomize locally if necessary.
 	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.8.7)
+
+GOIMPORTS = $(shell pwd)/bin/goimports
+goimports: ## Download goimports locally if necessary.
+	$(call go-get-tool,$(GOIMPORTS),golang.org/x/tools/cmd/goimports)
 
 GOLANGCI_LINT = $(shell pwd)/bin/golangci-lint
 golangci-lint: ## Download golangci-lint locally if necessary.
