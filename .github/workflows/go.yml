@@ -18,13 +18,21 @@ jobs:
       with:
         go-version: 1.16
 
-    - name: Go modules caching
+    - name: Cache go modules
       uses: actions/cache@v2
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
+
+    - name: Cache build tools
+      uses: actions/cache@v2
+      with:
+        path: |
+          bin
+          testbin
+        key: ${{ runner.os }}-go-${{ hashFiles('Makefile') }}
 
     - name: Build
       run: make build
