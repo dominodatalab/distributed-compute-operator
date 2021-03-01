@@ -6,7 +6,7 @@ import corev1 "k8s.io/api/core/v1"
 type Autoscaling struct {
 	// MinReplicas is the lower limit for the number of replicas to which the autoscaler can scale down.
 	// This value must be greater than zero and less than the MaxReplicas.
-	// +kubebuilder:validation:Optional
+	//+kubebuilder:validation:Optional
 	MinReplicas *int32 `json:"minReplicas,omitempty"`
 
 	// MaxReplicas is the upper limit for the number of replicas to which the autoscaler can scale up.
@@ -20,14 +20,14 @@ type Autoscaling struct {
 	// ScaleDownStabilizationWindowSeconds is the number of seconds for which past recommendations should be considered
 	// when scaling down. A shorter window will trigger scale down events quicker, but too short a window may cause
 	// replica flapping when metrics used for scaling keep fluctuating.
-	// +kubebuilder:validation:Optional
+	//+kubebuilder:validation:Optional
 	ScaleDownStabilizationWindowSeconds *int32 `json:"scaleDownStabilizationWindowSeconds,omitempty"`
 }
 
 // OCIImageDefinition describes where and when to fetch a container image.
 type OCIImageDefinition struct {
 	// Registry where the container image is hosted.
-	// +kubebuilder:validation:Optional
+	//+kubebuilder:validation:Optional
 	Registry string `json:"registry"`
 
 	// Repository where the container image is stored.
@@ -37,6 +37,6 @@ type OCIImageDefinition struct {
 	Tag string `json:"tag"`
 
 	// PullPolicy used to fetch container image.
-	// +kubebuilder:validation:Optional
+	//+kubebuilder:validation:Optional
 	PullPolicy corev1.PullPolicy `json:"pullPolicy"`
 }

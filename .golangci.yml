@@ -87,6 +87,6 @@ issues:
     - path: test/test.go
       linters:
         - dogsled
-    - source: "^// \\+kubebuilder:.+"
+    - source: "^//\\s*\\+kubebuilder:.+"
       linters:
         - lll

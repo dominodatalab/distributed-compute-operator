@@ -47,13 +47,26 @@ rules:
   resources:
   - rayclusters
   verbs:
+  - create
+  - delete
+  - get
   - list
+  - patch
+  - update
   - watch
+- apiGroups:
+  - distributed-compute.dominodatalab.com
+  resources:
+  - rayclusters/finalizers
+  verbs:
+  - update
 - apiGroups:
   - distributed-compute.dominodatalab.com
   resources:
   - rayclusters/status
   verbs:
+  - get
+  - patch
   - update
 - apiGroups:
   - networking.k8s.io

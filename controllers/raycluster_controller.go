@@ -43,44 +43,31 @@ type RayClusterReconciler struct {
 func (r *RayClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&dcv1alpha1.RayCluster{}).
-		Owns(&corev1.Service{
-			TypeMeta: metav1.TypeMeta{APIVersion: "v1", Kind: "Service"},
-		}).
-		Owns(&corev1.ServiceAccount{
-			TypeMeta: metav1.TypeMeta{APIVersion: "v1", Kind: "ServiceAccount"},
-		}).
-		Owns(&appsv1.Deployment{
-			TypeMeta: metav1.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"},
-		}).
-		Owns(&rbacv1.Role{
-			TypeMeta: metav1.TypeMeta{APIVersion: "rbac.authorization.k8s.io/v1", Kind: "Role"},
-		}).
-		Owns(&rbacv1.RoleBinding{
-			TypeMeta: metav1.TypeMeta{APIVersion: "rbac.authorization.k8s.io/v1", Kind: "RoleBinding"},
-		}).
-		Owns(&networkingv1.NetworkPolicy{
-			TypeMeta: metav1.TypeMeta{APIVersion: "networking.k8s.io/v1", Kind: "NetworkPolicy"},
-		}).
-		Owns(&autoscalingv2beta2.HorizontalPodAutoscaler{
-			TypeMeta: metav1.TypeMeta{APIVersion: "autoscaling/v2beta2", Kind: "HorizontalPodAutoscaler"},
-		}).
+		Owns(&corev1.Service{}).
+		Owns(&corev1.ServiceAccount{}).
+		Owns(&appsv1.Deployment{}).
+		Owns(&rbacv1.Role{}).
+		Owns(&rbacv1.RoleBinding{}).
+		Owns(&networkingv1.NetworkPolicy{}).
+		Owns(&autoscalingv2beta2.HorizontalPodAutoscaler{}).
 		Complete(r)
 }
 
-// +kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=rayclusters,verbs=list;watch
-// +kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=rayclusters/status,verbs=update
-// +kubebuilder:rbac:groups="",resources=pods,verbs=list;watch
-// +kubebuilder:rbac:groups="",resources=services;serviceaccounts,verbs=create;update;list;watch
-// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=create;update;list;watch
-// +kubebuilder:rbac:groups=autoscaling,resources=horizontalpodautoscalers,verbs=create;update;delete;list;watch
-// +kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=create;update;delete;list;watch
-// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles;rolebindings,verbs=create;update;delete;list;watch
+//+kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=rayclusters,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=rayclusters/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=rayclusters/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",resources=pods,verbs=list;watch
+//+kubebuilder:rbac:groups="",resources=services;serviceaccounts,verbs=create;update;list;watch
+//+kubebuilder:rbac:groups=apps,resources=deployments,verbs=create;update;list;watch
+//+kubebuilder:rbac:groups=autoscaling,resources=horizontalpodautoscalers,verbs=create;update;delete;list;watch
+//+kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=create;update;delete;list;watch
+//+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles;rolebindings,verbs=create;update;delete;list;watch
 
 // Reconcile implements state reconciliation logic for RayCluster objects.
 func (r *RayClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("raycluster", req.NamespacedName)
-	rc := &dcv1alpha1.RayCluster{}
 
+	rc := &dcv1alpha1.RayCluster{}
 	if err := r.Get(ctx, req.NamespacedName, rc); err != nil {
 		if apierrors.IsNotFound(err) {
 			log.Info("RayCluster resource not found, assuming object was deleted")
@@ -100,10 +87,10 @@ func (r *RayClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	// 	generation version conflicts. the desired state is eventually achieved
 	// 	but this produces a large amount of noise in the logs. we should figure
 	//  out how to remove these errors.
-	if err := r.updateStatus(ctx, rc); err != nil {
-		log.Error(err, "Failed to update cluster status")
-		return ctrl.Result{}, err
-	}
+	// if err := r.updateStatus(ctx, rc); err != nil {
+	// 	 log.Error(err, "Failed to update cluster status")
+	// 	 return ctrl.Result{}, err
+	// }
 
 	return ctrl.Result{}, nil
 }
@@ -306,6 +293,7 @@ func (r *RayClusterReconciler) deleteIfExists(ctx context.Context, objs ...clien
 	return nil
 }
 
+//nolint
 // updateStatus with a list of pods from both the head and worker deployments.
 func (r *RayClusterReconciler) updateStatus(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
 	podList := &corev1.PodList{}

@@ -52,6 +52,12 @@ rules:
   verbs:
   - update
 - apiGroups:
+  - distributed-compute.dominodatalab.com
+  resources:
+  - rayclusters/finalizers
+  verbs:
+  - update
+- apiGroups:
   - ""
   resources:
   - pods

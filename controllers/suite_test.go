@@ -16,11 +16,8 @@ import (
 
 	distributedcomputev1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/test"
-	// +kubebuilder:scaffold:imports
+	//+kubebuilder:scaffold:imports
 )
-
-// These tests use Ginkgo (BDD-style Go testing framework). Refer to
-// http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
 var cfg *rest.Config
 var k8sClient client.Client
@@ -32,6 +29,7 @@ func TestAPIs(t *testing.T) {
 	}
 
 	RegisterFailHandler(Fail)
+
 	RunSpecsWithDefaultAndCustomReporters(t,
 		"Controller Suite",
 		[]Reporter{printer.NewlineReporter{}})
@@ -44,6 +42,7 @@ var _ = BeforeSuite(func() {
 	testEnv = &envtest.Environment{
 		BinaryAssetsDirectory: test.KubebuilderBinaryAssetsDir(),
 		CRDDirectoryPaths:     []string{filepath.Join("..", "config", "crd", "bases")},
+		ErrorIfCRDPathMissing: true,
 	}
 
 	var err error
@@ -54,7 +53,7 @@ var _ = BeforeSuite(func() {
 	err = distributedcomputev1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
-	// +kubebuilder:scaffold:scheme
+	//+kubebuilder:scaffold:scheme
 
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
 	Expect(err).NotTo(HaveOccurred())
