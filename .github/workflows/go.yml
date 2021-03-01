@@ -40,13 +40,13 @@ jobs:
     - name: Test
       run: make test
 
-      # TODO: research codecov github action
-    - name: Upload coverage report
-      run: bash <(curl -s https://codecov.io/bash)
-
       # TODO: research golangci github action
     - name: Lint
       run: make lint
+
+      # TODO: research codecov github action
+    - name: Upload coverage report
+      run: bash <(curl -s https://codecov.io/bash)
 
     - name: Set up Docker buildx
       uses: docker/setup-buildx-action@v1
