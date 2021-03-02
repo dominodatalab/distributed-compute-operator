@@ -3,6 +3,8 @@ package manager
 import (
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
+	"os"
+
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -47,9 +49,12 @@ func Start(cfg *Config) error {
 		setupLog.Error(err, "unable to create controller", "controller", "RayCluster")
 		return err
 	}
-	if err = (&dcv1alpha1.RayCluster{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "RayCluster")
-		return err
+
+	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
+		if err = (&dcv1alpha1.RayCluster{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "RayCluster")
+			return err
+		}
 	}
 	//+kubebuilder:scaffold:builder
 
