@@ -1,7 +1,6 @@
 package ray
 
 import (
-	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -10,13 +9,9 @@ import (
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 )
 
-const (
-	scaleTargetKind                 = "Deployment"
-	defaultAverageUtilization int32 = 50
-)
+const defaultAverageUtilization int32 = 50
 
-// NewHorizontalPodAutoscaler generates an HPA that targets the ray worker deployment.
-// The Autoscaling config from the spec is used to set max replicas and the target average utilization.
+// NewHorizontalPodAutoscaler generates an HPA that targets a RayCluster resource.
 //
 // The metrics-server needs to be launched separately and the worker deployment
 // requires cpu resource requests in order for this object to have any effect.
@@ -43,18 +38,17 @@ func NewHorizontalPodAutoscaler(rc *dcv1alpha1.RayCluster) *autoscalingv2beta2.H
 		}
 	}
 
-	name := InstanceObjectName(rc.Name, ComponentWorker)
 	return &autoscalingv2beta2.HorizontalPodAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
+			Name:      InstanceObjectName(rc.Name, ComponentNone),
 			Namespace: rc.Namespace,
 			Labels:    MetadataLabels(rc),
 		},
 		Spec: autoscalingv2beta2.HorizontalPodAutoscalerSpec{
 			ScaleTargetRef: autoscalingv2beta2.CrossVersionObjectReference{
-				APIVersion: appsv1.SchemeGroupVersion.String(),
-				Kind:       scaleTargetKind,
-				Name:       name,
+				APIVersion: rc.APIVersion,
+				Kind:       rc.Kind,
+				Name:       rc.Name,
 			},
 			MinReplicas: minReplicas,
 			MaxReplicas: maxReplicas,

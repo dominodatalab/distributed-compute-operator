@@ -159,11 +159,17 @@ type RayClusterSpec struct {
 type RayClusterStatus struct {
 	// Nodes that comprise the cluster.
 	Nodes []string `json:"nodes,omitempty"`
+
+	// WorkerReplicas is the scale.status.replicas subresource field.
+	WorkerReplicas int32 `json:"workerReplicas,omitempty"`
+	// WorkerSelector is the scale.status.selector subresource field.
+	WorkerSelector string `json:"workerSelector,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:resource:shortName=ray
 //+kubebuilder:subresource:status
+//+kubebuilder:subresource:scale:specpath=.spec.worker.replicas,statuspath=.status.workerReplicas,selectorpath=.status.workerSelector
 //+kubebuilder:printcolumn:name="Worker Count",type=integer,JSONPath=".spec.worker.replicas"
 //+kubebuilder:printcolumn:name="Image",type=string,JSONPath=".spec.image"
 //+kubebuilder:printcolumn:name="Age",type=date,JSONPath=".metadata.creationTimestamp"

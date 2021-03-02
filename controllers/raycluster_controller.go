@@ -19,7 +19,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/ray"
@@ -42,7 +44,7 @@ type RayClusterReconciler struct {
 // SetupWithManager creates and registers this controller with the manager.
 func (r *RayClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&dcv1alpha1.RayCluster{}).
+		For(&dcv1alpha1.RayCluster{}, builder.WithPredicates(predicate.GenerationChangedPredicate{})).
 		Owns(&corev1.Service{}).
 		Owns(&corev1.ServiceAccount{}).
 		Owns(&appsv1.Deployment{}).
@@ -224,7 +226,27 @@ func (r *RayClusterReconciler) reconcileDeployments(ctx context.Context, rc *dcv
 		return fmt.Errorf("failed to create worker deployment: %w", err)
 	}
 
-	return nil
+	selector, err := metav1.LabelSelectorAsSelector(worker.Spec.Selector)
+	if err != nil {
+		return err
+	}
+
+	// update autoscaling fields
+	var updateStatus bool
+	if rc.Status.WorkerReplicas != *worker.Spec.Replicas {
+		rc.Status.WorkerReplicas = *worker.Spec.Replicas
+		updateStatus = true
+	}
+	if rc.Status.WorkerSelector != selector.String() {
+		rc.Status.WorkerSelector = selector.String()
+		updateStatus = true
+	}
+
+	if updateStatus {
+		err = r.Status().Update(ctx, rc)
+	}
+
+	return err
 }
 
 // createOrUpdateOwnedResource should be used to manage the lifecycle of namespace-scoped objects.

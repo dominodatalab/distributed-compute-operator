@@ -10,6 +10,10 @@ import (
 // rayClusterFixture should be used for all ray unit testing.
 func rayClusterFixture() *dcv1alpha1.RayCluster {
 	return &dcv1alpha1.RayCluster{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "RayCluster",
+			APIVersion: "distributed-compute.dominodatalab.com/v1test1",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-id",
 			Namespace: "fake-ns",

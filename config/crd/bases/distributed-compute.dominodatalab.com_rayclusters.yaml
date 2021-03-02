@@ -7158,11 +7158,24 @@ spec:
                 items:
                   type: string
                 type: array
+              workerReplicas:
+                description: WorkerReplicas is the scale.status.replicas subresource
+                  field.
+                format: int32
+                type: integer
+              workerSelector:
+                description: WorkerSelector is the scale.status.selector subresource
+                  field.
+                type: string
             type: object
         type: object
     served: true
     storage: true
     subresources:
+      scale:
+        labelSelectorPath: .status.workerSelector
+        specReplicasPath: .spec.worker.replicas
+        statusReplicasPath: .status.workerReplicas
       status: {}
 status:
   acceptedNames:

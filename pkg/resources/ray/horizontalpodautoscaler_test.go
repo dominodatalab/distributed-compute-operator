@@ -22,7 +22,7 @@ func TestNewHorizontalPodAutoscaler(t *testing.T) {
 
 		expected := &autoscalingv2beta2.HorizontalPodAutoscaler{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-id-ray-worker",
+				Name:      "test-id-ray",
 				Namespace: "fake-ns",
 				Labels: map[string]string{
 					"app.kubernetes.io/name":       "ray",
@@ -33,9 +33,9 @@ func TestNewHorizontalPodAutoscaler(t *testing.T) {
 			},
 			Spec: autoscalingv2beta2.HorizontalPodAutoscalerSpec{
 				ScaleTargetRef: autoscalingv2beta2.CrossVersionObjectReference{
-					Kind:       "Deployment",
-					Name:       "test-id-ray-worker",
-					APIVersion: "apps/v1",
+					Kind:       "RayCluster",
+					Name:       "test-id",
+					APIVersion: "distributed-compute.dominodatalab.com/v1test1",
 				},
 				MinReplicas: pointer.Int32Ptr(5),
 				MaxReplicas: 10,
