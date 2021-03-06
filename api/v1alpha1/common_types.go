@@ -6,37 +6,33 @@ import corev1 "k8s.io/api/core/v1"
 type Autoscaling struct {
 	// MinReplicas is the lower limit for the number of replicas to which the autoscaler can scale down.
 	// This value must be greater than zero and less than the MaxReplicas.
-	//+kubebuilder:validation:Optional
 	MinReplicas *int32 `json:"minReplicas,omitempty"`
 
 	// MaxReplicas is the upper limit for the number of replicas to which the autoscaler can scale up.
 	// This value cannot be less than the replica count for your workload.
 	MaxReplicas int32 `json:"maxReplicas"`
 
-	// AverageUtilization is the target value of the average of the resource metric across all relevant pods.
+	// AverageCPUUtilization is the target value of the average of the resource metric across all relevant pods.
 	// This is represented as a percentage of the requested value of the resource for the pods.
-	AverageUtilization int32 `json:"averageUtilization"`
+	AverageCPUUtilization *int32 `json:"averageCPUUtilization,omitempty"`
 
 	// ScaleDownStabilizationWindowSeconds is the number of seconds for which past recommendations should be considered
 	// when scaling down. A shorter window will trigger scale down events quicker, but too short a window may cause
 	// replica flapping when metrics used for scaling keep fluctuating.
-	//+kubebuilder:validation:Optional
 	ScaleDownStabilizationWindowSeconds *int32 `json:"scaleDownStabilizationWindowSeconds,omitempty"`
 }
 
 // OCIImageDefinition describes where and when to fetch a container image.
 type OCIImageDefinition struct {
 	// Registry where the container image is hosted.
-	//+kubebuilder:validation:Optional
-	Registry string `json:"registry"`
+	Registry string `json:"registry,omitempty"`
 
 	// Repository where the container image is stored.
-	Repository string `json:"repository"`
+	Repository string `json:"repository,omitempty"`
 
 	// Tag points to a specific container image variant.
-	Tag string `json:"tag"`
+	Tag string `json:"tag,omitempty"`
 
 	// PullPolicy used to fetch container image.
-	//+kubebuilder:validation:Optional
-	PullPolicy corev1.PullPolicy `json:"pullPolicy"`
+	PullPolicy corev1.PullPolicy `json:"pullPolicy,omitempty"`
 }

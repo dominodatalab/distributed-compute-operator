@@ -3,6 +3,7 @@ package ray
 import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 )
@@ -35,7 +36,7 @@ func rayClusterFixture() *dcv1alpha1.RayCluster {
 			NodeManagerPort:   2385,
 			DashboardPort:     8265,
 			Worker: dcv1alpha1.RayClusterWorker{
-				Replicas: 5,
+				Replicas: pointer.Int32Ptr(5),
 			},
 		},
 	}

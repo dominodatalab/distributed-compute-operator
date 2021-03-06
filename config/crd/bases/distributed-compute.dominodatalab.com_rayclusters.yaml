@@ -20,7 +20,7 @@ spec:
   versions:
   - additionalPrinterColumns:
     - jsonPath: .spec.worker.replicas
-      name: Worker Count
+      name: Worker Replicas
       type: integer
     - jsonPath: .spec.image
       name: Image
@@ -53,11 +53,11 @@ spec:
                 description: Autoscaling parameters used to scale up/down ray worker
                   nodes.
                 properties:
-                  averageUtilization:
-                    description: AverageUtilization is the target value of the average
-                      of the resource metric across all relevant pods. This is represented
-                      as a percentage of the requested value of the resource for the
-                      pods.
+                  averageCPUUtilization:
+                    description: AverageCPUUtilization is the target value of the
+                      average of the resource metric across all relevant pods. This
+                      is represented as a percentage of the requested value of the
+                      resource for the pods.
                     format: int32
                     type: integer
                   maxReplicas:
@@ -81,26 +81,21 @@ spec:
                     format: int32
                     type: integer
                 required:
-                - averageUtilization
                 - maxReplicas
                 type: object
               clientServerPort:
-                default: 10001
                 description: ClientServerPort is the port number to which the ray
                   client server will bind.
                 format: int32
                 type: integer
               dashboardPort:
-                default: 8265
                 description: DashboardPort is the port used by the dashboard server.
                 format: int32
                 type: integer
               enableDashboard:
-                default: true
                 description: EnableDashboard starts the dashboard web UI.
                 type: boolean
               enableNetworkPolicy:
-                default: true
                 description: EnableNetworkPolicy will create a network policy that
                   restricts ingress to the cluster.
                 type: boolean
@@ -3556,11 +3551,10 @@ spec:
                       - name
                       type: object
                     type: array
+                required:
+                - resources
                 type: object
               image:
-                default:
-                  repository: rayproject/ray
-                  tag: 1.2.0-cpu
                 description: Image used to launch head and worker nodes.
                 properties:
                   pullPolicy:
@@ -3575,9 +3569,6 @@ spec:
                   tag:
                     description: Tag points to a specific container image variant.
                     type: string
-                required:
-                - repository
-                - tag
                 type: object
               imagePullSecrets:
                 description: ImagePullSecrets are references to secrets with credentials
@@ -3593,8 +3584,6 @@ spec:
                   type: object
                 type: array
               networkPolicyClientLabels:
-                default:
-                - ray-client: "true"
                 description: NetworkPolicyClientLabels will create a pod selector
                   clause for each set of labels. This is used to grant ingress access
                   to one or more groups of external pods and is only applicable when
@@ -3605,12 +3594,10 @@ spec:
                   type: object
                 type: array
               nodeManagerPort:
-                default: 2385
                 description: NodeManagerPort is the raylet port for the node manager.
                 format: int32
                 type: integer
               objectManagerPort:
-                default: 2384
                 description: ObjectManagerPort is the raylet port for the object manager.
                 format: int32
                 type: integer
@@ -3767,14 +3754,10 @@ spec:
                   of the ray processes within pods.
                 type: string
               port:
-                default: 6379
                 description: Port is the port of the head ray process.
                 format: int32
                 type: integer
               redisShardPorts:
-                default:
-                - 6380
-                - 6381
                 description: RedisShardPorts is a list of ports for non-primary Redis
                   shards.
                 items:
@@ -3787,8 +3770,6 @@ spec:
                   name will be used instead.
                 type: string
               worker:
-                default:
-                  replicas: 1
                 description: Worker node configuration parameters.
                 properties:
                   affinity:
@@ -5533,7 +5514,6 @@ spec:
                     description: NodeSelector applied to ray pods.
                     type: object
                   replicas:
-                    default: 1
                     description: Replicas configures the total number of workers in
                       the cluster. This field behaves differently when Autoscaling
                       is enabled. If Autoscaling.MinReplicas is unspecified, then
@@ -7147,6 +7127,9 @@ spec:
                       - name
                       type: object
                     type: array
+                required:
+                - replicas
+                - resources
                 type: object
             type: object
           status:

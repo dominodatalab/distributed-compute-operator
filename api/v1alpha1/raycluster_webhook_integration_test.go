@@ -2,8 +2,9 @@ package v1alpha1
 
 import (
 	. "github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
@@ -15,31 +16,170 @@ func fixture(nsName string) *RayCluster {
 			GenerateName: "test-",
 			Namespace:    nsName,
 		},
-		Spec: RayClusterSpec{
-			Worker: RayClusterWorker{
-				Replicas: 1,
-			},
-		},
 	}
 }
 
 var _ = Describe("RayCluster", func() {
+	var testNS *v1.Namespace
+
+	BeforeEach(func() {
+		testNS = &v1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				GenerateName: "test-",
+			},
+		}
+		Expect(k8sClient.Create(ctx, testNS)).To(Succeed())
+	})
+
+	AfterEach(func() {
+		Expect(k8sClient.Delete(ctx, testNS)).To(Succeed())
+	})
+
+	Describe("Default", func() {
+		It("sets expected values on an empty object", func() {
+			rc := fixture(testNS.Name)
+			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
+
+			Expect(rc.Spec.Port).To(
+				BeNumerically("==", 6379),
+				"port should equal 6379",
+			)
+			Expect(rc.Spec.RedisShardPorts).To(
+				Equal([]int32{6380, 6381}),
+				"redis shard ports should equal [6380, 6381]",
+			)
+			Expect(rc.Spec.ClientServerPort).To(
+				BeNumerically("==", 10001),
+				"client server port should equal 10001",
+			)
+			Expect(rc.Spec.ObjectManagerPort).To(
+				BeNumerically("==", 2384),
+				"object manager port should equal 2384",
+			)
+			Expect(rc.Spec.NodeManagerPort).To(
+				BeNumerically("==", 2385),
+				"node manager port should equal 2385",
+			)
+			Expect(rc.Spec.DashboardPort).To(
+				BeNumerically("==", 8265),
+				"dashboard port should equal 8265",
+			)
+			Expect(rc.Spec.EnableDashboard).To(
+				PointTo(Equal(true)),
+				"enable dashboard should point to true",
+			)
+			Expect(rc.Spec.EnableNetworkPolicy).To(
+				PointTo(Equal(true)),
+				"enable network policy should point to true",
+			)
+			Expect(rc.Spec.NetworkPolicyClientLabels).To(
+				Equal([]map[string]string{{"ray-client": "true"}}),
+				`network policy client labels should equal [{"ray-client": "true"}]`,
+			)
+			Expect(rc.Spec.Worker.Replicas).To(
+				PointTo(BeNumerically("==", 1)),
+				"worker replicas should point to 1",
+			)
+			Expect(rc.Spec.Image).To(
+				Equal(&OCIImageDefinition{Repository: "rayproject/ray", Tag: "1.2.0-cpu"}),
+				`image reference should equal "rayproject/ray:1.2.0-cpu"`,
+			)
+		})
+
+		It("does not set the port when present", func() {
+			rc := fixture(testNS.Name)
+			rc.Spec.Port = 3000
+
+			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
+			Expect(rc.Spec.Port).To(BeNumerically("==", 3000))
+		})
+
+		It("does not set redis shard ports when present", func() {
+			rc := fixture(testNS.Name)
+			rc.Spec.RedisShardPorts = []int32{5000}
+
+			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
+			Expect(rc.Spec.RedisShardPorts).To(Equal([]int32{5000}))
+		})
+
+		It("does not set the client server port when present", func() {
+			rc := fixture(testNS.Name)
+			rc.Spec.ClientServerPort = 12000
+
+			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
+			Expect(rc.Spec.ClientServerPort).To(BeNumerically("==", 12000))
+		})
+
+		It("does not set the object manager port when present", func() {
+			rc := fixture(testNS.Name)
+			rc.Spec.ObjectManagerPort = 4832
+
+			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
+			Expect(rc.Spec.ObjectManagerPort).To(BeNumerically("==", 4832))
+		})
+
+		It("does not set the node manager port when present", func() {
+			rc := fixture(testNS.Name)
+			rc.Spec.NodeManagerPort = 5832
+
+			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
+			Expect(rc.Spec.NodeManagerPort).To(BeNumerically("==", 5832))
+		})
+
+		It("does not set the dashboard port when present", func() {
+			rc := fixture(testNS.Name)
+			rc.Spec.DashboardPort = 5555
+
+			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
+			Expect(rc.Spec.DashboardPort).To(BeNumerically("==", 5555))
+		})
+
+		It("does not enable the dashboard when false", func() {
+			rc := fixture(testNS.Name)
+			rc.Spec.EnableDashboard = pointer.BoolPtr(false)
+
+			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
+			Expect(rc.Spec.EnableDashboard).To(PointTo(Equal(false)))
+		})
+
+		It("does not enable network policies when false", func() {
+			rc := fixture(testNS.Name)
+			rc.Spec.EnableNetworkPolicy = pointer.BoolPtr(false)
+
+			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
+			Expect(rc.Spec.EnableNetworkPolicy).To(PointTo(Equal(false)))
+		})
+
+		Context("image is provided", func() {
+			It("adds default values when missing", func() {
+				rc := fixture(testNS.Name)
+				rc.Spec.Image = &OCIImageDefinition{Registry: "test-registry"}
+
+				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
+				Expect(rc.Spec.Image).To(Equal(
+					&OCIImageDefinition{Registry: "test-registry", Repository: "rayproject/ray", Tag: "1.2.0-cpu"},
+				))
+			})
+
+			It("does not set the repository when present", func() {
+				rc := fixture(testNS.Name)
+				rc.Spec.Image = &OCIImageDefinition{Repository: "test-repo"}
+
+				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
+				Expect(rc.Spec.Image.Repository).To(Equal("test-repo"))
+			})
+
+			It("does not set the tag when present", func() {
+				rc := fixture(testNS.Name)
+				rc.Spec.Image = &OCIImageDefinition{Tag: "test-tag"}
+
+				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
+				Expect(rc.Spec.Image.Tag).To(Equal("test-tag"))
+			})
+		})
+	})
+
 	Describe("Validation", func() {
-		var testNS *v1.Namespace
-
-		BeforeEach(func() {
-			testNS = &v1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
-					GenerateName: "test-",
-				},
-			}
-			Expect(k8sClient.Create(ctx, testNS)).To(Succeed())
-		})
-
-		AfterEach(func() {
-			Expect(k8sClient.Delete(ctx, testNS)).To(Succeed())
-		})
-
 		It("passes when object is valid", func() {
 			rc := fixture(testNS.Name)
 			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
@@ -47,7 +187,7 @@ var _ = Describe("RayCluster", func() {
 
 		It("requires a positive worker replica count", func() {
 			rc := fixture(testNS.Name)
-			rc.Spec.Worker.Replicas = 0
+			rc.Spec.Worker.Replicas = pointer.Int32Ptr(-1)
 
 			Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 		})
@@ -59,32 +199,32 @@ var _ = Describe("RayCluster", func() {
 			Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 		})
 
-		table.DescribeTable("(networking ports)",
+		DescribeTable("(networking ports)",
 			func(portSetter func(*RayCluster, int32)) {
 				rc := fixture(testNS.Name)
 
-				portSetter(rc, -1)
+				portSetter(rc, 1023)
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 
-				portSetter(rc, 65354)
+				portSetter(rc, 65536)
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 			},
-			table.Entry("rejects an invalid port",
+			Entry("rejects an invalid port",
 				func(rc *RayCluster, val int32) { rc.Spec.Port = val },
 			),
-			table.Entry("rejects invalid redis shard ports",
+			Entry("rejects invalid redis shard ports",
 				func(rc *RayCluster, val int32) { rc.Spec.RedisShardPorts = append(rc.Spec.RedisShardPorts, val) },
 			),
-			table.Entry("rejects an invalid client server port",
+			Entry("rejects an invalid client server port",
 				func(rc *RayCluster, val int32) { rc.Spec.ClientServerPort = val },
 			),
-			table.Entry("rejects an invalid object manager port",
+			Entry("rejects an invalid object manager port",
 				func(rc *RayCluster, val int32) { rc.Spec.ObjectManagerPort = val },
 			),
-			table.Entry("rejects an invalid node manager port",
+			Entry("rejects an invalid node manager port",
 				func(rc *RayCluster, val int32) { rc.Spec.NodeManagerPort = val },
 			),
-			table.Entry("rejects an invalid dashboard port",
+			Entry("rejects an invalid dashboard port",
 				func(rc *RayCluster, val int32) { rc.Spec.DashboardPort = val },
 			),
 		)
@@ -93,10 +233,7 @@ var _ = Describe("RayCluster", func() {
 			clusterWithAS := func() *RayCluster {
 				rc := fixture(testNS.Name)
 				rc.Spec.Autoscaling = &Autoscaling{
-					MinReplicas:                         pointer.Int32Ptr(1),
-					MaxReplicas:                         1,
-					AverageUtilization:                  50,
-					ScaleDownStabilizationWindowSeconds: pointer.Int32Ptr(50),
+					MaxReplicas: 1,
 				}
 
 				return rc
@@ -107,23 +244,18 @@ var _ = Describe("RayCluster", func() {
 				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
 			})
 
-			It("does not require min replicas", func() {
-				rc := clusterWithAS()
-				rc.Spec.Autoscaling.MinReplicas = nil
-
-				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
-			})
-
 			It("requires min replicas to be > 0 when provided", func() {
 				rc := clusterWithAS()
-				rc.Spec.Autoscaling.MinReplicas = pointer.Int32Ptr(0)
 
+				rc.Spec.Autoscaling.MinReplicas = pointer.Int32Ptr(0)
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
+
+				rc.Spec.Autoscaling.MinReplicas = pointer.Int32Ptr(1)
+				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
 			})
 
 			It("requires max replicas to be > 0", func() {
 				rc := clusterWithAS()
-				rc.Spec.Autoscaling.MinReplicas = nil
 				rc.Spec.Autoscaling.MaxReplicas = 0
 
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
@@ -131,34 +263,34 @@ var _ = Describe("RayCluster", func() {
 
 			It("requires max replicas to be > min replicas", func() {
 				rc := clusterWithAS()
+
 				rc.Spec.Autoscaling.MinReplicas = pointer.Int32Ptr(2)
 				rc.Spec.Autoscaling.MaxReplicas = 1
-
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
+
+				rc.Spec.Autoscaling.MinReplicas = pointer.Int32Ptr(1)
+				rc.Spec.Autoscaling.MaxReplicas = 2
+				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
 			})
 
-			It("requires average utilization to be > 0 and <= 100", func() {
+			It("requires average utilization to be > 0", func() {
 				rc := clusterWithAS()
 
-				rc.Spec.Autoscaling.AverageUtilization = 0
+				rc.Spec.Autoscaling.AverageCPUUtilization = pointer.Int32Ptr(0)
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 
-				rc.Spec.Autoscaling.AverageUtilization = 101
-				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
-			})
-
-			It("does not require scale down stabilization", func() {
-				rc := clusterWithAS()
-				rc.Spec.Autoscaling.ScaleDownStabilizationWindowSeconds = nil
-
+				rc.Spec.Autoscaling.AverageCPUUtilization = pointer.Int32Ptr(75)
 				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
 			})
 
 			It("requires scale down stabilization to be >= 0 when provided", func() {
 				rc := clusterWithAS()
-				rc.Spec.Autoscaling.ScaleDownStabilizationWindowSeconds = pointer.Int32Ptr(-1)
 
+				rc.Spec.Autoscaling.ScaleDownStabilizationWindowSeconds = pointer.Int32Ptr(-1)
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
+
+				rc.Spec.Autoscaling.ScaleDownStabilizationWindowSeconds = pointer.Int32Ptr(0)
+				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
 			})
 		})
 	})

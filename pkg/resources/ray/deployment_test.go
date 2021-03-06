@@ -163,7 +163,7 @@ func TestNewDeployment(t *testing.T) {
 
 		t.Run("enable_dashboard", func(t *testing.T) {
 			rc := rayClusterFixture()
-			rc.Spec.EnableDashboard = true
+			rc.Spec.EnableDashboard = pointer.BoolPtr(true)
 			rc.Spec.DashboardPort = 8265
 
 			actual, err := NewDeployment(rc, ComponentHead)

@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
 )
 
 func TestNewHeadService(t *testing.T) {
@@ -44,8 +45,8 @@ func TestNewHeadService(t *testing.T) {
 	}
 	assert.Equal(t, expected, svc)
 
-	t.Run("with_dashboard", func(t *testing.T) {
-		rc.Spec.EnableDashboard = true
+	t.Run("with_dashboard_enabled", func(t *testing.T) {
+		rc.Spec.EnableDashboard = pointer.BoolPtr(true)
 		svc := NewHeadService(rc)
 
 		expected.Spec.Ports = append(expected.Spec.Ports, corev1.ServicePort{

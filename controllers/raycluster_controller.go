@@ -152,7 +152,7 @@ func (r RayClusterReconciler) reconcileNetworkPolicies(ctx context.Context, rc *
 	headNetpol := ray.NewHeadNetworkPolicy(rc)
 	clusterNetpol := ray.NewClusterNetworkPolicy(rc)
 
-	if !rc.Spec.EnableNetworkPolicy {
+	if rc.Spec.EnableNetworkPolicy == nil || !*rc.Spec.EnableNetworkPolicy {
 		return r.deleteIfExists(ctx, headNetpol, clusterNetpol)
 	}
 
@@ -194,13 +194,18 @@ func (r *RayClusterReconciler) reconcilePodSecurityPolicyRBAC(ctx context.Contex
 // reconcileAutoscaler optionally creates a horizontal pod autoscaler that
 // targets Ray worker pods.
 func (r *RayClusterReconciler) reconcileAutoscaler(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
-	hpa := ray.NewHorizontalPodAutoscaler(rc)
-
 	if rc.Spec.Autoscaling == nil {
+		hpa := &autoscalingv2beta2.HorizontalPodAutoscaler{
+			ObjectMeta: ray.HorizontalPodAutoscalerObjectMeta(rc),
+		}
 		return r.deleteIfExists(ctx, hpa)
 	}
 
-	if err := r.createOrUpdateOwnedResource(ctx, rc, hpa); err != nil {
+	hpa, err := ray.NewHorizontalPodAutoscaler(rc)
+	if err != nil {
+		return err
+	}
+	if err = r.createOrUpdateOwnedResource(ctx, rc, hpa); err != nil {
 		return fmt.Errorf("failed to reconcile horizontal pod autoscaler: %w", err)
 	}
 

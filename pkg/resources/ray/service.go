@@ -5,6 +5,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
+	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
 )
 
 // NewHeadService creates a ClusterIP service that points to the head node.
@@ -21,7 +22,7 @@ func NewHeadService(rc *dcv1alpha1.RayCluster) *corev1.Service {
 		},
 	}
 
-	if rc.Spec.EnableDashboard {
+	if util.BoolPtrIsTrue(rc.Spec.EnableDashboard) {
 		ports = append(ports, corev1.ServicePort{
 			Name: "dashboard",
 			Port: rc.Spec.DashboardPort,

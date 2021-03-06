@@ -65,7 +65,7 @@ func NewDeployment(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Deploymen
 		replicas = 1
 		nodeAttrs = rc.Spec.Head.RayClusterNode
 	case ComponentWorker:
-		replicas = rc.Spec.Worker.Replicas
+		replicas = *rc.Spec.Worker.Replicas
 		nodeAttrs = rc.Spec.Worker.RayClusterNode
 	default:
 		return nil, fmt.Errorf("invalid ray component: %q", comp)
@@ -231,7 +231,7 @@ func addHeadCmdArgs(rc *dcv1alpha1.RayCluster, args []string) []string {
 		fmt.Sprintf("--redis-shard-ports=%s", strings.Join(util.IntsToStrings(rc.Spec.RedisShardPorts), ",")),
 	}
 
-	if rc.Spec.EnableDashboard {
+	if util.BoolPtrIsTrue(rc.Spec.EnableDashboard) {
 		dashArgs := []string{
 			"--include-dashboard=true",
 			"--dashboard-host=0.0.0.0",

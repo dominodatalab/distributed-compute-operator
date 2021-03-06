@@ -111,3 +111,11 @@ func TestParseImageDefinition(t *testing.T) {
 		assert.Equal(t, tc.expected, actual)
 	}
 }
+
+func TestBoolPtrIsTrue(t *testing.T) {
+	x, y := true, false
+
+	assert.True(t, BoolPtrIsTrue(&x))
+	assert.False(t, BoolPtrIsTrue(&y))
+	assert.False(t, BoolPtrIsTrue(nil))
+}

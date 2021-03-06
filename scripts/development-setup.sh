@@ -13,6 +13,7 @@ if ! minikube profile list 2> /dev/null | grep -q $MINIKUBE_PROFILE_NAME; then
     --driver=hyperkit \
     --cpus=6 \
     --memory=16384 \
+    --disk-size=50000mb \
     --addons=pod-security-policy \
     --extra-config=apiserver.enable-admission-plugins=PodSecurityPolicy \
     --network-plugin=cni \
