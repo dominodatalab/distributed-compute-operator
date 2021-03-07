@@ -34,10 +34,25 @@ spec:
           args:
             - start
             - --namespace={{ .Release.Namespace }}
-            - --zap-devel={{ .Values.config.developmentMode }}
-            - --leader-elect={{ .Values.config.enableLeaderElection }}
-            - --metrics-bind-address=:{{ .Values.config.metricsPort }}
-            - --health-probe-bind-address=:{{ .Values.config.healthProbePort }}
+            {{- with .Values.config }}
+            - --metrics-bind-address=:{{ .metricsPort }}
+            - --health-probe-bind-address=:{{ .healthProbePort }}
+            {{- if .enableLeaderElection }}
+            - --leader-elect
+            {{- end }}
+            {{- if .logDevelopmentMode }}
+            - --zap-devel
+            {{- end }}
+            {{- with .logEncoder }}
+            - --zap-encoder={{ . }}
+            {{- end }}
+            {{- with .logLevel }}
+            - --zap-log-level={{ . }}
+            {{- end }}
+            {{- with .logStacktraceLevel }}
+            - --zap-stacktrace-level={{ . }}
+            {{- end }}
+            {{- end }}
           ports:
             - name: metrics
               containerPort: {{ .Values.config.metricsPort }}

@@ -15,9 +15,7 @@ var (
 	metricsAddr          string
 	enableLeaderElection bool
 
-	zapOpts = zap.Options{
-		Development: true,
-	}
+	zapOpts = zap.Options{}
 )
 
 var startCmd = &cobra.Command{

@@ -15,10 +15,17 @@ config:
   metricsPort: 8080
   # Health probe port
   healthProbePort: 8081
-  # Development mode enables debug logging and console output suitable for troubleshooting
-  developmentMode: false
   # Leader election ensures that only one controller instance is active at a time
   enableLeaderElection: false
+
+  # Logger enconding can be either 'json' or 'console'
+  logEncoder: ""
+  # Logger level can be either 'debug', 'info', 'error', or any integer value >= 0 which corresponds to custom debug levels of increasing verbosity
+  logLevel: ""
+  # Logger level at which stacktraces are printed can either 'info', 'error', or 'panic'
+  logStacktraceLevel: panic
+  # Development mode enables debug logging, console output and stacktraces suitable for troubleshooting
+  logDevelopmentMode: false
 
 image:
   repository: ghcr.io/dominodatalab/distributed-compute-operator
