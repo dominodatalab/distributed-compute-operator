@@ -21,6 +21,6 @@ func Execute() {
 }
 
 func init() {
-	// NOTE: https://github.com/spf13/cobra/issues/587
+	// NOTE: required until https://github.com/spf13/cobra/issues/587
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
 }

@@ -5,12 +5,10 @@ import (
 	"path/filepath"
 )
 
-// NOTE: ON USING WEBHOOKS
-//
-// If we start using webhooks in the future and need to "patch" our CRD bases
-// with `kustomize', we can (1) pre-process CRDs during build time and store
-// them in "config/crd/processed", (2) git ignore that directory, (3) and embed
-// that directory instead of "bases".
+// NOTE: If we start using conversion webhooks in the future and need to
+//  "patch" our CRD bases with `kustomize', we can (1) pre-process CRDs during
+//  build time and store them in "config/crd/processed", (2) git ignore that
+//  directory, (3) and embed that directory instead of "bases".
 
 //go:embed bases/*.yaml
 var bases embed.FS

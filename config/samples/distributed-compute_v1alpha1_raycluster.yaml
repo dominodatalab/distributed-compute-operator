@@ -156,8 +156,7 @@ spec:
 
     # resources:
     #   requests:
-    #     # NOTE: this must be set when attempting to use HPAs
-    #     cpu: 100m
+    #     cpu: 100m # this MUST be set when attempting to use HPAs
     #     memory: 250Mi
     #   limits:
     #     cpu: 500m
