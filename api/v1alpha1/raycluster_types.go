@@ -48,7 +48,7 @@ type RayClusterWorker struct {
 	// This field behaves differently when Autoscaling is enabled. If Autoscaling.MinReplicas is unspecified, then the
 	// minimum number of replicas will be set to this value. Additionally, you can specify an "initial cluster size" by
 	// setting this field to some value above the minimum number of replicas.
-	Replicas *int32 `json:"replicas"`
+	Replicas *int32 `json:"replicas,omitempty"`
 }
 
 // RayClusterSpec defines the desired state of a RayCluster resource.

@@ -7128,7 +7128,6 @@ spec:
                       type: object
                     type: array
                 required:
-                - replicas
                 - resources
                 type: object
             type: object
