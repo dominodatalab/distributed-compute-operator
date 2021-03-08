@@ -27,11 +27,14 @@ import (
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/ray"
 )
 
+// LastAppliedConfig is the annotation key used to store object state on owned components.
 const LastAppliedConfig = "distributed-compute-operator.dominodatalab.com/last-applied"
 
 var (
+	// PatchAnnotator applies state annotations to owned components.
 	PatchAnnotator = patch.NewAnnotator(LastAppliedConfig)
-	PatchMaker     = patch.NewPatchMaker(PatchAnnotator)
+	// PatchMaker calculates changes to state annotations on owned components.
+	PatchMaker = patch.NewPatchMaker(PatchAnnotator)
 )
 
 // RayClusterReconciler reconciles RayCluster objects.
@@ -67,21 +70,23 @@ func (r *RayClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 // Reconcile implements state reconciliation logic for RayCluster objects.
 func (r *RayClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := r.Log.WithValues("raycluster", req.NamespacedName)
+	ctx, log := r.setLogger(ctx, r.Log.WithValues("raycluster", req.NamespacedName))
+
+	log.V(2).Info("reconciliation loop trigged")
 
 	rc := &dcv1alpha1.RayCluster{}
 	if err := r.Get(ctx, req.NamespacedName, rc); err != nil {
 		if apierrors.IsNotFound(err) {
-			log.Info("RayCluster resource not found, assuming object was deleted")
+			log.Info("resource not found, assuming object was deleted")
 			return ctrl.Result{}, nil
 		}
 
-		log.Error(err, "Failed to get RayCluster")
+		log.Error(err, "failed to retrieve resource")
 		return ctrl.Result{}, err
 	}
 
 	if err := r.reconcileResources(ctx, rc); err != nil {
-		log.Error(err, "Failed to reconcile cluster resources")
+		log.Error(err, "failed to reconcile cluster resources")
 		return ctrl.Result{}, err
 	}
 
@@ -236,15 +241,21 @@ func (r *RayClusterReconciler) reconcileDeployments(ctx context.Context, rc *dcv
 		return err
 	}
 
+	log := r.getLogger(ctx)
+
 	// update autoscaling fields
 	var updateStatus bool
 	if rc.Status.WorkerReplicas != *worker.Spec.Replicas {
 		rc.Status.WorkerReplicas = *worker.Spec.Replicas
 		updateStatus = true
+
+		log.V(1).Info("updating status", "path", ".status.workerReplicas", "value", rc.Status.WorkerReplicas)
 	}
 	if rc.Status.WorkerSelector != selector.String() {
 		rc.Status.WorkerSelector = selector.String()
 		updateStatus = true
+
+		log.V(1).Info("updating status", "path", ".status.workerSelector", "value", rc.Status.WorkerSelector)
 	}
 
 	if updateStatus {
@@ -267,6 +278,7 @@ func (r *RayClusterReconciler) createOrUpdateOwnedResource(ctx context.Context, 
 		return err
 	}
 
+	log := r.getLogger(ctx)
 	found := controlled.DeepCopyObject().(client.Object)
 	err := r.Get(ctx, client.ObjectKeyFromObject(controlled), found)
 
@@ -275,6 +287,7 @@ func (r *RayClusterReconciler) createOrUpdateOwnedResource(ctx context.Context, 
 			return err
 		}
 
+		log.Info("creating controlled object", "object", controlled)
 		return r.Create(ctx, controlled)
 	}
 	if err != nil {
@@ -289,29 +302,36 @@ func (r *RayClusterReconciler) createOrUpdateOwnedResource(ctx context.Context, 
 		return nil
 	}
 
+	log.V(1).Info("applying patch to object", "object", controlled, "patch", string(patchResult.Patch))
 	if err = PatchAnnotator.SetLastAppliedAnnotation(controlled); err != nil {
 		return err
 	}
-	controlled.SetResourceVersion(found.GetResourceVersion())
 
+	controlled.SetResourceVersion(found.GetResourceVersion())
 	if modified, ok := controlled.(*corev1.Service); ok {
 		current := found.(*corev1.Service)
 		modified.Spec.ClusterIP = current.Spec.ClusterIP
 	}
 
+	log.Info("updating controlled object", "object", controlled)
 	return r.Update(ctx, controlled)
 }
 
 // deleteIfExists will delete one or more Kubernetes objects if they exist.
 func (r *RayClusterReconciler) deleteIfExists(ctx context.Context, objs ...client.Object) error {
+	log := r.getLogger(ctx)
+
 	for _, obj := range objs {
 		err := r.Get(ctx, client.ObjectKeyFromObject(obj), obj)
+
 		if apierrors.IsNotFound(err) {
 			return nil
 		}
 		if err != nil {
 			return err
 		}
+
+		log.Info("deleting controlled object", "object", obj)
 		if err = r.Delete(ctx, obj); err != nil {
 			return err
 		}
@@ -341,11 +361,30 @@ func (r *RayClusterReconciler) updateStatus(ctx context.Context, rc *dcv1alpha1.
 	if reflect.DeepEqual(podNames, rc.Status.Nodes) {
 		return nil
 	}
-
 	rc.Status.Nodes = podNames
+
 	if err := r.Status().Update(ctx, rc); err != nil {
 		return fmt.Errorf("cannot update ray status nodes: %w", err)
 	}
 
 	return nil
+}
+
+type loggerKeyType int
+
+const loggerKey loggerKeyType = iota
+
+func (r *RayClusterReconciler) setLogger(ctx context.Context, logger logr.Logger) (context.Context, logr.Logger) {
+	return context.WithValue(ctx, loggerKey, logger), logger
+}
+
+func (r *RayClusterReconciler) getLogger(ctx context.Context) logr.Logger {
+	if ctx == nil {
+		return r.Log
+	}
+	if ctxLogger, ok := ctx.Value(loggerKey).(logr.Logger); ok {
+		return ctxLogger
+	}
+
+	return r.Log
 }
