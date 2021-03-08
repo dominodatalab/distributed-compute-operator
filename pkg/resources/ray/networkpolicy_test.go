@@ -15,6 +15,10 @@ func TestNewClusterNetworkPolicy(t *testing.T) {
 	netpol := NewClusterNetworkPolicy(rc)
 
 	expected := &networkingv1.NetworkPolicy{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "NetworkPolicy",
+			APIVersion: "networking.k8s.io/v1",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-id-ray-cluster",
 			Namespace: "fake-ns",

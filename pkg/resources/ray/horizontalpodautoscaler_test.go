@@ -20,6 +20,10 @@ func TestNewHorizontalPodAutoscaler(t *testing.T) {
 		require.NoError(t, err)
 
 		expected := &autoscalingv2beta2.HorizontalPodAutoscaler{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "HorizontalPodAutoscaler",
+				APIVersion: "autoscaling/v2beta2",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-id-ray",
 				Namespace: "fake-ns",

@@ -15,6 +15,10 @@ func TestNewPodSecurityPolicyRBAC(t *testing.T) {
 
 	t.Run("role", func(t *testing.T) {
 		expected := &rbacv1.Role{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Role",
+				APIVersion: "rbac.authorization.k8s.io/v1",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-id-ray",
 				Namespace: "fake-ns",
@@ -39,6 +43,10 @@ func TestNewPodSecurityPolicyRBAC(t *testing.T) {
 
 	t.Run("role_binding", func(t *testing.T) {
 		expected := &rbacv1.RoleBinding{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "RoleBinding",
+				APIVersion: "rbac.authorization.k8s.io/v1",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-id-ray",
 				Namespace: "fake-ns",

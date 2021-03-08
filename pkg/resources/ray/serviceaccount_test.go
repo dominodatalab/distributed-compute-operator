@@ -14,6 +14,10 @@ func TestNewServiceAccount(t *testing.T) {
 	sa := NewServiceAccount(rc)
 
 	expected := &corev1.ServiceAccount{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ServiceAccount",
+			APIVersion: "v1",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-id-ray",
 			Namespace: "fake-ns",

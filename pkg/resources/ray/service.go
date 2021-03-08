@@ -30,6 +30,10 @@ func NewHeadService(rc *dcv1alpha1.RayCluster) *corev1.Service {
 	}
 
 	return &corev1.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Service",
+			APIVersion: "v1",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      HeadServiceName(rc.Name),
 			Namespace: rc.Namespace,
