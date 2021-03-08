@@ -41,7 +41,7 @@ var (
 )
 
 // logger is for webhook logging.
-var logger = logf.Log.WithName("webhooks.RayCluster")
+var logger = logf.Log.WithName("webhooks").WithName("RayCluster")
 
 // SetupWebhookWithManager creates and registers this webhook with the manager.
 func (r *RayCluster) SetupWebhookWithManager(mgr ctrl.Manager) error {
@@ -57,7 +57,6 @@ var _ webhook.Defaulter = &RayCluster{}
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *RayCluster) Default() {
 	log := logger.WithValues("raycluster", client.ObjectKeyFromObject(r))
-
 	log.Info("applying defaults")
 
 	if r.Spec.Port == 0 {
