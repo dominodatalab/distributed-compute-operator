@@ -31,10 +31,6 @@ func TestNewDeployment(t *testing.T) {
 			require.NoError(t, err)
 
 			expected := &appsv1.Deployment{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       "Deployment",
-					APIVersion: "apps/v1",
-				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-id-ray-head",
 					Namespace: "fake-ns",
@@ -191,10 +187,6 @@ func TestNewDeployment(t *testing.T) {
 			require.NoError(t, err)
 
 			expected := &appsv1.Deployment{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       "Deployment",
-					APIVersion: "apps/v1",
-				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-id-ray-worker",
 					Namespace: "fake-ns",

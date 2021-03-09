@@ -18,10 +18,6 @@ func NewClusterNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.NetworkPol
 	}
 
 	return &networkingv1.NetworkPolicy{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "NetworkPolicy",
-			APIVersion: "networking.k8s.io/v1",
-		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      InstanceObjectName(rc.Name, Component("cluster")),
 			Namespace: rc.Namespace,

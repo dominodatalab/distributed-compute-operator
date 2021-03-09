@@ -18,6 +18,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	genericregistry "k8s.io/apiserver/pkg/registry/generic/registry"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -256,16 +257,23 @@ func (r *RayClusterReconciler) createOrUpdateOwnedResource(ctx context.Context, 
 		return err
 	}
 
+	var gvks []schema.GroupVersionKind
+	gvks, _, err := r.Scheme.ObjectKinds(controlled)
+	if err != nil {
+		return err
+	}
+	gvk := gvks[0]
+
 	log := r.Log.FromContext(ctx)
 	found := controlled.DeepCopyObject().(client.Object)
-	err := r.Get(ctx, client.ObjectKeyFromObject(controlled), found)
+	err = r.Get(ctx, client.ObjectKeyFromObject(controlled), found)
 
 	if apierrors.IsNotFound(err) {
 		if err = PatchAnnotator.SetLastAppliedAnnotation(controlled); err != nil {
 			return err
 		}
 
-		log.Info("creating controlled object", "object", controlled)
+		log.Info("creating controlled object", "gvk", gvk, "object", controlled)
 		return r.Create(ctx, controlled)
 	}
 	if err != nil {
@@ -280,7 +288,7 @@ func (r *RayClusterReconciler) createOrUpdateOwnedResource(ctx context.Context, 
 		return nil
 	}
 
-	log.V(1).Info("applying patch to object", "object", controlled, "patch", string(patchResult.Patch))
+	log.V(1).Info("applying patch to object", "gvk", gvk, "object", controlled, "patch", string(patchResult.Patch))
 	if err = PatchAnnotator.SetLastAppliedAnnotation(controlled); err != nil {
 		return err
 	}
@@ -291,7 +299,7 @@ func (r *RayClusterReconciler) createOrUpdateOwnedResource(ctx context.Context, 
 		modified.Spec.ClusterIP = current.Spec.ClusterIP
 	}
 
-	log.Info("updating controlled object", "object", controlled)
+	log.Info("updating controlled object", "gvk", gvk, "object", controlled)
 	return r.Update(ctx, controlled)
 }
 

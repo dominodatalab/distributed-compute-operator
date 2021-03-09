@@ -89,10 +89,6 @@ func NewDeployment(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Deploymen
 	}
 
 	deploy := &appsv1.Deployment{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Deployment",
-			APIVersion: "apps/v1",
-		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      InstanceObjectName(rc.Name, comp),
 			Namespace: rc.Namespace,

@@ -14,10 +14,6 @@ func TestNewHeadService(t *testing.T) {
 	svc := NewHeadService(rc)
 
 	expected := &corev1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: "v1",
-		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-id-ray-head",
 			Namespace: "fake-ns",
