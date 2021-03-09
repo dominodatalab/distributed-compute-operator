@@ -16,6 +16,7 @@ import (
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/controllers"
+	"github.com/dominodatalab/distributed-compute-operator/pkg/logging"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -43,7 +44,7 @@ func Start(cfg *Config) error {
 
 	if err = (&controllers.RayClusterReconciler{
 		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("RayCluster"),
+		Log:    logging.New(ctrl.Log.WithName("controllers").WithName("RayCluster")),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RayCluster")

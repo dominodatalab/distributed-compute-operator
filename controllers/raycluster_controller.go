@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
-	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
 	corev1 "k8s.io/api/core/v1"
@@ -27,6 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
+	"github.com/dominodatalab/distributed-compute-operator/pkg/logging"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/ray"
 )
 
@@ -43,7 +43,7 @@ var (
 // RayClusterReconciler reconciles RayCluster objects.
 type RayClusterReconciler struct {
 	client.Client
-	Log    logr.Logger
+	Log    logging.ContextLogger
 	Scheme *runtime.Scheme
 }
 
@@ -73,7 +73,7 @@ func (r *RayClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 // Reconcile implements state reconciliation logic for RayCluster objects.
 func (r *RayClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	ctx, log := r.setLogger(ctx, r.Log.WithValues("raycluster", req.NamespacedName))
+	ctx, log := r.Log.NewContext(ctx, "raycluster", req.NamespacedName)
 
 	log.V(2).Info("reconciliation loop trigged")
 
@@ -256,7 +256,7 @@ func (r *RayClusterReconciler) createOrUpdateOwnedResource(ctx context.Context, 
 		return err
 	}
 
-	log := r.getLogger(ctx)
+	log := r.Log.FromContext(ctx)
 	found := controlled.DeepCopyObject().(client.Object)
 	err := r.Get(ctx, client.ObjectKeyFromObject(controlled), found)
 
@@ -297,7 +297,7 @@ func (r *RayClusterReconciler) createOrUpdateOwnedResource(ctx context.Context, 
 
 // deleteIfExists will delete one or more Kubernetes objects if they exist.
 func (r *RayClusterReconciler) deleteIfExists(ctx context.Context, objs ...client.Object) error {
-	log := r.getLogger(ctx)
+	log := r.Log.FromContext(ctx)
 
 	for _, obj := range objs {
 		err := r.Get(ctx, client.ObjectKeyFromObject(obj), obj)
@@ -360,7 +360,7 @@ func (r *RayClusterReconciler) modifyStatusNodes(ctx context.Context, rc *dcv1al
 		return false, nil
 	}
 
-	log := r.getLogger(ctx)
+	log := r.Log.FromContext(ctx)
 
 	log.V(1).Info("modifying status", "path", ".status.nodes", "value", podNames)
 	rc.Status.Nodes = podNames
@@ -385,7 +385,7 @@ func (r *RayClusterReconciler) modifyStatusWorkerFields(ctx context.Context, rc 
 		return false, err
 	}
 
-	log := r.getLogger(ctx)
+	log := r.Log.FromContext(ctx)
 
 	var modified bool
 	if rc.Status.WorkerSelector != selector.String() {
@@ -402,23 +402,4 @@ func (r *RayClusterReconciler) modifyStatusWorkerFields(ctx context.Context, rc 
 	}
 
 	return modified, nil
-}
-
-type loggerKeyType int
-
-const loggerKey loggerKeyType = iota
-
-func (r *RayClusterReconciler) setLogger(ctx context.Context, logger logr.Logger) (context.Context, logr.Logger) {
-	return context.WithValue(ctx, loggerKey, logger), logger
-}
-
-func (r *RayClusterReconciler) getLogger(ctx context.Context) logr.Logger {
-	if ctx == nil {
-		return r.Log
-	}
-	if ctxLogger, ok := ctx.Value(loggerKey).(logr.Logger); ok {
-		return ctxLogger
-	}
-
-	return r.Log
 }
