@@ -205,6 +205,8 @@ func (r *RayClusterReconciler) reconcilePodSecurityPolicyRBAC(ctx context.Contex
 // targets Ray worker pods.
 func (r *RayClusterReconciler) reconcileAutoscaler(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
 	if rc.Spec.Autoscaling == nil {
+		// calling ray.NewHorizontalPodAutoscaler when autoscaling is nil will
+		// result in error. so we leverage a shallow reference here instead.
 		hpa := &autoscalingv2beta2.HorizontalPodAutoscaler{
 			ObjectMeta: ray.HorizontalPodAutoscalerObjectMeta(rc),
 		}
