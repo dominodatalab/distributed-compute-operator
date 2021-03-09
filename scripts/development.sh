@@ -5,6 +5,7 @@
 set -euo pipefail
 
 NAME=distributed-compute-operator
+IMAGE_TAG_PREFIX=dev-
 
 function dco::_info {
   echo -e "\033[0;32m[development-workflow]\033[0m INFO: $*"
@@ -84,7 +85,7 @@ function dco::minikube_teardown() {
 }
 
 function dco::docker_build() {
-    image="distributed-compute-operator:dev-$(date +%s)"
+    image="$NAME:$IMAGE_TAG_PREFIX$(date +%s)"
 
     dco::_info "Building local development image '$image'"
     make docker-build IMG="$image"
@@ -102,17 +103,17 @@ function dco::helm_install() {
   ip_addr=$(minikube ip --profile $NAME)
   latest_tag=$(
     ssh -o StrictHostKeyChecking=no -i "$ssh_key" docker@"$ip_addr" \
-      "docker image list distributed-compute-operator:dev-* --format '{{.Tag}}:{{.CreatedAt}}'" \
-      | sort -k 2 | tail -n 1 | cut -d ':' -f 1
+      "docker image list $NAME:$IMAGE_TAG_PREFIX* --format '{{ .Tag }}:{{ .CreatedAt }}'" | \
+        sort -k 2 | tail -n 1 | cut -d ':' -f 1
   )
 
-  dco::_info "Deploying operator image 'distributed-compute-operator:$latest_tag'"
+  dco::_info "Deploying operator image '$NAME:$latest_tag'"
 
   helm upgrade \
-    distributed-compute-operator \
-    deploy/helm/distributed-compute-operator \
+    $NAME \
+    deploy/helm/$NAME \
     --install \
-    --set image.repository=distributed-compute-operator \
+    --set image.repository=$NAME \
     --set image.tag="$latest_tag" \
     --set config.logDevelopmentMode=true
 }
@@ -139,23 +140,23 @@ function dco::main() {
   case $command in
     create)
       dco::minikube_setup
-    ;;
+      ;;
     build)
       dco::docker_build
-    ;;
+      ;;
     deploy)
       dco::helm_install
-    ;;
+      ;;
     teardown)
       dco::minikube_teardown
-    ;;
+      ;;
     ""|help)
       dco::display_usage
-    ;;
+      ;;
     *)
       _error "Unknown command: $command"
       dco::display_usage
-    ;;
+      ;;
   esac
 }
 
