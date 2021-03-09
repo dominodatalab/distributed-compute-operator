@@ -3,6 +3,7 @@ package v1alpha1
 import (
 	"fmt"
 
+	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -145,6 +146,9 @@ func (r *RayCluster) validateRayCluster() error {
 	if err := r.validateWorkerReplicas(); err != nil {
 		allErrs = append(allErrs, err)
 	}
+	if err := r.validateWorkerResourceRequestsCPU(); err != nil {
+		allErrs = append(allErrs, err)
+	}
 	if err := r.validateObjectStoreMemoryBytes(); err != nil {
 		allErrs = append(allErrs, err)
 	}
@@ -176,6 +180,20 @@ func (r *RayCluster) validateWorkerReplicas() *field.Error {
 		field.NewPath("spec").Child("worker").Child("replicas"),
 		replicas,
 		"should be greater than or equal to 0",
+	)
+}
+
+func (r *RayCluster) validateWorkerResourceRequestsCPU() *field.Error {
+	if r.Spec.Autoscaling == nil {
+		return nil
+	}
+	if _, ok := r.Spec.Worker.Resources.Requests[v1.ResourceCPU]; ok {
+		return nil
+	}
+
+	return field.Required(
+		field.NewPath("spec").Child("worker").Child("resources").Child("requests").Child("cpu"),
+		"is mandatory when autoscaling is enabled",
 	)
 }
 

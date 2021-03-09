@@ -6,6 +6,7 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
 )
@@ -230,22 +231,25 @@ var _ = Describe("RayCluster", func() {
 		)
 
 		Context("With autoscaling enabled", func() {
-			clusterWithAS := func() *RayCluster {
+			clusterWithAutoscaling := func() *RayCluster {
 				rc := fixture(testNS.Name)
 				rc.Spec.Autoscaling = &Autoscaling{
 					MaxReplicas: 1,
+				}
+				rc.Spec.Worker.Resources.Requests = v1.ResourceList{
+					v1.ResourceCPU: resource.MustParse("100m"),
 				}
 
 				return rc
 			}
 
 			It("passes when valid", func() {
-				rc := clusterWithAS()
+				rc := clusterWithAutoscaling()
 				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
 			})
 
 			It("requires min replicas to be > 0 when provided", func() {
-				rc := clusterWithAS()
+				rc := clusterWithAutoscaling()
 
 				rc.Spec.Autoscaling.MinReplicas = pointer.Int32Ptr(0)
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
@@ -255,14 +259,14 @@ var _ = Describe("RayCluster", func() {
 			})
 
 			It("requires max replicas to be > 0", func() {
-				rc := clusterWithAS()
+				rc := clusterWithAutoscaling()
 				rc.Spec.Autoscaling.MaxReplicas = 0
 
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 			})
 
 			It("requires max replicas to be > min replicas", func() {
-				rc := clusterWithAS()
+				rc := clusterWithAutoscaling()
 
 				rc.Spec.Autoscaling.MinReplicas = pointer.Int32Ptr(2)
 				rc.Spec.Autoscaling.MaxReplicas = 1
@@ -274,7 +278,7 @@ var _ = Describe("RayCluster", func() {
 			})
 
 			It("requires average utilization to be > 0", func() {
-				rc := clusterWithAS()
+				rc := clusterWithAutoscaling()
 
 				rc.Spec.Autoscaling.AverageCPUUtilization = pointer.Int32Ptr(0)
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
@@ -284,13 +288,20 @@ var _ = Describe("RayCluster", func() {
 			})
 
 			It("requires scale down stabilization to be >= 0 when provided", func() {
-				rc := clusterWithAS()
+				rc := clusterWithAutoscaling()
 
 				rc.Spec.Autoscaling.ScaleDownStabilizationWindowSeconds = pointer.Int32Ptr(-1)
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 
 				rc.Spec.Autoscaling.ScaleDownStabilizationWindowSeconds = pointer.Int32Ptr(0)
 				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
+			})
+
+			It("requires cpu resource requests for worker", func() {
+				rc := clusterWithAutoscaling()
+				rc.Spec.Worker.Resources.Requests = nil
+
+				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 			})
 		})
 	})
