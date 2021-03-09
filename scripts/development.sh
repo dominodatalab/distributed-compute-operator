@@ -4,9 +4,12 @@
 
 set -euo pipefail
 
-COMMON_NAME=distributed-compute-operator
-MINIKUBE_PROFILE=distributed-compute-operator
-IMAGE_TAG_PREFIX=dev-
+MINIKUBE_PROFILE=${MINIKUBE_PROFILE:-"distributed-compute-operator"}
+MINIKUBE_CPUS=${MINIKUBE_CPUS:-"6"}
+MINIKUBE_MEMORY=${MINIKUBE_MEMORY:-"16384"}
+MINIKUBE_DISK_SIZE=${MINIKUBE_DISK_SIZE:-"50000mb"}
+IMAGE_NAME=${IMAGE_NAME:-"distributed-compute-operator"}
+IMAGE_TAG_PREFIX=${IMAGE_TAG_PREFIX:-"dev-"}
 
 function dco::_info {
   echo -e "\033[0;32m[development-workflow]\033[0m INFO: $*"
@@ -20,11 +23,11 @@ function dco::minikube_setup() {
   if ! minikube profile list 2> /dev/null | grep -q $MINIKUBE_PROFILE; then
     dco::_info "Creating minikube cluster"
     minikube start \
-      --profile=MINIKUBE_PROFILE \
+      --profile=$MINIKUBE_PROFILE \
+      --cpus=$MINIKUBE_CPUS \
+      --memory=$MINIKUBE_MEMORY \
+      --disk-size=$MINIKUBE_DISK_SIZE \
       --driver=hyperkit \
-      --cpus=6 \
-      --memory=16384 \
-      --disk-size=50000mb \
       --addons=pod-security-policy \
       --extra-config=apiserver.enable-admission-plugins=PodSecurityPolicy \
       --network-plugin=cni \
@@ -86,7 +89,7 @@ function dco::minikube_teardown() {
 }
 
 function dco::docker_build() {
-    image="$COMMON_NAME:$IMAGE_TAG_PREFIX$(date +%s)"
+    image="$IMAGE_NAME:$IMAGE_TAG_PREFIX$(date +%s)"
 
     dco::_info "Building local development image '$image'"
     make docker-build IMG="$image"
@@ -98,23 +101,24 @@ function dco::docker_build() {
 }
 
 function dco::helm_install() {
-  local ssh_key ip_addr latest_tag
+  local chart_name ssh_key ip_addr latest_tag
 
+  chart_name=distributed-compute-operator
   ssh_key=$(minikube ssh-key --profile=$MINIKUBE_PROFILE)
   ip_addr=$(minikube ip --profile=$MINIKUBE_PROFILE)
   latest_tag=$(
     ssh -o StrictHostKeyChecking=no -i "$ssh_key" docker@"$ip_addr" \
-      "docker image list $COMMON_NAME:$IMAGE_TAG_PREFIX* --format '{{ .Tag }}:{{ .CreatedAt }}'" | \
+      "docker image list $IMAGE_NAME:$IMAGE_TAG_PREFIX* --format '{{ .Tag }}:{{ .CreatedAt }}'" | \
         sort -k 2 | tail -n 1 | cut -d ':' -f 1
   )
 
-  dco::_info "Deploying operator image '$COMMON_NAME:$latest_tag'"
+  dco::_info "Deploying operator image '$IMAGE_NAME:$latest_tag'"
 
   helm upgrade \
-    $COMMON_NAME \
-    deploy/helm/$COMMON_NAME \
+    $chart_name \
+    deploy/helm/$chart_name \
     --install \
-    --set image.repository=$COMMON_NAME \
+    --set image.repository=$IMAGE_NAME \
     --set image.tag="$latest_tag" \
     --set config.logDevelopmentMode=true
 }
