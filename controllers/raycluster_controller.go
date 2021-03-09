@@ -267,19 +267,19 @@ func (r *RayClusterReconciler) createOrUpdateOwnedResource(ctx context.Context, 
 	gvk := gvks[0]
 
 	log := r.Log.FromContext(ctx)
-	found := controlled.DeepCopyObject().(client.Object)
-	err = r.Get(ctx, client.ObjectKeyFromObject(controlled), found)
 
-	if apierrors.IsNotFound(err) {
+	found := controlled.DeepCopyObject().(client.Object)
+	if err = r.Get(ctx, client.ObjectKeyFromObject(controlled), found); err != nil {
+		if !apierrors.IsNotFound(err) {
+			return err
+		}
+
 		if err = PatchAnnotator.SetLastAppliedAnnotation(controlled); err != nil {
 			return err
 		}
 
 		log.Info("creating controlled object", "gvk", gvk, "object", controlled)
 		return r.Create(ctx, controlled)
-	}
-	if err != nil {
-		return err
 	}
 
 	patchResult, err := PatchMaker.Calculate(found, controlled, patch.IgnoreStatusFields())
@@ -310,17 +310,16 @@ func (r *RayClusterReconciler) deleteIfExists(ctx context.Context, objs ...clien
 	log := r.Log.FromContext(ctx)
 
 	for _, obj := range objs {
-		err := r.Get(ctx, client.ObjectKeyFromObject(obj), obj)
+		if err := r.Get(ctx, client.ObjectKeyFromObject(obj), obj); err != nil {
+			if apierrors.IsNotFound(err) {
+				continue
+			}
 
-		if apierrors.IsNotFound(err) {
-			return nil
-		}
-		if err != nil {
 			return err
 		}
 
 		log.Info("deleting controlled object", "object", obj)
-		if err = r.Delete(ctx, obj); err != nil {
+		if err := r.Delete(ctx, obj); err != nil {
 			return err
 		}
 	}

@@ -24,11 +24,11 @@ func Apply(ctx context.Context) error {
 	apply := func(client apixv1client.CustomResourceDefinitionInterface, crd *apixv1.CustomResourceDefinition) error {
 		found, err := client.Get(ctx, crd.Name, metav1.GetOptions{})
 
-		switch {
-		case apierrors.IsNotFound(err):
+		if apierrors.IsNotFound(err) {
 			log.Info("Creating CRD", "Name", crd.Name)
 			_, err = client.Create(ctx, crd, metav1.CreateOptions{})
-		case err == nil:
+		}
+		if err == nil {
 			log.Info("Updating CRD", "Name", crd.Name)
 			crd.SetResourceVersion(found.ResourceVersion)
 			_, err = client.Update(ctx, crd, metav1.UpdateOptions{})
@@ -44,8 +44,8 @@ func Apply(ctx context.Context) error {
 func Delete(ctx context.Context) error {
 	deleteFn := func(client apixv1client.CustomResourceDefinitionInterface, crd *apixv1.CustomResourceDefinition) error {
 		log.Info("Deleting CRD", "Name", crd.Name)
-
 		err := client.Delete(ctx, crd.Name, metav1.DeleteOptions{})
+
 		if apierrors.IsNotFound(err) {
 			log.Info("CRD not found, ignoring", "Name", crd.Name)
 			return nil
