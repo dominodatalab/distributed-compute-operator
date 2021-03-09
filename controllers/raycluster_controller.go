@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"strings"
+	"time"
 
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
@@ -18,6 +20,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	genericregistry "k8s.io/apiserver/pkg/registry/generic/registry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -90,14 +93,15 @@ func (r *RayClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
-	// NOTE: this func will error out during certain update events because of
-	// 	generation version conflicts. the desired state is eventually achieved
-	// 	but this produces a large amount of noise in the logs. we should figure
-	//  out how to remove these errors.
-	// if err := r.updateStatus(ctx, rc); err != nil {
-	// 	 log.Error(err, "Failed to update cluster status")
-	// 	 return ctrl.Result{}, err
-	// }
+	if err := r.updateStatus(ctx, rc); err != nil {
+		if strings.Contains(err.Error(), genericregistry.OptimisticLockErrorMsg) {
+			log.V(1).Info("canot update status on modified object, requeuing key for reprocessing")
+			return ctrl.Result{RequeueAfter: 500 * time.Millisecond}, nil
+		}
+
+		log.Error(err, "failed to update cluster status")
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
 }
@@ -236,33 +240,7 @@ func (r *RayClusterReconciler) reconcileDeployments(ctx context.Context, rc *dcv
 		return fmt.Errorf("failed to create worker deployment: %w", err)
 	}
 
-	selector, err := metav1.LabelSelectorAsSelector(worker.Spec.Selector)
-	if err != nil {
-		return err
-	}
-
-	log := r.getLogger(ctx)
-
-	// update autoscaling fields
-	var updateStatus bool
-	if rc.Status.WorkerReplicas != *worker.Spec.Replicas {
-		rc.Status.WorkerReplicas = *worker.Spec.Replicas
-		updateStatus = true
-
-		log.V(1).Info("updating status", "path", ".status.workerReplicas", "value", rc.Status.WorkerReplicas)
-	}
-	if rc.Status.WorkerSelector != selector.String() {
-		rc.Status.WorkerSelector = selector.String()
-		updateStatus = true
-
-		log.V(1).Info("updating status", "path", ".status.workerSelector", "value", rc.Status.WorkerSelector)
-	}
-
-	if updateStatus {
-		err = r.Status().Update(ctx, rc)
-	}
-
-	return err
+	return nil
 }
 
 // createOrUpdateOwnedResource should be used to manage the lifecycle of namespace-scoped objects.
@@ -340,16 +318,36 @@ func (r *RayClusterReconciler) deleteIfExists(ctx context.Context, objs ...clien
 	return nil
 }
 
-//nolint
-// updateStatus with a list of pods from both the head and worker deployments.
+// updateStatus updates the RayCluster status subresource when changes occur.
 func (r *RayClusterReconciler) updateStatus(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
+	mNodes, err := r.modifyStatusNodes(ctx, rc)
+	if err != nil {
+		return fmt.Errorf("cannot modify cluster status nodes: %w", err)
+	}
+
+	mWorkedFields, err := r.modifyStatusWorkerFields(ctx, rc)
+	if err != nil {
+		return fmt.Errorf("cannot modify cluster status worker fields: %w", err)
+	}
+
+	if mNodes || mWorkedFields {
+		if err = r.Status().Update(ctx, rc); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// modifyStatusNodes will ensure the status contains an accurate list of all the pods in the cluster.
+func (r *RayClusterReconciler) modifyStatusNodes(ctx context.Context, rc *dcv1alpha1.RayCluster) (bool, error) {
 	podList := &corev1.PodList{}
 	listOpts := []client.ListOption{
 		client.InNamespace(rc.Namespace),
 		client.MatchingLabels(ray.MetadataLabels(rc)),
 	}
 	if err := r.List(ctx, podList, listOpts...); err != nil {
-		return fmt.Errorf("cannot list ray pods: %w", err)
+		return false, fmt.Errorf("cannot list ray pods: %w", err)
 	}
 
 	var podNames []string
@@ -359,15 +357,51 @@ func (r *RayClusterReconciler) updateStatus(ctx context.Context, rc *dcv1alpha1.
 	sort.Strings(podNames)
 
 	if reflect.DeepEqual(podNames, rc.Status.Nodes) {
-		return nil
+		return false, nil
 	}
+
+	log := r.getLogger(ctx)
+
+	log.V(1).Info("modifying status", "path", ".status.nodes", "value", podNames)
 	rc.Status.Nodes = podNames
 
-	if err := r.Status().Update(ctx, rc); err != nil {
-		return fmt.Errorf("cannot update ray status nodes: %w", err)
+	return true, nil
+}
+
+// modifyStatusWorkerFields syncs certain worker deployment fields into the status.
+func (r *RayClusterReconciler) modifyStatusWorkerFields(ctx context.Context, rc *dcv1alpha1.RayCluster) (bool, error) {
+	worker, err := ray.NewDeployment(rc, ray.ComponentWorker)
+	if err != nil {
+		return false, err
 	}
 
-	return nil
+	err = r.Get(ctx, client.ObjectKeyFromObject(worker), worker)
+	if client.IgnoreNotFound(err) != nil {
+		return false, err
+	}
+
+	selector, err := metav1.LabelSelectorAsSelector(worker.Spec.Selector)
+	if err != nil {
+		return false, err
+	}
+
+	log := r.getLogger(ctx)
+
+	var modified bool
+	if rc.Status.WorkerSelector != selector.String() {
+		rc.Status.WorkerSelector = selector.String()
+		modified = true
+
+		log.V(1).Info("modifying status", "path", ".status.workerSelector", "value", rc.Status.WorkerSelector)
+	}
+	if rc.Status.WorkerReplicas != *worker.Spec.Replicas {
+		rc.Status.WorkerReplicas = *worker.Spec.Replicas
+		modified = true
+
+		log.V(1).Info("modifying status", "path", ".status.workerReplicas", "value", rc.Status.WorkerReplicas)
+	}
+
+	return modified, nil
 }
 
 type loggerKeyType int

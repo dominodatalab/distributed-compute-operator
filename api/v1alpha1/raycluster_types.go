@@ -118,7 +118,6 @@ type RayClusterSpec struct {
 type RayClusterStatus struct {
 	// Nodes that comprise the cluster.
 	Nodes []string `json:"nodes,omitempty"`
-
 	// WorkerReplicas is the scale.status.replicas subresource field.
 	WorkerReplicas int32 `json:"workerReplicas,omitempty"`
 	// WorkerSelector is the scale.status.selector subresource field.
