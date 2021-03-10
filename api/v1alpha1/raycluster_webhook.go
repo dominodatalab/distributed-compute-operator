@@ -104,15 +104,6 @@ func (r *RayCluster) Default() {
 	if r.Spec.Image == nil {
 		log.Info("setting default image", "value", *defaultImage)
 		r.Spec.Image = defaultImage
-	} else {
-		if r.Spec.Image.Repository == "" {
-			log.Info("setting default image repository", "value", defaultImage.Repository)
-			r.Spec.Image.Repository = defaultImage.Repository
-		}
-		if r.Spec.Image.Tag == "" {
-			log.Info("setting default image tag", "value", defaultImage.Tag)
-			r.Spec.Image.Tag = defaultImage.Tag
-		}
 	}
 }
 
@@ -158,6 +149,9 @@ func (r *RayCluster) validateRayCluster() error {
 	if errs := r.validateAutoscaler(); errs != nil {
 		allErrs = append(allErrs, errs...)
 	}
+	if errs := r.validateImage(); errs != nil {
+		allErrs = append(allErrs, errs...)
+	}
 
 	if len(allErrs) == 0 {
 		return nil
@@ -168,6 +162,20 @@ func (r *RayCluster) validateRayCluster() error {
 		r.Name,
 		allErrs,
 	)
+}
+
+func (r *RayCluster) validateImage() field.ErrorList {
+	var errs field.ErrorList
+	fldPath := field.NewPath("spec").Child("image")
+
+	if r.Spec.Image.Repository == "" {
+		errs = append(errs, field.Required(fldPath.Child("repository"), "cannot be blank"))
+	}
+	if r.Spec.Image.Tag == "" {
+		errs = append(errs, field.Required(fldPath.Child("tag"), "cannot be blank"))
+	}
+
+	return errs
 }
 
 func (r *RayCluster) validateWorkerReplicas() *field.Error {

@@ -150,34 +150,6 @@ var _ = Describe("RayCluster", func() {
 			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
 			Expect(rc.Spec.EnableNetworkPolicy).To(PointTo(Equal(false)))
 		})
-
-		Context("image is provided", func() {
-			It("adds default values when missing", func() {
-				rc := fixture(testNS.Name)
-				rc.Spec.Image = &OCIImageDefinition{Registry: "test-registry"}
-
-				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
-				Expect(rc.Spec.Image).To(Equal(
-					&OCIImageDefinition{Registry: "test-registry", Repository: "rayproject/ray", Tag: "1.2.0-cpu"},
-				))
-			})
-
-			It("does not set the repository when present", func() {
-				rc := fixture(testNS.Name)
-				rc.Spec.Image = &OCIImageDefinition{Repository: "test-repo"}
-
-				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
-				Expect(rc.Spec.Image.Repository).To(Equal("test-repo"))
-			})
-
-			It("does not set the tag when present", func() {
-				rc := fixture(testNS.Name)
-				rc.Spec.Image = &OCIImageDefinition{Tag: "test-tag"}
-
-				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
-				Expect(rc.Spec.Image.Tag).To(Equal("test-tag"))
-			})
-		})
 	})
 
 	Describe("Validation", func() {
@@ -229,6 +201,22 @@ var _ = Describe("RayCluster", func() {
 				func(rc *RayCluster, val int32) { rc.Spec.DashboardPort = val },
 			),
 		)
+
+		Context("With a provided image", func() {
+			It("requires a non-blank image registry", func() {
+				rc := fixture(testNS.Name)
+				rc.Spec.Image = &OCIImageDefinition{Tag: "test-tag"}
+
+				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
+			})
+
+			It("requires a non-blank image tag", func() {
+				rc := fixture(testNS.Name)
+				rc.Spec.Image = &OCIImageDefinition{Repository: "test-repo"}
+
+				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
+			})
+		})
 
 		Context("With autoscaling enabled", func() {
 			clusterWithAutoscaling := func() *RayCluster {
