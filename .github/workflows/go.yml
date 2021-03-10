@@ -3,7 +3,7 @@ name: Go
 on:
   push:
     branches: [ main ]
-    tags: [ "v\d+(\.\d+)*(-.*)*" ]
+    tags: [ 'v\d+(\.\d+)*(-.*)*' ]
   pull_request:
     branches: [ main ]
 
