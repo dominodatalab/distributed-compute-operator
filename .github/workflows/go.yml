@@ -65,7 +65,7 @@ jobs:
       run: |
         set -x
 
-        DESCRIPTION="$(echo ${{ github.event.repository.description }} | sed -r 's/:.+:[[:blank:]]*//')"
+        DESCRIPTION="$(echo "${{ github.event.repository.description }}" | sed -r 's/:.+:[[:blank:]]*//')"
         DOCKER_IMAGE=ghcr.io/${{ github.repository }}
 
         VERSION=edge
