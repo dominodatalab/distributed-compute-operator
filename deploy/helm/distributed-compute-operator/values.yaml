@@ -28,10 +28,10 @@ config:
   logDevelopmentMode: false
 
 image:
-  repository: ghcr.io/dominodatalab/distributed-compute-operator
-  pullPolicy: IfNotPresent
+  repository: "local"
+  pullPolicy: Never
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "audi-dco-test"
 
 imagePullSecrets: []
 

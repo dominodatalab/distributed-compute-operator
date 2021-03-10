@@ -3,82 +3,80 @@ package v1alpha1
 import (
 	"fmt"
 
-	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
-const (
-	minValidPort int32 = 1024
-	maxValidPort int32 = 65535
-)
-
-var (
-	defaultPort                int32 = 6379
-	defaultRedisShardPorts           = []int32{6380, 6381}
-	defaultClientServerPort    int32 = 10001
-	defaultHttpPort            int32 = 80
-	defaultClusterPort         int32 = 7077
-	defaultDashboardPort       int32 = 8080
-	defaultEnableDashboard           = pointer.BoolPtr(true)
-	defaultEnableNetworkPolicy       = pointer.BoolPtr(true)
-	defaultWorkerReplicas            = pointer.Int32Ptr(1)
-
-	defaultNetworkPolicyClientLabels = []map[string]string{
-		{"ray-client": "true"},
-	}
-
-	defaultImage = &OCIImageDefinition{
-		Repository: "rayproject/ray",
-		Tag:        "1.2.0-cpu",
-	}
-)
+//const (
+//	minValidPort int32 = 1024
+//	maxValidPort int32 = 65535
+//)
+//
+//var (
+//	defaultPort                int32 = 6379
+//	defaultRedisShardPorts           = []int32{6380, 6381}
+//	defaultClientServerPort    int32 = 10001
+//	defaultHttpPort   		   int32 = 80
+//	defaultClusterPort         int32 = 7077
+//	defaultDashboardPort       int32 = 8265
+//	defaultEnableDashboard           = pointer.BoolPtr(true)
+//	defaultEnableNetworkPolicy       = pointer.BoolPtr(true)
+//	defaultWorkerReplicas            = pointer.Int32Ptr(1)
+//
+//	defaultNetworkPolicyClientLabels = []map[string]string{
+//		{"spark-client": "true"},
+//	}
+//
+//	defaultImage = &OCIImageDefinition{
+//		Repository: "sparkproject/spark",
+//		Tag:        "1.2.0-cpu",
+//	}
+//)
 
 // logger is for webhook logging.
-var logger = logf.Log.WithName("webhooks").WithName("RayCluster")
+var sparkLogger = logf.Log.WithName("webhooks").WithName("SparkCluster")
 
 // SetupWebhookWithManager creates and registers this webhook with the manager.
-func (r *RayCluster) SetupWebhookWithManager(mgr ctrl.Manager) error {
+func (r *SparkCluster) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
 		Complete()
 }
 
-//+kubebuilder:webhook:path=/mutate-distributed-compute-dominodatalab-com-v1alpha1-raycluster,mutating=true,failurePolicy=fail,sideEffects=None,groups=distributed-compute.dominodatalab.com,resources=rayclusters,verbs=create;update,versions=v1alpha1,name=mraycluster.kb.io,admissionReviewVersions={v1,v1beta1}
+//+kubebuilder:webhook:path=/mutate-distributed-compute-dominodatalab-com-v1alpha1-sparkcluster,mutating=true,failurePolicy=fail,sideEffects=None,groups=distributed-compute.dominodatalab.com,resources=sparkclusters,verbs=create;update,versions=v1alpha1,name=msparkcluster.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Defaulter = &RayCluster{}
+var _ webhook.Defaulter = &SparkCluster{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *RayCluster) Default() {
-	log := logger.WithValues("raycluster", client.ObjectKeyFromObject(r))
+func (r *SparkCluster) Default() {
+	log := sparkLogger.WithValues("sparkcluster", client.ObjectKeyFromObject(r))
 	log.Info("applying defaults")
 
 	if r.Spec.Port == 0 {
 		log.Info("setting default port", "value", defaultPort)
 		r.Spec.Port = defaultPort
 	}
-	if r.Spec.RedisShardPorts == nil {
-		log.Info("setting default redis shard ports", "value", defaultRedisShardPorts)
-		r.Spec.RedisShardPorts = defaultRedisShardPorts
-	}
+	//if r.Spec.RedisShardPorts == nil {
+	//	log.Info("setting default redis shard ports", "value", defaultRedisShardPorts)
+	//	r.Spec.RedisShardPorts = defaultRedisShardPorts
+	//}
 	if r.Spec.ClientServerPort == 0 {
 		log.Info("setting default client server port", "value", defaultClientServerPort)
 		r.Spec.ClientServerPort = defaultClientServerPort
 	}
-	if r.Spec.ObjectManagerPort == 0 {
-		log.Info("setting default object manager port", "value", defaultObjectManagerPort)
-		r.Spec.ObjectManagerPort = defaultObjectManagerPort
+	if r.Spec.HttpPort == 0 {
+		log.Info("setting default http port", "value", defaultHttpPort)
+		r.Spec.HttpPort = defaultHttpPort
 	}
-	if r.Spec.NodeManagerPort == 0 {
-		log.Info("setting default node manager port", "value", defaultNodeManagerPort)
-		r.Spec.NodeManagerPort = defaultNodeManagerPort
+	if r.Spec.ClusterPort == 0 {
+		log.Info("setting default cluster port", "value", defaultClusterPort)
+		r.Spec.ClusterPort = defaultClusterPort
 	}
 	if r.Spec.DashboardPort == 0 {
 		log.Info("setting default dashboard port", "value", defaultDashboardPort)
@@ -104,40 +102,46 @@ func (r *RayCluster) Default() {
 	if r.Spec.Image == nil {
 		log.Info("setting default image", "value", *defaultImage)
 		r.Spec.Image = defaultImage
+	} else {
+		if r.Spec.Image.Repository == "" {
+			log.Info("setting default image repository", "value", defaultImage.Repository)
+			r.Spec.Image.Repository = defaultImage.Repository
+		}
+		if r.Spec.Image.Tag == "" {
+			log.Info("setting default image tag", "value", defaultImage.Tag)
+			r.Spec.Image.Tag = defaultImage.Tag
+		}
 	}
 }
 
-//+kubebuilder:webhook:path=/validate-distributed-compute-dominodatalab-com-v1alpha1-raycluster,mutating=false,failurePolicy=fail,sideEffects=None,groups=distributed-compute.dominodatalab.com,resources=rayclusters,verbs=create;update,versions=v1alpha1,name=vraycluster.kb.io,admissionReviewVersions={v1,v1beta1}
+//+kubebuilder:webhook:path=/validate-distributed-compute-dominodatalab-com-v1alpha1-sparkcluster,mutating=false,failurePolicy=fail,sideEffects=None,groups=distributed-compute.dominodatalab.com,resources=sparkclusters,verbs=create;update,versions=v1alpha1,name=vsparkcluster.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Validator = &RayCluster{}
+var _ webhook.Validator = &SparkCluster{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
-func (r *RayCluster) ValidateCreate() error {
-	logger.WithValues("raycluster", client.ObjectKeyFromObject(r)).Info("validating create")
+func (r *SparkCluster) ValidateCreate() error {
+	sparkLogger.WithValues("sparkcluster", client.ObjectKeyFromObject(r)).Info("validating create")
 
-	return r.validateRayCluster()
+	return r.validateSparkCluster()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
-func (r *RayCluster) ValidateUpdate(old runtime.Object) error {
-	logger.WithValues("raycluster", client.ObjectKeyFromObject(r)).Info("validating update")
+func (r *SparkCluster) ValidateUpdate(old runtime.Object) error {
+	sparkLogger.WithValues("sparkcluster", client.ObjectKeyFromObject(r)).Info("validating update")
 
-	return r.validateRayCluster()
+	return r.validateSparkCluster()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type.
 // Not used, just here for interface compliance.
-func (r *RayCluster) ValidateDelete() error {
+func (r *SparkCluster) ValidateDelete() error {
 	return nil
 }
 
-func (r *RayCluster) validateRayCluster() error {
+func (r *SparkCluster) validateSparkCluster() error {
 	var allErrs field.ErrorList
 
 	if err := r.validateWorkerReplicas(); err != nil {
-		allErrs = append(allErrs, err)
-	}
-	if err := r.validateWorkerResourceRequestsCPU(); err != nil {
 		allErrs = append(allErrs, err)
 	}
 	if err := r.validateObjectStoreMemoryBytes(); err != nil {
@@ -149,36 +153,19 @@ func (r *RayCluster) validateRayCluster() error {
 	if errs := r.validateAutoscaler(); errs != nil {
 		allErrs = append(allErrs, errs...)
 	}
-	if errs := r.validateImage(); errs != nil {
-		allErrs = append(allErrs, errs...)
-	}
 
 	if len(allErrs) == 0 {
 		return nil
 	}
 
 	return apierrors.NewInvalid(
-		schema.GroupKind{Group: "distributed-compute.dominodatalab.com", Kind: "RayCluster"},
+		schema.GroupKind{Group: "distributed-compute.dominodatalab.com", Kind: "SparkCluster"},
 		r.Name,
 		allErrs,
 	)
 }
 
-func (r *RayCluster) validateImage() field.ErrorList {
-	var errs field.ErrorList
-	fldPath := field.NewPath("spec").Child("image")
-
-	if r.Spec.Image.Repository == "" {
-		errs = append(errs, field.Required(fldPath.Child("repository"), "cannot be blank"))
-	}
-	if r.Spec.Image.Tag == "" {
-		errs = append(errs, field.Required(fldPath.Child("tag"), "cannot be blank"))
-	}
-
-	return errs
-}
-
-func (r *RayCluster) validateWorkerReplicas() *field.Error {
+func (r *SparkCluster) validateWorkerReplicas() *field.Error {
 	replicas := r.Spec.Worker.Replicas
 	if replicas == nil || *replicas >= 0 {
 		return nil
@@ -191,21 +178,7 @@ func (r *RayCluster) validateWorkerReplicas() *field.Error {
 	)
 }
 
-func (r *RayCluster) validateWorkerResourceRequestsCPU() *field.Error {
-	if r.Spec.Autoscaling == nil {
-		return nil
-	}
-	if _, ok := r.Spec.Worker.Resources.Requests[v1.ResourceCPU]; ok {
-		return nil
-	}
-
-	return field.Required(
-		field.NewPath("spec").Child("worker").Child("resources").Child("requests").Child("cpu"),
-		"is mandatory when autoscaling is enabled",
-	)
-}
-
-func (r *RayCluster) validateObjectStoreMemoryBytes() *field.Error {
+func (r *SparkCluster) validateObjectStoreMemoryBytes() *field.Error {
 	memBytes := r.Spec.ObjectStoreMemoryBytes
 
 	if memBytes == nil || *memBytes >= 78643200 {
@@ -219,19 +192,19 @@ func (r *RayCluster) validateObjectStoreMemoryBytes() *field.Error {
 	)
 }
 
-func (r *RayCluster) validatePorts() field.ErrorList {
+func (r *SparkCluster) validatePorts() field.ErrorList {
 	var errs field.ErrorList
 
 	if err := r.validatePort(r.Spec.Port, field.NewPath("spec").Child("port")); err != nil {
 		errs = append(errs, err)
 	}
 
-	for idx, port := range r.Spec.RedisShardPorts {
-		name := fmt.Sprintf("redisShardPorts[%d]", idx)
-		if err := r.validatePort(port, field.NewPath("spec").Child(name)); err != nil {
-			errs = append(errs, err)
-		}
-	}
+	//for idx, port := range r.Spec.RedisShardPorts {
+	//	name := fmt.Sprintf("redisShardPorts[%d]", idx)
+	//	if err := r.validatePort(port, field.NewPath("spec").Child(name)); err != nil {
+	//		errs = append(errs, err)
+	//	}
+	//}
 
 	if err := r.validatePort(r.Spec.ClientServerPort, field.NewPath("spec").Child("clientServerPort")); err != nil {
 		errs = append(errs, err)
@@ -251,7 +224,7 @@ func (r *RayCluster) validatePorts() field.ErrorList {
 	return errs
 }
 
-func (r *RayCluster) validatePort(port int32, fldPath *field.Path) *field.Error {
+func (r *SparkCluster) validatePort(port int32, fldPath *field.Path) *field.Error {
 	if port < minValidPort {
 		return field.Invalid(fldPath, port, fmt.Sprintf("must be greater than or equal to %d", minValidPort))
 	}
@@ -262,7 +235,7 @@ func (r *RayCluster) validatePort(port int32, fldPath *field.Path) *field.Error 
 	return nil
 }
 
-func (r *RayCluster) validateAutoscaler() field.ErrorList {
+func (r *SparkCluster) validateAutoscaler() field.ErrorList {
 	var errs field.ErrorList
 
 	as := r.Spec.Autoscaling

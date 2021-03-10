@@ -76,7 +76,7 @@ func (r *RayClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *RayClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	ctx, log := r.Log.NewContext(ctx, "raycluster", req.NamespacedName)
 
-	log.V(2).Info("reconciliation loop trigged")
+	log.V(2).Info("reconciliation loop triggered")
 
 	rc := &dcv1alpha1.RayCluster{}
 	if err := r.Get(ctx, req.NamespacedName, rc); err != nil {
