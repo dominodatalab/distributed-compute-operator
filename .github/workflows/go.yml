@@ -16,21 +16,61 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.15
+        go-version: 1.16
 
-    - name: Go modules caching
+    - name: Cache go modules and build data
       uses: actions/cache@v2
       with:
-        path: ~/go/pkg/mod
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
 
-    - name: Build
-      run: make manager
+    - name: Cache build tools
+      uses: actions/cache@v2
+      with:
+        path: |
+          bin
+          testbin
+        key: ${{ runner.os }}-go-${{ hashFiles('Makefile') }}
 
-    - name: Lint
-      run: make lint
+    - name: Build
+      run: make build
 
     - name: Test
       run: make test
+
+      # TODO: research golangci github action
+    - name: Lint
+      run: make lint
+
+      # TODO: research codecov github action
+    - name: Upload coverage report
+      run: bash <(curl -s https://codecov.io/bash)
+
+    - name: Set up Docker buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Login to registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.CR_PAT }}
+
+    - name: Build and push Docker image
+      id: docker_build
+      uses: docker/build-push-action@v2
+      with:
+        push: true
+        tags: ghcr.io/${{ github.repository }}:latest,ghcr.io/${{ github.repository }}:${{ github.sha }}
+        cache-to: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache,mode=max
+        cache-from: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache
+        labels: |
+          org.opencontainers.image.title=${{ github.event.repository.name }}
+          org.opencontainers.image.description=${{ github.event.repository.description }}
+          org.opencontainers.image.source=${{ github.event.repository.html_url }}
+          org.opencontainers.image.revision=${{ github.sha }}
+          org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}

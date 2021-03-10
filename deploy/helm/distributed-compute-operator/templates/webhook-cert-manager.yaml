@@ -1,0 +1,24 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "dco.webhook.issuer" . }}
+  labels:
+    {{- include "dco.labels" . | nindent 4 }}
+spec:
+  selfSigned: {}
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "dco.webhook.certificate" . }}
+  labels:
+    {{- include "dco.labels" . | nindent 4 }}
+spec:
+  dnsNames:
+    - {{ include "dco.webhook.service" . }}.{{ .Release.Namespace }}.svc
+    - {{ include "dco.webhook.service" . }}.{{ .Release.Namespace }}.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: {{ include "dco.webhook.issuer" . }}
+  secretName: {{ include "dco.webhook.secret" . }}

@@ -3,3 +3,7 @@
 !**/*.go
 !**/*.mod
 !**/*.sum
+
+# Ignore bin directories
+bin/*
+testbin/*

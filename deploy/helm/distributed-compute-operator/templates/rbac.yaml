@@ -1,0 +1,155 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "dco.fullname" . }}-manager-psp
+  labels:
+    {{- include "dco.labels" . | nindent 4 }}
+rules:
+- apiGroups:
+  - policy
+  resources:
+  - podsecuritypolicies
+  verbs:
+  - use # in order to grant RBAC permissions to CR clusters
+  - list
+  - watch
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "dco.fullname" . }}-manager-psp
+  labels:
+    {{- include "dco.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "dco.fullname" . }}-manager-psp
+subjects:
+- kind: ServiceAccount
+  name: {{ include "dco.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "dco.fullname" . }}-manager
+  labels:
+    {{- include "dco.labels" . | nindent 4 }}
+rules:
+- apiGroups:
+  - distributed-compute.dominodatalab.com
+  resources:
+  - rayclusters
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - distributed-compute.dominodatalab.com
+  resources:
+  - rayclusters/status
+  verbs:
+  - update
+- apiGroups:
+  - distributed-compute.dominodatalab.com
+  resources:
+  - rayclusters/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - serviceaccounts
+  verbs:
+  - create
+  - update
+  - list
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - create
+  - update
+  - list
+  - watch
+- apiGroups:
+  - autoscaling
+  resources:
+  - horizontalpodautoscalers
+  verbs:
+  - create
+  - update
+  - delete
+  - list
+  - watch
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - networkpolicies
+  verbs:
+  - create
+  - update
+  - delete
+  - list
+  - watch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - roles
+  - rolebindings
+  verbs:
+  - create
+  - update
+  - delete
+  - list
+  - watch
+{{- if .Values.config.enableLeaderElection }}
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - create
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - create
+  - update
+{{- end }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "dco.fullname" . }}-manager
+  labels:
+    {{- include "dco.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "dco.fullname" . }}-manager
+subjects:
+- kind: ServiceAccount
+  name: {{ include "dco.serviceAccountName" . }}

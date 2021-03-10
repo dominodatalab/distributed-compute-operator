@@ -2,7 +2,18 @@ domain: dominodatalab.com
 layout: go.kubebuilder.io/v3
 projectName: distributed-compute-operator
 repo: github.com/dominodatalab/distributed-compute-operator
-version: 3-alpha
-plugins:
-  manifests.sdk.operatorframework.io/v2: {}
-  scorecard.sdk.operatorframework.io/v2: {}
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: dominodatalab.com
+  group: distributed-compute
+  kind: RayCluster
+  path: github.com/dominodatalab/distributed-compute-operator/api/v1alpha1
+  version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
+version: "3"

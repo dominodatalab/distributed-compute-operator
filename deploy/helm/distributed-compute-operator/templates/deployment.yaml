@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "dco.fullname" . }}
+  labels:
+    {{- include "dco.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "dco.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "dco.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "dco.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - start
+            - --namespace={{ .Release.Namespace }}
+            {{- with .Values.config }}
+            - --metrics-bind-address=:{{ .metricsPort }}
+            - --health-probe-bind-address=:{{ .healthProbePort }}
+            {{- if .enableLeaderElection }}
+            - --leader-elect
+            {{- end }}
+            {{- if .logDevelopmentMode }}
+            - --zap-devel
+            {{- end }}
+            {{- with .logEncoder }}
+            - --zap-encoder={{ . }}
+            {{- end }}
+            {{- with .logLevel }}
+            - --zap-log-level={{ . }}
+            {{- end }}
+            {{- with .logStacktraceLevel }}
+            - --zap-stacktrace-level={{ . }}
+            {{- end }}
+            {{- end }}
+          ports:
+            - name: metrics
+              containerPort: {{ .Values.config.metricsPort }}
+              protocol: TCP
+            - name: health
+              containerPort: {{ .Values.config.healthProbePort }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: health
+          volumeMounts:
+            - name: webhook-cert
+              readOnly: true
+              mountPath: /tmp/k8s-webhook-server/serving-certs
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: webhook-cert
+          secret:
+            secretName: {{ include "dco.webhook.secret" . }}
+            defaultMode: 420
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

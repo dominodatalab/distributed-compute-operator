@@ -1,0 +1,163 @@
+apiVersion: distributed-compute.dominodatalab.com/v1alpha1
+kind: RayCluster
+metadata:
+  name: example
+spec:
+  ## global configurations
+
+  # image used by head and worker pods
+  # image:
+  #   registry: ""
+  #   repository: rayproject/ray
+  #   tag: nightly
+  #   pullPolicy: IfNotPresent
+
+  # dockerconfigjson used to pull images from private registries
+  # imagePullSecrets:
+  # - name: docker-registry-credentials
+
+  # enable autoscaling (worker cpu requests also required)
+  # autoscaling:
+  #   minReplicas: 1
+  #   maxReplicas: 5
+  #   averageCPUUtilization: 50
+  #   scaleDownStabilizationWindowSeconds: 60
+
+  # redis port and addition redis shard ports used by head node
+  # port: 1234
+  # redisShardPorts:
+  # - 6380
+  # - 6381
+
+  # port used to connect clients to ray
+  # clientServerPort: 10001
+
+  # enable dashboard ui and set port
+  # dashboardPort: 8265
+  # enableDashboard: true
+
+  # set the object store's port and initial memory
+  # objectManagerPort: 2384
+  # objectStoreMemoryBytes: 52428800
+
+  # internal port overrides
+  # nodeManagerPort: 2385
+
+  # control the creation of network policies
+ # enableNetworkPolicy: true
+
+  # bind cluster to existing psp
+  # podSecurityPolicy: privileged
+
+  # specify the security context used by ray pods
+  # podSecurityContext:
+  #   runAsUser: 0
+
+  # specify the service account used to run ray pods
+  # serviceAccountName: my-service-account
+
+  # add extra env vars to every ray pod container
+  # envVars:
+  # - name: ENV_BASED_SETTING
+  #   value: abc123
+
+  ## head configuration parameters
+
+  head:
+  #   labels:
+  #     environment: production
+
+  #   annotations:
+  #     non-identifying-metadata: "true"
+
+  #   nodeSelector:
+  #     disktype: ssd
+
+  #   affinity:
+  #     nodeAffinity:
+  #       preferredDuringSchedulingIgnoredDuringExecution:
+  #       - weight: 1
+  #         preference:
+  #           matchExpressions:
+  #           - key: another-node-label-key
+  #             operator: In
+  #             values:
+  #             - another-node-label-value
+
+  #   tolerations:
+  #   - key: example-key
+  #     operator: Equal
+  #     value: example-value
+  #     effect: NoSchedule
+
+  #   initContainers:
+  #   - name: busybox
+  #     command: custom_setup.sh
+
+  #   volumes:
+  #   - name: example-vol
+  #     emptyDir: {}
+
+  #   volumeMounts:
+  #   - name: example-vol
+  #     mountPath: /mnt/more/space
+
+  #   resources:
+  #     requests:
+  #       cpu: 100m
+  #       memory: 250Mi
+  #     limits:
+  #       cpu: 500m
+  #       memory: 512Mi
+
+  ## worker configuration parameters
+
+  worker:
+    # total number of worker pods
+    # replicas: 2
+
+    # labels:
+    #   environment: production
+
+    # annotations:
+    #   non-identifying-metadata: "true"
+
+    # nodeSelector:
+    #   disktype: ssd
+
+    # affinity:
+    #   nodeAffinity:
+    #     preferredDuringSchedulingIgnoredDuringExecution:
+    #     - weight: 1
+    #       preference:
+    #         matchExpressions:
+    #         - key: another-node-label-key
+    #           operator: In
+    #           values:
+    #           - another-node-label-value
+
+    # tolerations:
+    # - key: example-key
+    #   operator: Equal
+    #   value: example-value
+    #   effect: NoSchedule
+
+    # initContainers:
+    #   - name: busybox
+    #     command: custom_setup.sh
+
+    # volumes:
+    #   - name: example-vol
+    #     emptyDir: {}
+
+    # volumeMounts:
+    #   - name: example-vol
+    #     mountPath: /mnt/more/space
+
+    # resources:
+    #   requests:
+    #     cpu: 100m # this MUST be set when attempting to use HPAs
+    #     memory: 250Mi
+    #   limits:
+    #     cpu: 500m
+    #     memory: 512Mi

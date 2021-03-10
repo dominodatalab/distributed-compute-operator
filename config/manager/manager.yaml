@@ -23,13 +23,15 @@ spec:
         control-plane: controller-manager
     spec:
       securityContext:
-        runAsUser: 65532
+        runAsNonRoot: true
       containers:
       - command:
         - /manager
+        - start
         args:
         - --leader-elect
         image: controller:latest
+        imagePullPolicy: IfNotPresent # changed to aid development
         name: manager
         securityContext:
           allowPrivilegeEscalation: false
