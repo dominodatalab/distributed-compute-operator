@@ -74,7 +74,6 @@ func NewStatefulSet(rc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 		return nil, err
 	}
 
-	args := processArgs(rc, comp)
 	ports := processPorts(rc, comp)
 	labels := processLabels(rc, comp, nodeAttrs.Labels)
 	envVars := append(append(defaultEnv, componentEnvVars(rc, comp)...), rc.Spec.EnvVars...)
@@ -130,7 +129,6 @@ func NewStatefulSet(rc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 						{
 							Name:            string(ApplicationName + "-" + comp),
 							Command:         defaultCmd,
-							Args:            args,
 							Image:           imageRef,
 							ImagePullPolicy: rc.Spec.Image.PullPolicy,
 							Ports:           ports,
@@ -176,18 +174,18 @@ func componentEnvVars(rc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 				Value: string(rc.Spec.ClusterPort),
 			},
 			{
-				Name: "SPARK_MASTER_WEBUI_PORT",
+				Name:  "SPARK_MASTER_WEBUI_PORT",
 				Value: string(rc.Spec.DashboardPort),
 			},
 			{
-				Name: "SPARK_MODE",
+				Name:  "SPARK_MODE",
 				Value: "master",
 			},
 		}
 	} else if comp == ComponentWorker {
 		envVar = []corev1.EnvVar{
 			{
-				Name: "SPARK_MASTER_URL",
+				Name:  "SPARK_MASTER_URL",
 				Value: "spark://" + HeadServiceName(rc.Name) + ":" + string(rc.Spec.ClusterPort),
 			},
 			{
@@ -196,39 +194,12 @@ func componentEnvVars(rc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 				Value: string(rc.Spec.DashboardPort),
 			},
 			{
-				Name: "SPARK_MODE",
+				Name:  "SPARK_MODE",
 				Value: "worker",
 			},
 		}
 	}
 	return envVar
-}
-
-func processArgs(rc *dcv1alpha1.SparkCluster, comp Component) []string {
-	cmdArgs := []string{
-		"start",
-		"--block",
-		"--node-ip-address=$(MY_POD_IP)",
-		"--num-cpus=$(MY_CPU_REQUEST)",
-		fmt.Sprintf("--object-manager-port=%d", rc.Spec.ObjectManagerPort),
-		fmt.Sprintf("--node-manager-port=%d", rc.Spec.NodeManagerPort),
-	}
-
-	if rc.Spec.ObjectStoreMemoryBytes != nil {
-		cmdArgs = append(cmdArgs, fmt.Sprintf("--object-store-memory=%d", *rc.Spec.ObjectStoreMemoryBytes))
-	}
-
-	// TODO: the exhaustive linter unveiled a nasty code smell in this set of functions.
-	// 	i think we want to refactor this so that we only check the component "once" in the
-	// 	main routine and leverage a deployment processor type that adheres to a common interface
-	// 	and returns the values based on the implementation (i.e. headDeploymentProcess).
-	if comp == ComponentHead {
-		cmdArgs = addHeadCmdArgs(rc, cmdArgs)
-	} else if comp == ComponentWorker {
-		cmdArgs = addWorkerCmdArgs(rc, cmdArgs)
-	}
-
-	return cmdArgs
 }
 
 func processPorts(rc *dcv1alpha1.SparkCluster, comp Component) []corev1.ContainerPort {
@@ -269,28 +240,4 @@ func addHeadContainerPorts(rc *dcv1alpha1.SparkCluster, ports []corev1.Container
 	}
 
 	return append(ports, redisPorts...)
-}
-
-func addHeadCmdArgs(rc *dcv1alpha1.SparkCluster, args []string) []string {
-	headArgs := []string{
-		"--head",
-		fmt.Sprintf("--ray-client-server-port=%d", rc.Spec.ClientServerPort),
-		fmt.Sprintf("--port=%d", rc.Spec.Port),
-		//fmt.Sprintf("--redis-shard-ports=%s", strings.Join(util.IntsToStrings(rc.Spec.RedisShardPorts), ",")),
-	}
-
-	if util.BoolPtrIsTrue(rc.Spec.EnableDashboard) {
-		dashArgs := []string{
-			"--include-dashboard=true",
-			"--dashboard-host=0.0.0.0",
-			fmt.Sprintf("--dashboard-port=%d", rc.Spec.DashboardPort),
-		}
-		headArgs = append(headArgs, dashArgs...)
-	}
-
-	return append(args, headArgs...)
-}
-
-func addWorkerCmdArgs(rc *dcv1alpha1.SparkCluster, args []string) []string {
-	return append(args, fmt.Sprintf("--address=%s:%d", HeadServiceName(rc.Name), rc.Spec.Port))
 }

@@ -2,7 +2,6 @@ package v1alpha1
 
 import (
 	"fmt"
-
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -17,27 +16,29 @@ import (
 //	minValidPort int32 = 1024
 //	maxValidPort int32 = 65535
 //)
-//
-//var (
-//	defaultPort                int32 = 6379
-//	defaultRedisShardPorts           = []int32{6380, 6381}
-//	defaultClientServerPort    int32 = 10001
-//	defaultHttpPort   		   int32 = 80
-//	defaultClusterPort         int32 = 7077
-//	defaultDashboardPort       int32 = 8265
-//	defaultEnableDashboard           = pointer.BoolPtr(true)
-//	defaultEnableNetworkPolicy       = pointer.BoolPtr(true)
-//	defaultWorkerReplicas            = pointer.Int32Ptr(1)
-//
-//	defaultNetworkPolicyClientLabels = []map[string]string{
-//		{"spark-client": "true"},
-//	}
-//
-//	defaultImage = &OCIImageDefinition{
-//		Repository: "sparkproject/spark",
-//		Tag:        "1.2.0-cpu",
-//	}
-//)
+
+var (
+	//defaultPort                int32 = 6379
+	//defaultRedisShardPorts           = []int32{6380, 6381}
+	//defaultClientServerPort    int32 = 10001
+	//defaultHttpPort   		   int32 = 80
+	//defaultClusterPort         int32 = 7077
+	//defaultDashboardPort       int32 = 8265
+	//defaultEnableDashboard           = pointer.BoolPtr(true)
+	//defaultEnableNetworkPolicy       = pointer.BoolPtr(true)
+	//defaultWorkerReplicas            = pointer.Int32Ptr(1)
+	//
+	//defaultNetworkPolicyClientLabels = []map[string]string{
+	//	{"spark-client": "true"},
+	//}
+	//
+	//defaultImage = &OCIImageDefinition{
+	//	Repository: "sparkproject/spark",
+	//	Tag:        "1.2.0-cpu",
+	//}
+	defaultHttpPort            int32 = 80
+	defaultClusterPort         int32 = 7077
+)
 
 // logger is for webhook logging.
 var sparkLogger = logf.Log.WithName("webhooks").WithName("SparkCluster")
@@ -199,20 +200,13 @@ func (r *SparkCluster) validatePorts() field.ErrorList {
 		errs = append(errs, err)
 	}
 
-	//for idx, port := range r.Spec.RedisShardPorts {
-	//	name := fmt.Sprintf("redisShardPorts[%d]", idx)
-	//	if err := r.validatePort(port, field.NewPath("spec").Child(name)); err != nil {
-	//		errs = append(errs, err)
-	//	}
-	//}
-
 	if err := r.validatePort(r.Spec.ClientServerPort, field.NewPath("spec").Child("clientServerPort")); err != nil {
 		errs = append(errs, err)
 	}
-	if err := r.validatePort(r.Spec.ObjectManagerPort, field.NewPath("spec").Child("objectManagerPort")); err != nil {
+	if err := r.validatePort(r.Spec.HttpPort, field.NewPath("spec").Child("httpPort")); err != nil {
 		errs = append(errs, err)
 	}
-	if err := r.validatePort(r.Spec.NodeManagerPort, field.NewPath("spec").Child("nodeManagerPort")); err != nil {
+	if err := r.validatePort(r.Spec.ClusterPort, field.NewPath("spec").Child("clusterPort")); err != nil {
 		errs = append(errs, err)
 	}
 	if err := r.validatePort(r.Spec.DashboardPort, field.NewPath("spec").Child("dashboardPort")); err != nil {

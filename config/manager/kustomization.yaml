@@ -13,4 +13,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: local
-  newTag: audi-test
+  newTag: audi-dco-test

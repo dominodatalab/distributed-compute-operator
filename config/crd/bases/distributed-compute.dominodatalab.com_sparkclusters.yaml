@@ -88,6 +88,11 @@ spec:
                   client server will bind.
                 format: int32
                 type: integer
+              clusterPort:
+                description: Cluster port is the port on which the spark protocol
+                  communicates
+                format: int32
+                type: integer
               dashboardPort:
                 description: DashboardPort is the port used by the dashboard server.
                 format: int32
@@ -100,7 +105,7 @@ spec:
                   restricts ingress to the cluster.
                 type: boolean
               envVars:
-                description: EnvVars added to all every spark pod container.
+                description: EnvVars added to every spark pod container.
                 items:
                   description: EnvVar represents an environment variable present in
                     a Container.
@@ -3546,6 +3551,10 @@ spec:
                 required:
                 - resources
                 type: object
+              httpPort:
+                description: HttpPort is the port on which spark pods expose http
+                format: int32
+                type: integer
               image:
                 description: Image used to launch head and worker nodes.
                 properties:
@@ -3585,15 +3594,6 @@ spec:
                     type: string
                   type: object
                 type: array
-              nodeManagerPort:
-                description: NodeManagerPort is the sparklet port for the node manager.
-                format: int32
-                type: integer
-              objectManagerPort:
-                description: ObjectManagerPort is the sparklet port for the object
-                  manager.
-                format: int32
-                type: integer
               objectStoreMemoryBytes:
                 description: ObjectStoreMemoryBytes is initial amount of memory with
                   which to start the object store.
@@ -3750,13 +3750,6 @@ spec:
                 description: Port is the port of the head spark process.
                 format: int32
                 type: integer
-              redisShardPorts:
-                description: RedisShardPorts is a list of ports for non-primary Redis
-                  shards.
-                items:
-                  format: int32
-                  type: integer
-                type: array
               serviceAccountName:
                 description: ServiceAccountName will disable the creation of a dedicated
                   cluster service account. The service account referenced by the provided

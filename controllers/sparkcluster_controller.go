@@ -385,9 +385,9 @@ func (r *SparkClusterReconciler) updateStatus(ctx context.Context, rc *dcv1alpha
 	return nil
 }
 
-//type loggerKeyType int
+type loggerKeyType int
 
-//const loggerKey loggerKeyType = iota
+const loggerKey loggerKeyType = iota
 
 func (r *SparkClusterReconciler) setLogger(ctx context.Context, logger logr.Logger) (context.Context, logr.Logger) {
 	return context.WithValue(ctx, loggerKey, logger), logger

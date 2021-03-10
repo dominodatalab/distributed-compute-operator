@@ -24,9 +24,9 @@ var (
 	defaultPort                int32 = 6379
 	defaultRedisShardPorts           = []int32{6380, 6381}
 	defaultClientServerPort    int32 = 10001
-	defaultHttpPort            int32 = 80
-	defaultClusterPort         int32 = 7077
-	defaultDashboardPort       int32 = 8080
+	defaultObjectManagerPort   int32 = 2384
+	defaultNodeManagerPort     int32 = 2385
+	defaultDashboardPort       int32 = 8265
 	defaultEnableDashboard           = pointer.BoolPtr(true)
 	defaultEnableNetworkPolicy       = pointer.BoolPtr(true)
 	defaultWorkerReplicas            = pointer.Int32Ptr(1)
