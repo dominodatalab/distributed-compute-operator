@@ -9,7 +9,7 @@ on:
 
 jobs:
 
-  build:
+  main:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -60,7 +60,7 @@ jobs:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.CR_PAT }}
 
-    - name: Docker prepare
+    - name: Prepare Docker image
       id: docker_prep
       run: |
         DOCKER_IMAGE=ghcr.io/${{ github.repository }}
@@ -89,7 +89,7 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         push: true
-        tags: ${{ steps.prep.outputs.tags }}
+        tags: ${{ steps.docker_prep.outputs.tags }}
         cache-to: type=registry,ref=${{ steps.docker_prep.outputs.image }}:buildcache,mode=max
         cache-from: type=registry,ref=${{ steps.docker_prep.outputs.image }}:buildcache
         labels: |
