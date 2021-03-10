@@ -51,6 +51,12 @@ type RayClusterWorker struct {
 	Replicas *int32 `json:"replicas,omitempty"`
 }
 
+// RayClusterNetworkPolicy defines network policy configuration options.
+type RayClusterNetworkPolicy struct {
+	ClientServerLabels []map[string]string
+	DashboardLabels    []map[string]string
+}
+
 // RayClusterSpec defines the desired state of a RayCluster resource.
 type RayClusterSpec struct {
 	// Image used to launch head and worker nodes.
@@ -118,8 +124,10 @@ type RayClusterSpec struct {
 type RayClusterStatus struct {
 	// Nodes that comprise the cluster.
 	Nodes []string `json:"nodes,omitempty"`
+
 	// WorkerReplicas is the scale.status.replicas subresource field.
 	WorkerReplicas int32 `json:"workerReplicas,omitempty"`
+
 	// WorkerSelector is the scale.status.selector subresource field.
 	WorkerSelector string `json:"workerSelector,omitempty"`
 }
