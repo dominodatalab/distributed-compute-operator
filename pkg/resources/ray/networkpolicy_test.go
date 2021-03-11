@@ -8,6 +8,8 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	"github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 )
 
 func TestNewClusterNetworkPolicy(t *testing.T) {
@@ -57,18 +59,17 @@ func TestNewClusterNetworkPolicy(t *testing.T) {
 	assert.Equal(t, expected, netpol)
 }
 
-func TestNewHeadNetworkPolicy(t *testing.T) {
+func TestNewHeadClientNetworkPolicy(t *testing.T) {
 	rc := rayClusterFixture()
-	rc.Spec.NetworkPolicyClientLabels = []map[string]string{
-		{
-			"ray-client": "true",
+	rc.Spec.NetworkPolicy = v1alpha1.RayClusterNetworkPolicy{
+		ClientServerLabels: map[string]string{
+			"server-client": "true",
 		},
 	}
-	netpol := NewHeadNetworkPolicy(rc)
+	netpol := NewHeadClientNetworkPolicy(rc)
 
 	tcpProto := v1.ProtocolTCP
 	clientPort := intstr.FromInt(10001)
-	dashboardPort := intstr.FromInt(8265)
 	expected := &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-id-ray-client",
@@ -81,7 +82,7 @@ func TestNewHeadNetworkPolicy(t *testing.T) {
 				"app.kubernetes.io/managed-by": "distributed-compute-operator",
 			},
 			Annotations: map[string]string{
-				"distributed-compute.dominodatalab.com/description": "Allows client ingress traffic to head node",
+				"distributed-compute.dominodatalab.com/description": "Allows client ingress traffic to head client server port",
 			},
 		},
 		Spec: networkingv1.NetworkPolicySpec{
@@ -99,6 +100,63 @@ func TestNewHeadNetworkPolicy(t *testing.T) {
 							Protocol: &tcpProto,
 							Port:     &clientPort,
 						},
+					},
+					From: []networkingv1.NetworkPolicyPeer{
+						{
+							PodSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"server-client": "true",
+								},
+							},
+						},
+					},
+				},
+			},
+			PolicyTypes: []networkingv1.PolicyType{
+				"Ingress",
+			},
+		},
+	}
+	assert.Equal(t, expected, netpol)
+}
+
+func TestNewHeadDashboardNetworkPolicy(t *testing.T) {
+	rc := rayClusterFixture()
+	rc.Spec.NetworkPolicy = v1alpha1.RayClusterNetworkPolicy{
+		DashboardLabels: map[string]string{
+			"dashboard-client": "true",
+		},
+	}
+	netpol := NewHeadDashboardNetworkPolicy(rc)
+
+	tcpProto := v1.ProtocolTCP
+	dashboardPort := intstr.FromInt(8265)
+	expected := &networkingv1.NetworkPolicy{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-id-ray-dashboard",
+			Namespace: "fake-ns",
+			Labels: map[string]string{
+				"app.kubernetes.io/name":       "ray",
+				"app.kubernetes.io/instance":   "test-id",
+				"app.kubernetes.io/component":  "head",
+				"app.kubernetes.io/version":    "fake-tag",
+				"app.kubernetes.io/managed-by": "distributed-compute-operator",
+			},
+			Annotations: map[string]string{
+				"distributed-compute.dominodatalab.com/description": "Allows client ingress traffic to head dashboard port",
+			},
+		},
+		Spec: networkingv1.NetworkPolicySpec{
+			PodSelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app.kubernetes.io/name":      "ray",
+					"app.kubernetes.io/instance":  "test-id",
+					"app.kubernetes.io/component": "head",
+				},
+			},
+			Ingress: []networkingv1.NetworkPolicyIngressRule{
+				{
+					Ports: []networkingv1.NetworkPolicyPort{
 						{
 							Protocol: &tcpProto,
 							Port:     &dashboardPort,
@@ -108,7 +166,7 @@ func TestNewHeadNetworkPolicy(t *testing.T) {
 						{
 							PodSelector: &metav1.LabelSelector{
 								MatchLabels: map[string]string{
-									"ray-client": "true",
+									"dashboard-client": "true",
 								},
 							},
 						},

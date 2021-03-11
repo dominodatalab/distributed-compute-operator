@@ -29,6 +29,7 @@ import (
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/logging"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/ray"
+	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
 )
 
 // LastAppliedConfig is the annotation key used to store object state on owned components.
@@ -157,21 +158,25 @@ func (r *RayClusterReconciler) reconcileHeadService(ctx context.Context, rc *dcv
 }
 
 // reconcileNetworkPolicies optionally creates network policies that control
-// traffic flow between cluster nodes and external clients.
+// traffic flow between cluster nodes and external clients. Existing network
+// policies will be deleted if enabled is set to false.
 func (r RayClusterReconciler) reconcileNetworkPolicies(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
-	headNetpol := ray.NewHeadNetworkPolicy(rc)
 	clusterNetpol := ray.NewClusterNetworkPolicy(rc)
+	clientNetpol := ray.NewHeadClientNetworkPolicy(rc)
+	dashboardNetpol := ray.NewHeadDashboardNetworkPolicy(rc)
 
-	if rc.Spec.EnableNetworkPolicy == nil || !*rc.Spec.EnableNetworkPolicy {
-		return r.deleteIfExists(ctx, headNetpol, clusterNetpol)
+	if util.BoolPtrIsNilOrFalse(rc.Spec.NetworkPolicy.Enabled) {
+		return r.deleteIfExists(ctx, dashboardNetpol, clientNetpol, clusterNetpol)
 	}
 
 	if err := r.createOrUpdateOwnedResource(ctx, rc, clusterNetpol); err != nil {
 		return fmt.Errorf("failed to reconcile cluster network policy: %w", err)
 	}
-
-	if err := r.createOrUpdateOwnedResource(ctx, rc, headNetpol); err != nil {
-		return fmt.Errorf("failed to reconcile head network policy: %w", err)
+	if err := r.createOrUpdateOwnedResource(ctx, rc, clientNetpol); err != nil {
+		return fmt.Errorf("failed to reconcile head client network policy: %w", err)
+	}
+	if err := r.createOrUpdateOwnedResource(ctx, rc, dashboardNetpol); err != nil {
+		return fmt.Errorf("failed to reconcile head dashboard network policy: %w", err)
 	}
 
 	return nil
