@@ -51,3 +51,9 @@ func ParseImageDefinition(def *v1alpha1.OCIImageDefinition) (string, error) {
 func BoolPtrIsTrue(ptr *bool) bool {
 	return ptr != nil && *ptr
 }
+
+// BoolPtrIsNilOrFalse returns true if bool pointer is nil or false, otherwise
+// this returns false.
+func BoolPtrIsNilOrFalse(ptr *bool) bool {
+	return ptr == nil || !*ptr
+}

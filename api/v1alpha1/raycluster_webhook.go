@@ -22,17 +22,16 @@ const (
 
 var (
 	defaultPort                int32 = 6379
-	defaultRedisShardPorts           = []int32{6380, 6381}
 	defaultClientServerPort    int32 = 10001
 	defaultObjectManagerPort   int32 = 2384
 	defaultNodeManagerPort     int32 = 2385
 	defaultDashboardPort       int32 = 8265
+	defaultRedisShardPorts           = []int32{6380, 6381}
 	defaultEnableDashboard           = pointer.BoolPtr(true)
 	defaultEnableNetworkPolicy       = pointer.BoolPtr(true)
 	defaultWorkerReplicas            = pointer.Int32Ptr(1)
-
-	defaultNetworkPolicyClientLabels = []map[string]string{
-		{"ray-client": "true"},
+	defaultNetworkPolicyLabels       = map[string]string{
+		"ray-client": "true",
 	}
 
 	defaultImage = &OCIImageDefinition{
@@ -88,13 +87,17 @@ func (r *RayCluster) Default() {
 		log.Info("setting enable dashboard flag", "value", *defaultEnableDashboard)
 		r.Spec.EnableDashboard = defaultEnableDashboard
 	}
-	if r.Spec.EnableNetworkPolicy == nil {
+	if r.Spec.NetworkPolicy.Enabled == nil {
 		log.Info("setting enable network policy flag", "value", *defaultEnableNetworkPolicy)
-		r.Spec.EnableNetworkPolicy = defaultEnableNetworkPolicy
+		r.Spec.NetworkPolicy.Enabled = defaultEnableNetworkPolicy
 	}
-	if r.Spec.NetworkPolicyClientLabels == nil {
-		log.Info("setting default network policy client labels", "value", defaultNetworkPolicyClientLabels)
-		r.Spec.NetworkPolicyClientLabels = defaultNetworkPolicyClientLabels
+	if r.Spec.NetworkPolicy.ClientServerLabels == nil {
+		log.Info("setting default network policy client server labels", "value", defaultNetworkPolicyLabels)
+		r.Spec.NetworkPolicy.ClientServerLabels = defaultNetworkPolicyLabels
+	}
+	if r.Spec.NetworkPolicy.DashboardLabels == nil {
+		log.Info("setting default network policy dashboard labels", "value", defaultNetworkPolicyLabels)
+		r.Spec.NetworkPolicy.DashboardLabels = defaultNetworkPolicyLabels
 	}
 	if r.Spec.Worker.Replicas == nil {
 		log.Info("setting default worker replicas", "value", *defaultWorkerReplicas)

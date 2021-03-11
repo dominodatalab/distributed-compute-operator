@@ -20,21 +20,21 @@ function dco::_error {
 }
 
 function dco::minikube_setup() {
-  if ! minikube profile list 2> /dev/null | grep -q $MINIKUBE_PROFILE; then
+  if ! minikube profile list 2> /dev/null | grep -q "$MINIKUBE_PROFILE"; then
     dco::_info "Creating minikube cluster"
     minikube start \
-      --profile=$MINIKUBE_PROFILE \
-      --cpus=$MINIKUBE_CPUS \
-      --memory=$MINIKUBE_MEMORY \
-      --disk-size=$MINIKUBE_DISK_SIZE \
+      --profile="$MINIKUBE_PROFILE" \
+      --cpus="$MINIKUBE_CPUS" \
+      --memory="$MINIKUBE_MEMORY" \
+      --disk-size="$MINIKUBE_DISK_SIZE" \
       --driver=hyperkit \
       --addons=pod-security-policy \
       --extra-config=apiserver.enable-admission-plugins=PodSecurityPolicy \
       --network-plugin=cni \
       --cni=calico
-  elif minikube status --profile=$MINIKUBE_PROFILE | grep -q 'host: Stopped'; then
+  elif minikube status --profile="$MINIKUBE_PROFILE" | grep -q 'host: Stopped'; then
     dco::_info "Restarting minikube cluster"
-    minikube start --profile=$MINIKUBE_PROFILE
+    minikube start --profile="$MINIKUBE_PROFILE"
   else
     dco::_info "Minikube cluster is running"
   fi
@@ -84,7 +84,7 @@ function dco::minikube_setup() {
 
 function dco::minikube_teardown() {
   dco::_info "Tearing down development environment"
-  minikube delete --profile=$MINIKUBE_PROFILE
+  minikube delete --profile="$MINIKUBE_PROFILE"
   dco::_info "Teardown complete"
 }
 
@@ -92,10 +92,10 @@ function dco::docker_build() {
     image="$IMAGE_NAME:$IMAGE_TAG_PREFIX$(date +%s)"
 
     dco::_info "Building local development image '$image'"
-    make docker-build IMG="$image"
+    make manifests generate docker-build IMG="$image"
 
     dco::_info "Loading image '$image' into Minikube"
-    minikube image load "$image" --profile=$MINIKUBE_PROFILE
+    minikube image load "$image" --profile="$MINIKUBE_PROFILE"
 
     dco::_info "Loading complete"
 }
@@ -104,12 +104,12 @@ function dco::helm_install() {
   local chart_name ssh_key ip_addr latest_tag
 
   chart_name=distributed-compute-operator
-  ssh_key=$(minikube ssh-key --profile=$MINIKUBE_PROFILE)
-  ip_addr=$(minikube ip --profile=$MINIKUBE_PROFILE)
+  ssh_key=$(minikube ssh-key --profile="$MINIKUBE_PROFILE")
+  ip_addr=$(minikube ip --profile="$MINIKUBE_PROFILE")
   latest_tag=$(
     ssh -o StrictHostKeyChecking=no -i "$ssh_key" docker@"$ip_addr" \
-      "docker image list $IMAGE_NAME:$IMAGE_TAG_PREFIX* --format '{{ .Tag }}:{{ .CreatedAt }}'" | \
-        sort -k 2 | tail -n 1 | cut -d ':' -f 1
+      "docker image list $IMAGE_NAME:$IMAGE_TAG_PREFIX* --format '{{ .Tag }}|{{ .CreatedAt }}'" | \
+        sort -r -t '|' -k 2 | head -n 1 | cut -d '|' -f 1
   )
 
   dco::_info "Deploying operator image '$IMAGE_NAME:$latest_tag'"
@@ -118,7 +118,7 @@ function dco::helm_install() {
     $chart_name \
     deploy/helm/$chart_name \
     --install \
-    --set image.repository=$IMAGE_NAME \
+    --set image.repository="$IMAGE_NAME" \
     --set image.tag="$latest_tag" \
     --set config.logDevelopmentMode=true
 }

@@ -80,6 +80,7 @@ issues:
   exclude-rules:
     - path: _test\.go
       linters:
+        - dupl
         - exhaustive
         - gocyclo
         - gomnd

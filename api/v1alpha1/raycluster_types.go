@@ -44,17 +44,28 @@ type RayClusterHead struct {
 type RayClusterWorker struct {
 	RayClusterNode `json:",inline"`
 
-	// Replicas configures the total number of workers in the cluster.
-	// This field behaves differently when Autoscaling is enabled. If Autoscaling.MinReplicas is unspecified, then the
-	// minimum number of replicas will be set to this value. Additionally, you can specify an "initial cluster size" by
-	// setting this field to some value above the minimum number of replicas.
+	// Replicas configures the total number of workers in the cluster. This
+	// field behaves differently when Autoscaling is enabled. If
+	// Autoscaling.MinReplicas is unspecified, then the minimum number of
+	// replicas will be set to this value. Additionally, you can specify an
+	// "initial cluster size" by setting this field to some value above the
+	// minimum number of replicas.
 	Replicas *int32 `json:"replicas,omitempty"`
 }
 
 // RayClusterNetworkPolicy defines network policy configuration options.
 type RayClusterNetworkPolicy struct {
-	ClientServerLabels []map[string]string
-	DashboardLabels    []map[string]string
+	// Enabled controls the creation of network policies that limit and provide
+	// ingress access to the cluster nodes.
+	Enabled *bool `json:"enabled,omitempty"`
+
+	// ClientServerLabels defines the pod selector clause that grant ingress
+	// access to the head client server port.
+	ClientServerLabels map[string]string `json:"clientServerLabels,omitempty"`
+
+	// DashboardLabels defines the pod selector clause used to grant ingress
+	// access to the head dashboard port.
+	DashboardLabels map[string]string `json:"dashboardLabels,omitempty"`
 }
 
 // RayClusterSpec defines the desired state of a RayCluster resource.
@@ -62,11 +73,16 @@ type RayClusterSpec struct {
 	// Image used to launch head and worker nodes.
 	Image *OCIImageDefinition `json:"image,omitempty"`
 
-	// ImagePullSecrets are references to secrets with credentials to private registries used to pull images.
+	// ImagePullSecrets are references to secrets with credentials to private
+	// registries used to pull images.
 	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 
 	// Autoscaling parameters used to scale up/down ray worker nodes.
 	Autoscaling *Autoscaling `json:"autoscaling,omitempty"`
+
+	// NetworkPolicy parameters that grant intra-cluster and external network
+	// access to cluster nodes.
+	NetworkPolicy RayClusterNetworkPolicy `json:"networkPolicy,omitempty"`
 
 	// Port is the port of the head ray process.
 	Port int32 `json:"port,omitempty"`
@@ -74,7 +90,8 @@ type RayClusterSpec struct {
 	// RedisShardPorts is a list of ports for non-primary Redis shards.
 	RedisShardPorts []int32 `json:"redisShardPorts,omitempty"`
 
-	// ClientServerPort is the port number to which the ray client server will bind.
+	// ClientServerPort is the port number to which the ray client server will
+	// bind. This port is used by external clients to submit work.
 	ClientServerPort int32 `json:"clientServerPort,omitempty"`
 
 	// ObjectManagerPort is the raylet port for the object manager.
@@ -83,7 +100,8 @@ type RayClusterSpec struct {
 	// NodeManagerPort is the raylet port for the node manager.
 	NodeManagerPort int32 `json:"nodeManagerPort,omitempty"`
 
-	// ObjectStoreMemoryBytes is initial amount of memory with which to start the object store.
+	// ObjectStoreMemoryBytes is initial amount of memory with which to start
+	// the object store.
 	ObjectStoreMemoryBytes *int64 `json:"objectStoreMemoryBytes,omitempty"`
 
 	// DashboardPort is the port used by the dashboard server.
@@ -92,22 +110,16 @@ type RayClusterSpec struct {
 	// EnableDashboard starts the dashboard web UI.
 	EnableDashboard *bool `json:"enableDashboard,omitempty"`
 
-	// EnableNetworkPolicy will create a network policy that restricts ingress to the cluster.
-	EnableNetworkPolicy *bool `json:"enableNetworkPolicy,omitempty"`
-
-	// NetworkPolicyClientLabels will create a pod selector clause for each set of labels.
-	// This is used to grant ingress access to one or more groups of external pods and is
-	// only applicable when EnableNetworkPolicy is true.
-	NetworkPolicyClientLabels []map[string]string `json:"networkPolicyClientLabels,omitempty"`
-
-	// PodSecurityPolicy name can be provided to govern execution of the ray processes within pods.
+	// PodSecurityPolicy name can be provided to govern execution of the ray
+	// processes within pods.
 	PodSecurityPolicy string `json:"podSecurityPolicy,omitempty"`
 
 	// PodSecurityContext added to every ray pod.
 	PodSecurityContext *corev1.PodSecurityContext `json:"podSecurityContext,omitempty"`
 
-	// ServiceAccountName will disable the creation of a dedicated cluster service account.
-	// The service account referenced by the provided name will be used instead.
+	// ServiceAccountName will disable the creation of a dedicated cluster
+	// service account. The service account referenced by the provided name
+	// will be used instead.
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 
 	// EnvVars added to all every ray pod container.

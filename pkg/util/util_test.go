@@ -113,9 +113,17 @@ func TestParseImageDefinition(t *testing.T) {
 }
 
 func TestBoolPtrIsTrue(t *testing.T) {
-	x, y := true, false
+	tb, fb := true, false
 
-	assert.True(t, BoolPtrIsTrue(&x))
-	assert.False(t, BoolPtrIsTrue(&y))
+	assert.True(t, BoolPtrIsTrue(&tb))
+	assert.False(t, BoolPtrIsTrue(&fb))
 	assert.False(t, BoolPtrIsTrue(nil))
+}
+
+func TestBoolPtrIsNilOrFalse(t *testing.T) {
+	tb, fb := true, false
+
+	assert.True(t, BoolPtrIsNilOrFalse(nil))
+	assert.True(t, BoolPtrIsNilOrFalse(&fb))
+	assert.False(t, BoolPtrIsNilOrFalse(&tb))
 }
