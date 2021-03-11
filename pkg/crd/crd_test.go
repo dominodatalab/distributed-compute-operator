@@ -105,6 +105,8 @@ func TestDelete(t *testing.T) {
 			return true, nil, apierrors.NewNotFound(action.GetResource().GroupResource(), action.GetSubresource())
 		})
 
+		t.Cleanup(overrideCRDClient(fakeClient))
+
 		assert.NoError(t, Delete(context.Background()), "Delete failed when CRD not found")
 	})
 
