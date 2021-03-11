@@ -51,9 +51,8 @@ func TestApply(t *testing.T) {
 		fakeClient.PrependReactor("update", "*", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 			updateAction := action.(k8stesting.UpdateAction)
 			obj := updateAction.GetObject().(*apixv1.CustomResourceDefinition)
-			if obj.ResourceVersion != resourceVersion {
-				t.Errorf("ResourceVersion was not passed through on update; received %v, expected %v", obj.ResourceVersion, resourceVersion)
-			}
+			assert.Equalf(t, resourceVersion, obj.ResourceVersion,
+				"ResourceVersion was not passed through on update; received %v, expected %v", obj.ResourceVersion, resourceVersion)
 
 			updated = true
 			return true, nil, nil
@@ -98,6 +97,15 @@ func TestDelete(t *testing.T) {
 
 		require.NoError(t, Delete(context.Background()))
 		assert.True(t, deleted, "Existing CRD was not deleted")
+	})
+
+	t.Run("not_found", func(t *testing.T) {
+		fakeClient := fake.NewSimpleClientset()
+		fakeClient.PrependReactor("get", "*", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+			return true, nil, apierrors.NewNotFound(action.GetResource().GroupResource(), action.GetSubresource())
+		})
+
+		assert.NoError(t, Delete(context.Background()), "Delete failed when CRD not found")
 	})
 
 	t.Run("error", func(t *testing.T) {
