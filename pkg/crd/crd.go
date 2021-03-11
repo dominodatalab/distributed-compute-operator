@@ -16,7 +16,10 @@ import (
 	"github.com/dominodatalab/distributed-compute-operator/config/crd"
 )
 
-var log = zap.New()
+var (
+	log         = zap.New()
+	crdClientFn = getCRDClient
+)
 
 // Apply will create or update all project CRDs inside a Kubernetes cluster.
 // The latest available version of the CRD will be used to perform this operation.
@@ -27,8 +30,7 @@ func Apply(ctx context.Context) error {
 		if apierrors.IsNotFound(err) {
 			log.Info("Creating CRD", "Name", crd.Name)
 			_, err = client.Create(ctx, crd, metav1.CreateOptions{})
-		}
-		if err == nil {
+		} else if err == nil {
 			log.Info("Updating CRD", "Name", crd.Name)
 			crd.SetResourceVersion(found.ResourceVersion)
 			_, err = client.Update(ctx, crd, metav1.UpdateOptions{})
@@ -59,7 +61,7 @@ func Delete(ctx context.Context) error {
 
 // processCRDs loads all available CRDs and uses a processor func to act upon them.
 func processCRDs(processor func(client apixv1client.CustomResourceDefinitionInterface, crd *apixv1.CustomResourceDefinition) error) error {
-	client, err := getCRDClient()
+	client, err := crdClientFn()
 	if err != nil {
 		return err
 	}
