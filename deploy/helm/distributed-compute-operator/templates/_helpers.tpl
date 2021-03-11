@@ -52,3 +52,17 @@ Webhook certificate injection annotation
 {{- define "dco.webhook.annotation" -}}
 cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "dco.webhook.certificate" . }}
 {{- end -}}
+
+{{/*
+Returns a name suitable for all manager RBAC objects
+*/}}
+{{- define "dco.rbac.managerName" -}}
+dominodatalab:operator:{{ include "common.names.fullname" . }}:manager
+{{- end -}}
+
+{{/*
+Returns a name suitable for all hook RBAC objects
+*/}}
+{{- define "dco.rbac.hookName" -}}
+dominodatalab:operator:{{ include "common.names.fullname" . }}:hook
+{{- end -}}

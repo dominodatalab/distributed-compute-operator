@@ -14,7 +14,7 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: dominodatalab:operator:distributed-compute-operator
+  name: {{ include "dco.rbac.hookName" . }}
   labels:
     {{- include "common.labels.standard" . | nindent 4 }}
   annotations:
@@ -36,7 +36,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: dominodatalab:operator:distributed-compute-operator
+  name: {{ include "dco.rbac.hookName" . }}
   labels:
     {{- include "common.labels.standard" . | nindent 4 }}
   annotations:
@@ -46,7 +46,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: dominodatalab:operator:distributed-compute-operator
+  name: {{ include "dco.rbac.hookName" . }}
 subjects:
   - kind: ServiceAccount
     name: {{ include "dco.serviceAccountName" . }}-hook
