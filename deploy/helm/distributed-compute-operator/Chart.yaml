@@ -2,7 +2,7 @@ apiVersion: v2
 type: application
 name: distributed-compute-operator
 version: 0.1.0
-appVersion: "latest"
+appVersion: "v0.1.0-rc2"
 kubeVersion: ">= 1.16.0"
 description: Kubernetes operator that manages parallel computing clusters.
 home: https://github.com/dominodatalab/distributed-compute-operator
@@ -10,3 +10,7 @@ icon: https://raw.githubusercontent.com/dominodatalab/distributed-compute-operat
 maintainers:
   - name: sonnysideup
     email: eng-platform@dominodatalab.com
+dependencies:
+  - name: common
+    version: 1.4.1
+    repository: https://charts.bitnami.com/bitnami
