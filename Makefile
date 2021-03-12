@@ -70,6 +70,23 @@ docker-build: ## Build docker image with the manager.
 docker-push: ## Push docker image with the manager.
 	docker push ${IMG}
 
+
+HELM_REGISTRY_HOST ?= ghcr.io
+helm-login: export HELM_EXPERIMENTAL_OCI=1
+helm-login: helm ## Authenticate with oci distribution registry.
+	@[ "${HELM_REGISTRY_USERNAME}" ] || ( echo ">> HELM_REGISTRY_USERNAME is not set"; exit 1 )
+	@[ "${HELM_REGISTRY_PASSWORD}" ] || ( echo ">> HELM_REGISTRY_PASSWORD is not set"; exit 1 )
+	@echo $(HELM_REGISTRY_PASSWORD) | $(HELM) registry login $(HELM_REGISTRY_HOST) -u $(HELM_REGISTRY_USERNAME) --password-stdin
+
+HELM_APP_VERSION ?= latest
+HELM_CHART_VERSION ?= 0.0.0
+helm-push: export HELM_EXPERIMENTAL_OCI=1
+helm-push: helm ## Package and push project helm chart.
+	$(HELM) package deploy/helm/distributed-compute-operator --destination chart-archives --app-version $(HELM_APP_VERSION) --version $(HELM_CHART_VERSION)
+	$(HELM) chart save chart-archives/distributed-compute-operator-*.tgz ghcr.io/dominodatalab/helm/distributed-compute-operator
+	$(HELM) chart push ghcr.io/dominodatalab/helm/distributed-compute-operator:$(HELM_CHART_VERSION)
+	rm -rf chart-archives
+
 ##@ Deployment
 
 install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
@@ -105,6 +122,14 @@ golangci-lint: ## Download golangci-lint locally if necessary.
 		set -e ;\
 		echo "Installing golangci-lint" ;\
 		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(PROJECT_DIR)/bin v1.37.1 ;\
+	}
+
+HELM = $(shell pwd)/bin/helm
+helm: ## Download helm locally if necessary.
+	@[ -f $(HELM) ] || { \
+		set -ex ;\
+		echo "Installing helm" ;\
+		curl -sSfL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | HELM_INSTALL_DIR=$(PROJECT_DIR)/bin sh -s -- --no-sudo -v v3.5.3 ;\
 	}
 
 # go-get-tool will 'go get' any package $2 and install it to $1.

@@ -104,6 +104,12 @@ jobs:
           org.opencontainers.image.revision=${{ github.sha }}
           org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
 
+    - name: Login to Helm OCI Distribution Registry
+      run:  make helm-login HELM_REGISTRY_USERNAME=${{ github.repository_owner }} HELM_REGISTRY_PASSWORD=${{ secrets.CR_PAT }}
+
+    - name: Package and push Helm chart
+      run: make helm-push HELM_APP_VERSION=${{ steps.docker_prep.outputs.version }} HELM_CHART_VERSION=${{ steps.docker_prep.outputs.version }}
+
     - name: Publish release
       if: startsWith(github.ref, 'refs/tags/')
       uses: goreleaser/goreleaser-action@v2
