@@ -70,7 +70,6 @@ docker-build: ## Build docker image with the manager.
 docker-push: ## Push docker image with the manager.
 	docker push ${IMG}
 
-
 HELM_REGISTRY_HOST ?= ghcr.io
 helm-login: export HELM_EXPERIMENTAL_OCI=1
 helm-login: helm ## Authenticate with oci distribution registry.
@@ -79,12 +78,11 @@ helm-login: helm ## Authenticate with oci distribution registry.
 	@echo $(HELM_REGISTRY_PASSWORD) | $(HELM) registry login $(HELM_REGISTRY_HOST) -u $(HELM_REGISTRY_USERNAME) --password-stdin
 
 HELM_APP_VERSION ?= latest
-HELM_CHART_VERSION ?= 0.0.0
 helm-push: export HELM_EXPERIMENTAL_OCI=1
 helm-push: helm ## Package and push project helm chart.
-	$(HELM) package deploy/helm/distributed-compute-operator --destination chart-archives --app-version $(HELM_APP_VERSION) --version $(HELM_CHART_VERSION)
-	$(HELM) chart save chart-archives/distributed-compute-operator-*.tgz ghcr.io/dominodatalab/helm/distributed-compute-operator
-	$(HELM) chart push ghcr.io/dominodatalab/helm/distributed-compute-operator:$(HELM_CHART_VERSION)
+	$(HELM) package deploy/helm/distributed-compute-operator --destination chart-archives --app-version $(HELM_APP_VERSION)
+	$(HELM) chart save chart-archives/distributed-compute-operator-*.tgz $(HELM_REGISTRY_HOST)/dominodatalab/helm/distributed-compute-operator
+	$(HELM) chart push $(HELM_REGISTRY_HOST)/dominodatalab/helm/distributed-compute-operator
 	rm -rf chart-archives
 
 ##@ Deployment
