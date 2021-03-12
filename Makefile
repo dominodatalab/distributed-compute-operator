@@ -127,9 +127,10 @@ golangci-lint: ## Download golangci-lint locally if necessary.
 HELM = $(shell pwd)/bin/helm
 helm: ## Download helm locally if necessary.
 	@[ -f $(HELM) ] || { \
-		set -ex ;\
+		set -e ;\
 		echo "Installing helm" ;\
-		curl -sSfL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | HELM_INSTALL_DIR=$(PROJECT_DIR)/bin sh -s -- --no-sudo -v v3.5.3 ;\
+		export HELM_INSTALL_DIR=$(PROJECT_DIR)/bin ;\
+		curl -sSfL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | sh -s -- --no-sudo --version v3.5.3 ;\
 	}
 
 # go-get-tool will 'go get' any package $2 and install it to $1.
