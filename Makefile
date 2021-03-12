@@ -80,9 +80,9 @@ helm-login: helm ## Authenticate with oci distribution registry.
 HELM_APP_VERSION ?= latest
 helm-push: export HELM_EXPERIMENTAL_OCI=1
 helm-push: helm ## Package and push project helm chart.
-	$(HELM) package deploy/helm/distributed-compute-operator --destination chart-archives --app-version $(HELM_APP_VERSION)
-	$(HELM) chart save chart-archives/distributed-compute-operator-*.tgz $(HELM_REGISTRY_HOST)/dominodatalab/helm/distributed-compute-operator
-	$(HELM) chart push $(HELM_REGISTRY_HOST)/dominodatalab/helm/distributed-compute-operator
+	$(HELM) package deploy/helm/distributed-compute-operator --destination chart-archives --app-version "$(HELM_APP_VERSION)"
+	$(HELM) chart save chart-archives/distributed-compute-operator-*.tgz "$(HELM_REGISTRY_HOST)/dominodatalab/helm/distributed-compute-operator"
+	$(HELM) chart push "$(HELM_REGISTRY_HOST)/dominodatalab/helm/distributed-compute-operator:$(shell ls chart-archives/ | sed -E 's/distributed-compute-operator-(.*)\.tgz/\1/')"
 	rm -rf chart-archives
 
 ##@ Deployment
