@@ -130,7 +130,7 @@ helm: ## Download helm locally if necessary.
 		set -e ;\
 		echo "Installing helm" ;\
 		export HELM_INSTALL_DIR=$(PROJECT_DIR)/bin ;\
-		curl -sSfL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | sh -s -- --no-sudo --version v3.5.3 ;\
+		curl -sSfL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | $(SHELL) -s -- --no-sudo --version v3.5.3 ;\
 	}
 
 # go-get-tool will 'go get' any package $2 and install it to $1.
