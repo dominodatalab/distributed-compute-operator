@@ -36,7 +36,7 @@ var _ = Describe("RayCluster", func() {
 		Expect(k8sClient.Delete(ctx, testNS)).To(Succeed())
 	})
 
-	Describe("Default", func() {
+	Describe("Defaulting", func() {
 		It("sets expected values on an empty object", func() {
 			rc := fixture(testNS.Name)
 			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
@@ -69,13 +69,17 @@ var _ = Describe("RayCluster", func() {
 				PointTo(Equal(true)),
 				"enable dashboard should point to true",
 			)
-			Expect(rc.Spec.EnableNetworkPolicy).To(
+			Expect(rc.Spec.NetworkPolicy.Enabled).To(
 				PointTo(Equal(true)),
 				"enable network policy should point to true",
 			)
-			Expect(rc.Spec.NetworkPolicyClientLabels).To(
-				Equal([]map[string]string{{"ray-client": "true"}}),
+			Expect(rc.Spec.NetworkPolicy.ClientServerLabels).To(
+				Equal(map[string]string{"ray-client": "true"}),
 				`network policy client labels should equal [{"ray-client": "true"}]`,
+			)
+			Expect(rc.Spec.NetworkPolicy.DashboardLabels).To(
+				Equal(map[string]string{"ray-client": "true"}),
+				`network policy dashboard labels should equal [{"ray-client": "true"}]`,
 			)
 			Expect(rc.Spec.Worker.Replicas).To(
 				PointTo(BeNumerically("==", 1)),
@@ -143,12 +147,34 @@ var _ = Describe("RayCluster", func() {
 			Expect(rc.Spec.EnableDashboard).To(PointTo(Equal(false)))
 		})
 
-		It("does not enable network policies when false", func() {
-			rc := fixture(testNS.Name)
-			rc.Spec.EnableNetworkPolicy = pointer.BoolPtr(false)
+		Context("Network policies", func() {
+			It("are not enabled when false", func() {
+				rc := fixture(testNS.Name)
+				rc.Spec.NetworkPolicy.Enabled = pointer.BoolPtr(false)
 
-			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
-			Expect(rc.Spec.EnableNetworkPolicy).To(PointTo(Equal(false)))
+				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
+				Expect(rc.Spec.NetworkPolicy.Enabled).To(PointTo(Equal(false)))
+			})
+
+			It("use provided client server labels", func() {
+				rc := fixture(testNS.Name)
+
+				expected := map[string]string{"server-client": "true"}
+				rc.Spec.NetworkPolicy.ClientServerLabels = expected
+
+				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
+				Expect(rc.Spec.NetworkPolicy.ClientServerLabels).To(Equal(expected))
+			})
+
+			It("use provided dashboard labels", func() {
+				rc := fixture(testNS.Name)
+
+				expected := map[string]string{"dashboard-client": "true"}
+				rc.Spec.NetworkPolicy.DashboardLabels = expected
+
+				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
+				Expect(rc.Spec.NetworkPolicy.DashboardLabels).To(Equal(expected))
+			})
 		})
 	})
 

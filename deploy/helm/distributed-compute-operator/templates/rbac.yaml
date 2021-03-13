@@ -1,16 +1,16 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "dco.fullname" . }}-manager-psp
+  name: {{ include "dco.rbac.managerName" . }}
   labels:
-    {{- include "dco.labels" . | nindent 4 }}
+    {{- include "common.labels.standard" . | nindent 4 }}
 rules:
 - apiGroups:
   - policy
   resources:
   - podsecuritypolicies
   verbs:
-  - use # in order to grant RBAC permissions to CR clusters
+  - use # required to grant RBAC permission "use" to CR clusters
   - list
   - watch
 
@@ -18,13 +18,13 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "dco.fullname" . }}-manager-psp
+  name: {{ include "dco.rbac.managerName" . }}
   labels:
-    {{- include "dco.labels" . | nindent 4 }}
+    {{- include "common.labels.standard" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "dco.fullname" . }}-manager-psp
+  name: {{ include "dco.rbac.managerName" . }}
 subjects:
 - kind: ServiceAccount
   name: {{ include "dco.serviceAccountName" . }}
@@ -34,9 +34,9 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ include "dco.fullname" . }}-manager
+  name: {{ include "dco.rbac.managerName" . }}
   labels:
-    {{- include "dco.labels" . | nindent 4 }}
+    {{- include "common.labels.standard" . | nindent 4 }}
 rules:
 - apiGroups:
   - distributed-compute.dominodatalab.com
@@ -143,13 +143,13 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ include "dco.fullname" . }}-manager
+  name: {{ include "dco.rbac.managerName" . }}
   labels:
-    {{- include "dco.labels" . | nindent 4 }}
+    {{- include "common.labels.standard" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: {{ include "dco.fullname" . }}-manager
+  name: {{ include "dco.rbac.managerName" . }}
 subjects:
 - kind: ServiceAccount
   name: {{ include "dco.serviceAccountName" . }}

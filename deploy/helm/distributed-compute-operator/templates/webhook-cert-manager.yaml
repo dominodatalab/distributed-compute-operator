@@ -3,7 +3,7 @@ kind: Issuer
 metadata:
   name: {{ include "dco.webhook.issuer" . }}
   labels:
-    {{- include "dco.labels" . | nindent 4 }}
+    {{- include "common.labels.standard" . | nindent 4 }}
 spec:
   selfSigned: {}
 
@@ -13,7 +13,7 @@ kind: Certificate
 metadata:
   name: {{ include "dco.webhook.certificate" . }}
   labels:
-    {{- include "dco.labels" . | nindent 4 }}
+    {{- include "common.labels.standard" . | nindent 4 }}
 spec:
   dnsNames:
     - {{ include "dco.webhook.service" . }}.{{ .Release.Namespace }}.svc
