@@ -1,2 +1,5 @@
+coverage:
+  status:
+    patch: off
 ignore:
   - "api/**/zz_generated.deepcopy.go"
