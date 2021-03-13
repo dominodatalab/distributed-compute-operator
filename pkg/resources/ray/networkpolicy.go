@@ -63,9 +63,9 @@ func NewHeadClientNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.Network
 	)
 }
 
-// NewHeadClientNetworkPolicy generates a network policy that allows dashboard
-// access to any pods that have been appointed with configured dashboard
-// labels.
+// NewHeadDashboardNetworkPolicy generates a network policy that allows
+// dashboard access to any pods that have been appointed with configured
+// dashboard labels.
 func NewHeadDashboardNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.NetworkPolicy {
 	return headNetworkPolicy(
 		rc,
