@@ -70,21 +70,6 @@ docker-build: ## Build docker image with the manager.
 docker-push: ## Push docker image with the manager.
 	docker push ${IMG}
 
-HELM_REGISTRY_HOST ?= ghcr.io
-helm-login: export HELM_EXPERIMENTAL_OCI=1
-helm-login: helm ## Authenticate with oci distribution registry.
-	@[ "${HELM_REGISTRY_USERNAME}" ] || ( echo ">> HELM_REGISTRY_USERNAME is not set"; exit 1 )
-	@[ "${HELM_REGISTRY_PASSWORD}" ] || ( echo ">> HELM_REGISTRY_PASSWORD is not set"; exit 1 )
-	@echo $(HELM_REGISTRY_PASSWORD) | $(HELM) registry login $(HELM_REGISTRY_HOST) -u $(HELM_REGISTRY_USERNAME) --password-stdin
-
-HELM_APP_VERSION ?= latest
-helm-push: export HELM_EXPERIMENTAL_OCI=1
-helm-push: helm ## Package and push project helm chart.
-	$(HELM) package deploy/helm/distributed-compute-operator --destination chart-archives --app-version "$(HELM_APP_VERSION)"
-	$(HELM) chart save chart-archives/distributed-compute-operator-*.tgz "$(HELM_REGISTRY_HOST)/dominodatalab/helm/distributed-compute-operator"
-	$(HELM) chart push "$(HELM_REGISTRY_HOST)/dominodatalab/helm/distributed-compute-operator:$(shell ls chart-archives/ | sed -E 's/distributed-compute-operator-(.*)\.tgz/\1/')"
-	rm -rf chart-archives
-
 ##@ Deployment
 
 install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
