@@ -97,7 +97,7 @@ func (r *RayClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	if err := r.updateStatus(ctx, rc); err != nil {
 		if strings.Contains(err.Error(), genericregistry.OptimisticLockErrorMsg) {
-			log.V(1).Info("canot update status on modified object, requeuing key for reprocessing")
+			log.V(1).Info("cannot update status on modified object, requeuing key for reprocessing")
 			return ctrl.Result{RequeueAfter: 500 * time.Millisecond}, nil
 		}
 
