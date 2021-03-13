@@ -109,9 +109,9 @@ jobs:
         make helm
 
         REGISTRY=ghcr.io
-        HELM_IMAGE="$(echo ${{ github.repository }} | awk -F / '{ print $(NF-1)  "/helm/" $NF }')"
+        IMAGE="$(echo ${{ github.repository }} | awk -F / '{ print $(NF-1)  "/helm/" $NF }')"
         VERSION="${{ steps.docker_prep.outputs.version }}"
-        TAG="$HELM_IMAGE:$VERSION"
+        TAG="$REGISTRY/$IMAGE:$VERSION"
 
         echo "${{ secrets.CR_PAT }}" | ./bin/helm registry login "$REGISTRY" --username "${{ github.repository_owner }}" --password-stdin
 
