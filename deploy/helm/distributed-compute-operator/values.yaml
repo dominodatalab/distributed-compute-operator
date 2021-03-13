@@ -28,7 +28,8 @@ config:
   logDevelopmentMode: false
 
 image:
-  repository: ghcr.io/dominodatalab/distributed-compute-operator
+  registry: ghcr.io
+  repository: dominodatalab/distributed-compute-operator
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""

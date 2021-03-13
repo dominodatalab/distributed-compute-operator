@@ -107,6 +107,15 @@ golangci-lint: ## Download golangci-lint locally if necessary.
 		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(PROJECT_DIR)/bin v1.37.1 ;\
 	}
 
+HELM = $(shell pwd)/bin/helm
+helm: ## Download helm locally if necessary.
+	@[ -f $(HELM) ] || { \
+		set -e ;\
+		echo "Installing helm" ;\
+		export HELM_INSTALL_DIR=$(PROJECT_DIR)/bin ;\
+		curl -sSfL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | $(SHELL) -s -- --no-sudo --version v3.5.3 ;\
+	}
+
 # go-get-tool will 'go get' any package $2 and install it to $1.
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 define go-get-tool
