@@ -28,8 +28,9 @@ config:
   logDevelopmentMode: false
 
 image:
-  repository: "local"
-  pullPolicy: Never
+  registry: ghcr.io
+  repository: dominodatalab/distributed-compute-operator
+  pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "audi-dco-test"
 

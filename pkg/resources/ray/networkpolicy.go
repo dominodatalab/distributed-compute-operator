@@ -10,6 +10,12 @@ import (
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources"
 )
 
+const (
+	descriptionCluster   = "Allows all ingress traffic between cluster nodes"
+	descriptionClient    = "Allows client ingress traffic to head client server port"
+	descriptionDashboard = "Allows client ingress traffic to head dashboard port"
+)
+
 // NewClusterNetworkPolicy generates a network policy that allows all nodes
 // within a single cluster to communicate on all ports.
 func NewClusterNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.NetworkPolicy {
@@ -23,7 +29,7 @@ func NewClusterNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.NetworkPol
 			Namespace: rc.Namespace,
 			Labels:    MetadataLabels(rc),
 			Annotations: map[string]string{
-				resources.DescriptionAnnotationKey: "Allows all ingress traffic between cluster nodes",
+				resources.DescriptionAnnotationKey: descriptionCluster,
 			},
 		},
 		Spec: networkingv1.NetworkPolicySpec{
@@ -44,29 +50,43 @@ func NewClusterNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.NetworkPol
 	}
 }
 
-// NewHeadNetworkPolicy generates a network policy that allows client/dashboard
-// port access to any pods that have been appointed with the ClientAccessLabels.
-func NewHeadNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.NetworkPolicy {
-	proto := corev1.ProtocolTCP
-	clientPort := intstr.FromInt(int(rc.Spec.ClientServerPort))
-	dashboardPort := intstr.FromInt(int(rc.Spec.DashboardPort))
+// NewHeadClientNetworkPolicy generates a network policy that allows client
+// access to any pods that have been appointed with the configured client
+// server labels.
+func NewHeadClientNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.NetworkPolicy {
+	return headNetworkPolicy(
+		rc,
+		rc.Spec.ClientServerPort,
+		rc.Spec.NetworkPolicy.ClientServerLabels,
+		Component("client"),
+		descriptionClient,
+	)
+}
 
-	var policyPeers []networkingv1.NetworkPolicyPeer
-	for _, labels := range rc.Spec.NetworkPolicyClientLabels {
-		policyPeers = append(policyPeers, networkingv1.NetworkPolicyPeer{
-			PodSelector: &metav1.LabelSelector{
-				MatchLabels: labels,
-			},
-		})
-	}
+// NewHeadDashboardNetworkPolicy generates a network policy that allows
+// dashboard access to any pods that have been appointed with configured
+// dashboard labels.
+func NewHeadDashboardNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.NetworkPolicy {
+	return headNetworkPolicy(
+		rc,
+		rc.Spec.DashboardPort,
+		rc.Spec.NetworkPolicy.DashboardLabels,
+		Component("dashboard"),
+		descriptionDashboard,
+	)
+}
+
+func headNetworkPolicy(rc *dcv1alpha1.RayCluster, p int32, l map[string]string, c Component, desc string) *networkingv1.NetworkPolicy {
+	proto := corev1.ProtocolTCP
+	targetPort := intstr.FromInt(int(p))
 
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      InstanceObjectName(rc.Name, Component("client")),
+			Name:      InstanceObjectName(rc.Name, c),
 			Namespace: rc.Namespace,
 			Labels:    MetadataLabelsWithComponent(rc, ComponentHead),
 			Annotations: map[string]string{
-				resources.DescriptionAnnotationKey: "Allows client ingress traffic to head node",
+				resources.DescriptionAnnotationKey: desc,
 			},
 		},
 		Spec: networkingv1.NetworkPolicySpec{
@@ -78,14 +98,16 @@ func NewHeadNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.NetworkPolicy
 					Ports: []networkingv1.NetworkPolicyPort{
 						{
 							Protocol: &proto,
-							Port:     &clientPort,
-						},
-						{
-							Protocol: &proto,
-							Port:     &dashboardPort,
+							Port:     &targetPort,
 						},
 					},
-					From: policyPeers,
+					From: []networkingv1.NetworkPolicyPeer{
+						{
+							PodSelector: &metav1.LabelSelector{
+								MatchLabels: l,
+							},
+						},
+					},
 				},
 			},
 			PolicyTypes: []networkingv1.PolicyType{

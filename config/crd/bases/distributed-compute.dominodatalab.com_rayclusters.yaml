@@ -85,7 +85,8 @@ spec:
                 type: object
               clientServerPort:
                 description: ClientServerPort is the port number to which the ray
-                  client server will bind.
+                  client server will bind. This port is used by external clients to
+                  submit work.
                 format: int32
                 type: integer
               dashboardPort:
@@ -94,10 +95,6 @@ spec:
                 type: integer
               enableDashboard:
                 description: EnableDashboard starts the dashboard web UI.
-                type: boolean
-              enableNetworkPolicy:
-                description: EnableNetworkPolicy will create a network policy that
-                  restricts ingress to the cluster.
                 type: boolean
               envVars:
                 description: EnvVars added to all every ray pod container.
@@ -3574,16 +3571,27 @@ spec:
                       type: string
                   type: object
                 type: array
-              networkPolicyClientLabels:
-                description: NetworkPolicyClientLabels will create a pod selector
-                  clause for each set of labels. This is used to grant ingress access
-                  to one or more groups of external pods and is only applicable when
-                  EnableNetworkPolicy is true.
-                items:
-                  additionalProperties:
-                    type: string
-                  type: object
-                type: array
+              networkPolicy:
+                description: NetworkPolicy parameters that grant intra-cluster and
+                  external network access to cluster nodes.
+                properties:
+                  clientServerLabels:
+                    additionalProperties:
+                      type: string
+                    description: ClientServerLabels defines the pod selector clause
+                      that grant ingress access to the head client server port.
+                    type: object
+                  dashboardLabels:
+                    additionalProperties:
+                      type: string
+                    description: DashboardLabels defines the pod selector clause used
+                      to grant ingress access to the head dashboard port.
+                    type: object
+                  enabled:
+                    description: Enabled controls the creation of network policies
+                      that limit and provide ingress access to the cluster nodes.
+                    type: boolean
+                type: object
               nodeManagerPort:
                 description: NodeManagerPort is the raylet port for the node manager.
                 format: int32

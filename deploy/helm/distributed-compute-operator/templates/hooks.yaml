@@ -4,7 +4,7 @@ kind: ServiceAccount
 metadata:
   name: {{ include "dco.serviceAccountName" . }}-hook
   labels:
-    {{- include "dco.labels" . | nindent 4 }}
+    {{- include "common.labels.standard" . | nindent 4 }}
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade,post-delete
     "helm.sh/hook-weight": "-3"
@@ -14,9 +14,9 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: dominodatalab:operator:distributed-compute-operator
+  name: {{ include "dco.rbac.hookName" . }}
   labels:
-    {{- include "dco.labels" . | nindent 4 }}
+    {{- include "common.labels.standard" . | nindent 4 }}
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade,post-delete
     "helm.sh/hook-weight": "-2"
@@ -36,9 +36,9 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: dominodatalab:operator:distributed-compute-operator
+  name: {{ include "dco.rbac.hookName" . }}
   labels:
-    {{- include "dco.labels" . | nindent 4 }}
+    {{- include "common.labels.standard" . | nindent 4 }}
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade,post-delete
     "helm.sh/hook-weight": "-1"
@@ -46,7 +46,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: dominodatalab:operator:distributed-compute-operator
+  name: {{ include "dco.rbac.hookName" . }}
 subjects:
   - kind: ServiceAccount
     name: {{ include "dco.serviceAccountName" . }}-hook
@@ -56,9 +56,9 @@ subjects:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "dco.fullname" . }}-crd-apply
+  name: {{ include "common.names.fullname" . }}-crd-apply
   labels:
-    {{- include "dco.labels" . | nindent 4 }}
+    {{- include "common.labels.standard" . | nindent 4 }}
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -67,7 +67,7 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "dco.selectorLabels" . | nindent 8 }}
+        {{- include "common.labels.matchLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -81,7 +81,7 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: {{ include "dco.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args: ["crd-apply"]
       {{- with .Values.nodeSelector }}
@@ -101,9 +101,9 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "dco.fullname" . }}-crd-delete
+  name: {{ include "common.names.fullname" . }}-crd-delete
   labels:
-    {{- include "dco.labels" . | nindent 4 }}
+    {{- include "common.labels.standard" . | nindent 4 }}
   annotations:
     "helm.sh/hook": post-delete
     "helm.sh/hook-delete-policy": hook-succeeded
@@ -112,7 +112,7 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "dco.selectorLabels" . | nindent 8 }}
+        {{- include "common.labels.matchLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -126,7 +126,7 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: {{ include "dco.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args: ["crd-delete"]
       {{- with .Values.nodeSelector }}

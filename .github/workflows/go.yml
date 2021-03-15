@@ -17,7 +17,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.16
+        go-version: 1.16.2
 
     - name: Cache go modules and build data
       uses: actions/cache@v2
@@ -103,6 +103,25 @@ jobs:
           org.opencontainers.image.created=${{ steps.docker_prep.outputs.created }}
           org.opencontainers.image.revision=${{ github.sha }}
           org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
+
+    - name: Package and push Helm chart
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        make helm
+
+        REGISTRY=ghcr.io
+        IMAGE="$(echo ${{ github.repository }} | awk -F / '{ print $(NF-1)  "/helm/" $NF }')"
+        VERSION="${{ steps.docker_prep.outputs.version }}"
+        TAG="$REGISTRY/$IMAGE:$VERSION"
+
+        echo "${{ secrets.CR_PAT }}" | ./bin/helm registry login "$REGISTRY" --username "${{ github.repository_owner }}" --password-stdin
+
+        ./bin/helm package deploy/helm/distributed-compute-operator --destination chart-archives --app-version "$VERSION" --version "$VERSION"
+        ./bin/helm chart save "chart-archives/distributed-compute-operator-$VERSION.tgz" "$TAG"
+        ./bin/helm chart push "$TAG"
+        rm -rf chart-archives
+      env:
+        HELM_EXPERIMENTAL_OCI: 1
 
     - name: Publish release
       if: startsWith(github.ref, 'refs/tags/')

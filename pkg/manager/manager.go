@@ -25,6 +25,8 @@ var (
 	setupLog = ctrl.Log.WithName("setup")
 )
 
+// Start creates a new controller manager, configures and registers all
+// reconcilers/webhooks with the manager, and starts their control loops.
 func Start(cfg *Config) error {
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&cfg.ZapOptions)))
 

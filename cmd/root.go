@@ -13,6 +13,7 @@ var rootCmd = &cobra.Command{
 	Long:  `Kubernetes operator that manages parallel computing clusters.`,
 }
 
+// Execute launches the command line tool.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)

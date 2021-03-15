@@ -3,10 +3,10 @@ kind: Service
 metadata:
   name: {{ include "dco.webhook.service" . }}
   labels:
-    {{- include "dco.labels" . | nindent 4 }}
+    {{- include "common.labels.standard" . | nindent 4 }}
 spec:
   ports:
     - port: 443
-      targetPort: 9443
+      targetPort: webhooks
   selector:
-    {{- include "dco.selectorLabels" . | nindent 4 }}
+    {{- include "common.labels.matchLabels" . | nindent 4 }}
