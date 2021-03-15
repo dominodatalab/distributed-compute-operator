@@ -52,7 +52,7 @@ func NewClusterNetworkPolicy(rc *dcv1alpha1.SparkCluster) *networkingv1.NetworkP
 // port access to any pods that have been appointed with the ClientAccessLabels.
 func NewHeadNetworkPolicy(rc *dcv1alpha1.SparkCluster) *networkingv1.NetworkPolicy {
 	proto := corev1.ProtocolTCP
-	clientPort := intstr.FromInt(int(rc.Spec.ClientServerPort))
+	clusterPort := intstr.FromInt(int(rc.Spec.ClusterPort))
 	dashboardPort := intstr.FromInt(int(rc.Spec.DashboardPort))
 
 	var policyPeers []networkingv1.NetworkPolicyPeer
@@ -82,7 +82,7 @@ func NewHeadNetworkPolicy(rc *dcv1alpha1.SparkCluster) *networkingv1.NetworkPoli
 					Ports: []networkingv1.NetworkPolicyPort{
 						{
 							Protocol: &proto,
-							Port:     &clientPort,
+							Port:     &clusterPort,
 						},
 						{
 							Protocol: &proto,

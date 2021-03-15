@@ -33,6 +33,15 @@ type SparkClusterNode struct {
 
 	// Resources are the requests and limits applied to spark containers.
 	Resources corev1.ResourceRequirements `json:"resources"`
+
+	AdditionalStorage []SparkAdditionalStorage `json:"additionalStorage,omitempty"`
+}
+
+type SparkAdditionalStorage struct {
+	AccessModes  []corev1.PersistentVolumeAccessMode `json:"accessModes""`
+	Size         string                              `json:"size"`
+	StorageClass string                              `json:"size"`
+	Name         string                              `json:"name"`
 }
 
 // SparkClusterHead defines head-specific pod settings.

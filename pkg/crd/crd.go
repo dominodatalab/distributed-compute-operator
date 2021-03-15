@@ -27,8 +27,7 @@ func Apply(ctx context.Context) error {
 		if apierrors.IsNotFound(err) {
 			log.Info("Creating CRD", "Name", crd.Name)
 			_, err = client.Create(ctx, crd, metav1.CreateOptions{})
-		}
-		if err == nil {
+		} else if err == nil {
 			log.Info("Updating CRD", "Name", crd.Name)
 			crd.SetResourceVersion(found.ResourceVersion)
 			_, err = client.Update(ctx, crd, metav1.UpdateOptions{})

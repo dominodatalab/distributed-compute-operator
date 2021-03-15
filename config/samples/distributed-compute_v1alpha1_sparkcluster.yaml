@@ -8,8 +8,8 @@ spec:
   # image used by head and worker pods
   image:
     registry: ""
-    repository: rayproject/ray
-    tag: nightly
+    repository: bitnami/spark
+    tag: 3.0.2-debian-10-r0
     pullPolicy: IfNotPresent
 
   # dockerconfigjson used to pull images from private registries
@@ -25,15 +25,12 @@ spec:
 
   # redis port and addition redis shard ports used by head node
   port: 1234
-  redisShardPorts:
-    - 6380
-    - 6381
 
   # port used to connect clients to spark
   clientServerPort: 10001
 
   # enable dashboard ui and set port
-  dashboardPort: 8265
+  dashboardPort: 8080
   enableDashboard: true
 
   # set the object store's port and initial memory
@@ -41,10 +38,10 @@ spec:
   objectStoreMemoryBytes: 78643200
 
   # internal port overrides
-  nodeManagerPort: 7077
+  clusterPort: 7077
 
   # control the creation of network policies
-  enableNetworkPolicy: true
+  enableNetworkPolicy: false
 
   # bind cluster to existing psp
   # podSecurityPolicy: privileged
@@ -172,6 +169,13 @@ spec:
     # volumeMounts:
     #   - name: example-vol
     #     mountPath: /mnt/more/space
+    volumes:
+    - name: spark-data
+      persistentVolumeClaim:
+        claimName: spark-data-pvc
+    volumeMounts:
+    - name: spark-data
+      mountPath: /data
 
     resources:
       requests:

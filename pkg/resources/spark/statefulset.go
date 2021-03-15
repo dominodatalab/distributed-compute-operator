@@ -4,16 +4,18 @@ import (
 	"fmt"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/pointer"
+	"strconv"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
 )
 
 var (
-	defaultCmd = []string{"ray"}
+	//defaultCmd = []string{"sp"}
 	defaultEnv = []corev1.EnvVar{
 		{
 			Name: "MY_POD_IP",
@@ -74,17 +76,27 @@ func NewStatefulSet(rc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 		return nil, err
 	}
 
-	ports := processPorts(rc, comp)
+	ports := processPorts(rc)
 	labels := processLabels(rc, comp, nodeAttrs.Labels)
 	envVars := append(append(defaultEnv, componentEnvVars(rc, comp)...), rc.Spec.EnvVars...)
 	volumes := append(defaultVolumes, nodeAttrs.Volumes...)
 	volumeMounts := append(defaultVolumeMounts, nodeAttrs.VolumeMounts...)
+
+	volumeClaimTemplates, err := processVolumeClaimTemplates(nodeAttrs.AdditionalStorage)
+	if err != nil {
+		return nil, err
+	}
 	serviceAccountName := InstanceObjectName(rc.Name, ComponentNone)
 	if rc.Spec.ServiceAccountName != "" {
 		serviceAccountName = rc.Spec.ServiceAccountName
 	}
 
-	annotations := nodeAttrs.Annotations
+	annotations := make(map[string]string)
+	if nodeAttrs.Annotations != nil {
+		for k, v := range nodeAttrs.Annotations {
+			annotations[k] = v
+		}
+	}
 	//TODO: Discuss with @Sonny and @Po about proper place for this
 	annotations["sidecar.istio.io/inject"] = "false"
 	//TODO: Chart defaults a specific security context if enabled. Always setting for now
@@ -92,11 +104,11 @@ func NewStatefulSet(rc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	if context == nil {
 		context = &corev1.PodSecurityContext{
 			RunAsUser:  pointer.Int64Ptr(1001),
-			RunAsGroup: pointer.Int64Ptr(1001),
+			FSGroup: pointer.Int64Ptr(1001),
 		}
 	}
 
-	deploy := &appsv1.StatefulSet{
+	statefulSet := &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "StatefulSet",
 			APIVersion: "apps/v1",
@@ -128,7 +140,7 @@ func NewStatefulSet(rc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 					Containers: []corev1.Container{
 						{
 							Name:            string(ApplicationName + "-" + comp),
-							Command:         defaultCmd,
+							//Command:         defaultCmd,
 							Image:           imageRef,
 							ImagePullPolicy: rc.Spec.Image.PullPolicy,
 							Ports:           ports,
@@ -156,13 +168,39 @@ func NewStatefulSet(rc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 					Volumes: volumes,
 				},
 			},
+			VolumeClaimTemplates: volumeClaimTemplates,
 			UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
 				Type: appsv1.RollingUpdateStatefulSetStrategyType,
 			},
 		},
 	}
 
-	return deploy, nil
+	return statefulSet, nil
+}
+
+func processVolumeClaimTemplates(storage []dcv1alpha1.SparkAdditionalStorage) ([]corev1.PersistentVolumeClaim, error){
+	pvcs := make([]corev1.PersistentVolumeClaim, len(storage))
+	for i, as := range storage {
+		quantity, err := resource.ParseQuantity(as.Size)
+		if err != nil {
+			return nil, err
+		}
+		pvcs[i] = corev1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: as.Name,
+			},
+			Spec: corev1.PersistentVolumeClaimSpec{
+				AccessModes: as.AccessModes,
+				Resources: corev1.ResourceRequirements{
+					Requests: map[corev1.ResourceName]resource.Quantity{
+						corev1.ResourceMemory: quantity,
+					},
+				},
+				StorageClassName: &as.StorageClass,
+			},
+		}
+	}
+	return pvcs, nil
 }
 
 func componentEnvVars(rc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvVar {
@@ -171,11 +209,11 @@ func componentEnvVars(rc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 		envVar = []corev1.EnvVar{
 			{
 				Name:  "SPARK_MASTER_PORT",
-				Value: string(rc.Spec.ClusterPort),
+				Value: strconv.Itoa(int(rc.Spec.ClusterPort)),
 			},
 			{
 				Name:  "SPARK_MASTER_WEBUI_PORT",
-				Value: string(rc.Spec.DashboardPort),
+				Value: strconv.Itoa(int(rc.Spec.DashboardPort)),
 			},
 			{
 				Name:  "SPARK_MODE",
@@ -186,12 +224,12 @@ func componentEnvVars(rc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 		envVar = []corev1.EnvVar{
 			{
 				Name:  "SPARK_MASTER_URL",
-				Value: "spark://" + HeadServiceName(rc.Name) + ":" + string(rc.Spec.ClusterPort),
+				Value: "spark://" + HeadServiceName(rc.Name) + ":" + strconv.Itoa(int(rc.Spec.ClusterPort)),
 			},
 			{
 				Name: "SPARK_WORKER_WEBUI_PORT",
 				//TODO talk to @Po about whether this makes sense. Spark defaults to 8081 as default for this
-				Value: string(rc.Spec.DashboardPort),
+				Value: strconv.Itoa(int(rc.Spec.DashboardPort)),
 			},
 			{
 				Name:  "SPARK_MODE",
@@ -202,12 +240,12 @@ func componentEnvVars(rc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 	return envVar
 }
 
-func processPorts(rc *dcv1alpha1.SparkCluster, comp Component) []corev1.ContainerPort {
+func processPorts(rc *dcv1alpha1.SparkCluster) []corev1.ContainerPort {
 	ports := []corev1.ContainerPort{
 		{
 			Name:          "http",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: rc.Spec.HttpPort,
+			ContainerPort: rc.Spec.DashboardPort,
 		},
 		{
 			Name:          "cluster",
@@ -215,9 +253,9 @@ func processPorts(rc *dcv1alpha1.SparkCluster, comp Component) []corev1.Containe
 		},
 	}
 
-	if comp == ComponentHead {
-		ports = addHeadContainerPorts(rc, ports)
-	}
+	//if comp == ComponentHead {
+	//	ports = addHeadContainerPorts(rc, ports)
+	//}
 
 	return ports
 }
@@ -230,14 +268,14 @@ func processLabels(rc *dcv1alpha1.SparkCluster, comp Component, extraLabels map[
 
 	return labels
 }
-
-func addHeadContainerPorts(rc *dcv1alpha1.SparkCluster, ports []corev1.ContainerPort) []corev1.ContainerPort {
-	redisPorts := []corev1.ContainerPort{
-		{
-			Name:          "redis-primary",
-			ContainerPort: rc.Spec.Port,
-		},
-	}
-
-	return append(ports, redisPorts...)
-}
+//
+//func addHeadContainerPorts(rc *dcv1alpha1.SparkCluster, ports []corev1.ContainerPort) []corev1.ContainerPort {
+//	redisPorts := []corev1.ContainerPort{
+//		{
+//			Name:          "redis-primary",
+//			ContainerPort: rc.Spec.Port,
+//		},
+//	}
+//
+//	return append(ports, redisPorts...)
+//}

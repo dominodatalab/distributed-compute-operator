@@ -6,11 +6,11 @@ spec:
   ## global configurations
 
   # image used by head and worker pods
-  # image:
-  #   registry: ""
-  #   repository: rayproject/ray
-  #   tag: nightly
-  #   pullPolicy: IfNotPresent
+  image:
+   registry: ""
+   repository: rayproject/ray
+   tag: nightly
+   pullPolicy: IfNotPresent
 
   # dockerconfigjson used to pull images from private registries
   # imagePullSecrets:
@@ -24,42 +24,42 @@ spec:
   #   scaleDownStabilizationWindowSeconds: 60
 
   # redis port and addition redis shard ports used by head node
-  # port: 1234
-  # redisShardPorts:
-  # - 6380
-  # - 6381
+  port: 1234
+  redisShardPorts:
+  - 6380
+  - 6381
 
   # port used to connect clients to ray
-  # clientServerPort: 10001
+  clientServerPort: 10001
 
   # enable dashboard ui and set port
-  # dashboardPort: 8265
-  # enableDashboard: true
+  dashboardPort: 8265
+  enableDashboard: true
 
   # set the object store's port and initial memory
-  # objectManagerPort: 2384
-  # objectStoreMemoryBytes: 52428800
+  objectManagerPort: 2384
+  objectStoreMemoryBytes: 78643200
 
   # internal port overrides
-  # nodeManagerPort: 2385
+  nodeManagerPort: 2385
 
   # control the creation of network policies
-  # enableNetworkPolicy: true
+  enableNetworkPolicy: true
 
   # bind cluster to existing psp
-  # podSecurityPolicy: privileged
+#  podSecurityPolicy: privileged
 
   # specify the security context used by ray pods
-  # podSecurityContext:
-  #   runAsUser: 0
+  podSecurityContext:
+   runAsUser: 0
 
   # specify the service account used to run ray pods
-  # serviceAccountName: my-service-account
+  serviceAccountName: distributed-compute-operator
 
   # add extra env vars to every ray pod container
-  # envVars:
-  # - name: ENV_BASED_SETTING
-  #   value: abc123
+#   envVars:
+#   - name: ENV_BASED_SETTING
+#     value: abc123
 
   ## head configuration parameters
 
@@ -102,9 +102,9 @@ spec:
     #   - name: example-vol
     #     mountPath: /mnt/more/space
 #
-#    resources:
-#      requests:
-#        cpu: 100m
+    resources:
+      requests:
+        cpu: 100m
 #        memory: 250Mi
 #      limits:
 #        cpu: 500m

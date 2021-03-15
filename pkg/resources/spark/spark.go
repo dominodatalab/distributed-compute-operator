@@ -14,7 +14,7 @@ const (
 	// ComponentNone indicates a generic spark resource.
 	ComponentNone Component = "none"
 	// ComponentHead indicates a spark head resource.
-	ComponentHead Component = "head"
+	ComponentHead Component = "master"
 	// ComponentWorker indicates a spark worker resource.
 	ComponentWorker Component = "worker"
 	// ApplicationName defines the static name used to generate spark object metadata.
@@ -36,7 +36,7 @@ func HeadServiceName(name string) string {
 }
 
 func HeadlessServiceName(name string) string {
-	return InstanceObjectName(name + "-headless", ComponentNone)
+	return InstanceObjectName(name + "-headless", ComponentWorker)
 }
 
 // MetadataLabels returns standard metadata for spark resources.

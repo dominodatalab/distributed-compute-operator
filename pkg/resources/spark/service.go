@@ -22,7 +22,7 @@ func NewHeadService(rc *dcv1alpha1.SparkCluster) *corev1.Service {
 		},
 		{
 			Name:     "tcp", // named tcp to prevent istio from sniffing for Host
-			Port:     rc.Spec.HttpPort,
+			Port:     rc.Spec.DashboardPort,
 			Protocol: corev1.ProtocolTCP,
 			TargetPort: intstr.IntOrString{
 				Type:   intstr.String,
@@ -39,11 +39,12 @@ func NewHeadService(rc *dcv1alpha1.SparkCluster) *corev1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      HeadServiceName(rc.Name),
 			Namespace: rc.Namespace,
-			Labels:    MetadataLabelsWithComponent(rc, ComponentNone),
+			Labels:    MetadataLabelsWithComponent(rc, ComponentHead),
 		},
 		Spec: corev1.ServiceSpec{
 			Type:  corev1.ServiceTypeClusterIP,
 			Ports: ports,
+			Selector: SelectorLabelsWithComponent(rc, ComponentHead),
 		},
 	}
 }
@@ -55,13 +56,14 @@ func NewHeadlessService(rc *dcv1alpha1.SparkCluster) *corev1.Service {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      HeadlessServiceName(rc.Name),
+			//Name:      HeadlessServiceName(rc.Name),
+			Name:      "example-spark-worker",
 			Namespace: rc.Namespace,
 			Labels:    MetadataLabelsWithComponent(rc, ComponentHead),
 		},
 		Spec: corev1.ServiceSpec{
-			ClusterIP: "None",
-			Selector:  SelectorLabelsWithComponent(rc, ComponentHead),
+			ClusterIP: corev1.ClusterIPNone,
+			Selector:  SelectorLabels(rc),
 		},
 	}
 }
