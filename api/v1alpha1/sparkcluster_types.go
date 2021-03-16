@@ -71,20 +71,8 @@ type SparkClusterSpec struct {
 	// Autoscaling parameters used to scale up/down spark worker nodes.
 	Autoscaling *Autoscaling `json:"autoscaling,omitempty"`
 
-	// Port is the port of the head spark process.
-	Port int32 `json:"port,omitempty"`
-
-	// ClientServerPort is the port number to which the spark client server will bind.
-	ClientServerPort int32 `json:"clientServerPort,omitempty"`
-
-	// HttpPort is the port on which spark pods expose http
-	HttpPort int32 `json:"httpPort,omitempty"`
-
 	// Cluster port is the port on which the spark protocol communicates
 	ClusterPort int32 `json:"clusterPort,omitempty"`
-
-	// ObjectStoreMemoryBytes is initial amount of memory with which to start the object store.
-	ObjectStoreMemoryBytes *int64 `json:"objectStoreMemoryBytes,omitempty"`
 
 	// DashboardPort is the port used by the dashboard server.
 	DashboardPort int32 `json:"dashboardPort,omitempty"`
@@ -98,7 +86,7 @@ type SparkClusterSpec struct {
 	// NetworkPolicyClientLabels will create a pod selector clause for each set of labels.
 	// This is used to grant ingress access to one or more groups of external pods and is
 	// only applicable when EnableNetworkPolicy is true.
-	NetworkPolicyClientLabels []map[string]string `json:"networkPolicyClientLabels,omitempty"`
+	NetworkPolicy SparkClusterNetworkPolicy `json:"networkPolicy,omitempty"`
 
 	// PodSecurityPolicy name can be provided to govern execution of the spark processes within pods.
 	PodSecurityPolicy string `json:"podSecurityPolicy,omitempty"`
@@ -118,6 +106,21 @@ type SparkClusterSpec struct {
 
 	// Worker node configuration parameters.
 	Worker SparkClusterWorker `json:"worker,omitempty"`
+}
+
+// SparkClusterNetworkPolicy defines network policy configuration options.
+type SparkClusterNetworkPolicy struct {
+	// Enabled controls the creation of network policies that limit and provide
+	// ingress access to the cluster nodes.
+	Enabled *bool `json:"enabled,omitempty"`
+
+	// ClientServerLabels defines the pod selector clause that grant ingress
+	// access to the head client server port.
+	ClientServerLabels map[string]string `json:"clientServerLabels,omitempty"`
+
+	// DashboardLabels defines the pod selector clause used to grant ingress
+	// access to the head dashboard port.
+	DashboardLabels map[string]string `json:"dashboardLabels,omitempty"`
 }
 
 // SparkClusterStatus defines the observed state of a SparkCluster resource.

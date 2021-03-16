@@ -41,7 +41,8 @@ spec:
   clusterPort: 7077
 
   # control the creation of network policies
-  enableNetworkPolicy: false
+  networkPolicy:
+    enable: false
 
   # bind cluster to existing psp
   # podSecurityPolicy: privileged

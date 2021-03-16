@@ -2,42 +2,36 @@ package v1alpha1
 
 import (
 	"fmt"
+
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
-//const (
-//	minValidPort int32 = 1024
-//	maxValidPort int32 = 65535
-//)
+const (
+	minSparkValidPort int32 = 1024
+	maxSparkValidPort int32 = 65535
+)
 
 var (
-	//defaultPort                int32 = 6379
-	//defaultRedisShardPorts           = []int32{6380, 6381}
-	//defaultClientServerPort    int32 = 10001
-	//defaultHttpPort   		   int32 = 80
-	//defaultClusterPort         int32 = 7077
-	//defaultDashboardPort       int32 = 8265
-	//defaultEnableDashboard           = pointer.BoolPtr(true)
-	//defaultEnableNetworkPolicy       = pointer.BoolPtr(true)
-	//defaultWorkerReplicas            = pointer.Int32Ptr(1)
-	//
-	//defaultNetworkPolicyClientLabels = []map[string]string{
-	//	{"spark-client": "true"},
-	//}
-	//
-	//defaultImage = &OCIImageDefinition{
-	//	Repository: "sparkproject/spark",
-	//	Tag:        "1.2.0-cpu",
-	//}
-	defaultHttpPort            int32 = 80
-	defaultClusterPort         int32 = 7077
+	defaultSparkDashboardPort             int32 = 8265
+	defaultSparkEnableNetworkPolicy             = pointer.BoolPtr(true)
+	defaultSparkWorkerReplicas                  = pointer.Int32Ptr(1)
+	defaultSparkHttpPort                  int32 = 80
+	defaultSparkClusterPort               int32 = 7077
+	defaultSparkNetworkPolicyClientLabels       = map[string]string{
+		"spark-client": "true",
+	}
+	defaultSparkImage 							= &OCIImageDefinition{
+		Repository: "bitnami/spark",
+		Tag:        "3.0.2-debian-10-r0",
+	}
 )
 
 // logger is for webhook logging.
@@ -59,58 +53,42 @@ func (r *SparkCluster) Default() {
 	log := sparkLogger.WithValues("sparkcluster", client.ObjectKeyFromObject(r))
 	log.Info("applying defaults")
 
-	if r.Spec.Port == 0 {
-		log.Info("setting default port", "value", defaultPort)
-		r.Spec.Port = defaultPort
-	}
-	//if r.Spec.RedisShardPorts == nil {
-	//	log.Info("setting default redis shard ports", "value", defaultRedisShardPorts)
-	//	r.Spec.RedisShardPorts = defaultRedisShardPorts
-	//}
-	if r.Spec.ClientServerPort == 0 {
-		log.Info("setting default client server port", "value", defaultClientServerPort)
-		r.Spec.ClientServerPort = defaultClientServerPort
-	}
-	if r.Spec.HttpPort == 0 {
-		log.Info("setting default http port", "value", defaultHttpPort)
-		r.Spec.HttpPort = defaultHttpPort
-	}
 	if r.Spec.ClusterPort == 0 {
-		log.Info("setting default cluster port", "value", defaultClusterPort)
-		r.Spec.ClusterPort = defaultClusterPort
+		log.Info("setting default cluster port", "value", defaultSparkClusterPort)
+		r.Spec.ClusterPort = defaultSparkClusterPort
 	}
 	if r.Spec.DashboardPort == 0 {
-		log.Info("setting default dashboard port", "value", defaultDashboardPort)
-		r.Spec.DashboardPort = defaultDashboardPort
+		log.Info("setting default dashboard port", "value", defaultSparkDashboardPort)
+		r.Spec.DashboardPort = defaultSparkDashboardPort
 	}
-	if r.Spec.EnableDashboard == nil {
-		log.Info("setting enable dashboard flag", "value", *defaultEnableDashboard)
-		r.Spec.EnableDashboard = defaultEnableDashboard
+	if r.Spec.NetworkPolicy.Enabled == nil {
+		log.Info("setting enable network policy flag", "value", *defaultSparkEnableNetworkPolicy)
+		r.Spec.EnableNetworkPolicy = defaultSparkEnableNetworkPolicy
 	}
-	if r.Spec.EnableNetworkPolicy == nil {
-		log.Info("setting enable network policy flag", "value", *defaultEnableNetworkPolicy)
-		r.Spec.EnableNetworkPolicy = defaultEnableNetworkPolicy
+	if r.Spec.NetworkPolicy.ClientServerLabels == nil {
+		log.Info("setting default network policy client labels", "value", defaultSparkNetworkPolicyClientLabels)
+		r.Spec.NetworkPolicy.ClientServerLabels = defaultSparkNetworkPolicyClientLabels
 	}
-	if r.Spec.NetworkPolicyClientLabels == nil {
-		log.Info("setting default network policy client labels", "value", defaultNetworkPolicyClientLabels)
-		r.Spec.NetworkPolicyClientLabels = defaultNetworkPolicyClientLabels
+	if r.Spec.NetworkPolicy.DashboardLabels == nil {
+		log.Info("setting default network policy dashboard labels", "value", defaultSparkNetworkPolicyClientLabels)
+		r.Spec.NetworkPolicy.DashboardLabels = defaultSparkNetworkPolicyClientLabels
 	}
 	if r.Spec.Worker.Replicas == nil {
-		log.Info("setting default worker replicas", "value", *defaultWorkerReplicas)
-		r.Spec.Worker.Replicas = defaultWorkerReplicas
+		log.Info("setting default worker replicas", "value", *defaultSparkWorkerReplicas)
+		r.Spec.Worker.Replicas = defaultSparkWorkerReplicas
 	}
 
 	if r.Spec.Image == nil {
-		log.Info("setting default image", "value", *defaultImage)
-		r.Spec.Image = defaultImage
+		log.Info("setting default image", "value", *defaultSparkImage)
+		r.Spec.Image = defaultSparkImage
 	} else {
 		if r.Spec.Image.Repository == "" {
-			log.Info("setting default image repository", "value", defaultImage.Repository)
-			r.Spec.Image.Repository = defaultImage.Repository
+			log.Info("setting default image repository", "value", defaultSparkImage.Repository)
+			r.Spec.Image.Repository = defaultSparkImage.Repository
 		}
 		if r.Spec.Image.Tag == "" {
-			log.Info("setting default image tag", "value", defaultImage.Tag)
-			r.Spec.Image.Tag = defaultImage.Tag
+			log.Info("setting default image tag", "value", defaultSparkImage.Tag)
+			r.Spec.Image.Tag = defaultSparkImage.Tag
 		}
 	}
 }
@@ -145,9 +123,6 @@ func (r *SparkCluster) validateSparkCluster() error {
 	if err := r.validateWorkerReplicas(); err != nil {
 		allErrs = append(allErrs, err)
 	}
-	if err := r.validateObjectStoreMemoryBytes(); err != nil {
-		allErrs = append(allErrs, err)
-	}
 	if errs := r.validatePorts(); errs != nil {
 		allErrs = append(allErrs, errs...)
 	}
@@ -179,33 +154,9 @@ func (r *SparkCluster) validateWorkerReplicas() *field.Error {
 	)
 }
 
-func (r *SparkCluster) validateObjectStoreMemoryBytes() *field.Error {
-	memBytes := r.Spec.ObjectStoreMemoryBytes
-
-	if memBytes == nil || *memBytes >= 78643200 {
-		return nil
-	}
-
-	return field.Invalid(
-		field.NewPath("spec").Child("objectStoreMemoryBytes"),
-		memBytes,
-		"should be greater than or equal to 78643200",
-	)
-}
-
 func (r *SparkCluster) validatePorts() field.ErrorList {
 	var errs field.ErrorList
 
-	if err := r.validatePort(r.Spec.Port, field.NewPath("spec").Child("port")); err != nil {
-		errs = append(errs, err)
-	}
-
-	if err := r.validatePort(r.Spec.ClientServerPort, field.NewPath("spec").Child("clientServerPort")); err != nil {
-		errs = append(errs, err)
-	}
-	if err := r.validatePort(r.Spec.HttpPort, field.NewPath("spec").Child("httpPort")); err != nil {
-		errs = append(errs, err)
-	}
 	if err := r.validatePort(r.Spec.ClusterPort, field.NewPath("spec").Child("clusterPort")); err != nil {
 		errs = append(errs, err)
 	}
@@ -219,11 +170,11 @@ func (r *SparkCluster) validatePorts() field.ErrorList {
 }
 
 func (r *SparkCluster) validatePort(port int32, fldPath *field.Path) *field.Error {
-	if port < minValidPort {
-		return field.Invalid(fldPath, port, fmt.Sprintf("must be greater than or equal to %d", minValidPort))
+	if port < minSparkValidPort {
+		return field.Invalid(fldPath, port, fmt.Sprintf("must be greater than or equal to %d", minSparkValidPort))
 	}
-	if port > maxValidPort {
-		return field.Invalid(fldPath, port, fmt.Sprintf("must be less than or equal to %d", maxValidPort))
+	if port > maxSparkValidPort {
+		return field.Invalid(fldPath, port, fmt.Sprintf("must be less than or equal to %d", maxSparkValidPort))
 	}
 
 	return nil

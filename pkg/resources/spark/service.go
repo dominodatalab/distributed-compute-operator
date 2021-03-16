@@ -42,8 +42,8 @@ func NewHeadService(rc *dcv1alpha1.SparkCluster) *corev1.Service {
 			Labels:    MetadataLabelsWithComponent(rc, ComponentHead),
 		},
 		Spec: corev1.ServiceSpec{
-			Type:  corev1.ServiceTypeClusterIP,
-			Ports: ports,
+			Type:     corev1.ServiceTypeClusterIP,
+			Ports:    ports,
 			Selector: SelectorLabelsWithComponent(rc, ComponentHead),
 		},
 	}
@@ -56,8 +56,8 @@ func NewHeadlessService(rc *dcv1alpha1.SparkCluster) *corev1.Service {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			//Name:      HeadlessServiceName(rc.Name),
-			Name:      "example-spark-worker",
+			Name: HeadlessServiceName(rc.Name),
+			//Name:      "example-spark-worker",
 			Namespace: rc.Namespace,
 			Labels:    MetadataLabelsWithComponent(rc, ComponentHead),
 		},

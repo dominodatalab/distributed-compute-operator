@@ -36,7 +36,7 @@ func HeadServiceName(name string) string {
 }
 
 func HeadlessServiceName(name string) string {
-	return InstanceObjectName(name + "-headless", ComponentWorker)
+	return InstanceObjectName(name, ComponentWorker)
 }
 
 // MetadataLabels returns standard metadata for spark resources.

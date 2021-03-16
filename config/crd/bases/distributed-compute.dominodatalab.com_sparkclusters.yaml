@@ -83,11 +83,6 @@ spec:
                 required:
                 - maxReplicas
                 type: object
-              clientServerPort:
-                description: ClientServerPort is the port number to which the spark
-                  client server will bind.
-                format: int32
-                type: integer
               clusterPort:
                 description: Cluster port is the port on which the spark protocol
                   communicates
@@ -210,6 +205,23 @@ spec:
               head:
                 description: Head node configuration parameters.
                 properties:
+                  additionalStorage:
+                    items:
+                      properties:
+                        accessModes:
+                          items:
+                            type: string
+                          type: array
+                        name:
+                          type: string
+                        size:
+                          type: string
+                      required:
+                      - accessModes
+                      - name
+                      - size
+                      type: object
+                    type: array
                   affinity:
                     description: Affinity applied to spark pods.
                     properties:
@@ -3551,10 +3563,6 @@ spec:
                 required:
                 - resources
                 type: object
-              httpPort:
-                description: HttpPort is the port on which spark pods expose http
-                format: int32
-                type: integer
               image:
                 description: Image used to launch head and worker nodes.
                 properties:
@@ -3584,21 +3592,29 @@ spec:
                       type: string
                   type: object
                 type: array
-              networkPolicyClientLabels:
+              networkPolicy:
                 description: NetworkPolicyClientLabels will create a pod selector
                   clause for each set of labels. This is used to grant ingress access
                   to one or more groups of external pods and is only applicable when
                   EnableNetworkPolicy is true.
-                items:
-                  additionalProperties:
-                    type: string
-                  type: object
-                type: array
-              objectStoreMemoryBytes:
-                description: ObjectStoreMemoryBytes is initial amount of memory with
-                  which to start the object store.
-                format: int64
-                type: integer
+                properties:
+                  clientServerLabels:
+                    additionalProperties:
+                      type: string
+                    description: ClientServerLabels defines the pod selector clause
+                      that grant ingress access to the head client server port.
+                    type: object
+                  dashboardLabels:
+                    additionalProperties:
+                      type: string
+                    description: DashboardLabels defines the pod selector clause used
+                      to grant ingress access to the head dashboard port.
+                    type: object
+                  enabled:
+                    description: Enabled controls the creation of network policies
+                      that limit and provide ingress access to the cluster nodes.
+                    type: boolean
+                type: object
               podSecurityContext:
                 description: PodSecurityContext added to every spark pod.
                 properties:
@@ -3746,10 +3762,6 @@ spec:
                 description: PodSecurityPolicy name can be provided to govern execution
                   of the spark processes within pods.
                 type: string
-              port:
-                description: Port is the port of the head spark process.
-                format: int32
-                type: integer
               serviceAccountName:
                 description: ServiceAccountName will disable the creation of a dedicated
                   cluster service account. The service account referenced by the provided
@@ -3758,6 +3770,23 @@ spec:
               worker:
                 description: Worker node configuration parameters.
                 properties:
+                  additionalStorage:
+                    items:
+                      properties:
+                        accessModes:
+                          items:
+                            type: string
+                          type: array
+                        name:
+                          type: string
+                        size:
+                          type: string
+                      required:
+                      - accessModes
+                      - name
+                      - size
+                      type: object
+                    type: array
                   affinity:
                     description: Affinity applied to spark pods.
                     properties:

@@ -2,13 +2,14 @@ package spark
 
 import (
 	"fmt"
+	"strconv"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/pointer"
-	"strconv"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
@@ -103,8 +104,8 @@ func NewStatefulSet(rc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	context := rc.Spec.PodSecurityContext
 	if context == nil {
 		context = &corev1.PodSecurityContext{
-			RunAsUser:  pointer.Int64Ptr(1001),
-			FSGroup: pointer.Int64Ptr(1001),
+			RunAsUser: pointer.Int64Ptr(1001),
+			FSGroup:   pointer.Int64Ptr(1001),
 		}
 	}
 
@@ -139,7 +140,7 @@ func NewStatefulSet(rc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 					SecurityContext:    context,
 					Containers: []corev1.Container{
 						{
-							Name:            string(ApplicationName + "-" + comp),
+							Name: string(ApplicationName + "-" + comp),
 							//Command:         defaultCmd,
 							Image:           imageRef,
 							ImagePullPolicy: rc.Spec.Image.PullPolicy,
@@ -178,7 +179,7 @@ func NewStatefulSet(rc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	return statefulSet, nil
 }
 
-func processVolumeClaimTemplates(storage []dcv1alpha1.SparkAdditionalStorage) ([]corev1.PersistentVolumeClaim, error){
+func processVolumeClaimTemplates(storage []dcv1alpha1.SparkAdditionalStorage) ([]corev1.PersistentVolumeClaim, error) {
 	pvcs := make([]corev1.PersistentVolumeClaim, len(storage))
 	for i, as := range storage {
 		quantity, err := resource.ParseQuantity(as.Size)
@@ -268,6 +269,7 @@ func processLabels(rc *dcv1alpha1.SparkCluster, comp Component, extraLabels map[
 
 	return labels
 }
+
 //
 //func addHeadContainerPorts(rc *dcv1alpha1.SparkCluster, ports []corev1.ContainerPort) []corev1.ContainerPort {
 //	redisPorts := []corev1.ContainerPort{

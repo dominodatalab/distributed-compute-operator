@@ -3,8 +3,13 @@ package controllers
 import (
 	"context"
 	"fmt"
+	genericregistry "k8s.io/apiserver/pkg/registry/generic/registry"
 	"reflect"
 	"sort"
+	"strings"
+	"time"
+
+	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
 
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
@@ -91,14 +96,15 @@ func (r *SparkClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{}, err
 	}
 
-	// NOTE: this func will error out during certain update events because of
-	// 	generation version conflicts. the desired state is eventually achieved
-	// 	but this produces a large amount of noise in the logs. we should figure
-	//  out how to remove these errors.
-	// if err := r.updateStatus(ctx, rc); err != nil {
-	// 	 log.Error(err, "Failed to update cluster status")
-	// 	 return ctrl.Result{}, err
-	// }
+	if err := r.updateStatus(ctx, rc); err != nil {
+		if strings.Contains(err.Error(), genericregistry.OptimisticLockErrorMsg) {
+			log.V(1).Info("cannot update status on modified object, requeuing key for reprocessing")
+			return ctrl.Result{RequeueAfter: 500 * time.Millisecond}, nil
+		}
+
+		log.Error(err, "failed to update cluster status")
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
 }
@@ -169,10 +175,11 @@ func (r *SparkClusterReconciler) reconcileHeadLessService(ctx context.Context, r
 // reconcileNetworkPolicies optionally creates network policies that control
 // traffic flow between cluster nodes and external clients.
 func (r SparkClusterReconciler) reconcileNetworkPolicies(ctx context.Context, rc *dcv1alpha1.SparkCluster) error {
-	headNetpol := spark.NewHeadNetworkPolicy(rc)
+	headNetpol := spark.NewHeadClientNetworkPolicy(rc)
 	clusterNetpol := spark.NewClusterNetworkPolicy(rc)
+	dashboardNetpol := spark.NewHeadDashboardNetworkPolicy(rc)
 
-	if rc.Spec.EnableNetworkPolicy == nil || !*rc.Spec.EnableNetworkPolicy {
+	if !util.BoolPtrIsTrue(rc.Spec.EnableNetworkPolicy) {
 		return r.deleteIfExists(ctx, headNetpol, clusterNetpol)
 	}
 
@@ -182,6 +189,10 @@ func (r SparkClusterReconciler) reconcileNetworkPolicies(ctx context.Context, rc
 
 	if err := r.createOrUpdateOwnedResource(ctx, rc, headNetpol); err != nil {
 		return fmt.Errorf("failed to reconcile head network policy: %w", err)
+	}
+
+	if err := r.createOrUpdateOwnedResource(ctx, rc, dashboardNetpol); err != nil {
+		return fmt.Errorf("failed to reconcile dashboard network policy: %w", err)
 	}
 
 	return nil

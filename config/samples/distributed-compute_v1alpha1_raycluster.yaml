@@ -7,10 +7,10 @@ spec:
 
   # image used by head and worker pods
   image:
-   registry: ""
-   repository: rayproject/ray
-   tag: nightly
-   pullPolicy: IfNotPresent
+    registry: ""
+    repository: rayproject/ray
+    tag: nightly
+    pullPolicy: IfNotPresent
 
   # dockerconfigjson used to pull images from private registries
   # imagePullSecrets:
@@ -33,8 +33,8 @@ spec:
   # redis port and addition redis shard ports used by head node
   port: 1234
   redisShardPorts:
-  - 6380
-  - 6381
+    - 6380
+    - 6381
 
   # port used to connect clients to ray
   clientServerPort: 10001
@@ -54,19 +54,19 @@ spec:
   enableNetworkPolicy: true
 
   # bind cluster to existing psp
-#  podSecurityPolicy: privileged
+  #  podSecurityPolicy: privileged
 
   # specify the security context used by ray pods
   podSecurityContext:
-   runAsUser: 0
+    runAsUser: 0
 
   # specify the service account used to run ray pods
   serviceAccountName: distributed-compute-operator
 
   # add extra env vars to every ray pod container
-#   envVars:
-#   - name: ENV_BASED_SETTING
-#     value: abc123
+  # envVars:
+  # - name: ENV_BASED_SETTING
+  #   value: abc123
 
   ## head configuration parameters
 
@@ -108,14 +108,14 @@ spec:
     #   volumeMounts:
     #   - name: example-vol
     #     mountPath: /mnt/more/space
-#
+    #
     resources:
       requests:
         cpu: 100m
-#        memory: 250Mi
-#      limits:
-#        cpu: 500m
-#        memory: 512Mi
+  #        memory: 250Mi
+  #      limits:
+  #        cpu: 500m
+  #        memory: 512Mi
 
   ## worker configuration parameters
 
