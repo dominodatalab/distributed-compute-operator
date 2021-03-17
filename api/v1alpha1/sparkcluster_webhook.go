@@ -28,7 +28,7 @@ var (
 	defaultSparkNetworkPolicyClientLabels       = map[string]string{
 		"spark-client": "true",
 	}
-	defaultSparkImage 							= &OCIImageDefinition{
+	defaultSparkImage = &OCIImageDefinition{
 		Repository: "bitnami/spark",
 		Tag:        "3.0.2-debian-10-r0",
 	}

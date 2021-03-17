@@ -24,6 +24,10 @@ func NewClusterNetworkPolicy(rc *dcv1alpha1.SparkCluster) *networkingv1.NetworkP
 	}
 
 	return &networkingv1.NetworkPolicy{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "NetworkPolicy",
+			APIVersion: "networking.k8s.io/v1",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      InstanceObjectName(rc.Name, Component("cluster")),
 			Namespace: rc.Namespace,
@@ -81,6 +85,10 @@ func headNetworkPolicy(rc *dcv1alpha1.SparkCluster, p int32, l map[string]string
 	targetPort := intstr.FromInt(int(p))
 
 	return &networkingv1.NetworkPolicy{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "NetworkPolicy",
+			APIVersion: "networking.k8s.io/v1",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      InstanceObjectName(rc.Name, c),
 			Namespace: rc.Namespace,

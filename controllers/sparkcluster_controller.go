@@ -3,11 +3,12 @@ package controllers
 import (
 	"context"
 	"fmt"
-	genericregistry "k8s.io/apiserver/pkg/registry/generic/registry"
 	"reflect"
 	"sort"
 	"strings"
 	"time"
+
+	genericregistry "k8s.io/apiserver/pkg/registry/generic/registry"
 
 	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
 

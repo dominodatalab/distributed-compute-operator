@@ -3,6 +3,8 @@ package spark
 import (
 	"testing"
 
+	"github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
+
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -61,31 +63,58 @@ func TestNewClusterNetworkPolicy(t *testing.T) {
 	assert.Equal(t, expected, netpol)
 }
 
-func TestNewHeadNetworkPolicy(t *testing.T) {
+func TestNewHeadClientNetworkPolicy(t *testing.T) {
 	rc := sparkClusterFixture()
-	rc.Spec.NetworkPolicyClientLabels = []map[string]string{
-		{
-			"spark-client": "true",
-		},
+	labels := map[string]string{
+		"spark-client": "true",
 	}
-	netpol := NewHeadNetworkPolicy(rc)
+	rc.Spec.NetworkPolicy = v1alpha1.SparkClusterNetworkPolicy{
+		ClientServerLabels: labels,
+		DashboardLabels:    labels,
+	}
+	netpol := NewHeadClientNetworkPolicy(rc)
 
 	tcpProto := v1.ProtocolTCP
-	clientPort := intstr.FromInt(10001)
-	dashboardPort := intstr.FromInt(8265)
-	expected := &networkingv1.NetworkPolicy{
+	clusterPort := intstr.FromInt(7077)
+	expected := getNetworkPolicy(tcpProto, clusterPort, "test-id-spark-client", "Allows client ingress traffic to head client server port")
+	assert.Equal(t, expected, netpol)
+}
+
+func TestNewHeadDashboardNetworkPolicy(t *testing.T) {
+	rc := sparkClusterFixture()
+	labels := map[string]string{
+		"spark-client": "true",
+	}
+	rc.Spec.NetworkPolicy = v1alpha1.SparkClusterNetworkPolicy{
+		ClientServerLabels: labels,
+		DashboardLabels:    labels,
+	}
+	netpol := NewHeadDashboardNetworkPolicy(rc)
+
+	tcpProto := v1.ProtocolTCP
+	clusterPort := intstr.FromInt(8265)
+	expected := getNetworkPolicy(tcpProto, clusterPort, "test-id-spark-dashboard", "Allows client ingress traffic to head dashboard port")
+	assert.Equal(t, expected, netpol)
+}
+
+func getNetworkPolicy(tcpProto v1.Protocol, clusterPort intstr.IntOrString, name string, description string) *networkingv1.NetworkPolicy {
+	return &networkingv1.NetworkPolicy{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "NetworkPolicy",
+			APIVersion: "networking.k8s.io/v1",
+		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-id-spark-client",
+			Name:      name,
 			Namespace: "fake-ns",
 			Labels: map[string]string{
 				"app.kubernetes.io/name":       "spark",
 				"app.kubernetes.io/instance":   "test-id",
-				"app.kubernetes.io/component":  "head",
+				"app.kubernetes.io/component":  "master",
 				"app.kubernetes.io/version":    "fake-tag",
 				"app.kubernetes.io/managed-by": "distributed-compute-operator",
 			},
 			Annotations: map[string]string{
-				"distributed-compute.dominodatalab.com/description": "Allows client ingress traffic to head node",
+				"distributed-compute.dominodatalab.com/description": description,
 			},
 		},
 		Spec: networkingv1.NetworkPolicySpec{
@@ -93,7 +122,7 @@ func TestNewHeadNetworkPolicy(t *testing.T) {
 				MatchLabels: map[string]string{
 					"app.kubernetes.io/name":      "spark",
 					"app.kubernetes.io/instance":  "test-id",
-					"app.kubernetes.io/component": "head",
+					"app.kubernetes.io/component": "master",
 				},
 			},
 			Ingress: []networkingv1.NetworkPolicyIngressRule{
@@ -101,11 +130,7 @@ func TestNewHeadNetworkPolicy(t *testing.T) {
 					Ports: []networkingv1.NetworkPolicyPort{
 						{
 							Protocol: &tcpProto,
-							Port:     &clientPort,
-						},
-						{
-							Protocol: &tcpProto,
-							Port:     &dashboardPort,
+							Port:     &clusterPort,
 						},
 					},
 					From: []networkingv1.NetworkPolicyPeer{
@@ -124,5 +149,4 @@ func TestNewHeadNetworkPolicy(t *testing.T) {
 			},
 		},
 	}
-	assert.Equal(t, expected, netpol)
 }

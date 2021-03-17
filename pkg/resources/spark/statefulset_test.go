@@ -323,16 +323,6 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		assert.Error(t, err)
 	})
 
-	t.Run("object_store_memory", func(t *testing.T) {
-		rc := sparkClusterFixture()
-		rc.Spec.ObjectStoreMemoryBytes = pointer.Int64Ptr(100 * 1 << 20)
-
-		actual, err := NewStatefulSet(rc, comp)
-		require.NoError(t, err)
-
-		assert.Contains(t, actual.Spec.Template.Spec.Containers[0].Args, "--object-store-memory=104857600")
-	})
-
 	t.Run("extra_labels", func(t *testing.T) {
 		rc := sparkClusterFixture()
 
