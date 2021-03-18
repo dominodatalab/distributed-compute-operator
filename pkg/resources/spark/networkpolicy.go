@@ -92,14 +92,14 @@ func headNetworkPolicy(rc *dcv1alpha1.SparkCluster, p int32, l map[string]string
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      InstanceObjectName(rc.Name, c),
 			Namespace: rc.Namespace,
-			Labels:    MetadataLabelsWithComponent(rc, ComponentHead),
+			Labels:    MetadataLabelsWithComponent(rc, ComponentMaster),
 			Annotations: map[string]string{
 				resources.DescriptionAnnotationKey: desc,
 			},
 		},
 		Spec: networkingv1.NetworkPolicySpec{
 			PodSelector: metav1.LabelSelector{
-				MatchLabels: SelectorLabelsWithComponent(rc, ComponentHead),
+				MatchLabels: SelectorLabelsWithComponent(rc, ComponentMaster),
 			},
 			Ingress: []networkingv1.NetworkPolicyIngressRule{
 				{

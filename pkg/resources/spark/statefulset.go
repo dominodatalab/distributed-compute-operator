@@ -62,7 +62,7 @@ func NewStatefulSet(rc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	var nodeAttrs dcv1alpha1.SparkClusterNode
 
 	switch comp {
-	case ComponentHead:
+	case ComponentMaster:
 		replicas = 1
 		nodeAttrs = rc.Spec.Head.SparkClusterNode
 	case ComponentWorker:
@@ -206,7 +206,7 @@ func processVolumeClaimTemplates(storage []dcv1alpha1.SparkAdditionalStorage) ([
 
 func componentEnvVars(rc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvVar {
 	var envVar []corev1.EnvVar
-	if comp == ComponentHead {
+	if comp == ComponentMaster {
 		envVar = []corev1.EnvVar{
 			{
 				Name:  "SPARK_MASTER_PORT",
@@ -254,7 +254,7 @@ func processPorts(rc *dcv1alpha1.SparkCluster) []corev1.ContainerPort {
 		},
 	}
 
-	//if comp == ComponentHead {
+	//if comp == ComponentMaster {
 	//	ports = addHeadContainerPorts(rc, ports)
 	//}
 

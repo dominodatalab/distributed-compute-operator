@@ -13,8 +13,8 @@ type Component string
 const (
 	// ComponentNone indicates a generic spark resource.
 	ComponentNone Component = "none"
-	// ComponentHead indicates a spark head resource.
-	ComponentHead Component = "master"
+	// ComponentMaster indicates a spark master resource.
+	ComponentMaster Component = "master"
 	// ComponentWorker indicates a spark worker resource.
 	ComponentWorker Component = "worker"
 	// ApplicationName defines the static name used to generate spark object metadata.
@@ -32,7 +32,7 @@ func InstanceObjectName(instance string, comp Component) string {
 
 // HeadServiceName returns the name of the service that points to the spark head pod.
 func HeadServiceName(name string) string {
-	return InstanceObjectName(name, ComponentHead)
+	return InstanceObjectName(name, ComponentMaster)
 }
 
 func HeadlessServiceName(name string) string {

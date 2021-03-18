@@ -154,7 +154,7 @@ func (r *SparkClusterReconciler) reconcileServiceAccount(ctx context.Context, rc
 // reconcileHeadService creates a service that points to the head Spark pod and
 // applies updates when the parent CR changes.
 func (r *SparkClusterReconciler) reconcileHeadService(ctx context.Context, rc *dcv1alpha1.SparkCluster) error {
-	svc := spark.NewHeadService(rc)
+	svc := spark.NewMasterService(rc)
 	if err := r.createOrUpdateOwnedResource(ctx, rc, svc); err != nil {
 		return fmt.Errorf("failed to reconcile head service: %w", err)
 	}
@@ -247,7 +247,7 @@ func (r *SparkClusterReconciler) reconcileAutoscaler(ctx context.Context, rc *dc
 // reconcileDeployments creates separate Spark head and worker deployments that
 // will collectively comprise the execution agents of the cluster.
 func (r *SparkClusterReconciler) reconcileDeployments(ctx context.Context, rc *dcv1alpha1.SparkCluster) error {
-	head, err := spark.NewStatefulSet(rc, spark.ComponentHead)
+	head, err := spark.NewStatefulSet(rc, spark.ComponentMaster)
 	if err != nil {
 		return err
 	}

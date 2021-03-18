@@ -5,12 +5,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
+	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
+
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 )
 
-// NewHeadService creates a ClusterIP service that points to the head node.
+// NewMasterService creates a ClusterIP service that points to the head node.
 // Dashboard port is exposed when enabled.
-func NewHeadService(rc *dcv1alpha1.SparkCluster) *corev1.Service {
+func NewMasterService(rc *dcv1alpha1.SparkCluster) *corev1.Service {
 	ports := []corev1.ServicePort{
 		{
 			Name: "cluster",
@@ -20,7 +22,9 @@ func NewHeadService(rc *dcv1alpha1.SparkCluster) *corev1.Service {
 				StrVal: "cluster",
 			},
 		},
-		{
+	}
+	if util.BoolPtrIsTrue(rc.Spec.EnableDashboard) {
+		ports = append(ports, corev1.ServicePort{
 			Name:     "tcp", // named tcp to prevent istio from sniffing for Host
 			Port:     rc.Spec.DashboardPort,
 			Protocol: corev1.ProtocolTCP,
@@ -28,7 +32,7 @@ func NewHeadService(rc *dcv1alpha1.SparkCluster) *corev1.Service {
 				Type:   intstr.String,
 				StrVal: "http",
 			},
-		},
+		})
 	}
 
 	return &corev1.Service{
@@ -39,16 +43,17 @@ func NewHeadService(rc *dcv1alpha1.SparkCluster) *corev1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      HeadServiceName(rc.Name),
 			Namespace: rc.Namespace,
-			Labels:    MetadataLabelsWithComponent(rc, ComponentHead),
+			Labels:    MetadataLabelsWithComponent(rc, ComponentMaster),
 		},
 		Spec: corev1.ServiceSpec{
 			Type:     corev1.ServiceTypeClusterIP,
 			Ports:    ports,
-			Selector: SelectorLabelsWithComponent(rc, ComponentHead),
+			Selector: SelectorLabelsWithComponent(rc, ComponentMaster),
 		},
 	}
 }
 
+// NewHeadlessService creates a headless service that points to worker nodes
 func NewHeadlessService(rc *dcv1alpha1.SparkCluster) *corev1.Service {
 	return &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
@@ -56,10 +61,9 @@ func NewHeadlessService(rc *dcv1alpha1.SparkCluster) *corev1.Service {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: HeadlessServiceName(rc.Name),
-			//Name:      "example-spark-worker",
+			Name:      HeadlessServiceName(rc.Name),
 			Namespace: rc.Namespace,
-			Labels:    MetadataLabelsWithComponent(rc, ComponentHead),
+			Labels:    MetadataLabelsWithComponent(rc, ComponentMaster),
 		},
 		Spec: corev1.ServiceSpec{
 			ClusterIP: corev1.ClusterIPNone,

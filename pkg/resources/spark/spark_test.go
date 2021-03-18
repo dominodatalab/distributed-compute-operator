@@ -8,7 +8,7 @@ import (
 
 func TestHeadServiceName(t *testing.T) {
 	actual := HeadServiceName("steve-o")
-	assert.Equal(t, "steve-o-spark-head", actual)
+	assert.Equal(t, "steve-o-spark-master", actual)
 }
 
 func TestInstanceObjectName(t *testing.T) {

@@ -3,6 +3,8 @@ package spark
 import (
 	"testing"
 
+	"k8s.io/apimachinery/pkg/util/intstr"
+
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -11,7 +13,7 @@ import (
 
 func TestNewHeadService(t *testing.T) {
 	rc := sparkClusterFixture()
-	svc := NewHeadService(rc)
+	svc := NewMasterService(rc)
 
 	expected := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
@@ -19,12 +21,12 @@ func TestNewHeadService(t *testing.T) {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-id-spark-head",
+			Name:      "test-id-spark-master",
 			Namespace: "fake-ns",
 			Labels: map[string]string{
 				"app.kubernetes.io/name":       "spark",
 				"app.kubernetes.io/instance":   "test-id",
-				"app.kubernetes.io/component":  "head",
+				"app.kubernetes.io/component":  "master",
 				"app.kubernetes.io/version":    "fake-tag",
 				"app.kubernetes.io/managed-by": "distributed-compute-operator",
 			},
@@ -32,18 +34,16 @@ func TestNewHeadService(t *testing.T) {
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{
 				{
-					Name: "client",
-					Port: 10001,
-				},
-				{
-					Name: "redis-primary",
-					Port: 6379,
+					Name:       "cluster",
+					Port:       7077,
+					TargetPort: intstr.FromString("cluster"),
 				},
 			},
+			Type: "ClusterIP",
 			Selector: map[string]string{
 				"app.kubernetes.io/name":      "spark",
 				"app.kubernetes.io/instance":  "test-id",
-				"app.kubernetes.io/component": "head",
+				"app.kubernetes.io/component": "master",
 			},
 		},
 	}
@@ -51,11 +51,13 @@ func TestNewHeadService(t *testing.T) {
 
 	t.Run("with_dashboard_enabled", func(t *testing.T) {
 		rc.Spec.EnableDashboard = pointer.BoolPtr(true)
-		svc := NewHeadService(rc)
+		svc := NewMasterService(rc)
 
 		expected.Spec.Ports = append(expected.Spec.Ports, corev1.ServicePort{
-			Name: "dashboard",
-			Port: 8265,
+			Name:       "tcp",
+			Protocol:   corev1.ProtocolTCP,
+			Port:       8265,
+			TargetPort: intstr.FromString("http"),
 		})
 
 		assert.Equal(t, expected, svc)
