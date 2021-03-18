@@ -95,10 +95,6 @@ spec:
               enableDashboard:
                 description: EnableDashboard starts the dashboard web UI.
                 type: boolean
-              enableNetworkPolicy:
-                description: EnableNetworkPolicy will create a network policy that
-                  restricts ingress to the cluster.
-                type: boolean
               envVars:
                 description: EnvVars added to every spark pod container.
                 items:
@@ -203,7 +199,7 @@ spec:
                   type: object
                 type: array
               head:
-                description: Head node configuration parameters.
+                description: Master node configuration parameters.
                 properties:
                   additionalStorage:
                     items:

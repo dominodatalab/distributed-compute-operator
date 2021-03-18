@@ -80,9 +80,6 @@ type SparkClusterSpec struct {
 	// EnableDashboard starts the dashboard web UI.
 	EnableDashboard *bool `json:"enableDashboard,omitempty"`
 
-	// EnableNetworkPolicy will create a network policy that restricts ingress to the cluster.
-	EnableNetworkPolicy *bool `json:"enableNetworkPolicy,omitempty"`
-
 	// NetworkPolicyClientLabels will create a pod selector clause for each set of labels.
 	// This is used to grant ingress access to one or more groups of external pods and is
 	// only applicable when EnableNetworkPolicy is true.
@@ -101,8 +98,8 @@ type SparkClusterSpec struct {
 	// EnvVars added to every spark pod container.
 	EnvVars []corev1.EnvVar `json:"envVars,omitempty"`
 
-	// Head node configuration parameters.
-	Head SparkClusterHead `json:"head,omitempty"`
+	// Master node configuration parameters.
+	Master SparkClusterHead `json:"head,omitempty"`
 
 	// Worker node configuration parameters.
 	Worker SparkClusterWorker `json:"worker,omitempty"`

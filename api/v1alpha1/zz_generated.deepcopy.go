@@ -563,11 +563,6 @@ func (in *SparkClusterSpec) DeepCopyInto(out *SparkClusterSpec) {
 		*out = new(bool)
 		**out = **in
 	}
-	if in.EnableNetworkPolicy != nil {
-		in, out := &in.EnableNetworkPolicy, &out.EnableNetworkPolicy
-		*out = new(bool)
-		**out = **in
-	}
 	in.NetworkPolicy.DeepCopyInto(&out.NetworkPolicy)
 	if in.PodSecurityContext != nil {
 		in, out := &in.PodSecurityContext, &out.PodSecurityContext
@@ -581,7 +576,7 @@ func (in *SparkClusterSpec) DeepCopyInto(out *SparkClusterSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	in.Head.DeepCopyInto(&out.Head)
+	in.Master.DeepCopyInto(&out.Master)
 	in.Worker.DeepCopyInto(&out.Worker)
 }
 

@@ -65,9 +65,7 @@ func TestNewStatefulSet(t *testing.T) {
 								"app.kubernetes.io/version":    "fake-tag",
 								"app.kubernetes.io/managed-by": "distributed-compute-operator",
 							},
-							Annotations: map[string]string{
-								"sidecar.istio.io/inject": "false",
-							},
+							Annotations: map[string]string{},
 						},
 						Spec: corev1.PodSpec{
 							ServiceAccountName: "test-id-spark",
@@ -208,9 +206,7 @@ func TestNewStatefulSet(t *testing.T) {
 								"app.kubernetes.io/version":    "fake-tag",
 								"app.kubernetes.io/managed-by": "distributed-compute-operator",
 							},
-							Annotations: map[string]string{
-								"sidecar.istio.io/inject": "false",
-							},
+							Annotations: map[string]string{},
 						},
 						Spec: corev1.PodSpec{
 							ServiceAccountName: "test-id-spark",
@@ -328,7 +324,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		}
 		switch comp {
 		case ComponentMaster:
-			rc.Spec.Head.Labels = expected
+			rc.Spec.Master.Labels = expected
 		case ComponentWorker:
 			rc.Spec.Worker.Labels = expected
 		}
@@ -349,11 +345,10 @@ func testCommonFeatures(t *testing.T, comp Component) {
 
 		expected := map[string]string{
 			"dominodatalab.com/inject-tooling": "true",
-			"sidecar.istio.io/inject":          "false",
 		}
 		switch comp {
 		case ComponentMaster:
-			rc.Spec.Head.Annotations = expected
+			rc.Spec.Master.Annotations = expected
 		case ComponentWorker:
 			rc.Spec.Worker.Annotations = expected
 		}
@@ -379,8 +374,8 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		}
 		switch comp {
 		case ComponentMaster:
-			rc.Spec.Head.Volumes = expectedVols
-			rc.Spec.Head.VolumeMounts = expectedVolMounts
+			rc.Spec.Master.Volumes = expectedVols
+			rc.Spec.Master.VolumeMounts = expectedVolMounts
 		case ComponentWorker:
 			rc.Spec.Worker.Volumes = expectedVols
 			rc.Spec.Worker.VolumeMounts = expectedVolMounts
@@ -408,7 +403,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		}
 		switch comp {
 		case ComponentMaster:
-			rc.Spec.Head.Resources = expected
+			rc.Spec.Master.Resources = expected
 		case ComponentWorker:
 			rc.Spec.Worker.Resources = expected
 		}
@@ -427,7 +422,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		}
 		switch comp {
 		case ComponentMaster:
-			rc.Spec.Head.NodeSelector = expected
+			rc.Spec.Master.NodeSelector = expected
 		case ComponentWorker:
 			rc.Spec.Worker.NodeSelector = expected
 		}
@@ -466,7 +461,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		}
 		switch comp {
 		case ComponentMaster:
-			rc.Spec.Head.Affinity = expected
+			rc.Spec.Master.Affinity = expected
 		case ComponentWorker:
 			rc.Spec.Worker.Affinity = expected
 		}
@@ -490,7 +485,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		}
 		switch comp {
 		case ComponentMaster:
-			rc.Spec.Head.Tolerations = expected
+			rc.Spec.Master.Tolerations = expected
 		case ComponentWorker:
 			rc.Spec.Worker.Tolerations = expected
 		}
@@ -511,7 +506,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		}
 		switch comp {
 		case ComponentMaster:
-			rc.Spec.Head.InitContainers = expected
+			rc.Spec.Master.InitContainers = expected
 		case ComponentWorker:
 			rc.Spec.Worker.InitContainers = expected
 		}

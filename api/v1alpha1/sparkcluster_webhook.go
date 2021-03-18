@@ -3,6 +3,8 @@ package v1alpha1
 import (
 	"fmt"
 
+	v1 "k8s.io/api/core/v1"
+
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -21,10 +23,11 @@ const (
 
 var (
 	defaultSparkDashboardPort             int32 = 8265
-	defaultSparkEnableNetworkPolicy             = pointer.BoolPtr(true)
-	defaultSparkWorkerReplicas                  = pointer.Int32Ptr(1)
 	defaultSparkHttpPort                  int32 = 80
 	defaultSparkClusterPort               int32 = 7077
+	defaultSparkEnableNetworkPolicy             = pointer.BoolPtr(true)
+	defaultSparkWorkerReplicas                  = pointer.Int32Ptr(1)
+	defaultSparkEnableDashboard                 = pointer.BoolPtr(true)
 	defaultSparkNetworkPolicyClientLabels       = map[string]string{
 		"spark-client": "true",
 	}
@@ -61,9 +64,13 @@ func (r *SparkCluster) Default() {
 		log.Info("setting default dashboard port", "value", defaultSparkDashboardPort)
 		r.Spec.DashboardPort = defaultSparkDashboardPort
 	}
+	if r.Spec.EnableDashboard == nil {
+		log.Info("setting enable dashboard flag", "value", *defaultSparkEnableDashboard)
+		r.Spec.EnableDashboard = defaultSparkEnableDashboard
+	}
 	if r.Spec.NetworkPolicy.Enabled == nil {
 		log.Info("setting enable network policy flag", "value", *defaultSparkEnableNetworkPolicy)
-		r.Spec.EnableNetworkPolicy = defaultSparkEnableNetworkPolicy
+		r.Spec.NetworkPolicy.Enabled = defaultSparkEnableNetworkPolicy
 	}
 	if r.Spec.NetworkPolicy.ClientServerLabels == nil {
 		log.Info("setting default network policy client labels", "value", defaultSparkNetworkPolicyClientLabels)
@@ -81,16 +88,23 @@ func (r *SparkCluster) Default() {
 	if r.Spec.Image == nil {
 		log.Info("setting default image", "value", *defaultSparkImage)
 		r.Spec.Image = defaultSparkImage
-	} else {
-		if r.Spec.Image.Repository == "" {
-			log.Info("setting default image repository", "value", defaultSparkImage.Repository)
-			r.Spec.Image.Repository = defaultSparkImage.Repository
-		}
-		if r.Spec.Image.Tag == "" {
-			log.Info("setting default image tag", "value", defaultSparkImage.Tag)
-			r.Spec.Image.Tag = defaultSparkImage.Tag
-		}
 	}
+
+	annotations := make(map[string]string)
+	if r.Spec.Worker.Annotations == nil {
+		r.Spec.Worker.Annotations = annotations
+	}
+	if r.Spec.Master.Annotations == nil {
+		r.Spec.Master.Annotations = annotations
+	}
+	annotations["sidecar.istio.io/inject"] = "false"
+	if r.Spec.Worker.Annotations["sidecar.istio.io/inject"] == "" {
+		annotations["sidecar.istio.io/inject"] = "false"
+	}
+	if r.Spec.Master.Annotations["sidecar.istio.io/inject"] == "" {
+		annotations["sidecar.istio.io/inject"] = "false"
+	}
+
 }
 
 //+kubebuilder:webhook:path=/validate-distributed-compute-dominodatalab-com-v1alpha1-sparkcluster,mutating=false,failurePolicy=fail,sideEffects=None,groups=distributed-compute.dominodatalab.com,resources=sparkclusters,verbs=create;update,versions=v1alpha1,name=vsparkcluster.kb.io,admissionReviewVersions={v1,v1beta1}
@@ -123,10 +137,16 @@ func (r *SparkCluster) validateSparkCluster() error {
 	if err := r.validateWorkerReplicas(); err != nil {
 		allErrs = append(allErrs, err)
 	}
+	if err := r.validateWorkerResourceRequestsCPU(); err != nil {
+		allErrs = append(allErrs, err)
+	}
 	if errs := r.validatePorts(); errs != nil {
 		allErrs = append(allErrs, errs...)
 	}
 	if errs := r.validateAutoscaler(); errs != nil {
+		allErrs = append(allErrs, errs...)
+	}
+	if errs := r.validateImage(); errs != nil {
 		allErrs = append(allErrs, errs...)
 	}
 
@@ -230,6 +250,34 @@ func (r *SparkCluster) validateAutoscaler() field.ErrorList {
 			as.ScaleDownStabilizationWindowSeconds,
 			"must be greater than or equal to 0",
 		))
+	}
+
+	return errs
+}
+
+func (r *SparkCluster) validateWorkerResourceRequestsCPU() *field.Error {
+	if r.Spec.Autoscaling == nil {
+		return nil
+	}
+	if _, ok := r.Spec.Worker.Resources.Requests[v1.ResourceCPU]; ok {
+		return nil
+	}
+
+	return field.Required(
+		field.NewPath("spec").Child("worker").Child("resources").Child("requests").Child("cpu"),
+		"is mandatory when autoscaling is enabled",
+	)
+}
+
+func (r *SparkCluster) validateImage() field.ErrorList {
+	var errs field.ErrorList
+	fldPath := field.NewPath("spec").Child("image")
+
+	if r.Spec.Image.Repository == "" {
+		errs = append(errs, field.Required(fldPath.Child("repository"), "cannot be blank"))
+	}
+	if r.Spec.Image.Tag == "" {
+		errs = append(errs, field.Required(fldPath.Child("tag"), "cannot be blank"))
 	}
 
 	return errs

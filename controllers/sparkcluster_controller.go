@@ -180,7 +180,7 @@ func (r SparkClusterReconciler) reconcileNetworkPolicies(ctx context.Context, rc
 	clusterNetpol := spark.NewClusterNetworkPolicy(rc)
 	dashboardNetpol := spark.NewHeadDashboardNetworkPolicy(rc)
 
-	if !util.BoolPtrIsTrue(rc.Spec.EnableNetworkPolicy) {
+	if !util.BoolPtrIsTrue(rc.Spec.NetworkPolicy.Enabled) {
 		return r.deleteIfExists(ctx, headNetpol, clusterNetpol)
 	}
 

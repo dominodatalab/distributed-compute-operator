@@ -16,7 +16,6 @@ import (
 )
 
 var (
-	//defaultCmd = []string{"sp"}
 	defaultEnv = []corev1.EnvVar{
 		{
 			Name: "MY_POD_IP",
@@ -64,7 +63,7 @@ func NewStatefulSet(rc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	switch comp {
 	case ComponentMaster:
 		replicas = 1
-		nodeAttrs = rc.Spec.Head.SparkClusterNode
+		nodeAttrs = rc.Spec.Master.SparkClusterNode
 	case ComponentWorker:
 		replicas = *rc.Spec.Worker.Replicas
 		nodeAttrs = rc.Spec.Worker.SparkClusterNode
@@ -98,8 +97,6 @@ func NewStatefulSet(rc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 			annotations[k] = v
 		}
 	}
-	//TODO: Discuss with @Sonny and @Po about proper place for this
-	annotations["sidecar.istio.io/inject"] = "false"
 	//TODO: Chart defaults a specific security context if enabled. Always setting for now
 	context := rc.Spec.PodSecurityContext
 	if context == nil {
