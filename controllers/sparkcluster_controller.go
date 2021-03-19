@@ -65,6 +65,8 @@ func (r *SparkClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
+var finalizerName = "distributed-compute.dominodatalab.com/dco-finalizer"
+
 //+kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=sparkclusters,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=sparkclusters/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=sparkclusters/finalizers,verbs=update
@@ -92,6 +94,15 @@ func (r *SparkClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{}, err
 	}
 
+	result, err, done := r.processFinalizers(ctx, rc, log)
+	if done {
+		return result, err
+	}
+	//the other two cases
+	// - has finalizer and no deletion timestamp
+	// - no finalizer and yes deletion timestamp
+	// are just events we want to generally reconcile
+
 	if err := r.reconcileResources(ctx, rc); err != nil {
 		log.Error(err, "failed to reconcile cluster resources")
 		return ctrl.Result{}, err
@@ -110,6 +121,95 @@ func (r *SparkClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	return ctrl.Result{}, nil
 }
 
+func (r *SparkClusterReconciler) processFinalizers(ctx context.Context, rc *dcv1alpha1.SparkCluster, log logr.Logger) (ctrl.Result, error, bool) {
+	//no finalizer and no deletion timestamp means this is a new object so set the finalizer
+	if !hasFinalizer(rc) && !hasDeletionTimestamp(rc) {
+		rc.Finalizers = append(rc.Finalizers, finalizerName)
+		err := r.Update(ctx, rc)
+		if err != nil {
+			log.Error(err, "failed to set finalizer")
+			return ctrl.Result{}, err, true
+		}
+		return ctrl.Result{
+			Requeue: true,
+		}, nil, true
+		//if has finalizer and has deletion timestamp then we want to delete some stuff
+	} else if hasFinalizer(rc) && hasDeletionTimestamp(rc) {log.Info(fmt.Sprintf("%s has finalizer and deletion timestamp. looking for pvcs to delete", rc.Name))
+		var pvcsToDelete []client.Object
+		if len(rc.Spec.Worker.AdditionalStorage) > 0 {
+			claims := &corev1.PersistentVolumeClaimList{}
+			var selectors client.MatchingLabels = spark.SelectorLabelsWithComponent(rc, spark.ComponentWorker)
+			r.List(ctx, claims, client.InNamespace(rc.Namespace), selectors)
+			for _, claim := range claims.Items {
+				//dont bother deleting if its already been deleted
+				if claim.DeletionTimestamp == nil {
+					pvc := claim
+					pvcsToDelete = append(pvcsToDelete, &pvc)
+				}
+			}
+		}
+		if len(rc.Spec.Master.AdditionalStorage) > 0 {
+			claims := &corev1.PersistentVolumeClaimList{}
+			var selectors client.MatchingLabels = spark.SelectorLabelsWithComponent(rc, spark.ComponentMaster)
+			err := r.List(ctx, claims, client.InNamespace(rc.Namespace), selectors)
+			if err != nil {
+				log.Error(err, "unable to list pvcs")
+				return ctrl.Result{}, err, true
+			}
+			for _, claim := range claims.Items {
+				//dont bother deleting if its already been deleted
+				if claim.DeletionTimestamp == nil {
+					pvc := claim
+					pvcsToDelete = append(pvcsToDelete, &pvc)
+				}
+			}
+		}
+		if len(pvcsToDelete) > 0 {
+			log.Info(fmt.Sprintf("deleting %d pvcs associated with %s", len(pvcsToDelete), rc.Name))
+			err := r.deleteIfExists(ctx, pvcsToDelete...)
+			if err != nil {
+				log.Error(err, fmt.Sprintf("unable to delete %s pvcs", spark.ComponentWorker))
+				return ctrl.Result{}, err, true
+			}
+		}
+		finalizerIndex := -1
+		for index, val := range rc.ObjectMeta.Finalizers {
+			if val == finalizerName {
+				finalizerIndex = index
+			}
+		}
+		if finalizerIndex >= 0 {
+			log.Info(fmt.Sprintf("found finalizer to delete on %s. deleting", rc.Name))
+			rc.ObjectMeta.Finalizers = remove(rc.ObjectMeta.Finalizers, finalizerIndex)
+			err := r.Update(ctx, rc)
+			if err != nil {
+				log.Error(err, "unable to remove finalizer from resource")
+				return ctrl.Result{}, err, true
+			}
+		}
+		return ctrl.Result{}, nil, true
+	}
+	return ctrl.Result{}, nil, false
+}
+
+func remove(s []string, i int) []string {
+	s[len(s)-1], s[i] = s[i], s[len(s)-1]
+	return s[:len(s)-1]
+}
+
+func hasDeletionTimestamp(rc *dcv1alpha1.SparkCluster) bool {
+	return rc.ObjectMeta.DeletionTimestamp != nil
+}
+
+func hasFinalizer(rc *dcv1alpha1.SparkCluster) bool {
+	for _, val := range rc.ObjectMeta.Finalizers {
+		if val == finalizerName {
+			return true
+		}
+	}
+	return false
+}
+
 // reconcileResources manages the creation and updates of resources that
 // collectively comprise a Spark cluster. Each resource is controlled by a parent
 // SparkCluster object so that full cleanup occurs during a delete operation.
@@ -120,7 +220,7 @@ func (r *SparkClusterReconciler) reconcileResources(ctx context.Context, rc *dcv
 	if err := r.reconcileHeadService(ctx, rc); err != nil {
 		return err
 	}
-	if err := r.reconcileHeadLessService(ctx, rc); err != nil {
+	if err := r.reconcileHeadlessService(ctx, rc); err != nil {
 		return err
 	}
 	if err := r.reconcileNetworkPolicies(ctx, rc); err != nil {
@@ -133,7 +233,7 @@ func (r *SparkClusterReconciler) reconcileResources(ctx context.Context, rc *dcv
 		return err
 	}
 
-	return r.reconcileDeployments(ctx, rc)
+	return r.reconcileStatefulSets(ctx, rc)
 }
 
 // reconcileServiceAccount creates a new dedicated service account for a Spark
@@ -164,7 +264,7 @@ func (r *SparkClusterReconciler) reconcileHeadService(ctx context.Context, rc *d
 
 // reconcileHeadService creates a service that points to the head Spark pod and
 // applies updates when the parent CR changes.
-func (r *SparkClusterReconciler) reconcileHeadLessService(ctx context.Context, rc *dcv1alpha1.SparkCluster) error {
+func (r *SparkClusterReconciler) reconcileHeadlessService(ctx context.Context, rc *dcv1alpha1.SparkCluster) error {
 	svc := spark.NewHeadlessService(rc)
 	if err := r.createOrUpdateOwnedResource(ctx, rc, svc); err != nil {
 		return fmt.Errorf("failed to reconcile headless service: %w", err)
@@ -244,9 +344,9 @@ func (r *SparkClusterReconciler) reconcileAutoscaler(ctx context.Context, rc *dc
 	return nil
 }
 
-// reconcileDeployments creates separate Spark head and worker deployments that
+// reconcileStatefulSets creates separate Spark head and worker statefulsets that
 // will collectively comprise the execution agents of the cluster.
-func (r *SparkClusterReconciler) reconcileDeployments(ctx context.Context, rc *dcv1alpha1.SparkCluster) error {
+func (r *SparkClusterReconciler) reconcileStatefulSets(ctx context.Context, rc *dcv1alpha1.SparkCluster) error {
 	head, err := spark.NewStatefulSet(rc, spark.ComponentMaster)
 	if err != nil {
 		return err

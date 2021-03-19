@@ -23,26 +23,19 @@ spec:
   #   averageUtilization: 50
   #   scaleDownStabilizationWindowSeconds: 60
 
-  # redis port and addition redis shard ports used by head node
-  port: 1234
-
   # port used to connect clients to spark
-  clientServerPort: 10001
+  # clientServerPort: 10001
 
   # enable dashboard ui and set port
   dashboardPort: 8080
   enableDashboard: true
-
-  # set the object store's port and initial memory
-  httpPort: 80
-  objectStoreMemoryBytes: 78643200
 
   # internal port overrides
   clusterPort: 7077
 
   # control the creation of network policies
   networkPolicy:
-    enable: false
+    enabled: false
 
   # bind cluster to existing psp
   # podSecurityPolicy: privileged
@@ -77,6 +70,11 @@ spec:
   #  - name: SPARK_MASTER_PORT
   #  - name: SPARK_MASTER_WEBUI_PORT
   #  - name: SPARK_MASTER_OPTS
+
+  autoscaling:
+    averageCPUUtilization: 99
+    maxReplicas: 3
+    minReplicas: 1
 
   ## head configuration parameters
 
@@ -186,3 +184,10 @@ spec:
       limits:
         cpu: 500m
         memory: 512Mi
+
+    additionalStorage:
+    - accessModes:
+      - ReadWriteMany
+      size: 1Gi
+      storageClass: nfs
+      name: spark-worker-pvc

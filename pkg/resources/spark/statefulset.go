@@ -191,7 +191,7 @@ func processVolumeClaimTemplates(storage []dcv1alpha1.SparkAdditionalStorage) ([
 				AccessModes: as.AccessModes,
 				Resources: corev1.ResourceRequirements{
 					Requests: map[corev1.ResourceName]resource.Quantity{
-						corev1.ResourceMemory: quantity,
+						corev1.ResourceStorage: quantity,
 					},
 				},
 				StorageClassName: &as.StorageClass,
@@ -251,10 +251,6 @@ func processPorts(rc *dcv1alpha1.SparkCluster) []corev1.ContainerPort {
 		},
 	}
 
-	//if comp == ComponentMaster {
-	//	ports = addHeadContainerPorts(rc, ports)
-	//}
-
 	return ports
 }
 
@@ -266,15 +262,3 @@ func processLabels(rc *dcv1alpha1.SparkCluster, comp Component, extraLabels map[
 
 	return labels
 }
-
-//
-//func addHeadContainerPorts(rc *dcv1alpha1.SparkCluster, ports []corev1.ContainerPort) []corev1.ContainerPort {
-//	redisPorts := []corev1.ContainerPort{
-//		{
-//			Name:          "redis-primary",
-//			ContainerPort: rc.Spec.Port,
-//		},
-//	}
-//
-//	return append(ports, redisPorts...)
-//}

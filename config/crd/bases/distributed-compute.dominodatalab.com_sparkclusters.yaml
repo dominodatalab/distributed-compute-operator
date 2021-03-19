@@ -212,10 +212,13 @@ spec:
                           type: string
                         size:
                           type: string
+                        storageClass:
+                          type: string
                       required:
                       - accessModes
                       - name
                       - size
+                      - storageClass
                       type: object
                     type: array
                   affinity:
@@ -3777,10 +3780,13 @@ spec:
                           type: string
                         size:
                           type: string
+                        storageClass:
+                          type: string
                       required:
                       - accessModes
                       - name
                       - size
+                      - storageClass
                       type: object
                     type: array
                   affinity:
