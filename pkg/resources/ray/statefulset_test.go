@@ -15,10 +15,10 @@ import (
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 )
 
-func TestNewDeployment(t *testing.T) {
+func TestNewStatefulSet(t *testing.T) {
 	t.Run("invalid_component", func(t *testing.T) {
 		rc := rayClusterFixture()
-		_, err := NewDeployment(rc, Component("garbage"))
+		_, err := NewStatefulSet(rc, Component("garbage"))
 		assert.Error(t, err)
 	})
 
@@ -27,10 +27,10 @@ func TestNewDeployment(t *testing.T) {
 
 		t.Run("default_values", func(t *testing.T) {
 			rc := rayClusterFixture()
-			actual, err := NewDeployment(rc, ComponentHead)
+			actual, err := NewStatefulSet(rc, ComponentHead)
 			require.NoError(t, err)
 
-			expected := &appsv1.Deployment{
+			expected := &appsv1.StatefulSet{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-id-ray-head",
 					Namespace: "fake-ns",
@@ -42,7 +42,7 @@ func TestNewDeployment(t *testing.T) {
 						"app.kubernetes.io/managed-by": "distributed-compute-operator",
 					},
 				},
-				Spec: appsv1.DeploymentSpec{
+				Spec: appsv1.StatefulSetSpec{
 					Replicas: pointer.Int32Ptr(1),
 					Selector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
@@ -155,7 +155,10 @@ func TestNewDeployment(t *testing.T) {
 							},
 						},
 					},
-					Strategy: appsv1.DeploymentStrategy{Type: appsv1.RecreateDeploymentStrategyType},
+					PodManagementPolicy: appsv1.ParallelPodManagement,
+					UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
+						Type: appsv1.RollingUpdateStatefulSetStrategyType,
+					},
 				},
 			}
 			assert.Equal(t, expected, actual, "head deployment not correctly generated")
@@ -166,7 +169,7 @@ func TestNewDeployment(t *testing.T) {
 			rc.Spec.EnableDashboard = pointer.BoolPtr(true)
 			rc.Spec.DashboardPort = 8265
 
-			actual, err := NewDeployment(rc, ComponentHead)
+			actual, err := NewStatefulSet(rc, ComponentHead)
 			require.NoError(t, err)
 
 			expected := []string{
@@ -183,10 +186,10 @@ func TestNewDeployment(t *testing.T) {
 
 		t.Run("default_values", func(t *testing.T) {
 			rc := rayClusterFixture()
-			actual, err := NewDeployment(rc, ComponentWorker)
+			actual, err := NewStatefulSet(rc, ComponentWorker)
 			require.NoError(t, err)
 
-			expected := &appsv1.Deployment{
+			expected := &appsv1.StatefulSet{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-id-ray-worker",
 					Namespace: "fake-ns",
@@ -198,7 +201,7 @@ func TestNewDeployment(t *testing.T) {
 						"app.kubernetes.io/managed-by": "distributed-compute-operator",
 					},
 				},
-				Spec: appsv1.DeploymentSpec{
+				Spec: appsv1.StatefulSetSpec{
 					Replicas: pointer.Int32Ptr(5),
 					Selector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
@@ -296,10 +299,13 @@ func TestNewDeployment(t *testing.T) {
 							},
 						},
 					},
-					Strategy: appsv1.DeploymentStrategy{Type: appsv1.RecreateDeploymentStrategyType},
+					PodManagementPolicy: appsv1.ParallelPodManagement,
+					UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
+						Type: appsv1.RollingUpdateStatefulSetStrategyType,
+					},
 				},
 			}
-			assert.Equal(t, expected, actual, "worker deployment not correctly generated")
+			assert.Equal(t, expected, actual, "worker stateful set not correctly generated")
 		})
 	})
 }
@@ -311,7 +317,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		rc := rayClusterFixture()
 		rc.Spec.Image = &dcv1alpha1.OCIImageDefinition{}
 
-		_, err := NewDeployment(rc, comp)
+		_, err := NewStatefulSet(rc, comp)
 		assert.Error(t, err)
 	})
 
@@ -319,7 +325,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		rc := rayClusterFixture()
 		rc.Spec.ObjectStoreMemoryBytes = pointer.Int64Ptr(100 * 1 << 20)
 
-		actual, err := NewDeployment(rc, comp)
+		actual, err := NewStatefulSet(rc, comp)
 		require.NoError(t, err)
 
 		assert.Contains(t, actual.Spec.Template.Spec.Containers[0].Args, "--object-store-memory=104857600")
@@ -338,7 +344,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.Labels = expected
 		}
 
-		actual, err := NewDeployment(rc, comp)
+		actual, err := NewStatefulSet(rc, comp)
 		require.NoError(t, err)
 
 		for _, labels := range []map[string]string{actual.Labels, actual.Spec.Template.Labels} {
@@ -362,7 +368,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.Annotations = expected
 		}
 
-		actual, err := NewDeployment(rc, comp)
+		actual, err := NewStatefulSet(rc, comp)
 		require.NoError(t, err)
 
 		assert.Equal(t, expected, actual.Spec.Template.Annotations)
@@ -390,7 +396,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.VolumeMounts = expectedVolMounts
 		}
 
-		actual, err := NewDeployment(rc, comp)
+		actual, err := NewStatefulSet(rc, comp)
 		require.NoError(t, err)
 
 		assert.Subset(t, actual.Spec.Template.Spec.Volumes, expectedVols)
@@ -417,7 +423,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.Resources = expected
 		}
 
-		actual, err := NewDeployment(rc, comp)
+		actual, err := NewStatefulSet(rc, comp)
 		require.NoError(t, err)
 
 		assert.Equal(t, expected, actual.Spec.Template.Spec.Containers[0].Resources)
@@ -436,7 +442,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.NodeSelector = expected
 		}
 
-		actual, err := NewDeployment(rc, comp)
+		actual, err := NewStatefulSet(rc, comp)
 		require.NoError(t, err)
 
 		assert.Equal(t, expected, actual.Spec.Template.Spec.NodeSelector)
@@ -475,7 +481,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.Affinity = expected
 		}
 
-		actual, err := NewDeployment(rc, comp)
+		actual, err := NewStatefulSet(rc, comp)
 		require.NoError(t, err)
 
 		assert.Equal(t, expected, actual.Spec.Template.Spec.Affinity)
@@ -499,7 +505,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.Tolerations = expected
 		}
 
-		actual, err := NewDeployment(rc, comp)
+		actual, err := NewStatefulSet(rc, comp)
 		require.NoError(t, err)
 
 		assert.Equal(t, expected, actual.Spec.Template.Spec.Tolerations)
@@ -520,7 +526,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.InitContainers = expected
 		}
 
-		actual, err := NewDeployment(rc, comp)
+		actual, err := NewStatefulSet(rc, comp)
 		require.NoError(t, err)
 
 		assert.Equal(t, expected, actual.Spec.Template.Spec.InitContainers)
@@ -535,7 +541,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			},
 		}
 
-		actual, err := NewDeployment(rc, comp)
+		actual, err := NewStatefulSet(rc, comp)
 		require.NoError(t, err)
 
 		assert.Subset(t, actual.Spec.Template.Spec.Containers[0].Env, rc.Spec.EnvVars)
@@ -547,7 +553,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			RunAsUser: pointer.Int64Ptr(0),
 		}
 
-		actual, err := NewDeployment(rc, comp)
+		actual, err := NewStatefulSet(rc, comp)
 		require.NoError(t, err)
 
 		assert.Equal(t, rc.Spec.PodSecurityContext, actual.Spec.Template.Spec.SecurityContext)
@@ -557,7 +563,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		rc := rayClusterFixture()
 		rc.Spec.ServiceAccountName = "user-managed-sa"
 
-		actual, err := NewDeployment(rc, comp)
+		actual, err := NewStatefulSet(rc, comp)
 		require.NoError(t, err)
 
 		assert.Equal(t, rc.Spec.ServiceAccountName, actual.Spec.Template.Spec.ServiceAccountName)
