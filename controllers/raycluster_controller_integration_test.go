@@ -94,8 +94,8 @@ var _ = Describe("RayCluster Controller", func() {
 				{"pod security policy role", "it-ray", &rbacv1.Role{}},
 				{"pod security policy role binding", "it-ray", &rbacv1.RoleBinding{}},
 				{"horizontal pod autoscaler", "it-ray", &autoscalingv2beta2.HorizontalPodAutoscaler{}},
-				{"head deployment", "it-ray-head", &appsv1.Deployment{}},
-				{"worker deployment", "it-ray-worker", &appsv1.Deployment{}},
+				{"head stateful set", "it-ray-head", &appsv1.StatefulSet{}},
+				{"worker stateful set", "it-ray-worker", &appsv1.StatefulSet{}},
 			}
 			for _, tc := range testcases {
 				By(fmt.Sprintf("Creating a new %s", tc.desc))

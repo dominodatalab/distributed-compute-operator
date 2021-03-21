@@ -161,7 +161,7 @@ func TestNewStatefulSet(t *testing.T) {
 					},
 				},
 			}
-			assert.Equal(t, expected, actual, "head deployment not correctly generated")
+			assert.Equal(t, expected, actual, "head stateful set not correctly generated")
 		})
 
 		t.Run("enable_dashboard", func(t *testing.T) {

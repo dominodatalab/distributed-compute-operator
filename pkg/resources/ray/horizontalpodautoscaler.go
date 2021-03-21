@@ -12,8 +12,9 @@ import (
 
 // NewHorizontalPodAutoscaler generates an HPA that targets a RayCluster resource.
 //
-// The metrics-server needs to be launched separately and the worker deployment
-// requires cpu resource requests in order for this object to have any effect.
+// The metrics-server needs to be launched separately and the worker stateful
+// set requires cpu resource requests in order for this object to have any
+// effect.
 func NewHorizontalPodAutoscaler(rc *dcv1alpha1.RayCluster) (*autoscalingv2beta2.HorizontalPodAutoscaler, error) {
 	autoscaling := rc.Spec.Autoscaling
 	if autoscaling == nil {

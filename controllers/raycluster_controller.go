@@ -55,7 +55,7 @@ func (r *RayClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&dcv1alpha1.RayCluster{}, builder.WithPredicates(predicate.GenerationChangedPredicate{})).
 		Owns(&corev1.Service{}).
 		Owns(&corev1.ServiceAccount{}).
-		Owns(&appsv1.Deployment{}).
+		Owns(&appsv1.StatefulSet{}).
 		Owns(&rbacv1.Role{}).
 		Owns(&rbacv1.RoleBinding{}).
 		Owns(&networkingv1.NetworkPolicy{}).
@@ -68,7 +68,7 @@ func (r *RayClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 //+kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=rayclusters/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",resources=pods,verbs=list;watch
 //+kubebuilder:rbac:groups="",resources=services;serviceaccounts,verbs=create;update;list;watch
-//+kubebuilder:rbac:groups=apps,resources=deployments,verbs=create;update;list;watch
+//+kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=create;update;list;watch
 //+kubebuilder:rbac:groups=autoscaling,resources=horizontalpodautoscalers,verbs=create;update;delete;list;watch
 //+kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=create;update;delete;list;watch
 //+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles;rolebindings,verbs=create;update;delete;list;watch
@@ -128,7 +128,7 @@ func (r *RayClusterReconciler) reconcileResources(ctx context.Context, rc *dcv1a
 		return err
 	}
 
-	return r.reconcileDeployments(ctx, rc)
+	return r.reconcileStatefulSets(ctx, rc)
 }
 
 // reconcileServiceAccount creates a new dedicated service account for a Ray
@@ -229,23 +229,23 @@ func (r *RayClusterReconciler) reconcileAutoscaler(ctx context.Context, rc *dcv1
 	return nil
 }
 
-// reconcileDeployments creates separate Ray head and worker deployments that
-// will collectively comprise the execution agents of the cluster.
-func (r *RayClusterReconciler) reconcileDeployments(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
-	head, err := ray.NewDeployment(rc, ray.ComponentHead)
+// reconcileStatefulSets creates separate Ray head and worker stateful sets
+// that will collectively comprise the execution agents of the cluster.
+func (r *RayClusterReconciler) reconcileStatefulSets(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
+	head, err := ray.NewStatefulSet(rc, ray.ComponentHead)
 	if err != nil {
 		return err
 	}
 	if err = r.createOrUpdateOwnedResource(ctx, rc, head); err != nil {
-		return fmt.Errorf("failed to create head deployment: %w", err)
+		return fmt.Errorf("failed to create head stateful set: %w", err)
 	}
 
-	worker, err := ray.NewDeployment(rc, ray.ComponentWorker)
+	worker, err := ray.NewStatefulSet(rc, ray.ComponentWorker)
 	if err != nil {
 		return err
 	}
 	if err = r.createOrUpdateOwnedResource(ctx, rc, worker); err != nil {
-		return fmt.Errorf("failed to create worker deployment: %w", err)
+		return fmt.Errorf("failed to create worker stateful set: %w", err)
 	}
 
 	return nil
@@ -382,9 +382,9 @@ func (r *RayClusterReconciler) modifyStatusNodes(ctx context.Context, rc *dcv1al
 	return true, nil
 }
 
-// modifyStatusWorkerFields syncs certain worker deployment fields into the status.
+// modifyStatusWorkerFields syncs certain worker stateful set fields into the status.
 func (r *RayClusterReconciler) modifyStatusWorkerFields(ctx context.Context, rc *dcv1alpha1.RayCluster) (bool, error) {
-	worker, err := ray.NewDeployment(rc, ray.ComponentWorker)
+	worker, err := ray.NewStatefulSet(rc, ray.ComponentWorker)
 	if err != nil {
 		return false, err
 	}
