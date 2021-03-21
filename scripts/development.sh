@@ -118,6 +118,7 @@ function dco::helm_install() {
     $chart_name \
     deploy/helm/$chart_name \
     --install \
+    --set image.registry="" \
     --set image.repository="$IMAGE_NAME" \
     --set image.tag="$latest_tag" \
     --set image.registry="" \
