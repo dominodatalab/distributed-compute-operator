@@ -265,6 +265,7 @@ func (r *RayCluster) validatePort(port int32, fldPath *field.Path) *field.Error 
 	return nil
 }
 
+// nolint:dupl
 func (r *RayCluster) validateAutoscaler() field.ErrorList {
 	var errs field.ErrorList
 

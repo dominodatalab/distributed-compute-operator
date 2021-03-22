@@ -100,11 +100,24 @@ func NewStatefulSet(rc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	//TODO: Chart defaults a specific security context if enabled. Always setting for now
 	context := rc.Spec.PodSecurityContext
 	if context == nil {
+		const DefaultUser = 1001
+		const DefaultFSGroup = 1001
 		context = &corev1.PodSecurityContext{
-			RunAsUser: pointer.Int64Ptr(1001),
-			FSGroup:   pointer.Int64Ptr(1001),
+			RunAsUser: pointer.Int64Ptr(DefaultUser),
+			FSGroup:   pointer.Int64Ptr(DefaultFSGroup),
 		}
 	}
+
+	podSpec := getPodSpec(rc,
+		comp,
+		serviceAccountName,
+		nodeAttrs,
+		context,
+		imageRef,
+		ports,
+		envVars,
+		volumeMounts,
+		volumes)
 
 	statefulSet := &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
@@ -127,44 +140,7 @@ func NewStatefulSet(rc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 					Labels:      labels,
 					Annotations: annotations,
 				},
-				Spec: corev1.PodSpec{
-					ServiceAccountName: serviceAccountName,
-					NodeSelector:       nodeAttrs.NodeSelector,
-					Affinity:           nodeAttrs.Affinity,
-					Tolerations:        nodeAttrs.Tolerations,
-					InitContainers:     nodeAttrs.InitContainers,
-					ImagePullSecrets:   rc.Spec.ImagePullSecrets,
-					SecurityContext:    context,
-					Containers: []corev1.Container{
-						{
-							Name: string(ApplicationName + "-" + comp),
-							//Command:         defaultCmd,
-							Image:           imageRef,
-							ImagePullPolicy: rc.Spec.Image.PullPolicy,
-							Ports:           ports,
-							Env:             envVars,
-							VolumeMounts:    volumeMounts,
-							Resources:       nodeAttrs.Resources,
-							LivenessProbe: &corev1.Probe{
-								Handler: corev1.Handler{
-									HTTPGet: &corev1.HTTPGetAction{
-										Path: "/",
-										Port: intstr.FromInt(int(rc.Spec.DashboardPort)),
-									},
-								},
-							},
-							ReadinessProbe: &corev1.Probe{
-								Handler: corev1.Handler{
-									HTTPGet: &corev1.HTTPGetAction{
-										Path: "/",
-										Port: intstr.FromInt(int(rc.Spec.DashboardPort)),
-									},
-								},
-							},
-						},
-					},
-					Volumes: volumes,
-				},
+				Spec: podSpec,
 			},
 			VolumeClaimTemplates: volumeClaimTemplates,
 			UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
@@ -174,6 +150,56 @@ func NewStatefulSet(rc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	}
 
 	return statefulSet, nil
+}
+
+func getPodSpec(rc *dcv1alpha1.SparkCluster,
+	comp Component,
+	serviceAccountName string,
+	nodeAttrs dcv1alpha1.SparkClusterNode,
+	context *corev1.PodSecurityContext,
+	imageRef string,
+	ports []corev1.ContainerPort,
+	envVars []corev1.EnvVar,
+	volumeMounts []corev1.VolumeMount,
+	volumes []corev1.Volume) corev1.PodSpec {
+	return corev1.PodSpec{
+		ServiceAccountName: serviceAccountName,
+		NodeSelector:       nodeAttrs.NodeSelector,
+		Affinity:           nodeAttrs.Affinity,
+		Tolerations:        nodeAttrs.Tolerations,
+		InitContainers:     nodeAttrs.InitContainers,
+		ImagePullSecrets:   rc.Spec.ImagePullSecrets,
+		SecurityContext:    context,
+		Containers: []corev1.Container{
+			{
+				Name: string(ApplicationName + "-" + comp),
+				//Command:         defaultCmd,
+				Image:           imageRef,
+				ImagePullPolicy: rc.Spec.Image.PullPolicy,
+				Ports:           ports,
+				Env:             envVars,
+				VolumeMounts:    volumeMounts,
+				Resources:       nodeAttrs.Resources,
+				LivenessProbe: &corev1.Probe{
+					Handler: corev1.Handler{
+						HTTPGet: &corev1.HTTPGetAction{
+							Path: "/",
+							Port: intstr.FromInt(int(rc.Spec.DashboardPort)),
+						},
+					},
+				},
+				ReadinessProbe: &corev1.Probe{
+					Handler: corev1.Handler{
+						HTTPGet: &corev1.HTTPGetAction{
+							Path: "/",
+							Port: intstr.FromInt(int(rc.Spec.DashboardPort)),
+						},
+					},
+				},
+			},
+		},
+		Volumes: volumes,
+	}
 }
 
 func processVolumeClaimTemplates(storage []dcv1alpha1.SparkAdditionalStorage) ([]corev1.PersistentVolumeClaim, error) {
@@ -226,7 +252,7 @@ func componentEnvVars(rc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 			},
 			{
 				Name: "SPARK_WORKER_WEBUI_PORT",
-				//TODO talk to @Po about whether this makes sense. Spark defaults to 8081 as default for this
+				// TODO talk to @Po about whether this makes sense. Spark defaults to 8081 as default for this
 				Value: strconv.Itoa(int(rc.Spec.DashboardPort)),
 			},
 			{

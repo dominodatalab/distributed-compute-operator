@@ -37,9 +37,9 @@ import (
 const SparkLastAppliedConfig = "distributed-compute-operator.dominodatalab.com/last-applied"
 
 var (
-	// PatchAnnotator applies state annotations to owned components.
+	// SparkPatchAnnotator applies state annotations to owned components.
 	SparkPatchAnnotator = patch.NewAnnotator(SparkLastAppliedConfig)
-	// PatchMaker calculates changes to state annotations on owned components.
+	// SparkPatchMaker calculates changes to state annotations on owned components.
 	SparkPatchMaker = patch.NewPatchMaker(SparkPatchAnnotator)
 )
 
@@ -50,6 +50,7 @@ type SparkClusterReconciler struct {
 	Scheme *runtime.Scheme
 }
 
+// nolint:dupl
 // SetupWithManager creates and registers this controller with the manager.
 func (r *SparkClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
@@ -118,7 +119,8 @@ func (r *SparkClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request
 }
 
 func (r *SparkClusterReconciler) processFinalizers(ctx context.Context, rc *dcv1alpha1.SparkCluster, log logr.Logger) error {
-	//no finalizer and no deletion timestamp means this is a new object so we're going to set a finalizer
+	// nolint:nestif
+	// no finalizer and no deletion timestamp means this is a new object so we're going to set a finalizer
 	if !hasFinalizer(rc) && !hasDeletionTimestamp(rc) {
 		rc.Finalizers = append(rc.Finalizers, SparkFinalizerName)
 		err := r.Update(ctx, rc)
@@ -126,15 +128,21 @@ func (r *SparkClusterReconciler) processFinalizers(ctx context.Context, rc *dcv1
 			log.Error(err, "failed to set finalizer")
 			return err
 		}
-		//if it has finalizer and has a deletion timestamp then we want to delete some stuff
+		// if it has finalizer and has a deletion timestamp then we want to delete some stuff
 	} else if hasFinalizer(rc) && hasDeletionTimestamp(rc) {
 		log.Info(fmt.Sprintf("%s has finalizer and deletion timestamp. looking for pvcs to delete", rc.Name))
 		var pvcsToDelete []client.Object
-		workerPvcs := r.getPvcsForDeletion(ctx, rc, spark.ComponentWorker, log)
-		masterPvcs := r.getPvcsForDeletion(ctx, rc, spark.ComponentMaster, log)
+		workerPvcs, err := r.getPvcsForDeletion(ctx, rc, spark.ComponentWorker, log)
+		if err != nil {
+			return err
+		}
+		masterPvcs, err := r.getPvcsForDeletion(ctx, rc, spark.ComponentMaster, log)
+		if err != nil {
+			return err
+		}
 		pvcsToDelete = append(pvcsToDelete, workerPvcs...)
 		pvcsToDelete = append(pvcsToDelete, masterPvcs...)
-		err := r.deletePvcs(ctx, rc, log, pvcsToDelete)
+		err = r.deletePvcs(ctx, rc, log, pvcsToDelete)
 		if err != nil {
 			return err
 		}
@@ -153,7 +161,11 @@ func (r *SparkClusterReconciler) processFinalizers(ctx context.Context, rc *dcv1
 	return nil
 }
 
-func (r *SparkClusterReconciler) deletePvcs(ctx context.Context, rc *dcv1alpha1.SparkCluster, log logr.Logger, pvcsToDelete []client.Object) error {
+func (r *SparkClusterReconciler) deletePvcs(
+	ctx context.Context,
+	rc *dcv1alpha1.SparkCluster,
+	log logr.Logger,
+	pvcsToDelete []client.Object) error {
 	if len(pvcsToDelete) > 0 {
 		log.Info(fmt.Sprintf("deleting %d pvcs associated with %s", len(pvcsToDelete), rc.Name))
 		err := r.deleteIfExists(ctx, pvcsToDelete...)
@@ -165,7 +177,11 @@ func (r *SparkClusterReconciler) deletePvcs(ctx context.Context, rc *dcv1alpha1.
 	return nil
 }
 
-func (r *SparkClusterReconciler) getPvcsForDeletion(ctx context.Context, rc *dcv1alpha1.SparkCluster, component spark.Component, log logr.Logger) []client.Object {
+func (r *SparkClusterReconciler) getPvcsForDeletion(
+	ctx context.Context,
+	rc *dcv1alpha1.SparkCluster,
+	component spark.Component,
+	log logr.Logger) ([]client.Object, error) {
 	var pvcsToDelete []client.Object
 	var additionalStorage []dcv1alpha1.SparkAdditionalStorage
 	switch component {
@@ -175,24 +191,27 @@ func (r *SparkClusterReconciler) getPvcsForDeletion(ctx context.Context, rc *dcv
 		additionalStorage = rc.Spec.Master.AdditionalStorage
 	default:
 		log.Info(fmt.Sprintf("Invalid component type %s. Not looking for pvcs to delete", component))
-		return pvcsToDelete
+		return pvcsToDelete, nil
 	}
 
-	if len(additionalStorage) <= 0 {
-		return pvcsToDelete
+	if len(additionalStorage) == 0 {
+		return pvcsToDelete, nil
 	}
 
 	claims := &corev1.PersistentVolumeClaimList{}
 	var selectors client.MatchingLabels = spark.SelectorLabelsWithComponent(rc, component)
-	r.List(ctx, claims, client.InNamespace(rc.Namespace), selectors)
+	err := r.List(ctx, claims, client.InNamespace(rc.Namespace), selectors)
+	if err != nil {
+		return pvcsToDelete, err
+	}
 	for _, claim := range claims.Items {
-		//dont bother deleting if its already been deleted
+		// dont bother deleting if its already been deleted
 		if claim.DeletionTimestamp == nil {
 			pvc := claim
 			pvcsToDelete = append(pvcsToDelete, &pvc)
 		}
 	}
-	return pvcsToDelete
+	return pvcsToDelete, err
 }
 
 func hasDeletionTimestamp(rc *dcv1alpha1.SparkCluster) bool {
@@ -292,6 +311,7 @@ func (r SparkClusterReconciler) reconcileNetworkPolicies(ctx context.Context, rc
 	return nil
 }
 
+// nolint:dupl
 // reconcilePodSecurityPolicyRBAC optionally creates a role and role binding
 // that allows the Spark pods to "use" the specified pod security policy.
 func (r *SparkClusterReconciler) reconcilePodSecurityPolicyRBAC(ctx context.Context, rc *dcv1alpha1.SparkCluster) error {
@@ -460,7 +480,6 @@ func (r *SparkClusterReconciler) deleteIfExists(ctx context.Context, objs ...cli
 	return nil
 }
 
-//nolint
 // updateStatus with a list of pods from both the head and worker deployments.
 func (r *SparkClusterReconciler) updateStatus(ctx context.Context, rc *dcv1alpha1.SparkCluster) error {
 	podList := &corev1.PodList{}

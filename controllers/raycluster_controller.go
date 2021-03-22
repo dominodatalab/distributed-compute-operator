@@ -49,6 +49,7 @@ type RayClusterReconciler struct {
 	Scheme *runtime.Scheme
 }
 
+// nolint:dupl
 // SetupWithManager creates and registers this controller with the manager.
 func (r *RayClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
@@ -182,6 +183,7 @@ func (r RayClusterReconciler) reconcileNetworkPolicies(ctx context.Context, rc *
 	return nil
 }
 
+// nolint:dupl
 // reconcilePodSecurityPolicyRBAC optionally creates a role and role binding
 // that allows the Ray pods to "use" the specified pod security policy.
 func (r *RayClusterReconciler) reconcilePodSecurityPolicyRBAC(ctx context.Context, rc *dcv1alpha1.RayCluster) error {

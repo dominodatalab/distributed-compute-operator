@@ -23,7 +23,6 @@ const (
 
 var (
 	defaultSparkDashboardPort             int32 = 8265
-	defaultSparkHttpPort                  int32 = 80
 	defaultSparkClusterPort               int32 = 7077
 	defaultSparkEnableNetworkPolicy             = pointer.BoolPtr(true)
 	defaultSparkWorkerReplicas                  = pointer.Int32Ptr(1)
@@ -97,14 +96,14 @@ func (r *SparkCluster) Default() {
 	if r.Spec.Master.Annotations == nil {
 		r.Spec.Master.Annotations = annotations
 	}
-	annotations["sidecar.istio.io/inject"] = "false"
+	const False = "false"
+	annotations["sidecar.istio.io/inject"] = False
 	if r.Spec.Worker.Annotations["sidecar.istio.io/inject"] == "" {
-		annotations["sidecar.istio.io/inject"] = "false"
+		annotations["sidecar.istio.io/inject"] = False
 	}
 	if r.Spec.Master.Annotations["sidecar.istio.io/inject"] == "" {
-		annotations["sidecar.istio.io/inject"] = "false"
+		annotations["sidecar.istio.io/inject"] = False
 	}
-
 }
 
 //+kubebuilder:webhook:path=/validate-distributed-compute-dominodatalab-com-v1alpha1-sparkcluster,mutating=false,failurePolicy=fail,sideEffects=None,groups=distributed-compute.dominodatalab.com,resources=sparkclusters,verbs=create;update,versions=v1alpha1,name=vsparkcluster.kb.io,admissionReviewVersions={v1,v1beta1}
@@ -200,6 +199,7 @@ func (r *SparkCluster) validatePort(port int32, fldPath *field.Path) *field.Erro
 	return nil
 }
 
+// nolint:dupl
 func (r *SparkCluster) validateAutoscaler() field.ErrorList {
 	var errs field.ErrorList
 

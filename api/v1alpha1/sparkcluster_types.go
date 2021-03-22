@@ -38,7 +38,7 @@ type SparkClusterNode struct {
 }
 
 type SparkAdditionalStorage struct {
-	AccessModes  []corev1.PersistentVolumeAccessMode `json:"accessModes""`
+	AccessModes  []corev1.PersistentVolumeAccessMode `json:"accessModes"`
 	Size         string                              `json:"size"`
 	StorageClass string                              `json:"storageClass"`
 	Name         string                              `json:"name"`
