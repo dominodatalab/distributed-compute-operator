@@ -20,6 +20,8 @@ function dco::_error {
 }
 
 function dco::minikube_setup() {
+  set -x
+
   if ! minikube profile list 2> /dev/null | grep -q "$MINIKUBE_PROFILE"; then
     dco::_info "Creating minikube cluster"
     minikube start \
@@ -30,7 +32,6 @@ function dco::minikube_setup() {
       --driver=hyperkit \
       --addons=pod-security-policy \
       --extra-config=apiserver.enable-admission-plugins=PodSecurityPolicy \
-      --network-plugin=cni \
       --cni=calico
   elif minikube status --profile="$MINIKUBE_PROFILE" | grep -q 'host: Stopped'; then
     dco::_info "Restarting minikube cluster"
