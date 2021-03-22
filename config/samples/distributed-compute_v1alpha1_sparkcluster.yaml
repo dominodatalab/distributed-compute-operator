@@ -72,9 +72,10 @@ spec:
   #  - name: SPARK_MASTER_OPTS
 
   autoscaling:
-    averageCPUUtilization: 99
+    averageCPUUtilization: 5
     maxReplicas: 3
     minReplicas: 1
+    scaleDownStabilizationWindowSeconds: 10
 
   ## head configuration parameters
 

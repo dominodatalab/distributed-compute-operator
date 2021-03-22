@@ -107,6 +107,13 @@ var _ = Describe("SparkCluster Controller", func() {
 					return k8sClient.Get(ctx, key, obj)
 				}, timeout).Should(Succeed())
 			}
+			cluster := dcv1alpha1.SparkCluster{}
+			Expect(k8sClient.Get(ctx, types.NamespacedName{
+				Namespace: "default",
+				Name:      "it",
+			}, &cluster)).Should(Succeed())
+			Expect(len(cluster.Finalizers)).Should(Equal(1))
+			Expect(cluster.Finalizers[0]).Should(Equal(SparkFinalizerName))
 		})
 	})
 })

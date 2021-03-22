@@ -33,16 +33,15 @@ import (
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/spark"
 )
 
-//
-//// LastAppliedConfig is the annotation key used to store object state on owned components.
-//const LastAppliedConfig = "distributed-compute-operator.dominodatalab.com/last-applied"
-//
-//var (
-//	// PatchAnnotator applies state annotations to owned components.
-//	PatchAnnotator = patch.NewAnnotator(LastAppliedConfig)
-//	// PatchMaker calculates changes to state annotations on owned components.
-//	PatchMaker = patch.NewPatchMaker(PatchAnnotator)
-//)
+// LastAppliedConfig is the annotation key used to store object state on owned components.
+const SparkLastAppliedConfig = "distributed-compute-operator.dominodatalab.com/last-applied"
+
+var (
+	// PatchAnnotator applies state annotations to owned components.
+	SparkPatchAnnotator = patch.NewAnnotator(SparkLastAppliedConfig)
+	// PatchMaker calculates changes to state annotations on owned components.
+	SparkPatchMaker = patch.NewPatchMaker(SparkPatchAnnotator)
+)
 
 // SparkClusterReconciler reconciles SparkCluster objects.
 type SparkClusterReconciler struct {
@@ -65,7 +64,7 @@ func (r *SparkClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-var finalizerName = "distributed-compute.dominodatalab.com/dco-finalizer"
+const SparkFinalizerName = "distributed-compute.dominodatalab.com/dco-finalizer"
 
 //+kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=sparkclusters,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=sparkclusters/status,verbs=get;update;patch
@@ -94,14 +93,11 @@ func (r *SparkClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{}, err
 	}
 
-	result, err, done := r.processFinalizers(ctx, rc, log)
-	if done {
-		return result, err
+	err := r.processFinalizers(ctx, rc, log)
+	if err != nil {
+		log.Error(err, "failed to process finalizers")
+		return ctrl.Result{}, err
 	}
-	//the other two cases
-	// - has finalizer and no deletion timestamp
-	// - no finalizer and yes deletion timestamp
-	// are just events we want to generally reconcile
 
 	if err := r.reconcileResources(ctx, rc); err != nil {
 		log.Error(err, "failed to reconcile cluster resources")
@@ -121,80 +117,82 @@ func (r *SparkClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	return ctrl.Result{}, nil
 }
 
-func (r *SparkClusterReconciler) processFinalizers(ctx context.Context, rc *dcv1alpha1.SparkCluster, log logr.Logger) (ctrl.Result, error, bool) {
-	//no finalizer and no deletion timestamp means this is a new object so set the finalizer
+func (r *SparkClusterReconciler) processFinalizers(ctx context.Context, rc *dcv1alpha1.SparkCluster, log logr.Logger) error {
+	//no finalizer and no deletion timestamp means this is a new object so we're going to set a finalizer
 	if !hasFinalizer(rc) && !hasDeletionTimestamp(rc) {
-		rc.Finalizers = append(rc.Finalizers, finalizerName)
+		rc.Finalizers = append(rc.Finalizers, SparkFinalizerName)
 		err := r.Update(ctx, rc)
 		if err != nil {
 			log.Error(err, "failed to set finalizer")
-			return ctrl.Result{}, err, true
+			return err
 		}
-		return ctrl.Result{
-			Requeue: true,
-		}, nil, true
-		//if has finalizer and has deletion timestamp then we want to delete some stuff
-	} else if hasFinalizer(rc) && hasDeletionTimestamp(rc) {log.Info(fmt.Sprintf("%s has finalizer and deletion timestamp. looking for pvcs to delete", rc.Name))
+		//if it has finalizer and has a deletion timestamp then we want to delete some stuff
+	} else if hasFinalizer(rc) && hasDeletionTimestamp(rc) {
+		log.Info(fmt.Sprintf("%s has finalizer and deletion timestamp. looking for pvcs to delete", rc.Name))
 		var pvcsToDelete []client.Object
-		if len(rc.Spec.Worker.AdditionalStorage) > 0 {
-			claims := &corev1.PersistentVolumeClaimList{}
-			var selectors client.MatchingLabels = spark.SelectorLabelsWithComponent(rc, spark.ComponentWorker)
-			r.List(ctx, claims, client.InNamespace(rc.Namespace), selectors)
-			for _, claim := range claims.Items {
-				//dont bother deleting if its already been deleted
-				if claim.DeletionTimestamp == nil {
-					pvc := claim
-					pvcsToDelete = append(pvcsToDelete, &pvc)
-				}
-			}
+		workerPvcs := r.getPvcsForDeletion(ctx, rc, spark.ComponentWorker, log)
+		masterPvcs := r.getPvcsForDeletion(ctx, rc, spark.ComponentMaster, log)
+		pvcsToDelete = append(pvcsToDelete, workerPvcs...)
+		pvcsToDelete = append(pvcsToDelete, masterPvcs...)
+		err := r.deletePvcs(ctx, rc, log, pvcsToDelete)
+		if err != nil {
+			return err
 		}
-		if len(rc.Spec.Master.AdditionalStorage) > 0 {
-			claims := &corev1.PersistentVolumeClaimList{}
-			var selectors client.MatchingLabels = spark.SelectorLabelsWithComponent(rc, spark.ComponentMaster)
-			err := r.List(ctx, claims, client.InNamespace(rc.Namespace), selectors)
-			if err != nil {
-				log.Error(err, "unable to list pvcs")
-				return ctrl.Result{}, err, true
-			}
-			for _, claim := range claims.Items {
-				//dont bother deleting if its already been deleted
-				if claim.DeletionTimestamp == nil {
-					pvc := claim
-					pvcsToDelete = append(pvcsToDelete, &pvc)
-				}
-			}
-		}
-		if len(pvcsToDelete) > 0 {
-			log.Info(fmt.Sprintf("deleting %d pvcs associated with %s", len(pvcsToDelete), rc.Name))
-			err := r.deleteIfExists(ctx, pvcsToDelete...)
-			if err != nil {
-				log.Error(err, fmt.Sprintf("unable to delete %s pvcs", spark.ComponentWorker))
-				return ctrl.Result{}, err, true
-			}
-		}
-		finalizerIndex := -1
-		for index, val := range rc.ObjectMeta.Finalizers {
-			if val == finalizerName {
-				finalizerIndex = index
-			}
-		}
+
+		finalizerIndex := util.GetIndexFromSlice(rc.ObjectMeta.Finalizers, SparkFinalizerName)
 		if finalizerIndex >= 0 {
 			log.Info(fmt.Sprintf("found finalizer to delete on %s. deleting", rc.Name))
-			rc.ObjectMeta.Finalizers = remove(rc.ObjectMeta.Finalizers, finalizerIndex)
+			rc.ObjectMeta.Finalizers = util.RemoveFromSlice(rc.ObjectMeta.Finalizers, finalizerIndex)
 			err := r.Update(ctx, rc)
 			if err != nil {
 				log.Error(err, "unable to remove finalizer from resource")
-				return ctrl.Result{}, err, true
+				return err
 			}
 		}
-		return ctrl.Result{}, nil, true
 	}
-	return ctrl.Result{}, nil, false
+	return nil
 }
 
-func remove(s []string, i int) []string {
-	s[len(s)-1], s[i] = s[i], s[len(s)-1]
-	return s[:len(s)-1]
+func (r *SparkClusterReconciler) deletePvcs(ctx context.Context, rc *dcv1alpha1.SparkCluster, log logr.Logger, pvcsToDelete []client.Object) error {
+	if len(pvcsToDelete) > 0 {
+		log.Info(fmt.Sprintf("deleting %d pvcs associated with %s", len(pvcsToDelete), rc.Name))
+		err := r.deleteIfExists(ctx, pvcsToDelete...)
+		if err != nil {
+			log.Error(err, fmt.Sprintf("unable to delete %s pvcs", rc.Name))
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *SparkClusterReconciler) getPvcsForDeletion(ctx context.Context, rc *dcv1alpha1.SparkCluster, component spark.Component, log logr.Logger) []client.Object {
+	var pvcsToDelete []client.Object
+	var additionalStorage []dcv1alpha1.SparkAdditionalStorage
+	switch component {
+	case spark.ComponentWorker:
+		additionalStorage = rc.Spec.Worker.AdditionalStorage
+	case spark.ComponentMaster:
+		additionalStorage = rc.Spec.Master.AdditionalStorage
+	default:
+		log.Info(fmt.Sprintf("Invalid component type %s. Not looking for pvcs to delete", component))
+		return pvcsToDelete
+	}
+
+	if len(additionalStorage) <= 0 {
+		return pvcsToDelete
+	}
+
+	claims := &corev1.PersistentVolumeClaimList{}
+	var selectors client.MatchingLabels = spark.SelectorLabelsWithComponent(rc, component)
+	r.List(ctx, claims, client.InNamespace(rc.Namespace), selectors)
+	for _, claim := range claims.Items {
+		//dont bother deleting if its already been deleted
+		if claim.DeletionTimestamp == nil {
+			pvc := claim
+			pvcsToDelete = append(pvcsToDelete, &pvc)
+		}
+	}
+	return pvcsToDelete
 }
 
 func hasDeletionTimestamp(rc *dcv1alpha1.SparkCluster) bool {
@@ -202,12 +200,7 @@ func hasDeletionTimestamp(rc *dcv1alpha1.SparkCluster) bool {
 }
 
 func hasFinalizer(rc *dcv1alpha1.SparkCluster) bool {
-	for _, val := range rc.ObjectMeta.Finalizers {
-		if val == finalizerName {
-			return true
-		}
-	}
-	return false
+	return util.GetIndexFromSlice(rc.ObjectMeta.Finalizers, SparkFinalizerName) >= 0
 }
 
 // reconcileResources manages the creation and updates of resources that
@@ -410,7 +403,7 @@ func (r *SparkClusterReconciler) createOrUpdateOwnedResource(ctx context.Context
 	err := r.Get(ctx, client.ObjectKeyFromObject(controlled), found)
 
 	if apierrors.IsNotFound(err) {
-		if err = PatchAnnotator.SetLastAppliedAnnotation(controlled); err != nil {
+		if err = SparkPatchAnnotator.SetLastAppliedAnnotation(controlled); err != nil {
 			return err
 		}
 
@@ -421,7 +414,7 @@ func (r *SparkClusterReconciler) createOrUpdateOwnedResource(ctx context.Context
 		return err
 	}
 
-	patchResult, err := PatchMaker.Calculate(found, controlled, patch.IgnoreStatusFields())
+	patchResult, err := SparkPatchMaker.Calculate(found, controlled, patch.IgnoreStatusFields())
 	if err != nil {
 		return err
 	}
@@ -430,7 +423,7 @@ func (r *SparkClusterReconciler) createOrUpdateOwnedResource(ctx context.Context
 	}
 
 	log.V(1).Info("applying patch to object", "object", controlled, "patch", string(patchResult.Patch))
-	if err = PatchAnnotator.SetLastAppliedAnnotation(controlled); err != nil {
+	if err = SparkPatchAnnotator.SetLastAppliedAnnotation(controlled); err != nil {
 		return err
 	}
 

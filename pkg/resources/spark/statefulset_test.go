@@ -553,4 +553,49 @@ func testCommonFeatures(t *testing.T, comp Component) {
 
 		assert.Equal(t, rc.Spec.ServiceAccountName, actual.Spec.Template.Spec.ServiceAccountName)
 	})
+
+	t.Run("volume_claim_template", func(t *testing.T) {
+		rc := sparkClusterFixture()
+		fixtureStorageClass := "fixture-storage-class"
+		additionalStorage := []dcv1alpha1.SparkAdditionalStorage{
+			{
+				AccessModes:  []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+				Size:         "1Gi",
+				StorageClass: fixtureStorageClass,
+				Name:         "worker-additional-storage",
+			},
+		}
+
+		switch comp {
+		case ComponentWorker:
+			rc.Spec.Worker.SparkClusterNode.AdditionalStorage = additionalStorage
+		case ComponentMaster:
+			rc.Spec.Master.SparkClusterNode.AdditionalStorage = additionalStorage
+		}
+
+		quantity, err := resource.ParseQuantity("1Gi")
+		require.NoError(t, err)
+
+		expected := []corev1.PersistentVolumeClaim{
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "worker-additional-storage",
+				},
+				Spec: corev1.PersistentVolumeClaimSpec{
+					AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+					Resources: corev1.ResourceRequirements{
+						Requests: map[corev1.ResourceName]resource.Quantity{
+							corev1.ResourceStorage: quantity,
+						},
+					},
+					StorageClassName: &fixtureStorageClass,
+				},
+			},
+		}
+
+		actual, err := NewStatefulSet(rc, comp)
+		require.NoError(t, err)
+
+		assert.Equal(t, expected, actual.Spec.VolumeClaimTemplates)
+	})
 }

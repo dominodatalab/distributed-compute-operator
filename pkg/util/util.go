@@ -57,3 +57,23 @@ func BoolPtrIsTrue(ptr *bool) bool {
 func BoolPtrIsNilOrFalse(ptr *bool) bool {
 	return ptr == nil || !*ptr
 }
+
+// returns the index of a specific string in a slice or -1 if the value is not present
+func GetIndexFromSlice(s []string, match string) int {
+	for index, val := range s {
+		if val == match {
+			return index
+		}
+	}
+	return -1
+}
+
+// removes index i from slice s. Does not maintain order of the original slice
+// https://stackoverflow.com/a/37335777/13979167
+func RemoveFromSlice(s []string, i int) []string {
+	if i >= 0 && i < len(s) {
+		s[len(s)-1], s[i] = s[i], s[len(s)-1]
+		return s[:len(s)-1]
+	}
+	return s
+}
