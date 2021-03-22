@@ -403,6 +403,38 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		assert.Subset(t, actual.Spec.Template.Spec.Containers[0].VolumeMounts, expectedVolMounts)
 	})
 
+	t.Run("volume_claim_templates", func(t *testing.T) {
+		rc := rayClusterFixture()
+
+		elem := dcv1alpha1.PersistentVolumeClaimTemplate{
+			Name: "stuffz",
+			Spec: corev1.PersistentVolumeClaimSpec{
+				StorageClassName: pointer.StringPtr("test-gpu"),
+			},
+		}
+		input := []dcv1alpha1.PersistentVolumeClaimTemplate{elem}
+
+		switch comp {
+		case ComponentHead:
+			rc.Spec.Head.VolumeClaimTemplates = input
+		case ComponentWorker:
+			rc.Spec.Worker.VolumeClaimTemplates = input
+		}
+
+		actual, err := NewStatefulSet(rc, comp)
+		require.NoError(t, err)
+
+		expected := []corev1.PersistentVolumeClaim{
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: elem.Name,
+				},
+				Spec: elem.Spec,
+			},
+		}
+		assert.Equal(t, expected, actual.Spec.VolumeClaimTemplates)
+	})
+
 	t.Run("resource_requirements", func(t *testing.T) {
 		rc := rayClusterFixture()
 
