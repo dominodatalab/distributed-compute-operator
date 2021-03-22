@@ -79,6 +79,16 @@ func NewStatefulSet(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Stateful
 	volumes := append(defaultVolumes, nodeAttrs.Volumes...)
 	volumeMounts := append(defaultVolumeMounts, nodeAttrs.VolumeMounts...)
 
+	var pvcTemplates []corev1.PersistentVolumeClaim
+	for _, vct := range nodeAttrs.VolumeClaimTemplates {
+		pvcTemplates = append(pvcTemplates, corev1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: vct.Name,
+			},
+			Spec: vct.Spec,
+		})
+	}
+
 	sts := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      InstanceObjectName(rc.Name, comp),
@@ -133,7 +143,8 @@ func NewStatefulSet(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Stateful
 					Volumes: volumes,
 				},
 			},
-			PodManagementPolicy: appsv1.ParallelPodManagement,
+			VolumeClaimTemplates: pvcTemplates,
+			PodManagementPolicy:  appsv1.ParallelPodManagement,
 			UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
 				Type: appsv1.RollingUpdateStatefulSetStrategyType,
 			},

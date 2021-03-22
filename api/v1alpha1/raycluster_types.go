@@ -31,8 +31,13 @@ type RayClusterNode struct {
 	// VolumeMounts added to ray containers.
 	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty"`
 
+	// VolumeClaimTemplates is a list of claims that ray pods are allowed to
+	// reference. You can enable dynamic provisioning of additional storage
+	// on-demand by using a storage class provisioner.
+	VolumeClaimTemplates []PersistentVolumeClaimTemplate `json:"volumeClaimTemplates,omitempty"`
+
 	// Resources are the requests and limits applied to ray containers.
-	Resources corev1.ResourceRequirements `json:"resources"`
+	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 // RayClusterHead defines head-specific pod settings.
