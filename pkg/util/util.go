@@ -58,7 +58,7 @@ func BoolPtrIsNilOrFalse(ptr *bool) bool {
 	return ptr == nil || !*ptr
 }
 
-// returns the index of a specific string in a slice or -1 if the value is not present
+// GetIndexFromSlice returns the index of a specific string in a slice or -1 if the value is not present.
 func GetIndexFromSlice(s []string, match string) int {
 	for index, val := range s {
 		if val == match {
