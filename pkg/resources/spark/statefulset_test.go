@@ -31,10 +31,6 @@ func TestNewStatefulSet(t *testing.T) {
 			require.NoError(t, err)
 
 			expected := &appsv1.StatefulSet{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       "StatefulSet",
-					APIVersion: "apps/v1",
-				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-id-spark-master",
 					Namespace: "fake-ns",
@@ -172,10 +168,6 @@ func TestNewStatefulSet(t *testing.T) {
 			require.NoError(t, err)
 
 			expected := &appsv1.StatefulSet{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       "StatefulSet",
-					APIVersion: "apps/v1",
-				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-id-spark-worker",
 					Namespace: "fake-ns",

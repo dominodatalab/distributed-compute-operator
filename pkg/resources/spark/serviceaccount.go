@@ -11,10 +11,6 @@ import (
 // NewServiceAccount generates a service account resource without API access.
 func NewServiceAccount(rc *dcv1alpha1.SparkCluster) *corev1.ServiceAccount {
 	return &corev1.ServiceAccount{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "ServiceAccount",
-			APIVersion: "v1",
-		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      InstanceObjectName(rc.Name, ComponentNone),
 			Namespace: rc.Namespace,

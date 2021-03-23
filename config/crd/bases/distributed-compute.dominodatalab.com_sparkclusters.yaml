@@ -202,17 +202,27 @@ spec:
                 description: Master node configuration parameters.
                 properties:
                   additionalStorage:
+                    description: Requests for additional storage volumes to be created
+                      alongside each pod
                     items:
                       properties:
                         accessModes:
+                          description: Sets the access mode which will be used when
+                            mounting the volume to the relevant pod
                           items:
                             type: string
                           type: array
                         name:
+                          description: The base of the name that will be used both
+                            to name and subsequently mount this volume. This should
+                            match an entry in VolumeMounts
                           type: string
                         size:
+                          description: Size of volume specified in any legal kubernetes
+                            units (i.e. 1Gi, 1000, etc)
                           type: string
                         storageClass:
+                          description: Controls the storage class of the PersistentVolumeClaim
                           type: string
                       required:
                       - accessModes
@@ -3770,17 +3780,27 @@ spec:
                 description: Worker node configuration parameters.
                 properties:
                   additionalStorage:
+                    description: Requests for additional storage volumes to be created
+                      alongside each pod
                     items:
                       properties:
                         accessModes:
+                          description: Sets the access mode which will be used when
+                            mounting the volume to the relevant pod
                           items:
                             type: string
                           type: array
                         name:
+                          description: The base of the name that will be used both
+                            to name and subsequently mount this volume. This should
+                            match an entry in VolumeMounts
                           type: string
                         size:
+                          description: Size of volume specified in any legal kubernetes
+                            units (i.e. 1Gi, 1000, etc)
                           type: string
                         storageClass:
+                          description: Controls the storage class of the PersistentVolumeClaim
                           type: string
                       required:
                       - accessModes

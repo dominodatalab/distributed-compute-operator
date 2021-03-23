@@ -17,10 +17,6 @@ func TestNewClusterNetworkPolicy(t *testing.T) {
 	netpol := NewClusterNetworkPolicy(rc)
 
 	expected := &networkingv1.NetworkPolicy{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "NetworkPolicy",
-			APIVersion: "networking.k8s.io/v1",
-		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-id-spark-cluster",
 			Namespace: "fake-ns",
@@ -99,10 +95,6 @@ func TestNewHeadDashboardNetworkPolicy(t *testing.T) {
 
 func getNetworkPolicy(tcpProto v1.Protocol, clusterPort intstr.IntOrString, name string, description string) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "NetworkPolicy",
-			APIVersion: "networking.k8s.io/v1",
-		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: "fake-ns",

@@ -35,10 +35,6 @@ func NewMasterService(rc *dcv1alpha1.SparkCluster) *corev1.Service {
 	}
 
 	return &corev1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: "v1",
-		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      HeadServiceName(rc.Name),
 			Namespace: rc.Namespace,
@@ -55,10 +51,6 @@ func NewMasterService(rc *dcv1alpha1.SparkCluster) *corev1.Service {
 // NewHeadlessService creates a headless service that points to worker nodes
 func NewHeadlessService(rc *dcv1alpha1.SparkCluster) *corev1.Service {
 	return &corev1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: "v1",
-		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      HeadlessServiceName(rc.Name),
 			Namespace: rc.Namespace,

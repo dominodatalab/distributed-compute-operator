@@ -16,10 +16,6 @@ func TestNewHeadService(t *testing.T) {
 	svc := NewMasterService(rc)
 
 	expected := &corev1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: "v1",
-		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-id-spark-master",
 			Namespace: "fake-ns",

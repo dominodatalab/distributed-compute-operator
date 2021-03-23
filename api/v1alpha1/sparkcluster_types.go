@@ -40,17 +40,17 @@ type SparkClusterNode struct {
 
 type SparkAdditionalStorage struct {
 	// Sets the access mode which will be used when mounting the volume to the relevant pod
-	AccessModes  []corev1.PersistentVolumeAccessMode `json:"accessModes"`
+	AccessModes []corev1.PersistentVolumeAccessMode `json:"accessModes"`
 
 	// Size of volume specified in any legal kubernetes units (i.e. 1Gi, 1000, etc)
-	Size         string                              `json:"size"`
+	Size string `json:"size"`
 
 	// Controls the storage class of the PersistentVolumeClaim
-	StorageClass string                              `json:"storageClass"`
+	StorageClass string `json:"storageClass"`
 
 	// The base of the name that will be used both to name and subsequently mount this volume. This should match
 	// an entry in VolumeMounts
-	Name         string                              `json:"name"`
+	Name string `json:"name"`
 }
 
 // SparkClusterHead defines head-specific pod settings.

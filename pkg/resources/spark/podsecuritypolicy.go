@@ -19,10 +19,6 @@ func NewPodSecurityPolicyRBAC(rc *dcv1alpha1.SparkCluster) (*rbacv1.Role, *rbacv
 	name := InstanceObjectName(rc.Name, ComponentNone)
 
 	role := &rbacv1.Role{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Role",
-			APIVersion: "rbac.authorization.k8s.io/v1",
-		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: rc.Namespace,
@@ -39,10 +35,6 @@ func NewPodSecurityPolicyRBAC(rc *dcv1alpha1.SparkCluster) (*rbacv1.Role, *rbacv
 	}
 
 	binding := &rbacv1.RoleBinding{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "RoleBinding",
-			APIVersion: "rbac.authorization.k8s.io/v1",
-		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: rc.Namespace,

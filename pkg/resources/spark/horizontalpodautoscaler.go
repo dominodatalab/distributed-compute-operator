@@ -30,10 +30,6 @@ func NewHorizontalPodAutoscaler(rc *dcv1alpha1.SparkCluster) (*autoscalingv2beta
 	}
 
 	hpa := &autoscalingv2beta2.HorizontalPodAutoscaler{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "HorizontalPodAutoscaler",
-			APIVersion: "autoscaling/v2beta2",
-		},
 		ObjectMeta: HorizontalPodAutoscalerObjectMeta(rc),
 		Spec: autoscalingv2beta2.HorizontalPodAutoscalerSpec{
 			ScaleTargetRef: autoscalingv2beta2.CrossVersionObjectReference{

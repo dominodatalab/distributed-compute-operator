@@ -120,10 +120,6 @@ func NewStatefulSet(rc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 		volumes)
 
 	statefulSet := &appsv1.StatefulSet{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "StatefulSet",
-			APIVersion: "apps/v1",
-		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      InstanceObjectName(rc.Name, comp),
 			Namespace: rc.Namespace,
