@@ -121,7 +121,6 @@ function dco::helm_install() {
     --set image.registry="" \
     --set image.repository="$IMAGE_NAME" \
     --set image.tag="$latest_tag" \
-    --set image.registry="" \
     --set config.logDevelopmentMode=true
 }
 
