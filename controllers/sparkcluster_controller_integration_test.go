@@ -3,7 +3,8 @@ package controllers
 import (
 	"context"
 	"fmt"
-	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
@@ -16,7 +17,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
+
+	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 )
 
 var _ = Describe("SparkCluster Controller", func() {
@@ -67,7 +69,7 @@ var _ = Describe("SparkCluster Controller", func() {
 			Eventually(func() error {
 				return k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: "default",
-					Name: "teardown"},
+					Name:      "teardown"},
 					&cluster)
 			}, timeout).Should(Succeed())
 
@@ -76,7 +78,7 @@ var _ = Describe("SparkCluster Controller", func() {
 			Eventually(func() error {
 				return k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: "default",
-					Name: "teardown"},
+					Name:      "teardown"},
 					&cluster)
 			}, timeout).ShouldNot(Succeed())
 
@@ -92,7 +94,7 @@ var _ = Describe("SparkCluster Controller", func() {
 				Namespace: "default",
 				Name:      name,
 			}, &cluster)).Should(Succeed())
-			Eventually(func () bool {
+			Eventually(func() bool {
 				k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: "default",
 					Name:      name,
@@ -114,7 +116,7 @@ var _ = Describe("SparkCluster Controller", func() {
 
 			cluster.Finalizers = append(cluster.Finalizers, "test-finalizer")
 			k8sClient.Update(ctx, &cluster)
-			Eventually(func () bool {
+			Eventually(func() bool {
 				k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: "default",
 					Name:      name,
@@ -123,7 +125,7 @@ var _ = Describe("SparkCluster Controller", func() {
 			}, timeout).Should(BeTrue())
 
 			k8sClient.Delete(ctx, &cluster)
-			Eventually(func () bool {
+			Eventually(func() bool {
 				k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: "default",
 					Name:      name,
