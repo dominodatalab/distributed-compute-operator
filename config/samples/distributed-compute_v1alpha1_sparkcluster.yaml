@@ -47,10 +47,12 @@ spec:
   # specify the service account used to run spark pods
   # serviceAccountName: my-service-account
 
-  # add extra env vars to every spark pod container
+  # add extra env vars to every spark pod container.
   # envVars:
-  #  - name: SPARK_WORKER_MEMORY
   #  - name: SPARK_WORKER_CORES
+  #    value: 2
+  # Here are a number of other potentially useful examples
+  #  - name: SPARK_WORKER_MEMORY
   #  - name: SPARK_WORKER_PORT
   #  - name: SPARK_WORKER_WEBUI_PORT
   #  - name: SPARK_WORKER_DIR
@@ -169,12 +171,12 @@ spec:
     # volumeMounts:
     #   - name: example-vol
     #     mountPath: /mnt/more/space
-    volumes:
-    - name: spark-data
-      persistentVolumeClaim:
-        claimName: spark-data-pvc
+#    volumes:
+#    - name: spark-data
+#      persistentVolumeClaim:
+#        claimName: spark-data-pvc
     volumeMounts:
-    - name: spark-data
+    - name: spark-worker-pvc
       mountPath: /data
 
     resources:

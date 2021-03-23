@@ -62,8 +62,6 @@ func Start(cfg *Config) error {
 		return err
 	}
 
-	setupLog.Info("Logging for testing")
-
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
 		if err = (&dcv1alpha1.RayCluster{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "RayCluster")

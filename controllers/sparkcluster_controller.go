@@ -3,6 +3,8 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/dominodatalab/distributed-compute-operator/pkg/logging"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"reflect"
 	"sort"
 	"strings"
@@ -46,7 +48,7 @@ var (
 // SparkClusterReconciler reconciles SparkCluster objects.
 type SparkClusterReconciler struct {
 	client.Client
-	Log    logr.Logger
+	Log    logging.ContextLogger
 	Scheme *runtime.Scheme
 }
 
@@ -418,23 +420,30 @@ func (r *SparkClusterReconciler) createOrUpdateOwnedResource(ctx context.Context
 		return err
 	}
 
-	log := r.getLogger(ctx)
-	found := controlled.DeepCopyObject().(client.Object)
-	err := r.Get(ctx, client.ObjectKeyFromObject(controlled), found)
-
-	if apierrors.IsNotFound(err) {
-		if err = SparkPatchAnnotator.SetLastAppliedAnnotation(controlled); err != nil {
-			return err
-		}
-
-		log.Info("creating controlled object", "object", controlled)
-		return r.Create(ctx, controlled)
-	}
+	var gvks []schema.GroupVersionKind
+	gvks, _, err := r.Scheme.ObjectKinds(controlled)
 	if err != nil {
 		return err
 	}
+	gvk := gvks[0]
 
-	patchResult, err := SparkPatchMaker.Calculate(found, controlled, patch.IgnoreStatusFields())
+	log := r.Log.FromContext(ctx)
+
+	found := controlled.DeepCopyObject().(client.Object)
+	if err = r.Get(ctx, client.ObjectKeyFromObject(controlled), found); err != nil {
+		if !apierrors.IsNotFound(err) {
+			return err
+		}
+
+		if err = PatchAnnotator.SetLastAppliedAnnotation(controlled); err != nil {
+			return err
+		}
+
+		log.Info("creating controlled object", "gvk", gvk, "object", controlled)
+		return r.Create(ctx, controlled)
+	}
+
+	patchResult, err := PatchMaker.Calculate(found, controlled, patch.IgnoreStatusFields())
 	if err != nil {
 		return err
 	}
@@ -442,8 +451,8 @@ func (r *SparkClusterReconciler) createOrUpdateOwnedResource(ctx context.Context
 		return nil
 	}
 
-	log.V(1).Info("applying patch to object", "object", controlled, "patch", string(patchResult.Patch))
-	if err = SparkPatchAnnotator.SetLastAppliedAnnotation(controlled); err != nil {
+	log.V(1).Info("applying patch to object", "gvk", gvk, "object", controlled, "patch", string(patchResult.Patch))
+	if err = PatchAnnotator.SetLastAppliedAnnotation(controlled); err != nil {
 		return err
 	}
 
@@ -453,7 +462,7 @@ func (r *SparkClusterReconciler) createOrUpdateOwnedResource(ctx context.Context
 		modified.Spec.ClusterIP = current.Spec.ClusterIP
 	}
 
-	log.Info("updating controlled object", "object", controlled)
+	log.Info("updating controlled object", "gvk", gvk, "object", controlled)
 	return r.Update(ctx, controlled)
 }
 
