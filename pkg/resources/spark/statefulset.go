@@ -142,6 +142,7 @@ func NewStatefulSet(rc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 			UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
 				Type: appsv1.RollingUpdateStatefulSetStrategyType,
 			},
+			PodManagementPolicy: appsv1.ParallelPodManagement,
 		},
 	}
 

@@ -3,13 +3,13 @@ package spark
 import (
 	"testing"
 
-	"github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
-
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	"github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 )
 
 func TestNewClusterNetworkPolicy(t *testing.T) {
