@@ -134,6 +134,7 @@ func TestGetIndexFromSlice(t *testing.T) {
 	assert.EqualValues(t, -1, GetIndexFromSlice([]string{}, "Penn"))
 	assert.EqualValues(t, -1, GetIndexFromSlice([]string{}, ""))
 }
+
 func TestRemoveFromSlice(t *testing.T) {
 	assert.EqualValues(t, []string{"Houdini", "Teller"}, RemoveFromSlice([]string{"Penn", "Teller", "Houdini"}, 0))
 	assert.EqualValues(t, []string{"Penn", "Houdini"}, RemoveFromSlice([]string{"Penn", "Teller", "Houdini"}, 1))
