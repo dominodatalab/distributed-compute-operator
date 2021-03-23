@@ -73,7 +73,7 @@ var _ = Describe("SparkCluster Controller", func() {
 					&cluster)
 			}, timeout).Should(Succeed())
 
-			k8sClient.Delete(ctx, &cluster)
+			Expect(k8sClient.Delete(ctx, &cluster)).To(Succeed())
 
 			Eventually(func() error {
 				return k8sClient.Get(ctx, types.NamespacedName{
@@ -97,10 +97,10 @@ var _ = Describe("SparkCluster Controller", func() {
 				}, &cluster)
 			}, timeout).Should(Succeed())
 			Eventually(func() bool {
-				k8sClient.Get(ctx, types.NamespacedName{
+				Expect(k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: "default",
 					Name:      name,
-				}, &cluster)
+				}, &cluster)).To(Succeed())
 				return len(cluster.Finalizers) == 1 && cluster.Finalizers[0] == SparkFinalizerName
 			}, timeout).Should(BeTrue())
 		})
@@ -119,21 +119,22 @@ var _ = Describe("SparkCluster Controller", func() {
 			}, timeout).Should(Succeed())
 
 			cluster.Finalizers = append(cluster.Finalizers, "test-finalizer")
-			k8sClient.Update(ctx, &cluster)
+			Expect(k8sClient.Update(ctx, &cluster)).To(Succeed())
 			Eventually(func() bool {
-				k8sClient.Get(ctx, types.NamespacedName{
+				Expect(k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: "default",
 					Name:      name,
-				}, &cluster)
+				}, &cluster)).To(Succeed())
 				return len(cluster.Finalizers) == 2
 			}, timeout).Should(BeTrue())
 
-			k8sClient.Delete(ctx, &cluster)
+			Expect(k8sClient.Delete(ctx, &cluster)).To(Succeed())
+
 			Eventually(func() bool {
-				k8sClient.Get(ctx, types.NamespacedName{
+				Expect(k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: "default",
 					Name:      name,
-				}, &cluster)
+				}, &cluster)).To(Succeed())
 				return len(cluster.Finalizers) == 1 && cluster.Finalizers[0] == "test-finalizer"
 			}, timeout).Should(BeTrue())
 		})
