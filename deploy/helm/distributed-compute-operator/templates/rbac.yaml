@@ -43,6 +43,7 @@ rules:
   resources:
   - rayclusters
   verbs:
+  - update
   - list
   - watch
 - apiGroups:
@@ -72,6 +73,14 @@ rules:
   verbs:
   - create
   - update
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
+  verbs:
+  - delete
   - list
   - watch
 - apiGroups:

@@ -24,22 +24,13 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/logging"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/ray"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
-)
-
-// LastAppliedConfig is the annotation key used to store object state on owned components.
-const LastAppliedConfig = "distributed-compute-operator.dominodatalab.com/last-applied"
-
-var (
-	// PatchAnnotator applies state annotations to owned components.
-	PatchAnnotator = patch.NewAnnotator(LastAppliedConfig)
-	// PatchMaker calculates changes to state annotations on owned components.
-	PatchMaker = patch.NewPatchMaker(PatchAnnotator)
 )
 
 // RayClusterReconciler reconciles RayCluster objects.
@@ -90,6 +81,12 @@ func (r *RayClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
+	if updated, err := r.manageFinalization(ctx, rc); err != nil {
+		return ctrl.Result{}, err
+	} else if updated {
+		return ctrl.Result{Requeue: true}, nil
+	}
+
 	if err := r.reconcileResources(ctx, rc); err != nil {
 		log.Error(err, "failed to reconcile cluster resources")
 		return ctrl.Result{}, err
@@ -106,6 +103,46 @@ func (r *RayClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	return ctrl.Result{}, nil
+}
+
+// manageFinalization will add a finalizer to new ray cluster resources if it's
+// absent and remove it during a delete request after performing the required
+// finalization steps.
+func (r *RayClusterReconciler) manageFinalization(ctx context.Context, rc *dcv1alpha1.RayCluster) (bool, error) {
+	log := r.Log.FromContext(ctx)
+	registered := controllerutil.ContainsFinalizer(rc, DistributedComputeFinalizer)
+
+	if rc.GetDeletionTimestamp().IsZero() && !registered {
+		log.V(1).Info("registering finalizer", "name", DistributedComputeFinalizer)
+		controllerutil.AddFinalizer(rc, DistributedComputeFinalizer)
+
+		if err := r.Update(ctx, rc); err != nil {
+			log.Error(err, "failed to register finalizer")
+			return false, err
+		}
+
+		return true, nil
+	}
+
+	if rc.GetDeletionTimestamp() != nil && registered {
+		log.Info("executing finalization steps")
+		if err := r.deleteExternalStorage(ctx, rc); err != nil {
+			log.Error(err, "failed to clean up storage")
+			return false, err
+		}
+
+		log.V(1).Info("removing finalizer", "name", DistributedComputeFinalizer)
+		controllerutil.RemoveFinalizer(rc, DistributedComputeFinalizer)
+
+		if err := r.Update(ctx, rc); err != nil {
+			log.Error(err, "failed to remove finalizer")
+			return false, err
+		}
+
+		return true, nil
+	}
+
+	return false, nil
 }
 
 // reconcileResources manages the creation and updates of resources that
@@ -416,4 +453,38 @@ func (r *RayClusterReconciler) modifyStatusWorkerFields(ctx context.Context, rc 
 	}
 
 	return modified, nil
+}
+
+// deleteExternalStorage queries for all persistent volume claims belonging to
+// a cluster instance using selector labels. this should find all the claims
+// created by both the head and worker stateful sets.
+func (r *RayClusterReconciler) deleteExternalStorage(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
+	log := r.Log.FromContext(ctx)
+
+	ns := rc.Namespace
+	labels := ray.SelectorLabels(rc)
+	pvcList := &corev1.PersistentVolumeClaimList{}
+	listOpts := []client.ListOption{
+		client.InNamespace(ns),
+		client.MatchingLabels(labels),
+	}
+
+	log.Info("querying for persistent volume claims", "namespace", ns, "labels", labels)
+	if err := r.List(ctx, pvcList, listOpts...); err != nil {
+		log.Error(err, "cannot list persistent volume claims")
+		return err
+	}
+
+	for idx := range pvcList.Items {
+		pvc := &pvcList.Items[idx]
+		key := client.ObjectKeyFromObject(pvc)
+
+		log.Info("deleting persistent volume claim", "claim", key)
+		if err := r.Delete(ctx, pvc); err != nil {
+			log.Error(err, "cannot delete persistent volume claim", "claim", key)
+			return err
+		}
+	}
+
+	return nil
 }
