@@ -68,7 +68,7 @@ func GetIndexFromSlice(s []string, match string) int {
 	return -1
 }
 
-// removes index i from slice s. Does not maintain order of the original slice
+// RemoveFromSlice removes index i from slice s. Does not maintain order of the original slice.
 // https://stackoverflow.com/a/37335777/13979167
 func RemoveFromSlice(s []string, i int) []string {
 	if i >= 0 && i < len(s) {
