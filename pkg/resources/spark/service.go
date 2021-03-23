@@ -6,7 +6,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
-
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 )
 
