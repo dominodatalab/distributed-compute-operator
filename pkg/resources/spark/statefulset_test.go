@@ -153,6 +153,7 @@ func TestNewStatefulSet(t *testing.T) {
 					},
 					VolumeClaimTemplates: []corev1.PersistentVolumeClaim{},
 					UpdateStrategy:       appsv1.StatefulSetUpdateStrategy{Type: appsv1.RollingUpdateStatefulSetStrategyType},
+					PodManagementPolicy:  appsv1.ParallelPodManagement,
 				},
 			}
 			assert.Equal(t, expected, actual, "head statefulset not correctly generated")
@@ -290,6 +291,7 @@ func TestNewStatefulSet(t *testing.T) {
 					},
 					VolumeClaimTemplates: []corev1.PersistentVolumeClaim{},
 					UpdateStrategy:       appsv1.StatefulSetUpdateStrategy{Type: appsv1.RollingUpdateStatefulSetStrategyType},
+					PodManagementPolicy:  appsv1.ParallelPodManagement,
 				},
 			}
 			assert.Equal(t, expected, actual, "worker statefulset not correctly generated")

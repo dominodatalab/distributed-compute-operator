@@ -5,8 +5,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
+	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
 )
 
 // NewMasterService creates a ClusterIP service that points to the head node.
