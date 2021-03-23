@@ -90,10 +90,12 @@ var _ = Describe("SparkCluster Controller", func() {
 			timeout := time.Second * 10
 			createAndBasicTest(ctx, name)
 			cluster := dcv1alpha1.SparkCluster{}
-			Expect(k8sClient.Get(ctx, types.NamespacedName{
-				Namespace: "default",
-				Name:      name,
-			}, &cluster)).Should(Succeed())
+			Eventually(func() error {
+				return k8sClient.Get(ctx, types.NamespacedName{
+					Namespace: "default",
+					Name:      name,
+				}, &cluster)
+			}, timeout).Should(Succeed())
 			Eventually(func() bool {
 				k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: "default",
@@ -109,10 +111,12 @@ var _ = Describe("SparkCluster Controller", func() {
 			timeout := time.Second * 10
 			createAndBasicTest(ctx, name)
 			cluster := dcv1alpha1.SparkCluster{}
-			Expect(k8sClient.Get(ctx, types.NamespacedName{
-				Namespace: "default",
-				Name:      name,
-			}, &cluster)).Should(Succeed())
+			Eventually(func() error {
+				return k8sClient.Get(ctx, types.NamespacedName{
+					Namespace: "default",
+					Name:      name,
+				}, &cluster)
+			}, timeout).Should(Succeed())
 
 			cluster.Finalizers = append(cluster.Finalizers, "test-finalizer")
 			k8sClient.Update(ctx, &cluster)
