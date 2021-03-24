@@ -67,26 +67,10 @@ func TestNewStatefulSet(t *testing.T) {
 							ServiceAccountName: "test-id-spark",
 							Containers: []corev1.Container{
 								{
-									Name:            "spark-master",
+									Name:            "test-id-spark-master",
 									Image:           "docker.io/fake-reg/fake-repo:fake-tag",
 									ImagePullPolicy: corev1.PullIfNotPresent,
 									Env: []corev1.EnvVar{
-										{
-											Name: "MY_POD_IP",
-											ValueFrom: &corev1.EnvVarSource{
-												FieldRef: &corev1.ObjectFieldSelector{
-													FieldPath: "status.podIP",
-												},
-											},
-										},
-										{
-											Name: "MY_CPU_REQUEST",
-											ValueFrom: &corev1.EnvVarSource{
-												ResourceFieldRef: &corev1.ResourceFieldSelector{
-													Resource: "requests.cpu",
-												},
-											},
-										},
 										{
 											Name:  "SPARK_MASTER_PORT",
 											Value: "7077",
@@ -111,12 +95,6 @@ func TestNewStatefulSet(t *testing.T) {
 											ContainerPort: 7077,
 										},
 									},
-									VolumeMounts: []corev1.VolumeMount{
-										{
-											Name:      sharedMemoryVolumeName,
-											MountPath: "/dev/shm",
-										},
-									},
 									LivenessProbe: &corev1.Probe{
 										Handler: corev1.Handler{
 											HTTPGet: &corev1.HTTPGetAction{
@@ -138,16 +116,6 @@ func TestNewStatefulSet(t *testing.T) {
 							SecurityContext: &corev1.PodSecurityContext{
 								RunAsUser: pointer.Int64Ptr(1001),
 								FSGroup:   pointer.Int64Ptr(1001),
-							},
-							Volumes: []corev1.Volume{
-								{
-									Name: "dshm",
-									VolumeSource: corev1.VolumeSource{
-										EmptyDir: &corev1.EmptyDirVolumeSource{
-											Medium: corev1.StorageMediumMemory,
-										},
-									},
-								},
 							},
 						},
 					},
@@ -205,26 +173,10 @@ func TestNewStatefulSet(t *testing.T) {
 							ServiceAccountName: "test-id-spark",
 							Containers: []corev1.Container{
 								{
-									Name:            "spark-worker",
+									Name:            "test-id-spark-worker",
 									Image:           "docker.io/fake-reg/fake-repo:fake-tag",
 									ImagePullPolicy: corev1.PullIfNotPresent,
 									Env: []corev1.EnvVar{
-										{
-											Name: "MY_POD_IP",
-											ValueFrom: &corev1.EnvVarSource{
-												FieldRef: &corev1.ObjectFieldSelector{
-													FieldPath: "status.podIP",
-												},
-											},
-										},
-										{
-											Name: "MY_CPU_REQUEST",
-											ValueFrom: &corev1.EnvVarSource{
-												ResourceFieldRef: &corev1.ResourceFieldSelector{
-													Resource: "requests.cpu",
-												},
-											},
-										},
 										{
 											Name:  "SPARK_MASTER_URL",
 											Value: "spark://test-id-spark-master:7077",
@@ -249,12 +201,6 @@ func TestNewStatefulSet(t *testing.T) {
 											ContainerPort: 7077,
 										},
 									},
-									VolumeMounts: []corev1.VolumeMount{
-										{
-											Name:      sharedMemoryVolumeName,
-											MountPath: "/dev/shm",
-										},
-									},
 									LivenessProbe: &corev1.Probe{
 										Handler: corev1.Handler{
 											HTTPGet: &corev1.HTTPGetAction{
@@ -276,16 +222,6 @@ func TestNewStatefulSet(t *testing.T) {
 							SecurityContext: &corev1.PodSecurityContext{
 								RunAsUser: pointer.Int64Ptr(1001),
 								FSGroup:   pointer.Int64Ptr(1001),
-							},
-							Volumes: []corev1.Volume{
-								{
-									Name: "dshm",
-									VolumeSource: corev1.VolumeSource{
-										EmptyDir: &corev1.EmptyDirVolumeSource{
-											Medium: corev1.StorageMediumMemory,
-										},
-									},
-								},
 							},
 						},
 					},

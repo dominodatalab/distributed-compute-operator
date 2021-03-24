@@ -8,13 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
-
-	"github.com/dominodatalab/distributed-compute-operator/pkg/logging"
-
-	genericregistry "k8s.io/apiserver/pkg/registry/generic/registry"
-
-	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
@@ -27,14 +21,18 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	genericregistry "k8s.io/apiserver/pkg/registry/generic/registry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
+	"github.com/dominodatalab/distributed-compute-operator/pkg/logging"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/spark"
+	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
 )
 
 // LastAppliedConfig is the annotation key used to store object state on owned components.
@@ -98,10 +96,12 @@ func (r *SparkClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{}, err
 	}
 
-	err := r.processFinalizers(ctx, rc, log)
+	updated, err := r.processFinalizers(ctx, rc, log)
 	if err != nil {
 		log.Error(err, "failed to process finalizers")
 		return ctrl.Result{}, err
+	} else if updated {
+		return ctrl.Result{Requeue: true}, nil
 	}
 
 	if err := r.reconcileResources(ctx, rc); err != nil {
@@ -122,59 +122,52 @@ func (r *SparkClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	return ctrl.Result{}, nil
 }
 
-func (r *SparkClusterReconciler) processFinalizers(ctx context.Context, rc *dcv1alpha1.SparkCluster, log logr.Logger) error {
-	// nolint:nestif
+func (r *SparkClusterReconciler) processFinalizers(ctx context.Context, sc *dcv1alpha1.SparkCluster, log logr.Logger) (bool, error) {
 	// no finalizer and no deletion timestamp means this is a new object so we're going to set a finalizer
-	if !hasFinalizer(rc) && !hasDeletionTimestamp(rc) {
-		rc.Finalizers = append(rc.Finalizers, SparkFinalizerName)
-		err := r.Update(ctx, rc)
+	containsFinalizer := controllerutil.ContainsFinalizer(sc, SparkFinalizerName)
+	hasDeletionTimestamp := hasDeletionTimestamp(sc)
+	if !containsFinalizer && !hasDeletionTimestamp {
+		controllerutil.AddFinalizer(sc, SparkFinalizerName)
+		err := r.Update(ctx, sc)
 		if err != nil {
 			log.Error(err, "failed to set finalizer")
-			return err
+			return false, err
 		}
+		return true, nil
 		// if it has finalizer and has a deletion timestamp then we want to delete some stuff
-	} else if hasFinalizer(rc) && hasDeletionTimestamp(rc) {
-		log.Info(fmt.Sprintf("%s has finalizer and deletion timestamp. looking for pvcs to delete", rc.Name))
-		var pvcsToDelete []client.Object
-		workerPvcs, err := r.getPvcsForDeletion(ctx, rc, spark.ComponentWorker, log)
+	}
+	if containsFinalizer && hasDeletionTimestamp {
+		log.Info(fmt.Sprintf("%s has finalizer and deletion timestamp. looking for pvcs to delete", sc.Name))
+		pvcs, err := r.getPvcsForDeletion(ctx, sc)
 		if err != nil {
-			return err
-		}
-		masterPvcs, err := r.getPvcsForDeletion(ctx, rc, spark.ComponentMaster, log)
-		if err != nil {
-			return err
-		}
-		pvcsToDelete = append(pvcsToDelete, workerPvcs...)
-		pvcsToDelete = append(pvcsToDelete, masterPvcs...)
-		err = r.deletePvcs(ctx, rc, log, pvcsToDelete)
-		if err != nil {
-			return err
+			return false, err
 		}
 
-		finalizerIndex := util.GetIndexFromSlice(rc.ObjectMeta.Finalizers, SparkFinalizerName)
-		if finalizerIndex >= 0 {
-			log.Info(fmt.Sprintf("found finalizer to delete on %s. deleting", rc.Name))
-			rc.ObjectMeta.Finalizers = util.RemoveFromSlice(rc.ObjectMeta.Finalizers, finalizerIndex)
-			err := r.Update(ctx, rc)
-			if err != nil {
-				log.Error(err, "unable to remove finalizer from resource")
-				return err
-			}
+		err = r.deletePvcs(ctx, sc, log, pvcs)
+		if err != nil {
+			return false, err
+		}
+
+		controllerutil.RemoveFinalizer(sc, SparkFinalizerName)
+		err = r.Update(ctx, sc)
+		if err != nil {
+			log.Error(err, "unable to remove finalizer from resource")
+			return false, err
 		}
 	}
-	return nil
+	return false, nil
 }
 
 func (r *SparkClusterReconciler) deletePvcs(
 	ctx context.Context,
-	rc *dcv1alpha1.SparkCluster,
+	sc *dcv1alpha1.SparkCluster,
 	log logr.Logger,
 	pvcsToDelete []client.Object) error {
 	if len(pvcsToDelete) > 0 {
-		log.Info(fmt.Sprintf("deleting %d pvcs associated with %s", len(pvcsToDelete), rc.Name))
+		log.Info(fmt.Sprintf("deleting %d pvcs associated with %s", len(pvcsToDelete), sc.Name))
 		err := r.deleteIfExists(ctx, pvcsToDelete...)
 		if err != nil {
-			log.Error(err, fmt.Sprintf("unable to delete %s pvcs", rc.Name))
+			log.Error(err, fmt.Sprintf("unable to delete %s pvcs", sc.Name))
 			return err
 		}
 	}
@@ -183,28 +176,11 @@ func (r *SparkClusterReconciler) deletePvcs(
 
 func (r *SparkClusterReconciler) getPvcsForDeletion(
 	ctx context.Context,
-	rc *dcv1alpha1.SparkCluster,
-	component spark.Component,
-	log logr.Logger) ([]client.Object, error) {
+	sc *dcv1alpha1.SparkCluster) ([]client.Object, error) {
 	var pvcsToDelete []client.Object
-	var additionalStorage []dcv1alpha1.SparkAdditionalStorage
-	switch component {
-	case spark.ComponentWorker:
-		additionalStorage = rc.Spec.Worker.AdditionalStorage
-	case spark.ComponentMaster:
-		additionalStorage = rc.Spec.Master.AdditionalStorage
-	default:
-		log.Info(fmt.Sprintf("Invalid component type %s. Not looking for pvcs to delete", component))
-		return pvcsToDelete, nil
-	}
-
-	if len(additionalStorage) == 0 {
-		return pvcsToDelete, nil
-	}
-
 	claims := &corev1.PersistentVolumeClaimList{}
-	var selectors client.MatchingLabels = spark.SelectorLabelsWithComponent(rc, component)
-	err := r.List(ctx, claims, client.InNamespace(rc.Namespace), selectors)
+	var selectors client.MatchingLabels = spark.SelectorLabels(sc)
+	err := r.List(ctx, claims, client.InNamespace(sc.Namespace), selectors)
 	if err != nil {
 		return pvcsToDelete, err
 	}
@@ -218,49 +194,45 @@ func (r *SparkClusterReconciler) getPvcsForDeletion(
 	return pvcsToDelete, err
 }
 
-func hasDeletionTimestamp(rc *dcv1alpha1.SparkCluster) bool {
-	return rc.ObjectMeta.DeletionTimestamp != nil
-}
-
-func hasFinalizer(rc *dcv1alpha1.SparkCluster) bool {
-	return util.GetIndexFromSlice(rc.ObjectMeta.Finalizers, SparkFinalizerName) >= 0
+func hasDeletionTimestamp(sc *dcv1alpha1.SparkCluster) bool {
+	return sc.ObjectMeta.DeletionTimestamp != nil
 }
 
 // reconcileResources manages the creation and updates of resources that
 // collectively comprise a Spark cluster. Each resource is controlled by a parent
 // SparkCluster object so that full cleanup occurs during a delete operation.
-func (r *SparkClusterReconciler) reconcileResources(ctx context.Context, rc *dcv1alpha1.SparkCluster) error {
-	if err := r.reconcileServiceAccount(ctx, rc); err != nil {
+func (r *SparkClusterReconciler) reconcileResources(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+	if err := r.reconcileServiceAccount(ctx, sc); err != nil {
 		return err
 	}
-	if err := r.reconcileHeadService(ctx, rc); err != nil {
+	if err := r.reconcileHeadService(ctx, sc); err != nil {
 		return err
 	}
-	if err := r.reconcileHeadlessService(ctx, rc); err != nil {
+	if err := r.reconcileHeadlessService(ctx, sc); err != nil {
 		return err
 	}
-	if err := r.reconcileNetworkPolicies(ctx, rc); err != nil {
+	if err := r.reconcileNetworkPolicies(ctx, sc); err != nil {
 		return err
 	}
-	if err := r.reconcilePodSecurityPolicyRBAC(ctx, rc); err != nil {
+	if err := r.reconcilePodSecurityPolicyRBAC(ctx, sc); err != nil {
 		return err
 	}
-	if err := r.reconcileAutoscaler(ctx, rc); err != nil {
+	if err := r.reconcileAutoscaler(ctx, sc); err != nil {
 		return err
 	}
 
-	return r.reconcileStatefulSets(ctx, rc)
+	return r.reconcileStatefulSets(ctx, sc)
 }
 
 // reconcileServiceAccount creates a new dedicated service account for a Spark
 // cluster unless a different service account name is provided in the spec.
-func (r *SparkClusterReconciler) reconcileServiceAccount(ctx context.Context, rc *dcv1alpha1.SparkCluster) error {
-	if rc.Spec.ServiceAccountName != "" {
+func (r *SparkClusterReconciler) reconcileServiceAccount(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+	if sc.Spec.ServiceAccountName != "" {
 		return nil
 	}
 
-	sa := spark.NewServiceAccount(rc)
-	if err := r.createOrUpdateOwnedResource(ctx, rc, sa); err != nil {
+	sa := spark.NewServiceAccount(sc)
+	if err := r.createOrUpdateOwnedResource(ctx, sc, sa); err != nil {
 		return fmt.Errorf("failed to reconcile service account: %w", err)
 	}
 
@@ -269,9 +241,9 @@ func (r *SparkClusterReconciler) reconcileServiceAccount(ctx context.Context, rc
 
 // reconcileHeadService creates a service that points to the head Spark pod and
 // applies updates when the parent CR changes.
-func (r *SparkClusterReconciler) reconcileHeadService(ctx context.Context, rc *dcv1alpha1.SparkCluster) error {
-	svc := spark.NewMasterService(rc)
-	if err := r.createOrUpdateOwnedResource(ctx, rc, svc); err != nil {
+func (r *SparkClusterReconciler) reconcileHeadService(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+	svc := spark.NewMasterService(sc)
+	if err := r.createOrUpdateOwnedResource(ctx, sc, svc); err != nil {
 		return fmt.Errorf("failed to reconcile head service: %w", err)
 	}
 
@@ -280,9 +252,9 @@ func (r *SparkClusterReconciler) reconcileHeadService(ctx context.Context, rc *d
 
 // reconcileHeadService creates a service that points to the head Spark pod and
 // applies updates when the parent CR changes.
-func (r *SparkClusterReconciler) reconcileHeadlessService(ctx context.Context, rc *dcv1alpha1.SparkCluster) error {
-	svc := spark.NewHeadlessService(rc)
-	if err := r.createOrUpdateOwnedResource(ctx, rc, svc); err != nil {
+func (r *SparkClusterReconciler) reconcileHeadlessService(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+	svc := spark.NewHeadlessService(sc)
+	if err := r.createOrUpdateOwnedResource(ctx, sc, svc); err != nil {
 		return fmt.Errorf("failed to reconcile headless service: %w", err)
 	}
 
@@ -291,24 +263,24 @@ func (r *SparkClusterReconciler) reconcileHeadlessService(ctx context.Context, r
 
 // reconcileNetworkPolicies optionally creates network policies that control
 // traffic flow between cluster nodes and external clients.
-func (r SparkClusterReconciler) reconcileNetworkPolicies(ctx context.Context, rc *dcv1alpha1.SparkCluster) error {
-	headNetpol := spark.NewHeadClientNetworkPolicy(rc)
-	clusterNetpol := spark.NewClusterNetworkPolicy(rc)
-	dashboardNetpol := spark.NewHeadDashboardNetworkPolicy(rc)
+func (r SparkClusterReconciler) reconcileNetworkPolicies(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+	headNetpol := spark.NewHeadClientNetworkPolicy(sc)
+	clusterNetpol := spark.NewClusterNetworkPolicy(sc)
+	dashboardNetpol := spark.NewHeadDashboardNetworkPolicy(sc)
 
-	if !util.BoolPtrIsTrue(rc.Spec.NetworkPolicy.Enabled) {
+	if !util.BoolPtrIsTrue(sc.Spec.NetworkPolicy.Enabled) {
 		return r.deleteIfExists(ctx, headNetpol, clusterNetpol)
 	}
 
-	if err := r.createOrUpdateOwnedResource(ctx, rc, clusterNetpol); err != nil {
+	if err := r.createOrUpdateOwnedResource(ctx, sc, clusterNetpol); err != nil {
 		return fmt.Errorf("failed to reconcile cluster network policy: %w", err)
 	}
 
-	if err := r.createOrUpdateOwnedResource(ctx, rc, headNetpol); err != nil {
+	if err := r.createOrUpdateOwnedResource(ctx, sc, headNetpol); err != nil {
 		return fmt.Errorf("failed to reconcile head network policy: %w", err)
 	}
 
-	if err := r.createOrUpdateOwnedResource(ctx, rc, dashboardNetpol); err != nil {
+	if err := r.createOrUpdateOwnedResource(ctx, sc, dashboardNetpol); err != nil {
 		return fmt.Errorf("failed to reconcile dashboard network policy: %w", err)
 	}
 
@@ -318,22 +290,22 @@ func (r SparkClusterReconciler) reconcileNetworkPolicies(ctx context.Context, rc
 // nolint:dupl
 // reconcilePodSecurityPolicyRBAC optionally creates a role and role binding
 // that allows the Spark pods to "use" the specified pod security policy.
-func (r *SparkClusterReconciler) reconcilePodSecurityPolicyRBAC(ctx context.Context, rc *dcv1alpha1.SparkCluster) error {
-	role, binding := spark.NewPodSecurityPolicyRBAC(rc)
+func (r *SparkClusterReconciler) reconcilePodSecurityPolicyRBAC(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+	role, binding := spark.NewPodSecurityPolicyRBAC(sc)
 
-	if rc.Spec.PodSecurityPolicy == "" {
+	if sc.Spec.PodSecurityPolicy == "" {
 		return r.deleteIfExists(ctx, role, binding)
 	}
 
-	err := r.Get(ctx, types.NamespacedName{Name: rc.Spec.PodSecurityPolicy}, &policyv1beta1.PodSecurityPolicy{})
+	err := r.Get(ctx, types.NamespacedName{Name: sc.Spec.PodSecurityPolicy}, &policyv1beta1.PodSecurityPolicy{})
 	if err != nil {
 		return fmt.Errorf("cannot verify pod security policy: %w", err)
 	}
 
-	if err := r.createOrUpdateOwnedResource(ctx, rc, role); err != nil {
+	if err := r.createOrUpdateOwnedResource(ctx, sc, role); err != nil {
 		return fmt.Errorf("failed to create role: %w", err)
 	}
-	if err := r.createOrUpdateOwnedResource(ctx, rc, binding); err != nil {
+	if err := r.createOrUpdateOwnedResource(ctx, sc, binding); err != nil {
 		return fmt.Errorf("failed to create role binding: %w", err)
 	}
 
@@ -342,19 +314,19 @@ func (r *SparkClusterReconciler) reconcilePodSecurityPolicyRBAC(ctx context.Cont
 
 // reconcileAutoscaler optionally creates a horizontal pod autoscaler that
 // targets Spark worker pods.
-func (r *SparkClusterReconciler) reconcileAutoscaler(ctx context.Context, rc *dcv1alpha1.SparkCluster) error {
-	if rc.Spec.Autoscaling == nil {
+func (r *SparkClusterReconciler) reconcileAutoscaler(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+	if sc.Spec.Autoscaling == nil {
 		hpa := &autoscalingv2beta2.HorizontalPodAutoscaler{
-			ObjectMeta: spark.HorizontalPodAutoscalerObjectMeta(rc),
+			ObjectMeta: spark.HorizontalPodAutoscalerObjectMeta(sc),
 		}
 		return r.deleteIfExists(ctx, hpa)
 	}
 
-	hpa, err := spark.NewHorizontalPodAutoscaler(rc)
+	hpa, err := spark.NewHorizontalPodAutoscaler(sc)
 	if err != nil {
 		return err
 	}
-	if err = r.createOrUpdateOwnedResource(ctx, rc, hpa); err != nil {
+	if err = r.createOrUpdateOwnedResource(ctx, sc, hpa); err != nil {
 		return fmt.Errorf("failed to reconcile horizontal pod autoscaler: %w", err)
 	}
 
@@ -363,20 +335,20 @@ func (r *SparkClusterReconciler) reconcileAutoscaler(ctx context.Context, rc *dc
 
 // reconcileStatefulSets creates separate Spark head and worker statefulsets that
 // will collectively comprise the execution agents of the cluster.
-func (r *SparkClusterReconciler) reconcileStatefulSets(ctx context.Context, rc *dcv1alpha1.SparkCluster) error {
-	head, err := spark.NewStatefulSet(rc, spark.ComponentMaster)
+func (r *SparkClusterReconciler) reconcileStatefulSets(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+	head, err := spark.NewStatefulSet(sc, spark.ComponentMaster)
 	if err != nil {
 		return err
 	}
-	if err = r.createOrUpdateOwnedResource(ctx, rc, head); err != nil {
+	if err = r.createOrUpdateOwnedResource(ctx, sc, head); err != nil {
 		return fmt.Errorf("failed to create head deployment: %w", err)
 	}
 
-	worker, err := spark.NewStatefulSet(rc, spark.ComponentWorker)
+	worker, err := spark.NewStatefulSet(sc, spark.ComponentWorker)
 	if err != nil {
 		return err
 	}
-	if err = r.createOrUpdateOwnedResource(ctx, rc, worker); err != nil {
+	if err = r.createOrUpdateOwnedResource(ctx, sc, worker); err != nil {
 		return fmt.Errorf("failed to create worker deployment: %w", err)
 	}
 
@@ -389,21 +361,21 @@ func (r *SparkClusterReconciler) reconcileStatefulSets(ctx context.Context, rc *
 
 	// update autoscaling fields
 	var updateStatus bool
-	if rc.Status.WorkerReplicas != *worker.Spec.Replicas {
-		rc.Status.WorkerReplicas = *worker.Spec.Replicas
+	if sc.Status.WorkerReplicas != *worker.Spec.Replicas {
+		sc.Status.WorkerReplicas = *worker.Spec.Replicas
 		updateStatus = true
 
-		log.V(1).Info("updating status", "path", ".status.workerReplicas", "value", rc.Status.WorkerReplicas)
+		log.V(1).Info("updating status", "path", ".status.workerReplicas", "value", sc.Status.WorkerReplicas)
 	}
-	if rc.Status.WorkerSelector != selector.String() {
-		rc.Status.WorkerSelector = selector.String()
+	if sc.Status.WorkerSelector != selector.String() {
+		sc.Status.WorkerSelector = selector.String()
 		updateStatus = true
 
-		log.V(1).Info("updating status", "path", ".status.workerSelector", "value", rc.Status.WorkerSelector)
+		log.V(1).Info("updating status", "path", ".status.workerSelector", "value", sc.Status.WorkerSelector)
 	}
 
 	if updateStatus {
-		err = r.Status().Update(ctx, rc)
+		err = r.Status().Update(ctx, sc)
 	}
 
 	return err
@@ -417,6 +389,7 @@ func (r *SparkClusterReconciler) reconcileStatefulSets(ctx context.Context, rc *
 // The controller resource will be created if it's missing.
 // The controller resource will be updated if any changes are applicable.
 // Any unexpected api errors will be reported.
+// nolint:dupl
 func (r *SparkClusterReconciler) createOrUpdateOwnedResource(ctx context.Context, owner metav1.Object, controlled client.Object) error {
 	if err := ctrl.SetControllerReference(owner, controlled, r.Scheme); err != nil {
 		return err
@@ -492,11 +465,11 @@ func (r *SparkClusterReconciler) deleteIfExists(ctx context.Context, objs ...cli
 }
 
 // updateStatus with a list of pods from both the head and worker deployments.
-func (r *SparkClusterReconciler) updateStatus(ctx context.Context, rc *dcv1alpha1.SparkCluster) error {
+func (r *SparkClusterReconciler) updateStatus(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
 	podList := &corev1.PodList{}
 	listOpts := []client.ListOption{
-		client.InNamespace(rc.Namespace),
-		client.MatchingLabels(spark.MetadataLabels(rc)),
+		client.InNamespace(sc.Namespace),
+		client.MatchingLabels(spark.MetadataLabels(sc)),
 	}
 	if err := r.List(ctx, podList, listOpts...); err != nil {
 		return fmt.Errorf("cannot list spark pods: %w", err)
@@ -508,12 +481,12 @@ func (r *SparkClusterReconciler) updateStatus(ctx context.Context, rc *dcv1alpha
 	}
 	sort.Strings(podNames)
 
-	if reflect.DeepEqual(podNames, rc.Status.Nodes) {
+	if reflect.DeepEqual(podNames, sc.Status.Nodes) {
 		return nil
 	}
-	rc.Status.Nodes = podNames
+	sc.Status.Nodes = podNames
 
-	if err := r.Status().Update(ctx, rc); err != nil {
+	if err := r.Status().Update(ctx, sc); err != nil {
 		return fmt.Errorf("cannot update spark status nodes: %w", err)
 	}
 

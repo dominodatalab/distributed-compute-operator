@@ -18,16 +18,16 @@ const (
 
 // NewClusterNetworkPolicy generates a network policy that allows all nodes
 // within a single cluster to communicate on all ports.
-func NewClusterNetworkPolicy(rc *dcv1alpha1.SparkCluster) *networkingv1.NetworkPolicy {
+func NewClusterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.NetworkPolicy {
 	labelSelector := metav1.LabelSelector{
-		MatchLabels: SelectorLabels(rc),
+		MatchLabels: SelectorLabels(sc),
 	}
 
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      InstanceObjectName(rc.Name, Component("cluster")),
-			Namespace: rc.Namespace,
-			Labels:    MetadataLabels(rc),
+			Name:      InstanceObjectName(sc.Name, Component("cluster")),
+			Namespace: sc.Namespace,
+			Labels:    MetadataLabels(sc),
 			Annotations: map[string]string{
 				resources.DescriptionAnnotationKey: descriptionCluster,
 			},
@@ -53,11 +53,11 @@ func NewClusterNetworkPolicy(rc *dcv1alpha1.SparkCluster) *networkingv1.NetworkP
 // NewHeadClientNetworkPolicy generates a network policy that allows client
 // access to any pods that have been appointed with the configured client
 // server labels.
-func NewHeadClientNetworkPolicy(rc *dcv1alpha1.SparkCluster) *networkingv1.NetworkPolicy {
+func NewHeadClientNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.NetworkPolicy {
 	return headNetworkPolicy(
-		rc,
-		rc.Spec.ClusterPort,
-		rc.Spec.NetworkPolicy.ClientServerLabels,
+		sc,
+		sc.Spec.ClusterPort,
+		sc.Spec.NetworkPolicy.ClientServerLabels,
 		Component("client"),
 		descriptionClient,
 	)
@@ -66,32 +66,32 @@ func NewHeadClientNetworkPolicy(rc *dcv1alpha1.SparkCluster) *networkingv1.Netwo
 // NewHeadDashboardNetworkPolicy generates a network policy that allows
 // dashboard access to any pods that have been appointed with configured
 // dashboard labels.
-func NewHeadDashboardNetworkPolicy(rc *dcv1alpha1.SparkCluster) *networkingv1.NetworkPolicy {
+func NewHeadDashboardNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.NetworkPolicy {
 	return headNetworkPolicy(
-		rc,
-		rc.Spec.DashboardPort,
-		rc.Spec.NetworkPolicy.DashboardLabels,
+		sc,
+		sc.Spec.DashboardPort,
+		sc.Spec.NetworkPolicy.DashboardLabels,
 		Component("dashboard"),
 		descriptionDashboard,
 	)
 }
 
-func headNetworkPolicy(rc *dcv1alpha1.SparkCluster, p int32, l map[string]string, c Component, desc string) *networkingv1.NetworkPolicy {
+func headNetworkPolicy(sc *dcv1alpha1.SparkCluster, p int32, l map[string]string, c Component, desc string) *networkingv1.NetworkPolicy {
 	proto := corev1.ProtocolTCP
 	targetPort := intstr.FromInt(int(p))
 
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      InstanceObjectName(rc.Name, c),
-			Namespace: rc.Namespace,
-			Labels:    MetadataLabelsWithComponent(rc, ComponentMaster),
+			Name:      InstanceObjectName(sc.Name, c),
+			Namespace: sc.Namespace,
+			Labels:    MetadataLabelsWithComponent(sc, ComponentMaster),
 			Annotations: map[string]string{
 				resources.DescriptionAnnotationKey: desc,
 			},
 		},
 		Spec: networkingv1.NetworkPolicySpec{
 			PodSelector: metav1.LabelSelector{
-				MatchLabels: SelectorLabelsWithComponent(rc, ComponentMaster),
+				MatchLabels: SelectorLabelsWithComponent(sc, ComponentMaster),
 			},
 			Ingress: []networkingv1.NetworkPolicyIngressRule{
 				{

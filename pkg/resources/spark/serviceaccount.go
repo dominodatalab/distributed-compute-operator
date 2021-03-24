@@ -9,12 +9,12 @@ import (
 )
 
 // NewServiceAccount generates a service account resource without API access.
-func NewServiceAccount(rc *dcv1alpha1.SparkCluster) *corev1.ServiceAccount {
+func NewServiceAccount(sc *dcv1alpha1.SparkCluster) *corev1.ServiceAccount {
 	return &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      InstanceObjectName(rc.Name, ComponentNone),
-			Namespace: rc.Namespace,
-			Labels:    MetadataLabels(rc),
+			Name:      InstanceObjectName(sc.Name, ComponentNone),
+			Namespace: sc.Namespace,
+			Labels:    MetadataLabels(sc),
 		},
 		AutomountServiceAccountToken: pointer.BoolPtr(false),
 	}

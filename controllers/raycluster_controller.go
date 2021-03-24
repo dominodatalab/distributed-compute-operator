@@ -253,6 +253,7 @@ func (r *RayClusterReconciler) reconcileDeployments(ctx context.Context, rc *dcv
 	return nil
 }
 
+// nolint:dupl
 // createOrUpdateOwnedResource should be used to manage the lifecycle of namespace-scoped objects.
 //
 // The CR will become the "owner" of the "controlled" object and cleanup will

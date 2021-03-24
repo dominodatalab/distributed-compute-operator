@@ -15,80 +15,41 @@ import (
 	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
 )
 
-var (
-	defaultEnv = []corev1.EnvVar{
-		{
-			Name: "MY_POD_IP",
-			ValueFrom: &corev1.EnvVarSource{
-				FieldRef: &corev1.ObjectFieldSelector{
-					FieldPath: "status.podIP",
-				},
-			},
-		},
-		{
-			Name: "MY_CPU_REQUEST",
-			ValueFrom: &corev1.EnvVarSource{
-				ResourceFieldRef: &corev1.ResourceFieldSelector{
-					Resource: "requests.cpu",
-				},
-			},
-		},
-	}
-	defaultVolumes = []corev1.Volume{
-		{
-			Name: sharedMemoryVolumeName,
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{
-					Medium: corev1.StorageMediumMemory,
-				},
-			},
-		},
-	}
-	defaultVolumeMounts = []corev1.VolumeMount{
-		{
-			Name:      sharedMemoryVolumeName,
-			MountPath: "/dev/shm",
-		},
-	}
-)
-
-const sharedMemoryVolumeName = "dshm"
-
 // NewStatefulSet generates a Deployment configured to manage Spark cluster nodes.
 // The configuration is based the provided spec and the desired Component workload.
-func NewStatefulSet(rc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.StatefulSet, error) {
+func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.StatefulSet, error) {
 	var replicas int32
 	var nodeAttrs dcv1alpha1.SparkClusterNode
 
 	switch comp {
 	case ComponentMaster:
 		replicas = 1
-		nodeAttrs = rc.Spec.Master.SparkClusterNode
+		nodeAttrs = sc.Spec.Master.SparkClusterNode
 	case ComponentWorker:
-		replicas = *rc.Spec.Worker.Replicas
-		nodeAttrs = rc.Spec.Worker.SparkClusterNode
+		replicas = *sc.Spec.Worker.Replicas
+		nodeAttrs = sc.Spec.Worker.SparkClusterNode
 	default:
 		return nil, fmt.Errorf("invalid spark component: %q", comp)
 	}
 
-	imageRef, err := util.ParseImageDefinition(rc.Spec.Image)
+	imageRef, err := util.ParseImageDefinition(sc.Spec.Image)
 	if err != nil {
 		return nil, err
 	}
 
-	ports := processPorts(rc)
-	labels := processLabels(rc, comp, nodeAttrs.Labels)
-	envVars := append(append(defaultEnv, componentEnvVars(rc, comp)...), rc.Spec.EnvVars...)
-	volumes := append(defaultVolumes, nodeAttrs.Volumes...)
-	volumeMounts := append(defaultVolumeMounts, nodeAttrs.VolumeMounts...)
+	ports := processPorts(sc)
+	labels := processLabels(sc, comp, nodeAttrs.Labels)
+	envVars := append(componentEnvVars(sc, comp), sc.Spec.EnvVars...)
+	volumes := nodeAttrs.Volumes
+	volumeMounts := nodeAttrs.VolumeMounts
 
 	volumeClaimTemplates, err := processVolumeClaimTemplates(nodeAttrs.AdditionalStorage)
 	if err != nil {
 		return nil, err
 	}
-	serviceAccountName := InstanceObjectName(rc.Name, ComponentNone)
-	if rc.Spec.ServiceAccountName != "" {
-		serviceAccountName = rc.Spec.ServiceAccountName
+	serviceAccountName := InstanceObjectName(sc.Name, ComponentNone)
+	if sc.Spec.ServiceAccountName != "" {
+		serviceAccountName = sc.Spec.ServiceAccountName
 	}
 
 	annotations := make(map[string]string)
@@ -98,7 +59,7 @@ func NewStatefulSet(rc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 		}
 	}
 	//TODO: Chart defaults a specific security context if enabled. Always setting for now
-	context := rc.Spec.PodSecurityContext
+	context := sc.Spec.PodSecurityContext
 	if context == nil {
 		const DefaultUser = 1001
 		const DefaultFSGroup = 1001
@@ -108,7 +69,7 @@ func NewStatefulSet(rc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 		}
 	}
 
-	podSpec := getPodSpec(rc,
+	podSpec := getPodSpec(sc,
 		comp,
 		serviceAccountName,
 		nodeAttrs,
@@ -121,15 +82,15 @@ func NewStatefulSet(rc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 
 	statefulSet := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      InstanceObjectName(rc.Name, comp),
-			Namespace: rc.Namespace,
+			Name:      InstanceObjectName(sc.Name, comp),
+			Namespace: sc.Namespace,
 			Labels:    labels,
 		},
 		Spec: appsv1.StatefulSetSpec{
-			ServiceName: InstanceObjectName(rc.Name, comp),
+			ServiceName: InstanceObjectName(sc.Name, comp),
 			Replicas:    pointer.Int32Ptr(replicas),
 			Selector: &metav1.LabelSelector{
-				MatchLabels: SelectorLabelsWithComponent(rc, comp),
+				MatchLabels: SelectorLabelsWithComponent(sc, comp),
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
@@ -149,7 +110,7 @@ func NewStatefulSet(rc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	return statefulSet, nil
 }
 
-func getPodSpec(rc *dcv1alpha1.SparkCluster,
+func getPodSpec(sc *dcv1alpha1.SparkCluster,
 	comp Component,
 	serviceAccountName string,
 	nodeAttrs dcv1alpha1.SparkClusterNode,
@@ -165,14 +126,13 @@ func getPodSpec(rc *dcv1alpha1.SparkCluster,
 		Affinity:           nodeAttrs.Affinity,
 		Tolerations:        nodeAttrs.Tolerations,
 		InitContainers:     nodeAttrs.InitContainers,
-		ImagePullSecrets:   rc.Spec.ImagePullSecrets,
+		ImagePullSecrets:   sc.Spec.ImagePullSecrets,
 		SecurityContext:    context,
 		Containers: []corev1.Container{
 			{
-				Name: string(ApplicationName + "-" + comp),
-				//Command:         defaultCmd,
+				Name:            InstanceObjectName(sc.Name, comp),
 				Image:           imageRef,
-				ImagePullPolicy: rc.Spec.Image.PullPolicy,
+				ImagePullPolicy: sc.Spec.Image.PullPolicy,
 				Ports:           ports,
 				Env:             envVars,
 				VolumeMounts:    volumeMounts,
@@ -181,7 +141,7 @@ func getPodSpec(rc *dcv1alpha1.SparkCluster,
 					Handler: corev1.Handler{
 						HTTPGet: &corev1.HTTPGetAction{
 							Path: "/",
-							Port: intstr.FromInt(int(rc.Spec.DashboardPort)),
+							Port: intstr.FromInt(int(sc.Spec.DashboardPort)),
 						},
 					},
 				},
@@ -189,7 +149,7 @@ func getPodSpec(rc *dcv1alpha1.SparkCluster,
 					Handler: corev1.Handler{
 						HTTPGet: &corev1.HTTPGetAction{
 							Path: "/",
-							Port: intstr.FromInt(int(rc.Spec.DashboardPort)),
+							Port: intstr.FromInt(int(sc.Spec.DashboardPort)),
 						},
 					},
 				},
@@ -224,17 +184,17 @@ func processVolumeClaimTemplates(storage []dcv1alpha1.SparkAdditionalStorage) ([
 	return pvcs, nil
 }
 
-func componentEnvVars(rc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvVar {
+func componentEnvVars(sc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvVar {
 	var envVar []corev1.EnvVar
 	if comp == ComponentMaster {
 		envVar = []corev1.EnvVar{
 			{
 				Name:  "SPARK_MASTER_PORT",
-				Value: strconv.Itoa(int(rc.Spec.ClusterPort)),
+				Value: strconv.Itoa(int(sc.Spec.ClusterPort)),
 			},
 			{
 				Name:  "SPARK_MASTER_WEBUI_PORT",
-				Value: strconv.Itoa(int(rc.Spec.DashboardPort)),
+				Value: strconv.Itoa(int(sc.Spec.DashboardPort)),
 			},
 			{
 				Name:  "SPARK_MODE",
@@ -245,12 +205,12 @@ func componentEnvVars(rc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 		envVar = []corev1.EnvVar{
 			{
 				Name:  "SPARK_MASTER_URL",
-				Value: "spark://" + HeadServiceName(rc.Name) + ":" + strconv.Itoa(int(rc.Spec.ClusterPort)),
+				Value: "spark://" + HeadServiceName(sc.Name) + ":" + strconv.Itoa(int(sc.Spec.ClusterPort)),
 			},
 			{
 				Name: "SPARK_WORKER_WEBUI_PORT",
 				// TODO talk to @Po about whether this makes sense. Spark defaults to 8081 as default for this
-				Value: strconv.Itoa(int(rc.Spec.DashboardPort)),
+				Value: strconv.Itoa(int(sc.Spec.DashboardPort)),
 			},
 			{
 				Name:  "SPARK_MODE",
@@ -261,24 +221,24 @@ func componentEnvVars(rc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 	return envVar
 }
 
-func processPorts(rc *dcv1alpha1.SparkCluster) []corev1.ContainerPort {
+func processPorts(sc *dcv1alpha1.SparkCluster) []corev1.ContainerPort {
 	ports := []corev1.ContainerPort{
 		{
 			Name:          "http",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: rc.Spec.DashboardPort,
+			ContainerPort: sc.Spec.DashboardPort,
 		},
 		{
 			Name:          "cluster",
-			ContainerPort: rc.Spec.ClusterPort,
+			ContainerPort: sc.Spec.ClusterPort,
 		},
 	}
 
 	return ports
 }
 
-func processLabels(rc *dcv1alpha1.SparkCluster, comp Component, extraLabels map[string]string) map[string]string {
-	labels := MetadataLabelsWithComponent(rc, comp)
+func processLabels(sc *dcv1alpha1.SparkCluster, comp Component, extraLabels map[string]string) map[string]string {
+	labels := MetadataLabelsWithComponent(sc, comp)
 	if extraLabels != nil {
 		labels = util.MergeStringMaps(extraLabels, labels)
 	}

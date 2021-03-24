@@ -14,8 +14,8 @@ import (
 //
 // The metrics-server needs to be launched separately and the worker deployment
 // requires cpu resource requests in order for this object to have any effect.
-func NewHorizontalPodAutoscaler(rc *dcv1alpha1.SparkCluster) (*autoscalingv2beta2.HorizontalPodAutoscaler, error) {
-	autoscaling := rc.Spec.Autoscaling
+func NewHorizontalPodAutoscaler(sc *dcv1alpha1.SparkCluster) (*autoscalingv2beta2.HorizontalPodAutoscaler, error) {
+	autoscaling := sc.Spec.Autoscaling
 	if autoscaling == nil {
 		return nil, fmt.Errorf("cannot build HPA without autoscaling config")
 	}
@@ -30,12 +30,12 @@ func NewHorizontalPodAutoscaler(rc *dcv1alpha1.SparkCluster) (*autoscalingv2beta
 	}
 
 	hpa := &autoscalingv2beta2.HorizontalPodAutoscaler{
-		ObjectMeta: HorizontalPodAutoscalerObjectMeta(rc),
+		ObjectMeta: HorizontalPodAutoscalerObjectMeta(sc),
 		Spec: autoscalingv2beta2.HorizontalPodAutoscalerSpec{
 			ScaleTargetRef: autoscalingv2beta2.CrossVersionObjectReference{
-				APIVersion: rc.APIVersion,
-				Kind:       rc.Kind,
-				Name:       rc.Name,
+				APIVersion: sc.APIVersion,
+				Kind:       sc.Kind,
+				Name:       sc.Name,
 			},
 			MinReplicas: autoscaling.MinReplicas,
 			MaxReplicas: autoscaling.MaxReplicas,
@@ -59,10 +59,10 @@ func NewHorizontalPodAutoscaler(rc *dcv1alpha1.SparkCluster) (*autoscalingv2beta
 }
 
 // HorizontalPodAutoscalerObjectMeta returns the ObjectMeta object used to identify new HPA objects.
-func HorizontalPodAutoscalerObjectMeta(rc *dcv1alpha1.SparkCluster) metav1.ObjectMeta {
+func HorizontalPodAutoscalerObjectMeta(sc *dcv1alpha1.SparkCluster) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
-		Name:      InstanceObjectName(rc.Name, ComponentNone),
-		Namespace: rc.Namespace,
-		Labels:    MetadataLabels(rc),
+		Name:      InstanceObjectName(sc.Name, ComponentNone),
+		Namespace: sc.Namespace,
+		Labels:    MetadataLabels(sc),
 	}
 }

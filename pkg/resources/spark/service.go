@@ -11,21 +11,21 @@ import (
 
 // NewMasterService creates a ClusterIP service that points to the head node.
 // Dashboard port is exposed when enabled.
-func NewMasterService(rc *dcv1alpha1.SparkCluster) *corev1.Service {
+func NewMasterService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 	ports := []corev1.ServicePort{
 		{
 			Name: "cluster",
-			Port: rc.Spec.ClusterPort,
+			Port: sc.Spec.ClusterPort,
 			TargetPort: intstr.IntOrString{
 				Type:   intstr.String,
 				StrVal: "cluster",
 			},
 		},
 	}
-	if util.BoolPtrIsTrue(rc.Spec.EnableDashboard) {
+	if util.BoolPtrIsTrue(sc.Spec.EnableDashboard) {
 		ports = append(ports, corev1.ServicePort{
 			Name:     "tcp", // named tcp to prevent istio from sniffing for Host
-			Port:     rc.Spec.DashboardPort,
+			Port:     sc.Spec.DashboardPort,
 			Protocol: corev1.ProtocolTCP,
 			TargetPort: intstr.IntOrString{
 				Type:   intstr.String,
@@ -36,29 +36,29 @@ func NewMasterService(rc *dcv1alpha1.SparkCluster) *corev1.Service {
 
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      HeadServiceName(rc.Name),
-			Namespace: rc.Namespace,
-			Labels:    MetadataLabelsWithComponent(rc, ComponentMaster),
+			Name:      HeadServiceName(sc.Name),
+			Namespace: sc.Namespace,
+			Labels:    MetadataLabelsWithComponent(sc, ComponentMaster),
 		},
 		Spec: corev1.ServiceSpec{
 			Type:     corev1.ServiceTypeClusterIP,
 			Ports:    ports,
-			Selector: SelectorLabelsWithComponent(rc, ComponentMaster),
+			Selector: SelectorLabelsWithComponent(sc, ComponentMaster),
 		},
 	}
 }
 
 // NewHeadlessService creates a headless service that points to worker nodes
-func NewHeadlessService(rc *dcv1alpha1.SparkCluster) *corev1.Service {
+func NewHeadlessService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      HeadlessServiceName(rc.Name),
-			Namespace: rc.Namespace,
-			Labels:    MetadataLabelsWithComponent(rc, ComponentMaster),
+			Name:      HeadlessServiceName(sc.Name),
+			Namespace: sc.Namespace,
+			Labels:    MetadataLabelsWithComponent(sc, ComponentMaster),
 		},
 		Spec: corev1.ServiceSpec{
 			ClusterIP: corev1.ClusterIPNone,
-			Selector:  SelectorLabels(rc),
+			Selector:  SelectorLabels(sc),
 		},
 	}
 }

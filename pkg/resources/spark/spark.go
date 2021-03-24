@@ -40,21 +40,21 @@ func HeadlessServiceName(name string) string {
 }
 
 // MetadataLabels returns standard metadata for spark resources.
-func MetadataLabels(rc *dcv1alpha1.SparkCluster) map[string]string {
-	return resources.MetadataLabels(ApplicationName, rc.Name, rc.Spec.Image.Tag)
+func MetadataLabels(sc *dcv1alpha1.SparkCluster) map[string]string {
+	return resources.MetadataLabels(ApplicationName, sc.Name, sc.Spec.Image.Tag)
 }
 
 // MetadataLabelsWithComponent returns standard component metadata for spark resources.
-func MetadataLabelsWithComponent(rc *dcv1alpha1.SparkCluster, comp Component) map[string]string {
-	return resources.MetadataLabelsWithComponent(ApplicationName, rc.Name, rc.Spec.Image.Tag, string(comp))
+func MetadataLabelsWithComponent(sc *dcv1alpha1.SparkCluster, comp Component) map[string]string {
+	return resources.MetadataLabelsWithComponent(ApplicationName, sc.Name, sc.Spec.Image.Tag, string(comp))
 }
 
 // SelectorLabels returns a resource selector clause for spark resources.
-func SelectorLabels(rc *dcv1alpha1.SparkCluster) map[string]string {
-	return resources.SelectorLabels(ApplicationName, rc.Name)
+func SelectorLabels(sc *dcv1alpha1.SparkCluster) map[string]string {
+	return resources.SelectorLabels(ApplicationName, sc.Name)
 }
 
 // SelectorLabelsWithComponent returns a resource component selector clause for spark resources.
-func SelectorLabelsWithComponent(rc *dcv1alpha1.SparkCluster, comp Component) map[string]string {
-	return resources.SelectorLabelsWithComponent(ApplicationName, rc.Name, string(comp))
+func SelectorLabelsWithComponent(sc *dcv1alpha1.SparkCluster, comp Component) map[string]string {
+	return resources.SelectorLabelsWithComponent(ApplicationName, sc.Name, string(comp))
 }

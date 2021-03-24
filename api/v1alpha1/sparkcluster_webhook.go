@@ -96,13 +96,12 @@ func (r *SparkCluster) Default() {
 	if r.Spec.Master.Annotations == nil {
 		r.Spec.Master.Annotations = annotations
 	}
-	const False = "false"
-	annotations["sidecar.istio.io/inject"] = False
-	if r.Spec.Worker.Annotations["sidecar.istio.io/inject"] == "" {
-		annotations["sidecar.istio.io/inject"] = False
-	}
-	if r.Spec.Master.Annotations["sidecar.istio.io/inject"] == "" {
-		annotations["sidecar.istio.io/inject"] = False
+
+	for _, node := range []SparkClusterNode{r.Spec.Master.SparkClusterNode, r.Spec.Worker.SparkClusterNode} {
+		if node.Annotations == nil {
+			node.Annotations = annotations
+		}
+		annotations["sidecar.istio.io/inject"] = "false"
 	}
 }
 
