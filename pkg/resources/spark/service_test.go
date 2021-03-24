@@ -59,3 +59,30 @@ func TestNewHeadService(t *testing.T) {
 		assert.Equal(t, expected, svc)
 	})
 }
+
+func TestNewHeadlessService(t *testing.T) {
+	rc := sparkClusterFixture()
+	svc := NewHeadlessService(rc)
+
+	expected := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-id-spark-worker",
+			Namespace: "fake-ns",
+			Labels: map[string]string{
+				"app.kubernetes.io/name":       "spark",
+				"app.kubernetes.io/instance":   "test-id",
+				"app.kubernetes.io/version":    "fake-tag",
+				"app.kubernetes.io/component":  "master",
+				"app.kubernetes.io/managed-by": "distributed-compute-operator",
+			},
+		},
+		Spec: corev1.ServiceSpec{
+			ClusterIP: "None",
+			Selector: map[string]string{
+				"app.kubernetes.io/name":      "spark",
+				"app.kubernetes.io/instance":  "test-id",
+			},
+		},
+	}
+	assert.Equal(t, expected, svc)
+}

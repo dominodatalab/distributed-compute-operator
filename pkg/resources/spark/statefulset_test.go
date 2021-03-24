@@ -528,4 +528,27 @@ func testCommonFeatures(t *testing.T, comp Component) {
 
 		assert.Equal(t, expected, actual.Spec.VolumeClaimTemplates)
 	})
+
+	t.Run("invalid_volume_claim", func(t *testing.T) {
+		rc := sparkClusterFixture()
+		fixtureStorageClass := "fixture-storage-class"
+		additionalStorage := []dcv1alpha1.SparkAdditionalStorage{
+			{
+				AccessModes:  []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+				Size:         "FakeSize",
+				StorageClass: fixtureStorageClass,
+				Name:         "worker-additional-storage",
+			},
+		}
+
+		switch comp {
+		case ComponentWorker:
+			rc.Spec.Worker.SparkClusterNode.AdditionalStorage = additionalStorage
+		case ComponentMaster:
+			rc.Spec.Master.SparkClusterNode.AdditionalStorage = additionalStorage
+		}
+		_, err := NewStatefulSet(rc, comp)
+		require.Error(t, err)
+	})
+
 }
