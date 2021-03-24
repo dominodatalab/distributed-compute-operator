@@ -58,7 +58,7 @@ func NewHeadClientNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Netwo
 		sc,
 		sc.Spec.ClusterPort,
 		sc.Spec.NetworkPolicy.ClientServerLabels,
-		Component("client"),
+		"client",
 		descriptionClient,
 	)
 }
@@ -71,7 +71,7 @@ func NewHeadDashboardNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 		sc,
 		sc.Spec.DashboardPort,
 		sc.Spec.NetworkPolicy.DashboardLabels,
-		Component("dashboard"),
+		"dashboard",
 		descriptionDashboard,
 	)
 }

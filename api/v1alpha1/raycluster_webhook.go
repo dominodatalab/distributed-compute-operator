@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	minRayValidPort int32 = 1024
-	maxRayValidPort int32 = 65535
+	rayMinValidPort int32 = 1024
+	rayMaxValidPort int32 = 65535
 )
 
 var (
@@ -255,11 +255,11 @@ func (r *RayCluster) validatePorts() field.ErrorList {
 }
 
 func (r *RayCluster) validatePort(port int32, fldPath *field.Path) *field.Error {
-	if port < minRayValidPort {
-		return field.Invalid(fldPath, port, fmt.Sprintf("must be greater than or equal to %d", minRayValidPort))
+	if port < rayMinValidPort {
+		return field.Invalid(fldPath, port, fmt.Sprintf("must be greater than or equal to %d", rayMinValidPort))
 	}
-	if port > maxRayValidPort {
-		return field.Invalid(fldPath, port, fmt.Sprintf("must be less than or equal to %d", maxRayValidPort))
+	if port > rayMaxValidPort {
+		return field.Invalid(fldPath, port, fmt.Sprintf("must be less than or equal to %d", rayMaxValidPort))
 	}
 
 	return nil

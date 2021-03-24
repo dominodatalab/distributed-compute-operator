@@ -17,20 +17,20 @@ import (
 )
 
 const (
-	minSparkValidPort int32 = 1024
-	maxSparkValidPort int32 = 65535
+	sparkMinValidPort int32 = 1024
+	sparkMaxValidPort int32 = 65535
 )
 
 var (
-	defaultSparkDashboardPort             int32 = 8265
-	defaultSparkClusterPort               int32 = 7077
-	defaultSparkEnableNetworkPolicy             = pointer.BoolPtr(true)
-	defaultSparkWorkerReplicas                  = pointer.Int32Ptr(1)
-	defaultSparkEnableDashboard                 = pointer.BoolPtr(true)
-	defaultSparkNetworkPolicyClientLabels       = map[string]string{
+	sparkDefaultDashboardPort             int32 = 8265
+	sparkDefaultClusterPort               int32 = 7077
+	sparkDefaultEnableNetworkPolicy             = pointer.BoolPtr(true)
+	sparkDefaultWorkerReplicas                  = pointer.Int32Ptr(1)
+	sparkDefaultEnableDashboard                 = pointer.BoolPtr(true)
+	sparkDefaultNetworkPolicyClientLabels       = map[string]string{
 		"spark-client": "true",
 	}
-	defaultSparkImage = &OCIImageDefinition{
+	sparkDefaultImage = &OCIImageDefinition{
 		Repository: "bitnami/spark",
 		Tag:        "3.0.2-debian-10-r0",
 	}
@@ -56,37 +56,37 @@ func (r *SparkCluster) Default() {
 	log.Info("applying defaults")
 
 	if r.Spec.ClusterPort == 0 {
-		log.Info("setting default cluster port", "value", defaultSparkClusterPort)
-		r.Spec.ClusterPort = defaultSparkClusterPort
+		log.Info("setting default cluster port", "value", sparkDefaultClusterPort)
+		r.Spec.ClusterPort = sparkDefaultClusterPort
 	}
 	if r.Spec.DashboardPort == 0 {
-		log.Info("setting default dashboard port", "value", defaultSparkDashboardPort)
-		r.Spec.DashboardPort = defaultSparkDashboardPort
+		log.Info("setting default dashboard port", "value", sparkDefaultDashboardPort)
+		r.Spec.DashboardPort = sparkDefaultDashboardPort
 	}
 	if r.Spec.EnableDashboard == nil {
-		log.Info("setting enable dashboard flag", "value", *defaultSparkEnableDashboard)
-		r.Spec.EnableDashboard = defaultSparkEnableDashboard
+		log.Info("setting enable dashboard flag", "value", *sparkDefaultEnableDashboard)
+		r.Spec.EnableDashboard = sparkDefaultEnableDashboard
 	}
 	if r.Spec.NetworkPolicy.Enabled == nil {
-		log.Info("setting enable network policy flag", "value", *defaultSparkEnableNetworkPolicy)
-		r.Spec.NetworkPolicy.Enabled = defaultSparkEnableNetworkPolicy
+		log.Info("setting enable network policy flag", "value", *sparkDefaultEnableNetworkPolicy)
+		r.Spec.NetworkPolicy.Enabled = sparkDefaultEnableNetworkPolicy
 	}
 	if r.Spec.NetworkPolicy.ClientServerLabels == nil {
-		log.Info("setting default network policy client labels", "value", defaultSparkNetworkPolicyClientLabels)
-		r.Spec.NetworkPolicy.ClientServerLabels = defaultSparkNetworkPolicyClientLabels
+		log.Info("setting default network policy client labels", "value", sparkDefaultNetworkPolicyClientLabels)
+		r.Spec.NetworkPolicy.ClientServerLabels = sparkDefaultNetworkPolicyClientLabels
 	}
 	if r.Spec.NetworkPolicy.DashboardLabels == nil {
-		log.Info("setting default network policy dashboard labels", "value", defaultSparkNetworkPolicyClientLabels)
-		r.Spec.NetworkPolicy.DashboardLabels = defaultSparkNetworkPolicyClientLabels
+		log.Info("setting default network policy dashboard labels", "value", sparkDefaultNetworkPolicyClientLabels)
+		r.Spec.NetworkPolicy.DashboardLabels = sparkDefaultNetworkPolicyClientLabels
 	}
 	if r.Spec.Worker.Replicas == nil {
-		log.Info("setting default worker replicas", "value", *defaultSparkWorkerReplicas)
-		r.Spec.Worker.Replicas = defaultSparkWorkerReplicas
+		log.Info("setting default worker replicas", "value", *sparkDefaultWorkerReplicas)
+		r.Spec.Worker.Replicas = sparkDefaultWorkerReplicas
 	}
 
 	if r.Spec.Image == nil {
-		log.Info("setting default image", "value", *defaultSparkImage)
-		r.Spec.Image = defaultSparkImage
+		log.Info("setting default image", "value", *sparkDefaultImage)
+		r.Spec.Image = sparkDefaultImage
 	}
 
 	annotations := make(map[string]string)
@@ -188,11 +188,11 @@ func (r *SparkCluster) validatePorts() field.ErrorList {
 }
 
 func (r *SparkCluster) validatePort(port int32, fldPath *field.Path) *field.Error {
-	if port < minSparkValidPort {
-		return field.Invalid(fldPath, port, fmt.Sprintf("must be greater than or equal to %d", minSparkValidPort))
+	if port < sparkMinValidPort {
+		return field.Invalid(fldPath, port, fmt.Sprintf("must be greater than or equal to %d", sparkMinValidPort))
 	}
-	if port > maxSparkValidPort {
-		return field.Invalid(fldPath, port, fmt.Sprintf("must be less than or equal to %d", maxSparkValidPort))
+	if port > sparkMaxValidPort {
+		return field.Invalid(fldPath, port, fmt.Sprintf("must be less than or equal to %d", sparkMaxValidPort))
 	}
 
 	return nil
