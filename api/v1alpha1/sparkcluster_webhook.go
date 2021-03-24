@@ -101,7 +101,7 @@ func (r *SparkCluster) Default() {
 		if node.Annotations == nil {
 			node.Annotations = annotations
 		}
-		annotations["sidecar.istio.io/inject"] = "false"
+		node.Annotations["sidecar.istio.io/inject"] = "false"
 	}
 }
 
