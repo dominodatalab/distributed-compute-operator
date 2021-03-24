@@ -166,6 +166,7 @@ func processVolumeClaimTemplates(storage []dcv1alpha1.SparkAdditionalStorage) ([
 		if err != nil {
 			return nil, err
 		}
+		fs := corev1.PersistentVolumeFilesystem
 		pvcs[i] = corev1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: as.Name,
@@ -178,6 +179,7 @@ func processVolumeClaimTemplates(storage []dcv1alpha1.SparkAdditionalStorage) ([
 					},
 				},
 				StorageClassName: &as.StorageClass,
+				VolumeMode:       &fs,
 			},
 		}
 	}

@@ -484,9 +484,11 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		assert.Equal(t, rc.Spec.ServiceAccountName, actual.Spec.Template.Spec.ServiceAccountName)
 	})
 
+	const fsc = "fixture-storage-class"
 	t.Run("volume_claim_template", func(t *testing.T) {
 		rc := sparkClusterFixture()
-		fixtureStorageClass := "fixture-storage-class"
+		fixtureStorageClass := fsc
+		fs := corev1.PersistentVolumeFilesystem
 		additionalStorage := []dcv1alpha1.SparkAdditionalStorage{
 			{
 				AccessModes:  []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
@@ -519,6 +521,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 						},
 					},
 					StorageClassName: &fixtureStorageClass,
+					VolumeMode:       &fs,
 				},
 			},
 		}
@@ -531,7 +534,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 
 	t.Run("invalid_volume_claim", func(t *testing.T) {
 		rc := sparkClusterFixture()
-		fixtureStorageClass := "fixture-storage-class"
+		fixtureStorageClass := fsc
 		additionalStorage := []dcv1alpha1.SparkAdditionalStorage{
 			{
 				AccessModes:  []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
@@ -550,5 +553,4 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		_, err := NewStatefulSet(rc, comp)
 		require.Error(t, err)
 	})
-
 }

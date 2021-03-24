@@ -79,8 +79,8 @@ func TestNewHeadlessService(t *testing.T) {
 		Spec: corev1.ServiceSpec{
 			ClusterIP: "None",
 			Selector: map[string]string{
-				"app.kubernetes.io/name":      "spark",
-				"app.kubernetes.io/instance":  "test-id",
+				"app.kubernetes.io/name":     "spark",
+				"app.kubernetes.io/instance": "test-id",
 			},
 		},
 	}

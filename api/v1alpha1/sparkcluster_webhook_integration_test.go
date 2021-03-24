@@ -138,7 +138,7 @@ var _ = Describe("SparkCluster", func() {
 
 		It("requires a positive worker replica count", func() {
 			rc := sparkFixture(testNS.Name)
-			rc.Spec.Worker.Replicas = pointer.Int32Ptr(-1)
+			rc.Spec.Worker.Replicas = pointer.Int32Ptr(-10)
 
 			Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 		})
