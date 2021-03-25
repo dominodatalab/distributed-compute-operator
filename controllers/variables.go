@@ -17,4 +17,10 @@ var (
 	PatchAnnotator = patch.NewAnnotator(path.Join(dcv1alpha1.GroupVersion.Group, "last-applied"))
 	// PatchMaker calculates changes to state annotations on owned components.
 	PatchMaker = patch.NewPatchMaker(PatchAnnotator)
+	// PatchCalculateOpts define the exclusion rules used when calculating the
+	// difference between two k8s resources.
+	PatchCalculateOpts = []patch.CalculateOption{
+		patch.IgnoreStatusFields(),
+		patch.IgnoreVolumeClaimTemplateTypeMetaAndStatus(),
+	}
 )

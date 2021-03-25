@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
 	corev1 "k8s.io/api/core/v1"
@@ -324,7 +323,7 @@ func (r *RayClusterReconciler) createOrUpdateOwnedResource(ctx context.Context, 
 		return r.Create(ctx, controlled)
 	}
 
-	patchResult, err := PatchMaker.Calculate(found, controlled, patch.IgnoreStatusFields())
+	patchResult, err := PatchMaker.Calculate(found, controlled, PatchCalculateOpts...)
 	if err != nil {
 		return err
 	}
