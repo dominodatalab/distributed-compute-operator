@@ -91,6 +91,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 
 	err = (&RayCluster{}).SetupWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
 	err = (&SparkCluster{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 

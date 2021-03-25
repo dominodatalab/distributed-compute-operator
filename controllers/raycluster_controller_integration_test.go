@@ -73,14 +73,18 @@ var _ = Describe("RayCluster Controller", func() {
 			By("Adding a finalizer")
 			Eventually(func() []string {
 				cluster := &dcv1alpha1.RayCluster{}
-				k8sClient.Get(ctx, clusterKey, cluster)
+				if err := k8sClient.Get(ctx, clusterKey, cluster); err != nil {
+					return nil
+				}
 				return cluster.Finalizers
 			}, timeout).Should(ContainElement(DistributedComputeFinalizer))
 
 			By("Updating the status with worker metadata")
 			Eventually(func() dcv1alpha1.RayClusterStatus {
 				cluster := &dcv1alpha1.RayCluster{}
-				k8sClient.Get(ctx, clusterKey, cluster)
+				if err := k8sClient.Get(ctx, clusterKey, cluster); err != nil {
+					return dcv1alpha1.RayClusterStatus{}
+				}
 				return cluster.Status
 			}, timeout).Should(Equal(dcv1alpha1.RayClusterStatus{
 				Nodes:          nil,
@@ -97,7 +101,9 @@ var _ = Describe("RayCluster Controller", func() {
 			By("promoting metadata onto all owned resources")
 			Eventually(func() error {
 				rc := &dcv1alpha1.RayCluster{}
-				k8sClient.Get(ctx, clusterKey, rc)
+				if err := k8sClient.Get(ctx, clusterKey, rc); err != nil {
+					return err
+				}
 
 				rc.Spec.Image.Tag = "baz"
 				return k8sClient.Update(ctx, rc)
@@ -113,7 +119,9 @@ var _ = Describe("RayCluster Controller", func() {
 
 			Eventually(func() error {
 				rc := &dcv1alpha1.RayCluster{}
-				k8sClient.Get(ctx, clusterKey, rc)
+				if err := k8sClient.Get(ctx, clusterKey, rc); err != nil {
+					return err
+				}
 
 				rc.Spec.Autoscaling = nil
 				return k8sClient.Update(ctx, rc)
