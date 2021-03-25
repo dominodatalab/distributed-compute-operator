@@ -69,6 +69,32 @@ rules:
   - patch
   - update
 - apiGroups:
+  - distributed-compute.dominodatalab.com
+  resources:
+  - sparkclusters
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - distributed-compute.dominodatalab.com
+  resources:
+  - sparkclusters/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - distributed-compute.dominodatalab.com
+  resources:
+  - sparkclusters/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - networking.k8s.io
   resources:
   - networkpolicies

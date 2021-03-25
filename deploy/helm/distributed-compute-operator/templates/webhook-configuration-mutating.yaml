@@ -28,3 +28,24 @@ webhooks:
         resources:
           - rayclusters
     sideEffects: None
+  - admissionReviewVersions:
+      - v1
+      - v1beta1
+    clientConfig:
+      service:
+        name: {{ include "dco.webhook.service" . }}
+        namespace: {{ .Release.Namespace }}
+        path: /mutate-distributed-compute-dominodatalab-com-v1alpha1-sparkcluster
+    failurePolicy: Fail
+    name: msparkcluster.kb.io
+    rules:
+      - apiGroups:
+          - distributed-compute.dominodatalab.com
+        apiVersions:
+          - v1alpha1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - sparkclusters
+    sideEffects: None

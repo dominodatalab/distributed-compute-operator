@@ -39,6 +39,7 @@ type RayClusterReconciler struct {
 	Scheme *runtime.Scheme
 }
 
+// nolint:dupl
 // SetupWithManager creates and registers this controller with the manager.
 func (r *RayClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
@@ -67,7 +68,7 @@ func (r *RayClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *RayClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	ctx, log := r.Log.NewContext(ctx, "raycluster", req.NamespacedName)
 
-	log.V(2).Info("reconciliation loop trigged")
+	log.V(2).Info("reconciliation loop triggered")
 
 	rc := &dcv1alpha1.RayCluster{}
 	if err := r.Get(ctx, req.NamespacedName, rc); err != nil {
@@ -218,6 +219,7 @@ func (r RayClusterReconciler) reconcileNetworkPolicies(ctx context.Context, rc *
 	return nil
 }
 
+// nolint:dupl
 // reconcilePodSecurityPolicyRBAC optionally creates a role and role binding
 // that allows the Ray pods to "use" the specified pod security policy.
 func (r *RayClusterReconciler) reconcilePodSecurityPolicyRBAC(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
@@ -287,6 +289,7 @@ func (r *RayClusterReconciler) reconcileStatefulSets(ctx context.Context, rc *dc
 	return nil
 }
 
+// nolint:dupl
 // createOrUpdateOwnedResource should be used to manage the lifecycle of namespace-scoped objects.
 //
 // The CR will become the "owner" of the "controlled" object and cleanup will

@@ -11,8 +11,8 @@ import (
 	"k8s.io/utils/pointer"
 )
 
-func rayFixture(nsName string) *RayCluster {
-	return &RayCluster{
+func sparkFixture(nsName string) *SparkCluster {
+	return &SparkCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "test-",
 			Namespace:    nsName,
@@ -20,7 +20,7 @@ func rayFixture(nsName string) *RayCluster {
 	}
 }
 
-var _ = Describe("RayCluster", func() {
+var _ = Describe("SparkCluster", func() {
 	var testNS *v1.Namespace
 
 	BeforeEach(func() {
@@ -38,28 +38,12 @@ var _ = Describe("RayCluster", func() {
 
 	Describe("Defaulting", func() {
 		It("sets expected values on an empty object", func() {
-			rc := rayFixture(testNS.Name)
+			rc := sparkFixture(testNS.Name)
 			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
 
-			Expect(rc.Spec.Port).To(
-				BeNumerically("==", 6379),
-				"port should equal 6379",
-			)
-			Expect(rc.Spec.RedisShardPorts).To(
-				Equal([]int32{6380, 6381}),
-				"redis shard ports should equal [6380, 6381]",
-			)
-			Expect(rc.Spec.ClientServerPort).To(
-				BeNumerically("==", 10001),
-				"client server port should equal 10001",
-			)
-			Expect(rc.Spec.ObjectManagerPort).To(
-				BeNumerically("==", 2384),
-				"object manager port should equal 2384",
-			)
-			Expect(rc.Spec.NodeManagerPort).To(
-				BeNumerically("==", 2385),
-				"node manager port should equal 2385",
+			Expect(rc.Spec.ClusterPort).To(
+				BeNumerically("==", 7077),
+				"port should equal 8265",
 			)
 			Expect(rc.Spec.DashboardPort).To(
 				BeNumerically("==", 8265),
@@ -74,65 +58,33 @@ var _ = Describe("RayCluster", func() {
 				"enable network policy should point to true",
 			)
 			Expect(rc.Spec.NetworkPolicy.ClientServerLabels).To(
-				Equal(map[string]string{"ray-client": "true"}),
-				`network policy client labels should equal [{"ray-client": "true"}]`,
+				Equal(map[string]string{"spark-client": "true"}),
+				`network policy client labels should equal [{"spark-client": "true"}]`,
 			)
 			Expect(rc.Spec.NetworkPolicy.DashboardLabels).To(
-				Equal(map[string]string{"ray-client": "true"}),
-				`network policy dashboard labels should equal [{"ray-client": "true"}]`,
+				Equal(map[string]string{"spark-client": "true"}),
+				`network policy dashboard labels should equal [{"spark-client": "true"}]`,
 			)
 			Expect(rc.Spec.Worker.Replicas).To(
 				PointTo(BeNumerically("==", 1)),
 				"worker replicas should point to 1",
 			)
 			Expect(rc.Spec.Image).To(
-				Equal(&OCIImageDefinition{Repository: "rayproject/ray", Tag: "1.2.0-cpu"}),
-				`image reference should equal "rayproject/ray:1.2.0-cpu"`,
+				Equal(&OCIImageDefinition{Repository: "bitnami/spark", Tag: "3.0.2-debian-10-r0"}),
+				`image reference should equal "bitnami/spark:3.0.2-debian-10-r0"`,
 			)
 		})
 
-		It("does not set the port when present", func() {
-			rc := rayFixture(testNS.Name)
-			rc.Spec.Port = 3000
+		It("does not set the cluster port when present", func() {
+			rc := sparkFixture(testNS.Name)
+			rc.Spec.ClusterPort = 3000
 
 			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
-			Expect(rc.Spec.Port).To(BeNumerically("==", 3000))
-		})
-
-		It("does not set redis shard ports when present", func() {
-			rc := rayFixture(testNS.Name)
-			rc.Spec.RedisShardPorts = []int32{5000}
-
-			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
-			Expect(rc.Spec.RedisShardPorts).To(Equal([]int32{5000}))
-		})
-
-		It("does not set the client server port when present", func() {
-			rc := rayFixture(testNS.Name)
-			rc.Spec.ClientServerPort = 12000
-
-			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
-			Expect(rc.Spec.ClientServerPort).To(BeNumerically("==", 12000))
-		})
-
-		It("does not set the object manager port when present", func() {
-			rc := rayFixture(testNS.Name)
-			rc.Spec.ObjectManagerPort = 4832
-
-			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
-			Expect(rc.Spec.ObjectManagerPort).To(BeNumerically("==", 4832))
-		})
-
-		It("does not set the node manager port when present", func() {
-			rc := rayFixture(testNS.Name)
-			rc.Spec.NodeManagerPort = 5832
-
-			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
-			Expect(rc.Spec.NodeManagerPort).To(BeNumerically("==", 5832))
+			Expect(rc.Spec.ClusterPort).To(BeNumerically("==", 3000))
 		})
 
 		It("does not set the dashboard port when present", func() {
-			rc := rayFixture(testNS.Name)
+			rc := sparkFixture(testNS.Name)
 			rc.Spec.DashboardPort = 5555
 
 			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
@@ -140,7 +92,7 @@ var _ = Describe("RayCluster", func() {
 		})
 
 		It("does not enable the dashboard when false", func() {
-			rc := rayFixture(testNS.Name)
+			rc := sparkFixture(testNS.Name)
 			rc.Spec.EnableDashboard = pointer.BoolPtr(false)
 
 			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
@@ -149,7 +101,7 @@ var _ = Describe("RayCluster", func() {
 
 		Context("Network policies", func() {
 			It("are not enabled when false", func() {
-				rc := rayFixture(testNS.Name)
+				rc := sparkFixture(testNS.Name)
 				rc.Spec.NetworkPolicy.Enabled = pointer.BoolPtr(false)
 
 				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
@@ -157,7 +109,7 @@ var _ = Describe("RayCluster", func() {
 			})
 
 			It("use provided client server labels", func() {
-				rc := rayFixture(testNS.Name)
+				rc := sparkFixture(testNS.Name)
 
 				expected := map[string]string{"server-client": "true"}
 				rc.Spec.NetworkPolicy.ClientServerLabels = expected
@@ -167,7 +119,7 @@ var _ = Describe("RayCluster", func() {
 			})
 
 			It("use provided dashboard labels", func() {
-				rc := rayFixture(testNS.Name)
+				rc := sparkFixture(testNS.Name)
 
 				expected := map[string]string{"dashboard-client": "true"}
 				rc.Spec.NetworkPolicy.DashboardLabels = expected
@@ -176,31 +128,53 @@ var _ = Describe("RayCluster", func() {
 				Expect(rc.Spec.NetworkPolicy.DashboardLabels).To(Equal(expected))
 			})
 		})
+
+		Context("Annotations", func() {
+			It("add istio annotation to provided annotations", func() {
+				rc := sparkFixture(testNS.Name)
+				provided := map[string]string{"annotation": "test"}
+				rc.Spec.Master.Annotations = provided
+				rc.Spec.Worker.Annotations = provided
+
+				expected := map[string]string{
+					"annotation":              "test",
+					"sidecar.istio.io/inject": "false",
+				}
+				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
+				Expect(rc.Spec.Master.Annotations).To(Equal(expected))
+				Expect(rc.Spec.Worker.Annotations).To(Equal(expected))
+			})
+
+			It("override provided istio annotation", func() {
+				rc := sparkFixture(testNS.Name)
+				provided := map[string]string{"sidecar.istio.io/inject": "true"}
+				rc.Spec.Master.Annotations = provided
+				rc.Spec.Worker.Annotations = provided
+
+				expected := map[string]string{"sidecar.istio.io/inject": "false"}
+				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
+				Expect(rc.Spec.Master.Annotations).To(Equal(expected))
+				Expect(rc.Spec.Worker.Annotations).To(Equal(expected))
+			})
+		})
 	})
 
 	Describe("Validation", func() {
 		It("passes when object is valid", func() {
-			rc := rayFixture(testNS.Name)
+			rc := sparkFixture(testNS.Name)
 			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
 		})
 
 		It("requires a positive worker replica count", func() {
-			rc := rayFixture(testNS.Name)
-			rc.Spec.Worker.Replicas = pointer.Int32Ptr(-1)
-
-			Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
-		})
-
-		It("requires a minimum of 75MB for object store memory", func() {
-			rc := rayFixture(testNS.Name)
-			rc.Spec.ObjectStoreMemoryBytes = pointer.Int64Ptr(74 * 1024 * 1024)
+			rc := sparkFixture(testNS.Name)
+			rc.Spec.Worker.Replicas = pointer.Int32Ptr(-10)
 
 			Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 		})
 
 		DescribeTable("(networking ports)",
-			func(portSetter func(*RayCluster, int32)) {
-				rc := rayFixture(testNS.Name)
+			func(portSetter func(*SparkCluster, int32)) {
+				rc := sparkFixture(testNS.Name)
 
 				portSetter(rc, 1023)
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
@@ -209,35 +183,23 @@ var _ = Describe("RayCluster", func() {
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 			},
 			Entry("rejects an invalid port",
-				func(rc *RayCluster, val int32) { rc.Spec.Port = val },
-			),
-			Entry("rejects invalid redis shard ports",
-				func(rc *RayCluster, val int32) { rc.Spec.RedisShardPorts = append(rc.Spec.RedisShardPorts, val) },
-			),
-			Entry("rejects an invalid client server port",
-				func(rc *RayCluster, val int32) { rc.Spec.ClientServerPort = val },
-			),
-			Entry("rejects an invalid object manager port",
-				func(rc *RayCluster, val int32) { rc.Spec.ObjectManagerPort = val },
-			),
-			Entry("rejects an invalid node manager port",
-				func(rc *RayCluster, val int32) { rc.Spec.NodeManagerPort = val },
+				func(rc *SparkCluster, val int32) { rc.Spec.ClusterPort = val },
 			),
 			Entry("rejects an invalid dashboard port",
-				func(rc *RayCluster, val int32) { rc.Spec.DashboardPort = val },
+				func(rc *SparkCluster, val int32) { rc.Spec.DashboardPort = val },
 			),
 		)
 
 		Context("With a provided image", func() {
 			It("requires a non-blank image registry", func() {
-				rc := rayFixture(testNS.Name)
+				rc := sparkFixture(testNS.Name)
 				rc.Spec.Image = &OCIImageDefinition{Tag: "test-tag"}
 
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 			})
 
 			It("requires a non-blank image tag", func() {
-				rc := rayFixture(testNS.Name)
+				rc := sparkFixture(testNS.Name)
 				rc.Spec.Image = &OCIImageDefinition{Repository: "test-repo"}
 
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
@@ -245,8 +207,8 @@ var _ = Describe("RayCluster", func() {
 		})
 
 		Context("With autoscaling enabled", func() {
-			clusterWithAutoscaling := func() *RayCluster {
-				rc := rayFixture(testNS.Name)
+			clusterWithAutoscaling := func() *SparkCluster {
+				rc := sparkFixture(testNS.Name)
 				rc.Spec.Autoscaling = &Autoscaling{
 					MaxReplicas: 1,
 				}

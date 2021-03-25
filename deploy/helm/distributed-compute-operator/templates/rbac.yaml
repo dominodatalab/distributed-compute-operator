@@ -42,6 +42,7 @@ rules:
   - distributed-compute.dominodatalab.com
   resources:
   - rayclusters
+  - sparkclusters
   verbs:
   - update
   - list
@@ -50,12 +51,14 @@ rules:
   - distributed-compute.dominodatalab.com
   resources:
   - rayclusters/status
+  - sparkclusters/status
   verbs:
   - update
 - apiGroups:
   - distributed-compute.dominodatalab.com
   resources:
   - rayclusters/finalizers
+  - sparkclusters/finalizers
   verbs:
   - update
 - apiGroups:

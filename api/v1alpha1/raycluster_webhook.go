@@ -16,25 +16,25 @@ import (
 )
 
 const (
-	minValidPort int32 = 1024
-	maxValidPort int32 = 65535
+	rayMinValidPort int32 = 1024
+	rayMaxValidPort int32 = 65535
 )
 
 var (
-	defaultPort                int32 = 6379
-	defaultClientServerPort    int32 = 10001
-	defaultObjectManagerPort   int32 = 2384
-	defaultNodeManagerPort     int32 = 2385
-	defaultDashboardPort       int32 = 8265
-	defaultRedisShardPorts           = []int32{6380, 6381}
-	defaultEnableDashboard           = pointer.BoolPtr(true)
-	defaultEnableNetworkPolicy       = pointer.BoolPtr(true)
-	defaultWorkerReplicas            = pointer.Int32Ptr(1)
-	defaultNetworkPolicyLabels       = map[string]string{
+	rayDefaultRedisPort           int32 = 6379
+	rayDefaultClientServerPort    int32 = 10001
+	rayDefaultObjectManagerPort   int32 = 2384
+	rayDefaultNodeManagerPort     int32 = 2385
+	rayDefaultDashboardPort       int32 = 8265
+	rayDefaultRedisShardPorts           = []int32{6380, 6381}
+	rayDefaultEnableDashboard           = pointer.BoolPtr(true)
+	rayDefaultEnableNetworkPolicy       = pointer.BoolPtr(true)
+	rayDefaultWorkerReplicas            = pointer.Int32Ptr(1)
+	rayDefaultNetworkPolicyLabels       = map[string]string{
 		"ray-client": "true",
 	}
 
-	defaultImage = &OCIImageDefinition{
+	rayDefaultImage = &OCIImageDefinition{
 		Repository: "rayproject/ray",
 		Tag:        "1.2.0-cpu",
 	}
@@ -60,53 +60,53 @@ func (r *RayCluster) Default() {
 	log.Info("applying defaults")
 
 	if r.Spec.Port == 0 {
-		log.Info("setting default port", "value", defaultPort)
-		r.Spec.Port = defaultPort
+		log.Info("setting default port", "value", rayDefaultRedisPort)
+		r.Spec.Port = rayDefaultRedisPort
 	}
 	if r.Spec.RedisShardPorts == nil {
-		log.Info("setting default redis shard ports", "value", defaultRedisShardPorts)
-		r.Spec.RedisShardPorts = defaultRedisShardPorts
+		log.Info("setting default redis shard ports", "value", rayDefaultRedisShardPorts)
+		r.Spec.RedisShardPorts = rayDefaultRedisShardPorts
 	}
 	if r.Spec.ClientServerPort == 0 {
-		log.Info("setting default client server port", "value", defaultClientServerPort)
-		r.Spec.ClientServerPort = defaultClientServerPort
+		log.Info("setting default client server port", "value", rayDefaultClientServerPort)
+		r.Spec.ClientServerPort = rayDefaultClientServerPort
 	}
 	if r.Spec.ObjectManagerPort == 0 {
-		log.Info("setting default object manager port", "value", defaultObjectManagerPort)
-		r.Spec.ObjectManagerPort = defaultObjectManagerPort
+		log.Info("setting default object manager port", "value", rayDefaultObjectManagerPort)
+		r.Spec.ObjectManagerPort = rayDefaultObjectManagerPort
 	}
 	if r.Spec.NodeManagerPort == 0 {
-		log.Info("setting default node manager port", "value", defaultNodeManagerPort)
-		r.Spec.NodeManagerPort = defaultNodeManagerPort
+		log.Info("setting default node manager port", "value", rayDefaultNodeManagerPort)
+		r.Spec.NodeManagerPort = rayDefaultNodeManagerPort
 	}
 	if r.Spec.DashboardPort == 0 {
-		log.Info("setting default dashboard port", "value", defaultDashboardPort)
-		r.Spec.DashboardPort = defaultDashboardPort
+		log.Info("setting default dashboard port", "value", rayDefaultDashboardPort)
+		r.Spec.DashboardPort = rayDefaultDashboardPort
 	}
 	if r.Spec.EnableDashboard == nil {
-		log.Info("setting enable dashboard flag", "value", *defaultEnableDashboard)
-		r.Spec.EnableDashboard = defaultEnableDashboard
+		log.Info("setting enable dashboard flag", "value", *rayDefaultEnableDashboard)
+		r.Spec.EnableDashboard = rayDefaultEnableDashboard
 	}
 	if r.Spec.NetworkPolicy.Enabled == nil {
-		log.Info("setting enable network policy flag", "value", *defaultEnableNetworkPolicy)
-		r.Spec.NetworkPolicy.Enabled = defaultEnableNetworkPolicy
+		log.Info("setting enable network policy flag", "value", *rayDefaultEnableNetworkPolicy)
+		r.Spec.NetworkPolicy.Enabled = rayDefaultEnableNetworkPolicy
 	}
 	if r.Spec.NetworkPolicy.ClientServerLabels == nil {
-		log.Info("setting default network policy client server labels", "value", defaultNetworkPolicyLabels)
-		r.Spec.NetworkPolicy.ClientServerLabels = defaultNetworkPolicyLabels
+		log.Info("setting default network policy client server labels", "value", rayDefaultNetworkPolicyLabels)
+		r.Spec.NetworkPolicy.ClientServerLabels = rayDefaultNetworkPolicyLabels
 	}
 	if r.Spec.NetworkPolicy.DashboardLabels == nil {
-		log.Info("setting default network policy dashboard labels", "value", defaultNetworkPolicyLabels)
-		r.Spec.NetworkPolicy.DashboardLabels = defaultNetworkPolicyLabels
+		log.Info("setting default network policy dashboard labels", "value", rayDefaultNetworkPolicyLabels)
+		r.Spec.NetworkPolicy.DashboardLabels = rayDefaultNetworkPolicyLabels
 	}
 	if r.Spec.Worker.Replicas == nil {
-		log.Info("setting default worker replicas", "value", *defaultWorkerReplicas)
-		r.Spec.Worker.Replicas = defaultWorkerReplicas
+		log.Info("setting default worker replicas", "value", *rayDefaultWorkerReplicas)
+		r.Spec.Worker.Replicas = rayDefaultWorkerReplicas
 	}
 
 	if r.Spec.Image == nil {
-		log.Info("setting default image", "value", *defaultImage)
-		r.Spec.Image = defaultImage
+		log.Info("setting default image", "value", *rayDefaultImage)
+		r.Spec.Image = rayDefaultImage
 	}
 }
 
@@ -255,16 +255,17 @@ func (r *RayCluster) validatePorts() field.ErrorList {
 }
 
 func (r *RayCluster) validatePort(port int32, fldPath *field.Path) *field.Error {
-	if port < minValidPort {
-		return field.Invalid(fldPath, port, fmt.Sprintf("must be greater than or equal to %d", minValidPort))
+	if port < rayMinValidPort {
+		return field.Invalid(fldPath, port, fmt.Sprintf("must be greater than or equal to %d", rayMinValidPort))
 	}
-	if port > maxValidPort {
-		return field.Invalid(fldPath, port, fmt.Sprintf("must be less than or equal to %d", maxValidPort))
+	if port > rayMaxValidPort {
+		return field.Invalid(fldPath, port, fmt.Sprintf("must be less than or equal to %d", rayMaxValidPort))
 	}
 
 	return nil
 }
 
+// nolint:dupl
 func (r *RayCluster) validateAutoscaler() field.ErrorList {
 	var errs field.ErrorList
 

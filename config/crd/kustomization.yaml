@@ -3,12 +3,14 @@
 # It should be run by config/default
 resources:
 - bases/distributed-compute.dominodatalab.com_rayclusters.yaml
+- bases/distributed-compute.dominodatalab.com_sparkclusters.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
 # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix.
 # patches here are for enabling the conversion webhook for each CRD
-#- patches/webhook_in_rayclusters.yaml
+- patches/webhook_in_rayclusters.yaml
+- patches/webhook_in_sparkclusters.yaml
 #+kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable webhook, uncomment all the sections with [CERTMANAGER] prefix.

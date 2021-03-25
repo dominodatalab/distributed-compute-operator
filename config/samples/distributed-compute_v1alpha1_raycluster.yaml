@@ -23,13 +23,6 @@ spec:
   #   averageCPUUtilization: 50
   #   scaleDownStabilizationWindowSeconds: 60
 
-  # control the creation of network policies
-  # networkPolicies:
-  #   clientLabels:
-  #     server-client: "true"
-  #   dashboardLabels:
-  #     dashboard-client: "true"
-
   # redis port and addition redis shard ports used by head node
   # port: 1234
   # redisShardPorts:
@@ -49,6 +42,9 @@ spec:
 
   # internal port overrides
   # nodeManagerPort: 2385
+
+  # control the creation of network policies
+ # enableNetworkPolicy: true
 
   # bind cluster to existing psp
   # podSecurityPolicy: privileged
