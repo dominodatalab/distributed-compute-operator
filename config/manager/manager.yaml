@@ -30,6 +30,7 @@ spec:
         - start
         args:
         - --leader-elect
+        - --zap-log-level=5
         image: controller:latest
         imagePullPolicy: IfNotPresent # changed to aid development
         name: manager

@@ -27,6 +27,27 @@ webhooks:
     resources:
     - rayclusters
   sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-distributed-compute-dominodatalab-com-v1alpha1-sparkcluster
+  failurePolicy: Fail
+  name: msparkcluster.kb.io
+  rules:
+  - apiGroups:
+    - distributed-compute.dominodatalab.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - sparkclusters
+  sideEffects: None
 
 ---
 apiVersion: admissionregistration.k8s.io/v1
@@ -55,4 +76,25 @@ webhooks:
     - UPDATE
     resources:
     - rayclusters
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-distributed-compute-dominodatalab-com-v1alpha1-sparkcluster
+  failurePolicy: Fail
+  name: vsparkcluster.kb.io
+  rules:
+  - apiGroups:
+    - distributed-compute.dominodatalab.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - sparkclusters
   sideEffects: None
