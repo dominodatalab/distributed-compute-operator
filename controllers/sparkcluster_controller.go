@@ -74,7 +74,7 @@ const SparkFinalizerName = "distributed-compute.dominodatalab.com/dco-finalizer"
 //+kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=sparkclusters/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",resources=pods,verbs=list;watch
 //+kubebuilder:rbac:groups="",resources=services;serviceaccounts,verbs=create;update;list;watch
-//+kubebuilder:rbac:groups=apps,resources=deployments,verbs=create;update;list;watch
+//+kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=create;update;list;watch
 //+kubebuilder:rbac:groups=autoscaling,resources=horizontalpodautoscalers,verbs=create;update;delete;list;watch
 //+kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=create;update;delete;list;watch
 //+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles;rolebindings,verbs=create;update;delete;list;watch
@@ -389,7 +389,6 @@ func (r *SparkClusterReconciler) reconcileStatefulSets(ctx context.Context, sc *
 // The controller resource will be created if it's missing.
 // The controller resource will be updated if any changes are applicable.
 // Any unexpected api errors will be reported.
-// nolint:dupl
 func (r *SparkClusterReconciler) createOrUpdateOwnedResource(ctx context.Context, owner metav1.Object, controlled client.Object) error {
 	if err := ctrl.SetControllerReference(owner, controlled, r.Scheme); err != nil {
 		return err

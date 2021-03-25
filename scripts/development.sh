@@ -30,7 +30,6 @@ function dco::minikube_setup() {
       --driver=hyperkit \
       --addons=pod-security-policy \
       --extra-config=apiserver.enable-admission-plugins=PodSecurityPolicy \
-      --network-plugin=cni \
       --cni=calico
   elif minikube status --profile="$MINIKUBE_PROFILE" | grep -q 'host: Stopped'; then
     dco::_info "Restarting minikube cluster"
@@ -107,7 +106,7 @@ function dco::helm_install() {
   ssh_key=$(minikube ssh-key --profile="$MINIKUBE_PROFILE")
   ip_addr=$(minikube ip --profile="$MINIKUBE_PROFILE")
   latest_tag=$(
-    ssh -o StrictHostKeyChecking=no -i "$ssh_key" docker@"$ip_addr" \
+    ssh  -o LogLevel=ERROR -o StrictHostKeyChecking=no -o GlobalKnownHostsFile=/dev/null -o UserKnownHostsFile=/dev/null -i "$ssh_key" docker@"$ip_addr" \
       "docker image list $IMAGE_NAME:$IMAGE_TAG_PREFIX* --format '{{ .Tag }}|{{ .CreatedAt }}'" | \
         sort -r -t '|' -k 2 | head -n 1 | cut -d '|' -f 1
   )

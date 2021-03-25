@@ -36,3 +36,14 @@ type OCIImageDefinition struct {
 	// PullPolicy used to fetch container image.
 	PullPolicy corev1.PullPolicy `json:"pullPolicy,omitempty"`
 }
+
+// PersistentVolumeClaimTemplate describes a claim that pods are allowed to
+// reference. These can either pre-exist or leverage storage classes to provide
+// dynamic provisioning.
+type PersistentVolumeClaimTemplate struct {
+	// Name is the unique metadata ID of the volume claim.
+	Name string `json:"name"`
+
+	// Spec describes the storage attributes of the underlying claim.
+	Spec corev1.PersistentVolumeClaimSpec `json:"spec"`
+}

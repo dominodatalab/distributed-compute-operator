@@ -150,9 +150,20 @@ spec:
     #   - name: example-vol
     #     emptyDir: {}
 
+    # volumeClaimTemplates:
+    #   - name: scratch
+    #     spec:
+    #       accessModes: [ "ReadWriteOnce" ]
+    #       storageClassName: "standard"
+    #       resources:
+    #         requests:
+    #           storage: 100Mi
+
     # volumeMounts:
     #   - name: example-vol
-    #     mountPath: /mnt/more/space
+    #     mountPath: /mnt/example
+    #   - name: scratch
+    #     mountPath: /mnt/scratch
 
     # resources:
     #   requests:

@@ -44,6 +44,7 @@ rules:
   - rayclusters
   - sparkclusters
   verbs:
+  - update
   - list
   - watch
 - apiGroups:
@@ -78,9 +79,16 @@ rules:
   - list
   - watch
 - apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
+  verbs:
+  - delete
+  - list
+  - watch
+- apiGroups:
   - apps
   resources:
-  - deployments
   - statefulsets
   verbs:
   - create
