@@ -187,10 +187,10 @@ spec:
 #      limits:
 #        cpu: 500m
 #        memory: 512Mi
-    volumes:
-      - name: spark-data
-        persistentVolumeClaim:
-          claimName: spark-data-pvc
-    volumeMounts:
-      - name: spark-data
-        mountPath: /data
+#    volumes:
+#      - name: spark-data
+#        persistentVolumeClaim:
+#          claimName: spark-data-pvc
+#    volumeMounts:
+#      - name: spark-data
+#        mountPath: /data

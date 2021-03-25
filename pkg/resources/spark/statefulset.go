@@ -211,7 +211,6 @@ func componentEnvVars(sc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 			},
 			{
 				Name: "SPARK_WORKER_WEBUI_PORT",
-				// TODO talk to @Po about whether this makes sense. Spark defaults to 8081 as default for this
 				Value: strconv.Itoa(int(sc.Spec.DashboardPort)),
 			},
 			{
