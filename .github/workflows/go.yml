@@ -134,7 +134,7 @@ jobs:
 
           ./bin/helm package deploy/helm/distributed-compute-operator --destination chart-archives --app-version "$VERSION" --version "$VERSION"
           ./bin/helm chart save "chart-archives/distributed-compute-operator-$VERSION.tgz" "$TAG"
-#          ./bin/helm chart push "$TAG"
+          #./bin/helm chart push "$TAG"
           rm -rf chart-archives
         env:
           HELM_EXPERIMENTAL_OCI: 1
