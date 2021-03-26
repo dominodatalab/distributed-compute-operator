@@ -130,11 +130,11 @@ function dco::display_usage() {
   echo "Usage: $(basename "$0") COMMAND"
   echo
   echo "Commands:"
-  echo -e "  create    Creates Minikube instance configured for DCO development"
-  echo -e "  build     Build image locally and load it into Minikube"
-  echo -e "  deploy    Deploy Helm chart into Minikube using latest "
-  echo -e "  teardown  Destroy Minikube instance"
-  echo -e "  help      Display usage"
+  echo "  create    Creates Minikube instance configured for DCO development"
+  echo "  build     Build image locally and load it into Minikube"
+  echo "  deploy    Deploy Helm chart into Minikube using latest "
+  echo "  teardown  Destroy Minikube instance"
+  echo "  help      Display usage"
 
   exit 1
 }
