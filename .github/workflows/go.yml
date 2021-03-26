@@ -124,6 +124,8 @@ jobs:
         run: make helm
 
       - name: Package and push chart to ghcr.io
+        env:
+          HELM_BIN: ./bin/helm
         run: |
           REGISTRY=ghcr.io
           IMAGE="$(echo ${{ github.repository }} | awk -F / '{ print $(NF-1)  "/helm/" $NF }')"
@@ -132,10 +134,4 @@ jobs:
           TAG="$REGISTRY/$IMAGE:$VERSION"
 
           ./scripts/helm.sh login -h "$REGISTRY" -u "${{ github.repository_owner }}" -p "${{ secrets.CR_PAT }}"
-
-          ./bin/helm package deploy/helm/distributed-compute-operator --destination chart-archives --app-version "$VERSION" --version "$VERSION"
-          ./bin/helm chart save "chart-archives/distributed-compute-operator-$VERSION.tgz" "$TAG"
-          #./bin/helm chart push "$TAG"
-          rm -rf chart-archives
-        env:
-          HELM_EXPERIMENTAL_OCI: 1
+          ./scripts/helm.sh push -v "$VERSION" -r "$TAG"
