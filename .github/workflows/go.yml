@@ -127,10 +127,11 @@ jobs:
         run: |
           REGISTRY=ghcr.io
           IMAGE="$(echo ${{ github.repository }} | awk -F / '{ print $(NF-1)  "/helm/" $NF }')"
-          VERSION="${{ needs.build.outputs.version }}"
+          #VERSION="${{ needs.build.outputs.version }}"
+          VERSION=0.0.0-alpha-1
           TAG="$REGISTRY/$IMAGE:$VERSION"
 
-          echo "${{ secrets.CR_PAT }}" | ./bin/helm registry login "$REGISTRY" --username "${{ github.repository_owner }}" --password-stdin
+          ./scripts/helm.sh login -h "$REGISTRY" -u "${{ github.repository_owner }}" -p "${{ secrets.CR_PAT }}"
 
           ./bin/helm package deploy/helm/distributed-compute-operator --destination chart-archives --app-version "$VERSION" --version "$VERSION"
           ./bin/helm chart save "chart-archives/distributed-compute-operator-$VERSION.tgz" "$TAG"
