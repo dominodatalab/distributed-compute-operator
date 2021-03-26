@@ -121,17 +121,26 @@ jobs:
 #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Helm
-        run: make helm
+        run: |
+          make helm
+          echo "HELM_BIN=./bin/helm" >> $GITHUB_ENV
 
       - name: Package and push chart to ghcr.io
-        env:
-          HELM_BIN: ./bin/helm
         run: |
           REGISTRY=ghcr.io
           IMAGE="$(echo ${{ github.repository }} | awk -F / '{ print $(NF-1)  "/helm/" $NF }')"
-          #VERSION="${{ needs.build.outputs.version }}"
-          VERSION=0.0.0-alpha-1
-          TAG="$REGISTRY/$IMAGE:$VERSION"
+          VERSION=0.0.0-alpha1 #"${{ needs.build.outputs.version }}"
+          REF="$REGISTRY/$IMAGE:$VERSION"
 
           ./scripts/helm.sh login -h "$REGISTRY" -u "${{ github.repository_owner }}" -p "${{ secrets.CR_PAT }}"
-          ./scripts/helm.sh push -v "$VERSION" -r "$TAG"
+          ./scripts/helm.sh push -r "$REF" -v "$VERSION"
+
+      - name: Package and push chart to gcr.io
+        run: |
+          REGISTRY=gcr.io
+          IMAGE="$(echo ${{ github.repository }} | awk -F / '{ print "${{ secrets.GCR_NAMESPACE }}/" $2 }')"
+          VERSION=0.0.0-alpha1 #"${{ needs.build.outputs.version }}"
+          REF="$REGISTRY/$IMAGE:$VERSION"
+
+          ./scripts/helm.sh login -h "$REGISTRY" -u _json_key -p "${{ secrets.GCR_PASSWORD }}" -n "${{ secrets.GCR_NAMESPACE }}"
+          ./scripts/helm.sh push -r "$REF" -v "$VERSION"

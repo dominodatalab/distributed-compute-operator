@@ -12,8 +12,12 @@ function dco::helm::login() {
   local registry="$1"
   local username="$2"
   local password="$3"
+  local namespace="$4"
 
-  echo "$password" | $HELM_BIN registry login "$registry" --username "$username" --password-stdin
+  echo "$password" | $HELM_BIN registry login "$registry" \
+    --namespace "$namespace" \
+    --username "$username" \
+    --password-stdin
 }
 
 function dco::helm::push() {
@@ -39,10 +43,11 @@ function dco::helm::main() {
       local host=""
       local username=""
       local password=""
+      local namespace=""
       local usage
 
-      usage="usage: $(basename "$0") login -h HOST -u USERNAME -p PASSWORD"
-      while getopts h:u:p: opt; do
+      usage="usage: $(basename "$0") login -h HOST -u USERNAME -p PASSWORD [-n NAMESPACE]"
+      while getopts h:u:p:n: opt; do
         case $opt in
           h)
             host=$OPTARG
@@ -52,6 +57,9 @@ function dco::helm::main() {
             ;;
           p)
             password=$OPTARG
+            ;;
+          n)
+            namespace=$OPTARG
             ;;
           *)
             echo "$usage"
@@ -65,7 +73,7 @@ function dco::helm::main() {
         exit 1
       fi
 
-      dco::helm::login "$host" "$username" "$password"
+      dco::helm::login "$host" "$username" "$password" "$namespace"
       ;;
     push)
       local version=""
