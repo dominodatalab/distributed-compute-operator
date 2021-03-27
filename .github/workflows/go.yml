@@ -141,6 +141,7 @@ jobs:
           IMAGE="$(echo ${{ github.repository }} | awk -F / '{ print "${{ secrets.GCR_NAMESPACE }}/" $2 }')"
           VERSION=0.0.0-alpha1 #"${{ needs.build.outputs.version }}"
           REF="$REGISTRY/$IMAGE:$VERSION"
+          PASSWORD="$(echo ${{ secrets.GCR_PASSWORD }} | base64 --decode)"
 
-          ./scripts/helm.sh login -h "$REGISTRY" -u _json_key -p "${{ secrets.GCR_PASSWORD }}" -n "${{ secrets.GCR_NAMESPACE }}"
+          ./scripts/helm.sh login -h "$REGISTRY"  -n "${{ secrets.GCR_NAMESPACE }}" -u _json_key -p "$PASSWORD"
           ./scripts/helm.sh push -r "$REF" -v "$VERSION"
