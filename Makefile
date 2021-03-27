@@ -112,6 +112,7 @@ helm: ## Download helm locally if necessary.
 	@[ -f $(HELM) ] || { \
 		set -e ;\
 		echo "Installing helm" ;\
+		mkdir -p $(PROJECT_DIR)/bin ;\
 		export HELM_INSTALL_DIR=$(PROJECT_DIR)/bin ;\
 		curl -sSfL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | $(SHELL) -s -- --no-sudo --version v3.5.3 ;\
 	}

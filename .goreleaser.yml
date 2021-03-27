@@ -1,6 +1,6 @@
 before:
   hooks:
-    - scripts/release.sh
+    - scripts/release/before-hook.sh
 builds:
   - env:
       - CGO_ENABLED=0
