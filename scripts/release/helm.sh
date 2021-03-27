@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #
-# Packages helm chart and pushes it to a remote registry.
-
-export HELM_EXPERIMENTAL_OCI=1
+# Functions used to log into helm registries, and package/push project chart.
 
 set -euo pipefail
+
+export HELM_EXPERIMENTAL_OCI=1
 
 HELM_BIN=${HELM_BIN:-helm}
 
@@ -21,13 +21,16 @@ function dco::helm::login() {
 }
 
 function dco::helm::push() {
-  local version=$1
-  local ref=$2
+  local ref=$1
+  local version
+
+  version="$(echo "$ref" | awk -F : '{ print $NF }')"
 
   $HELM_BIN package deploy/helm/distributed-compute-operator \
     --destination chart-archives \
     --app-version "$version" \
     --version "$version"
+
   $HELM_BIN chart save "chart-archives/distributed-compute-operator-$version.tgz" "$ref"
   $HELM_BIN chart push "$ref"
 
@@ -76,16 +79,12 @@ function dco::helm::main() {
       dco::helm::login "$host" "$username" "$password" "$namespace"
       ;;
     push)
-      local version=""
       local ref=""
       local usage
 
-      usage="usage: $(basename "$0") push -v VERSION -r REF"
-      while getopts v:r: opt; do
+      usage="usage: $(basename "$0") push -r REF"
+      while getopts r: opt; do
         case $opt in
-          v)
-            version=$OPTARG
-            ;;
           r)
             ref=$OPTARG
             ;;
@@ -96,12 +95,12 @@ function dco::helm::main() {
       done
       shift $((OPTIND -1))
 
-      if [[ -z $version ]] || [[ -z $ref ]]; then
+      if [[ -z $ref ]]; then
         echo "$usage"
         exit 1
       fi
 
-      dco::helm::push "$version" "$ref"
+      dco::helm::push "$ref"
       ;;
     ""|help)
       echo

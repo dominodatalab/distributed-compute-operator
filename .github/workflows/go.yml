@@ -129,19 +129,19 @@ jobs:
         run: |
           REGISTRY=ghcr.io
           IMAGE="$(echo ${{ github.repository }} | awk -F / '{ print $(NF-1)  "/helm/" $NF }')"
-          VERSION=0.0.0-alpha1 #"${{ needs.build.outputs.version }}"
+          VERSION=0.0.0-alpha2 #"${{ needs.build.outputs.version }}"
           REF="$REGISTRY/$IMAGE:$VERSION"
 
-          ./scripts/helm.sh login -h "$REGISTRY" -u "${{ github.repository_owner }}" -p "${{ secrets.CR_PAT }}"
-          ./scripts/helm.sh push -r "$REF" -v "$VERSION"
+          ./scripts/release/helm.sh login -h "$REGISTRY" -u "${{ github.repository_owner }}" -p "${{ secrets.CR_PAT }}"
+          ./scripts/release/helm.sh push -r "$REF"
 
       - name: Package and push chart to gcr.io
         run: |
           REGISTRY=gcr.io
           IMAGE="$(echo ${{ github.repository }} | awk -F / '{ print "${{ secrets.GCR_NAMESPACE }}/" $2 }')"
-          VERSION=0.0.0-alpha1 #"${{ needs.build.outputs.version }}"
+          VERSION=0.0.0-alpha2 #"${{ needs.build.outputs.version }}"
           REF="$REGISTRY/$IMAGE:$VERSION"
           PASSWORD="$(echo ${{ secrets.GCR_PASSWORD }} | base64 --decode)"
 
-          ./scripts/helm.sh login -h "$REGISTRY"  -n "${{ secrets.GCR_NAMESPACE }}" -u _json_key -p "$PASSWORD"
-          ./scripts/helm.sh push -r "$REF" -v "$VERSION"
+          ./scripts/release/helm.sh login -h "$REGISTRY"  -n "${{ secrets.GCR_NAMESPACE }}" -u _json_key -p "$PASSWORD"
+          ./scripts/release/helm.sh push -r "$REF"
