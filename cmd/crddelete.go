@@ -16,11 +16,12 @@ var crdDeleteCmd = &cobra.Command{
 Any running distributed compute resources will be decommissioned when this 
 operation runs (i.e. your deployments will be deleted immediately). This will
 only attempt to remove definitions that are already present in Kubernetes.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return crd.Delete(context.Background())
-	},
+	RunE: processIstioFlag(func(enabled bool) error {
+		return crd.Delete(context.Background(), enabled)
+	}),
 }
 
 func init() {
+	addIstioFlag(crdDeleteCmd)
 	rootCmd.AddCommand(crdDeleteCmd)
 }
