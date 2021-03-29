@@ -10,7 +10,7 @@ rules:
   resources:
   - podsecuritypolicies
   verbs:
-  - use # required to grant RBAC permission "use" to CR clusters
+  - use
   - list
   - watch
 

@@ -1,0 +1,50 @@
+{{- if .Values.podSecurityPolicy.enabled }}
+{{- $elevatePermissions := and .Values.istio.enabled (not .Values.istio.cniPluginInstalled) -}}
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: {{ include "common.names.fullname" . }}
+  labels:
+    {{- include "common.labels.standard" . | nindent 4 }}
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: 'docker/default,runtime/default'
+    apparmor.security.beta.kubernetes.io/allowedProfileNames: 'unconfined,runtime/default'
+    seccomp.security.alpha.kubernetes.io/defaultProfileName:  'runtime/default'
+    apparmor.security.beta.kubernetes.io/defaultProfileName:  'unconfined'
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  {{- if $elevatePermissions }}
+  allowedCapabilities:
+    - NET_ADMIN
+    - NET_RAW
+  {{- else }}
+  requiredDropCapabilities:
+    - ALL
+  {{- end }}
+  volumes:
+    - configMap
+    - emptyDir
+    - projected
+    - secret
+    - downwardAPI
+    - persistentVolumeClaim
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: {{ if $elevatePermissions }}RunAsAny{{ else }}MustRunAsNonRoot{{ end }}
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: MustRunAs
+    ranges:
+      - min: 1
+        max: 65535
+  fsGroup:
+    rule: MustRunAs
+    ranges:
+      - min: 1
+        max: 65535
+  readOnlyRootFilesystem: false
+{{- end }}
