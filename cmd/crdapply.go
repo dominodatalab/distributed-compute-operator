@@ -17,11 +17,12 @@ Apply Rules:
   - When a definition is is missing, it will be created
   - If a definition is already present, then it will be updated
   - Updating definitions that have not changed results in a no-op`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return crd.Apply(context.Background())
-	},
+	RunE: processIstioFlag(func(enabled bool) error {
+		return crd.Apply(context.Background(), enabled)
+	}),
 }
 
 func init() {
+	addIstioFlag(crdApplyCmd)
 	rootCmd.AddCommand(crdApplyCmd)
 }

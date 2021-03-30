@@ -23,7 +23,16 @@ var (
 
 // Apply will create or update all project CRDs inside a Kubernetes cluster.
 // The latest available version of the CRD will be used to perform this operation.
-func Apply(ctx context.Context) error {
+func Apply(ctx context.Context, istioEnabled bool) error {
+	if istioEnabled {
+		quit, err := waitForIstioSidecar()
+		if err != nil {
+			return err
+		}
+
+		defer quit()
+	}
+
 	apply := func(client apixv1client.CustomResourceDefinitionInterface, crd *apixv1.CustomResourceDefinition) error {
 		found, err := client.Get(ctx, crd.Name, metav1.GetOptions{})
 
@@ -43,7 +52,16 @@ func Apply(ctx context.Context) error {
 }
 
 // Delete will remove all project CRDs from a Kubernetes cluster.
-func Delete(ctx context.Context) error {
+func Delete(ctx context.Context, istioEnabled bool) error {
+	if istioEnabled {
+		quit, err := waitForIstioSidecar()
+		if err != nil {
+			return err
+		}
+
+		defer quit()
+	}
+
 	deleteFn := func(client apixv1client.CustomResourceDefinitionInterface, crd *apixv1.CustomResourceDefinition) error {
 		log.Info("Deleting CRD", "Name", crd.Name)
 		err := client.Delete(ctx, crd.Name, metav1.DeleteOptions{})
@@ -73,12 +91,12 @@ func processCRDs(processor func(client apixv1client.CustomResourceDefinitionInte
 	}
 
 	for _, def := range definitions {
-		crd, err := loadCRD(def)
+		customResourceDefinition, err := loadCRD(def)
 		if err != nil {
 			return err
 		}
 
-		if err := processor(client, crd); err != nil {
+		if err := processor(client, customResourceDefinition); err != nil {
 			return err
 		}
 	}
@@ -93,12 +111,12 @@ func loadCRD(bs []byte) (*apixv1.CustomResourceDefinition, error) {
 		return nil, err
 	}
 
-	crd := new(apixv1.CustomResourceDefinition)
-	if err := json.Unmarshal(bs, crd); err != nil {
+	resource := new(apixv1.CustomResourceDefinition)
+	if err := json.Unmarshal(bs, resource); err != nil {
 		return nil, err
 	}
 
-	return crd, nil
+	return resource, nil
 }
 
 // getCRDClient returns a client configured to work with custom resource definitions.

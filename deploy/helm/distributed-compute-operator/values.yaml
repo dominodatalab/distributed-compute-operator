@@ -5,7 +5,7 @@
 # Number of controller instances to run
 replicaCount: 1
 
-# If true, CRD resources will be installed/uninstalled as part of the Helm chart release
+# If true, CRD resources will be installed/uninstalled as part of the Helm chart release.
 # Uninstalling CRD resources will DELETE all related custom resources.
 installCRDs: true
 
@@ -26,6 +26,21 @@ config:
   logStacktraceLevel: panic
   # Development mode enables debug logging, console output and stacktraces suitable for troubleshooting
   logDevelopmentMode: false
+
+istio:
+  # Enable support for environments with Istio installed
+  enabled: false
+  # Elevate pod execution permissions so that Istio's init container can modify
+  # network settings when CNI plugin is NOT installed
+  cniPluginInstalled: true
+
+podSecurityPolicy:
+  # Create custom PSP for operator
+  enabled: false
+
+networkPolicy:
+  # Restrict network ingress to operator pods
+  enabled: false
 
 image:
   registry: ghcr.io
