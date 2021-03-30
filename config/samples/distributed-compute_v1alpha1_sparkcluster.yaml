@@ -171,12 +171,12 @@ spec:
     # volumeMounts:
     #   - name: example-vol
     #     mountPath: /mnt/more/space
-#    volumes:
-#    - name: spark-data
-#      persistentVolumeClaim:
-#        claimName: spark-data-pvc
+    volumes:
+    - name: spark-data
+      persistentVolumeClaim:
+        claimName: spark-data-pvc
     volumeMounts:
-    - name: spark-worker-pvc
+    - name: spark-data
       mountPath: /data
 
     resources:
@@ -188,9 +188,9 @@ spec:
         cpu: 500m
         memory: 512Mi
 
-    additionalStorage:
-    - accessModes:
-      - ReadWriteMany
-      size: 1Gi
-      storageClass: nfs
-      name: spark-worker-pvc
+#    additionalStorage:
+#    - accessModes:
+#      - ReadWriteMany
+#      size: 1Gi
+#      storageClass: nfs
+#      name: spark-worker-pvc

@@ -37,11 +37,30 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 		return nil, err
 	}
 
+	//cmv := corev1.Volume{
+	//	Name:         "spark-config",
+	//	VolumeSource: corev1.VolumeSource{
+	//		ConfigMap: &corev1.ConfigMapVolumeSource{
+	//			LocalObjectReference: corev1.LocalObjectReference{
+	//				Name: "sparkconfig",
+	//			},
+	//		},
+	//	},
+	//}
+	//
+	//cmvm := corev1.VolumeMount{
+	//	Name:      "spark-config",
+	//	MountPath: "/opt/bitnami/spark/conf/spark-defaults.conf",
+	//	SubPath:   "spark-block-manager",
+	//}
+
 	ports := processPorts(sc)
 	labels := processLabels(sc, comp, nodeAttrs.Labels)
 	envVars := append(componentEnvVars(sc, comp), sc.Spec.EnvVars...)
 	volumes := nodeAttrs.Volumes
 	volumeMounts := nodeAttrs.VolumeMounts
+	//volumes := append(nodeAttrs.Volumes, cmv)
+	//volumeMounts := append(nodeAttrs.VolumeMounts, cmvm)
 
 	volumeClaimTemplates, err := processVolumeClaimTemplates(nodeAttrs.AdditionalStorage)
 	if err != nil {
@@ -212,6 +231,10 @@ func componentEnvVars(sc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 			{
 				Name:  "SPARK_WORKER_WEBUI_PORT",
 				Value: strconv.Itoa(int(sc.Spec.DashboardPort)),
+			},
+			{
+				Name: "SPARK_WORKER_PORT",
+				Value: strconv.Itoa(int(sc.Spec.ClusterPort)),
 			},
 			{
 				Name:  "SPARK_MODE",
