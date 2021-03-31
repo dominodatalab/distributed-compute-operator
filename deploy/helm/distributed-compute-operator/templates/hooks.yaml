@@ -14,7 +14,7 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "dco.rbac.hookName" . }}
+  name: {{ include "dco.rbac.hookName" . }}.{{ .Release.Namespace }}
   labels:
     {{- include "common.labels.standard" . | nindent 4 }}
   annotations:
@@ -42,7 +42,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "dco.rbac.hookName" . }}
+  name: {{ include "dco.rbac.hookName" . }}.{{ .Release.Namespace }}
   labels:
     {{- include "common.labels.standard" . | nindent 4 }}
   annotations:
@@ -52,7 +52,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "dco.rbac.hookName" . }}
+  name: {{ include "dco.rbac.hookName" . }}.{{ .Release.Namespace }}
 subjects:
   - kind: ServiceAccount
     name: {{ include "dco.serviceAccountName" . }}-hook
