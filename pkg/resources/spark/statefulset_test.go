@@ -593,7 +593,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 				VolumeSource: corev1.VolumeSource{
 					ConfigMap: &corev1.ConfigMapVolumeSource{
 						LocalObjectReference: corev1.LocalObjectReference{
-							Name: fmt.Sprintf("test-id-spark-%s", comp),
+							Name: "test-id-spark",
 						},
 					},
 				},
@@ -602,7 +602,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 
 		expectedVolumeMounts := []corev1.VolumeMount{
 			{
-				Name:      fmt.Sprintf("test-id-spark-%s", comp),
+				Name:      "spark-config",
 				ReadOnly:  false,
 				MountPath: fmt.Sprintf("/test/%s/path", comp),
 				SubPath:   string(comp),

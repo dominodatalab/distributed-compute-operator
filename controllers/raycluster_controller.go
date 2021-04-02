@@ -39,7 +39,6 @@ type RayClusterReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// nolint:dupl
 // SetupWithManager creates and registers this controller with the manager.
 func (r *RayClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).

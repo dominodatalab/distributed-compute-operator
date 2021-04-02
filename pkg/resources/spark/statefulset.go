@@ -47,8 +47,8 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	volumeMounts = nodeAttrs.VolumeMounts
 
 	if nodeAttrs.FrameworkConfig != nil {
-		cmVolume := getConfigMapVolume(sc, comp)
-		cmVolumeMount := getConfigMapVolumeMount(sc, comp, nodeAttrs)
+		cmVolume := getConfigMapVolume(sc)
+		cmVolumeMount := getConfigMapVolumeMount(comp, nodeAttrs)
 
 		volumes = append(volumes, cmVolume)
 		volumeMounts = append(volumeMounts, cmVolumeMount)
@@ -120,7 +120,7 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	return statefulSet, nil
 }
 
-func getConfigMapVolumeMount(sc *dcv1alpha1.SparkCluster, comp Component, nodeAttrs dcv1alpha1.SparkClusterNode) corev1.VolumeMount {
+func getConfigMapVolumeMount(comp Component, nodeAttrs dcv1alpha1.SparkClusterNode) corev1.VolumeMount {
 	return corev1.VolumeMount{
 		Name:      "spark-config",
 		MountPath: nodeAttrs.FrameworkConfig.Path,
@@ -128,7 +128,7 @@ func getConfigMapVolumeMount(sc *dcv1alpha1.SparkCluster, comp Component, nodeAt
 	}
 }
 
-func getConfigMapVolume(sc *dcv1alpha1.SparkCluster, comp Component) corev1.Volume {
+func getConfigMapVolume(sc *dcv1alpha1.SparkCluster) corev1.Volume {
 	return corev1.Volume{
 		Name: "spark-config",
 		VolumeSource: corev1.VolumeSource{

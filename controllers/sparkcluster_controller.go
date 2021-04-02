@@ -52,7 +52,6 @@ type SparkClusterReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// nolint:dupl
 // SetupWithManager creates and registers this controller with the manager.
 func (r *SparkClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
