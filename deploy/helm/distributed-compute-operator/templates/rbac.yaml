@@ -24,7 +24,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "dco.rbac.managerName" . }}
+  name: {{ include "dco.rbac.managerName" . }}.{{ .Release.Namespace }}
 subjects:
 - kind: ServiceAccount
   name: {{ include "dco.serviceAccountName" . }}
