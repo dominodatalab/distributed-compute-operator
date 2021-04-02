@@ -36,6 +36,17 @@ type SparkClusterNode struct {
 
 	// Requests for additional storage volumes to be created alongside each pod
 	AdditionalStorage []SparkAdditionalStorage `json:"additionalStorage,omitempty"`
+
+	// Extra framework-specific configuration for this cluster
+	// For spark this means we'll generate a spark-defaults.conf config map
+	// and mount it in to the requested location
+	FrameworkConfig *FrameworkConfig `json:"frameworkConfig,omitempty"`
+}
+
+type FrameworkConfig struct {
+	// Path at which to mount the configmap
+	Path    string            `json:"path"`
+	Configs map[string]string `json:"configs"`
 }
 
 type SparkAdditionalStorage struct {

@@ -37,31 +37,22 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 		return nil, err
 	}
 
-	//cmv := corev1.Volume{
-	//	Name:         "spark-config",
-	//	VolumeSource: corev1.VolumeSource{
-	//		ConfigMap: &corev1.ConfigMapVolumeSource{
-	//			LocalObjectReference: corev1.LocalObjectReference{
-	//				Name: "sparkconfig",
-	//			},
-	//		},
-	//	},
-	//}
-	//
-	//cmvm := corev1.VolumeMount{
-	//	Name:      "spark-config",
-	//	MountPath: "/opt/bitnami/spark/conf/spark-defaults.conf",
-	//	SubPath:   "spark-block-manager",
-	//}
+	var volumes []corev1.Volume
+	var volumeMounts []corev1.VolumeMount
 
 	ports := processPorts(sc)
 	labels := processLabels(sc, comp, nodeAttrs.Labels)
 	envVars := append(componentEnvVars(sc, comp), sc.Spec.EnvVars...)
-	volumes := nodeAttrs.Volumes
-	volumeMounts := nodeAttrs.VolumeMounts
-	//volumes := append(nodeAttrs.Volumes, cmv)
-	//volumeMounts := append(nodeAttrs.VolumeMounts, cmvm)
+	volumes = nodeAttrs.Volumes
+	volumeMounts = nodeAttrs.VolumeMounts
 
+	if nodeAttrs.FrameworkConfig != nil {
+		cmVolume := getConfigMapVolume(sc, comp)
+		cmVolumeMount := getConfigMapVolumeMount(sc, comp, nodeAttrs)
+
+		volumes = append(volumes, cmVolume)
+		volumeMounts = append(volumeMounts, cmVolumeMount)
+	}
 	volumeClaimTemplates, err := processVolumeClaimTemplates(nodeAttrs.AdditionalStorage)
 	if err != nil {
 		return nil, err
@@ -127,6 +118,27 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	}
 
 	return statefulSet, nil
+}
+
+func getConfigMapVolumeMount(sc *dcv1alpha1.SparkCluster, comp Component, nodeAttrs dcv1alpha1.SparkClusterNode) corev1.VolumeMount {
+	return corev1.VolumeMount{
+		Name:      "spark-config",
+		MountPath: nodeAttrs.FrameworkConfig.Path,
+		SubPath:   string(comp),
+	}
+}
+
+func getConfigMapVolume(sc *dcv1alpha1.SparkCluster, comp Component) corev1.Volume {
+	return corev1.Volume{
+		Name: "spark-config",
+		VolumeSource: corev1.VolumeSource{
+			ConfigMap: &corev1.ConfigMapVolumeSource{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: InstanceObjectName(sc.Name, ComponentNone),
+				},
+			},
+		},
+	}
 }
 
 func getPodSpec(sc *dcv1alpha1.SparkCluster,
@@ -233,7 +245,7 @@ func componentEnvVars(sc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 				Value: strconv.Itoa(int(sc.Spec.DashboardPort)),
 			},
 			{
-				Name: "SPARK_WORKER_PORT",
+				Name:  "SPARK_WORKER_PORT",
 				Value: strconv.Itoa(int(sc.Spec.ClusterPort)),
 			},
 			{

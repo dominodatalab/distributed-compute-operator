@@ -126,21 +126,23 @@ rules:
   - delete
   - list
   - watch
+- apiGroups:
+    - ""
+  resources:
+    - configmaps
+  verbs:
+    - get
+    - create
+    - update
+    - watch
+    - list
+- apiGroups:
+    - ""
+  resources:
+    - events
+  verbs:
+    - create
 {{- if .Values.config.enableLeaderElection }}
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  verbs:
-  - get
-  - create
-  - update
-- apiGroups:
-  - ""
-  resources:
-  - events
-  verbs:
-  - create
 - apiGroups:
   - coordination.k8s.io
   resources:

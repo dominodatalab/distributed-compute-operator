@@ -64,6 +64,7 @@ func (r *SparkClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&rbacv1.RoleBinding{}).
 		Owns(&networkingv1.NetworkPolicy{}).
 		Owns(&autoscalingv2beta2.HorizontalPodAutoscaler{}).
+		Owns(&corev1.ConfigMap{}).
 		Complete(r)
 }
 
@@ -75,6 +76,7 @@ const SparkFinalizerName = "distributed-compute.dominodatalab.com/dco-finalizer"
 //+kubebuilder:rbac:groups="",resources=pods,verbs=list;watch
 //+kubebuilder:rbac:groups="",resources=services;serviceaccounts,verbs=create;update;list;watch
 //+kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=create;update;list;watch
+//+kubebuilder:rbac:groups=apps,resources=configmaps,verbs=create;update;list;watch
 //+kubebuilder:rbac:groups=autoscaling,resources=horizontalpodautoscalers,verbs=create;update;delete;list;watch
 //+kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=create;update;delete;list;watch
 //+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles;rolebindings,verbs=create;update;delete;list;watch
@@ -220,8 +222,24 @@ func (r *SparkClusterReconciler) reconcileResources(ctx context.Context, sc *dcv
 	if err := r.reconcileAutoscaler(ctx, sc); err != nil {
 		return err
 	}
+	if err := r.reconcileConfigMap(ctx, sc); err != nil {
+		return err
+	}
 
 	return r.reconcileStatefulSets(ctx, sc)
+}
+
+func (r *SparkClusterReconciler) reconcileConfigMap(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+	if sc.Spec.Master.FrameworkConfig == nil && sc.Spec.Worker.FrameworkConfig == nil {
+		return nil
+	}
+
+	cm := spark.NewConfigMap(sc)
+	if err := r.createOrUpdateOwnedResource(ctx, sc, cm); err != nil {
+		return fmt.Errorf("failed to reconcile configmap: %w", err)
+	}
+
+	return nil
 }
 
 // reconcileServiceAccount creates a new dedicated service account for a Spark

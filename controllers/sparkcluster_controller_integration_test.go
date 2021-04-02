@@ -45,6 +45,7 @@ var _ = Describe("SparkCluster Controller", func() {
 				{"horizontal pod autoscaler", name + "-spark", &autoscalingv2beta2.HorizontalPodAutoscaler{}},
 				{"head statefulset", name + "-spark-master", &appsv1.StatefulSet{}},
 				{"worker statefulset", name + "-spark-worker", &appsv1.StatefulSet{}},
+				{"configmap", name + "-spark", &corev1.ConfigMap{}},
 			}
 			for _, tc := range testcases {
 				By(fmt.Sprintf("Creating a new %s", tc.desc))
@@ -179,7 +180,25 @@ func createAndBasicTest(ctx context.Context, name string) {
 			NetworkPolicy: dcv1alpha1.SparkClusterNetworkPolicy{
 				Enabled: pointer.BoolPtr(true),
 			},
+			Master: dcv1alpha1.SparkClusterHead{
+				SparkClusterNode: dcv1alpha1.SparkClusterNode{
+					FrameworkConfig: &dcv1alpha1.FrameworkConfig{
+						Path: "/opt/bitnami/spark/conf/spark-defaults.conf",
+						Configs: map[string]string{
+							"m1": "v1",
+						},
+					},
+				},
+			},
 			Worker: dcv1alpha1.SparkClusterWorker{
+				SparkClusterNode: dcv1alpha1.SparkClusterNode{
+					FrameworkConfig: &dcv1alpha1.FrameworkConfig{
+						Path: "/opt/bitnami/spark/conf/spark-defaults.conf",
+						Configs: map[string]string{
+							"w1": "v1",
+						},
+					},
+				},
 				Replicas: pointer.Int32Ptr(1),
 			},
 			ClusterPort:       7077,

@@ -34,6 +34,11 @@ var (
 		Repository: "bitnami/spark",
 		Tag:        "3.0.2-debian-10-r0",
 	}
+
+	defaultExtraConfigurationPath   = "/opt/bitnami/spark/conf/spark-defaults.conf"
+	defaultExtraConfigurationValues = map[string]string{
+		"spark.executor.instances": "1",
+	}
 )
 
 // logger is for webhook logging.
@@ -89,19 +94,23 @@ func (r *SparkCluster) Default() {
 		r.Spec.Image = sparkDefaultImage
 	}
 
-	annotations := make(map[string]string)
-	if r.Spec.Worker.Annotations == nil {
-		r.Spec.Worker.Annotations = annotations
-	}
-	if r.Spec.Master.Annotations == nil {
-		r.Spec.Master.Annotations = annotations
-	}
-
-	for _, node := range []SparkClusterNode{r.Spec.Master.SparkClusterNode, r.Spec.Worker.SparkClusterNode} {
+	nodes := []*SparkClusterNode{&r.Spec.Master.SparkClusterNode, &r.Spec.Worker.SparkClusterNode}
+	for i := range nodes {
+		node := nodes[i]
 		if node.Annotations == nil {
-			node.Annotations = annotations
+			node.Annotations = make(map[string]string)
 		}
 		node.Annotations["sidecar.istio.io/inject"] = "false"
+
+		if node.FrameworkConfig == nil {
+			node.FrameworkConfig = &FrameworkConfig{}
+		}
+		if node.FrameworkConfig.Path == "" {
+			node.FrameworkConfig.Path = defaultExtraConfigurationPath
+		}
+		if len(node.FrameworkConfig.Configs) == 0 {
+			node.FrameworkConfig.Configs = defaultExtraConfigurationValues
+		}
 	}
 }
 

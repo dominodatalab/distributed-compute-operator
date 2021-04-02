@@ -853,6 +853,22 @@ spec:
                       type: string
                     description: Annotations applied to spark pods.
                     type: object
+                  frameworkConfig:
+                    description: Extra framework-specific configuration for this cluster
+                      For spark this means we'll generate a spark-defaults.conf config
+                      map and mount it in to the requested location
+                    properties:
+                      configs:
+                        additionalProperties:
+                          type: string
+                        type: object
+                      path:
+                        description: Path at which to mount the configmap
+                        type: string
+                    required:
+                    - configs
+                    - path
+                    type: object
                   initContainers:
                     description: InitContainers added to spark pods.
                     items:
@@ -4430,6 +4446,22 @@ spec:
                     additionalProperties:
                       type: string
                     description: Annotations applied to spark pods.
+                    type: object
+                  frameworkConfig:
+                    description: Extra framework-specific configuration for this cluster
+                      For spark this means we'll generate a spark-defaults.conf config
+                      map and mount it in to the requested location
+                    properties:
+                      configs:
+                        additionalProperties:
+                          type: string
+                        type: object
+                      path:
+                        description: Path at which to mount the configmap
+                        type: string
+                    required:
+                    - configs
+                    - path
                     type: object
                   initContainers:
                     description: InitContainers added to spark pods.
