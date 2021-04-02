@@ -34,11 +34,6 @@ var (
 		Repository: "bitnami/spark",
 		Tag:        "3.0.2-debian-10-r0",
 	}
-
-	defaultExtraConfigurationPath   = "/opt/bitnami/spark/conf/spark-defaults.conf"
-	defaultExtraConfigurationValues = map[string]string{
-		"spark.executor.instances": "1",
-	}
 )
 
 // logger is for webhook logging.
@@ -101,16 +96,6 @@ func (r *SparkCluster) Default() {
 			node.Annotations = make(map[string]string)
 		}
 		node.Annotations["sidecar.istio.io/inject"] = "false"
-
-		if node.FrameworkConfig == nil {
-			node.FrameworkConfig = &FrameworkConfig{}
-		}
-		if node.FrameworkConfig.Path == "" {
-			node.FrameworkConfig.Path = defaultExtraConfigurationPath
-		}
-		if len(node.FrameworkConfig.Configs) == 0 {
-			node.FrameworkConfig.Configs = defaultExtraConfigurationValues
-		}
 	}
 }
 
@@ -138,6 +123,7 @@ func (r *SparkCluster) ValidateDelete() error {
 	return nil
 }
 
+// nolint:dupl
 func (r *SparkCluster) validateSparkCluster() error {
 	var allErrs field.ErrorList
 
@@ -156,6 +142,9 @@ func (r *SparkCluster) validateSparkCluster() error {
 	if errs := r.validateImage(); errs != nil {
 		allErrs = append(allErrs, errs...)
 	}
+	if errs := r.validateExtraConfigs(); errs != nil {
+		allErrs = append(allErrs, errs...)
+	}
 
 	if len(allErrs) == 0 {
 		return nil
@@ -168,6 +157,42 @@ func (r *SparkCluster) validateSparkCluster() error {
 	)
 }
 
+func (r *SparkCluster) validateExtraConfigs() field.ErrorList {
+	var errs field.ErrorList
+
+	if err := r.validateExtraConfig(r.Spec.Master.FrameworkConfig, "master"); err != nil {
+		errs = append(errs, err...)
+	}
+
+	if err := r.validateExtraConfig(r.Spec.Worker.FrameworkConfig, "worker"); err != nil {
+		errs = append(errs, err...)
+	}
+
+	return errs
+}
+
+func (r *SparkCluster) validateExtraConfig(config *FrameworkConfig, comp string) field.ErrorList {
+	var errs field.ErrorList
+	if config == nil {
+		return nil
+	}
+	if len(config.Configs) == 0 {
+		errs = append(errs, field.Invalid(
+			field.NewPath("spec").Child(comp).Child("frameworkConfig").Child("configs"),
+			config.Configs,
+			"should have at least one item",
+		))
+	}
+
+	if config.Path == "" {
+		errs = append(errs, field.Invalid(
+			field.NewPath("spec").Child(comp).Child("frameworkConfig").Child("path"),
+			config.Path,
+			"should be non-empty",
+		))
+	}
+	return errs
+}
 func (r *SparkCluster) validateWorkerReplicas() *field.Error {
 	replicas := r.Spec.Worker.Replicas
 	if replicas == nil || *replicas >= 0 {

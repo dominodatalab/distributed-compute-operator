@@ -81,18 +81,6 @@ var _ = Describe("SparkCluster", func() {
 				Equal(map[string]string{"sidecar.istio.io/inject": "false"}),
 				`worker annotations should equal {"sidecar.istio.io/inject": "false"}`,
 			)
-			Expect(rc.Spec.Master.FrameworkConfig).To(
-				PointTo(Equal(FrameworkConfig{
-					Path:    "/opt/bitnami/spark/conf/spark-defaults.conf",
-					Configs: map[string]string{"spark.executor.instances": "1"}})),
-				`master framework config should be set to default values`,
-			)
-			Expect(rc.Spec.Worker.FrameworkConfig).To(
-				PointTo(Equal(FrameworkConfig{
-					Path:    "/opt/bitnami/spark/conf/spark-defaults.conf",
-					Configs: map[string]string{"spark.executor.instances": "1"}})),
-				`worker framework config should be set to default values`,
-			)
 		})
 
 		It("does not set the cluster port when present", func() {
@@ -175,63 +163,6 @@ var _ = Describe("SparkCluster", func() {
 				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
 				Expect(rc.Spec.Master.Annotations).To(Equal(expected))
 				Expect(rc.Spec.Worker.Annotations).To(Equal(expected))
-			})
-		})
-
-		Context("FrameworkConfiguration", func() {
-			It("overrides default framework configuration", func() {
-				rc := sparkFixture(testNS.Name)
-				fc := &FrameworkConfig{
-					Path:    "/path/to/file",
-					Configs: map[string]string{"test": "value"},
-				}
-				rc.Spec.Master.FrameworkConfig = fc
-				rc.Spec.Worker.FrameworkConfig = fc
-				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
-				Expect(rc.Spec.Master.FrameworkConfig).To(Equal(fc))
-				Expect(rc.Spec.Worker.FrameworkConfig).To(Equal(fc))
-			})
-
-			It("overrides only path", func() {
-				rc := sparkFixture(testNS.Name)
-				fc := &FrameworkConfig{Path: "/path/to/file"}
-				rc.Spec.Master.FrameworkConfig = fc
-				rc.Spec.Worker.FrameworkConfig = fc
-
-				expected := &FrameworkConfig{
-					Path:    "/path/to/file",
-					Configs: map[string]string{"spark.executor.instances": "1"},
-				}
-				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
-				Expect(rc.Spec.Master.FrameworkConfig).To(Equal(expected))
-				Expect(rc.Spec.Worker.FrameworkConfig).To(Equal(expected))
-			})
-
-			It("overrides only configs", func() {
-				rc := sparkFixture(testNS.Name)
-				fc := &FrameworkConfig{Configs: map[string]string{"test": "value"}}
-				rc.Spec.Master.FrameworkConfig = fc
-				rc.Spec.Worker.FrameworkConfig = fc
-
-				expected := &FrameworkConfig{
-					Path:    "/opt/bitnami/spark/conf/spark-defaults.conf",
-					Configs: map[string]string{"test": "value"},
-				}
-				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
-				Expect(rc.Spec.Master.FrameworkConfig).To(Equal(expected))
-				Expect(rc.Spec.Worker.FrameworkConfig).To(Equal(expected))
-			})
-
-			It("overrides only one node", func() {
-				rc := sparkFixture(testNS.Name)
-				fc := &FrameworkConfig{
-					Path:    "/path/to/file",
-					Configs: map[string]string{"test": "value"},
-				}
-				rc.Spec.Master.FrameworkConfig = fc
-				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
-				Expect(rc.Spec.Master.FrameworkConfig).To(Equal(fc))
-				Expect(rc.Spec.Worker.FrameworkConfig).NotTo(Equal(fc))
 			})
 		})
 	})
@@ -353,6 +284,28 @@ var _ = Describe("SparkCluster", func() {
 			It("requires cpu resource requests for worker", func() {
 				rc := clusterWithAutoscaling()
 				rc.Spec.Worker.Resources.Requests = nil
+
+				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
+			})
+		})
+
+		Context("framework configs", func() {
+			It("rejects a config with only path set", func() {
+				rc := sparkFixture(testNS.Name)
+				rc.Spec.Worker.FrameworkConfig = &FrameworkConfig{
+					Path:    "test/path/",
+					Configs: nil,
+				}
+
+				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
+			})
+
+			It("rejects a config with only data set", func() {
+				rc := sparkFixture(testNS.Name)
+				rc.Spec.Worker.FrameworkConfig = &FrameworkConfig{
+					Path:    "",
+					Configs: map[string]string{"test": "config"},
+				}
 
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 			})
