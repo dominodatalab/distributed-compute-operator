@@ -20,6 +20,8 @@ import (
 	//+kubebuilder:scaffold:imports
 )
 
+const leaderElectionID = "a846cbf2.dominodatalab.com"
+
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
@@ -33,10 +35,10 @@ func Start(cfg *Config) error {
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		MetricsBindAddress:     cfg.MetricsAddr,
-		Port:                   9443,
+		Port:                   cfg.WebhookServerPort,
 		HealthProbeBindAddress: cfg.HealthProbeAddr,
 		LeaderElection:         cfg.EnableLeaderElection,
-		LeaderElectionID:       "a846cbf2.dominodatalab.com",
+		LeaderElectionID:       leaderElectionID,
 		Namespace:              cfg.Namespace,
 	})
 	if err != nil {

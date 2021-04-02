@@ -26,7 +26,7 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: {{ .Chart.Name }}
+        - name: manager
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: {{ include "dco.image" . }}
@@ -35,6 +35,7 @@ spec:
             - start
             - --namespace={{ .Release.Namespace }}
             {{- with .Values.config }}
+            - --webhook-server-port={{ .webhookPort }}
             - --metrics-bind-address=:{{ .metricsPort }}
             - --health-probe-bind-address=:{{ .healthProbePort }}
             {{- if .enableLeaderElection }}
@@ -55,7 +56,7 @@ spec:
             {{- end }}
           ports:
             - name: webhooks
-              containerPort: 9443
+              containerPort: {{ .Values.config.webhookPort }}
               protocol: TCP
             - name: metrics
               containerPort: {{ .Values.config.metricsPort }}

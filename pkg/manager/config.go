@@ -7,6 +7,7 @@ type Config struct {
 	Namespace            string
 	MetricsAddr          string
 	HealthProbeAddr      string
+	WebhookServerPort    int
 	EnableLeaderElection bool
 	ZapOptions           zap.Options
 }
