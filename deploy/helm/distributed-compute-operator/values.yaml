@@ -11,6 +11,8 @@ installCRDs: true
 
 # Controller manager configuration
 config:
+  # Webhook server port
+  webhookPort: 9443
   # Prometheus metrics port
   metricsPort: 8080
   # Health probe port
@@ -36,11 +38,11 @@ istio:
 
 podSecurityPolicy:
   # Create custom PSP for operator
-  enabled: false
+  enabled: true
 
 networkPolicy:
   # Restrict network ingress to operator pods
-  enabled: false
+  enabled: true
 
 image:
   registry: ghcr.io

@@ -13,6 +13,7 @@ var (
 	namespace            string
 	probeAddr            string
 	metricsAddr          string
+	webhookPort          int
 	enableLeaderElection bool
 
 	zapOpts = zap.Options{}
@@ -26,6 +27,7 @@ var startCmd = &cobra.Command{
 			Namespace:            namespace,
 			MetricsAddr:          metricsAddr,
 			HealthProbeAddr:      probeAddr,
+			WebhookServerPort:    webhookPort,
 			EnableLeaderElection: enableLeaderElection,
 			ZapOptions:           zapOpts,
 		}
@@ -39,9 +41,10 @@ func init() {
 
 	fs := new(flag.FlagSet)
 	zapOpts.BindFlags(fs)
-	startCmd.Flags().AddGoFlagSet(fs)
 
+	startCmd.Flags().AddGoFlagSet(fs)
 	startCmd.Flags().StringVar(&namespace, "namespace", "default", "Reconcile clusters resources in this namespace")
+	startCmd.Flags().IntVar(&webhookPort, "webhook-server-port", 9443, "Webhook server will bind to this port")
 	startCmd.Flags().StringVar(&metricsAddr, "metrics-bind-address", ":8080",
 		"Metrics endpoint will bind to this address")
 	startCmd.Flags().StringVar(&probeAddr, "health-probe-bind-address", ":8081",
