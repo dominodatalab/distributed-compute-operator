@@ -54,11 +54,11 @@ func NewHeadlessService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      HeadlessServiceName(sc.Name),
 			Namespace: sc.Namespace,
-			Labels:    MetadataLabelsWithComponent(sc, ComponentMaster),
+			Labels:    MetadataLabelsWithComponent(sc, ComponentWorker),
 		},
 		Spec: corev1.ServiceSpec{
 			ClusterIP: corev1.ClusterIPNone,
-			Selector:  SelectorLabels(sc),
+			Selector:  SelectorLabelsWithComponent(sc, ComponentWorker),
 			// Ports: []corev1.ServicePort{
 			//	{
 			//		Name: "cluster",
