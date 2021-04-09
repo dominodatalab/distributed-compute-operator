@@ -1,6 +1,7 @@
 package test
 
 import (
+	"os"
 	"path/filepath"
 	"runtime"
 )
@@ -12,4 +13,35 @@ const MissingAssetsWarning = "Ensure required testing binaries are present by ru
 func KubebuilderBinaryAssetsDir() string {
 	_, b, _, _ := runtime.Caller(0)
 	return filepath.Join(filepath.Dir(b), "..", "testbin", "bin")
+}
+
+// HackBetaCRDs removes v1beta1 CRDs from the provided directory and returns a reset func.
+func HackBetaCRDs(path string) (func() error, error) {
+	betaFiles, err := filepath.Glob(filepath.Join(path, "*.v1beta1.yaml"))
+	if err != nil {
+		return nil, err
+	}
+
+	dir, err := os.MkdirTemp("", "beta-crds")
+	if err != nil {
+		return nil, err
+	}
+
+	for _, file := range betaFiles {
+		if err = os.Rename(file, filepath.Join(dir, filepath.Base(file))); err != nil {
+			return nil, err
+		}
+	}
+
+	fn := func() error {
+		for _, file := range betaFiles {
+			if err := os.Rename(filepath.Join(dir, filepath.Base(file)), file); err != nil {
+				return err
+			}
+		}
+
+		return os.RemoveAll(dir)
+	}
+
+	return fn, nil
 }
