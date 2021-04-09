@@ -50,17 +50,21 @@ var _ = BeforeSuite(func() {
 
 	ctx, cancel = context.WithCancel(context.TODO())
 
+	crdPath := filepath.Join("..", "..", "config", "crd", "bases")
+	reset, err := test.HackBetaCRDs(crdPath)
+	Expect(err).NotTo(HaveOccurred())
+	defer func() { _ = reset() }()
+
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
 		BinaryAssetsDirectory: test.KubebuilderBinaryAssetsDir(),
-		CRDDirectoryPaths:     []string{filepath.Join("..", "..", "config", "crd", "bases")},
+		CRDDirectoryPaths:     []string{crdPath},
 		ErrorIfCRDPathMissing: false,
 		WebhookInstallOptions: envtest.WebhookInstallOptions{
 			Paths: []string{filepath.Join("..", "..", "config", "webhook")},
 		},
 	}
 
-	var err error
 	cfg, err = testEnv.Start()
 	Expect(err).NotTo(HaveOccurred(), test.MissingAssetsWarning)
 	Expect(cfg).NotTo(BeNil())

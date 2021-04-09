@@ -40,14 +40,18 @@ func TestAPIs(t *testing.T) {
 var _ = BeforeSuite(func(done Done) {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
+	crdPath := filepath.Join("..", "config", "crd", "bases")
+	reset, err := test.HackBetaCRDs(crdPath)
+	Expect(err).NotTo(HaveOccurred())
+	defer func() { _ = reset() }()
+
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
 		BinaryAssetsDirectory: test.KubebuilderBinaryAssetsDir(),
-		CRDDirectoryPaths:     []string{filepath.Join("..", "config", "crd", "bases")},
+		CRDDirectoryPaths:     []string{crdPath},
 		ErrorIfCRDPathMissing: true,
 	}
 
-	var err error
 	cfg, err = testEnv.Start()
 	Expect(err).NotTo(HaveOccurred(), test.MissingAssetsWarning)
 	Expect(cfg).NotTo(BeNil())
