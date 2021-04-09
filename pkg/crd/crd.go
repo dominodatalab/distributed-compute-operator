@@ -19,8 +19,9 @@ import (
 type crdProcessor func(context.Context, apixv1client.CustomResourceDefinitionInterface, *apixv1.CustomResourceDefinition) error
 
 var (
-	log         = zap.New()
-	crdClientFn = getCRDClient
+	log           = zap.New()
+	crdClientFn   = getCRDClient
+	crdAPICheckFn = isV1CRDAPIAvailable
 
 	// nolint:dupl
 	applyFn = func(ctx context.Context, client apixv1client.CustomResourceDefinitionInterface, crd *apixv1.CustomResourceDefinition) error {
@@ -80,7 +81,7 @@ func operate(ctx context.Context, istio bool, p crdProcessor, bp v1Beta1CRDProce
 	}
 
 	log.Info("Checking CRD API version")
-	useV1, err := isV1CRDAPIAvailable()
+	useV1, err := crdAPICheckFn()
 	if err != nil {
 		return err
 	}

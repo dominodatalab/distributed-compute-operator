@@ -139,4 +139,7 @@ func overrideCRDClient(clientset *fake.Clientset) (reset func()) {
 
 func init() {
 	log = zap.New(zap.WriteTo(io.Discard))
+	crdAPICheckFn = func() (useV1 bool, err error) {
+		return true, nil
+	}
 }
