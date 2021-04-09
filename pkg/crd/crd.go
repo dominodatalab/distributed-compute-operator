@@ -16,31 +16,22 @@ import (
 	"github.com/dominodatalab/distributed-compute-operator/config/crd"
 )
 
+type crdProcessor func(context.Context, apixv1client.CustomResourceDefinitionInterface, *apixv1.CustomResourceDefinition) error
+
 var (
 	log         = zap.New()
 	crdClientFn = getCRDClient
-)
 
-// Apply will create or update all project CRDs inside a Kubernetes cluster.
-// The latest available version of the CRD will be used to perform this operation.
-func Apply(ctx context.Context, istioEnabled bool) error {
-	if istioEnabled {
-		quit, err := waitForIstioSidecar()
-		if err != nil {
-			return err
-		}
-
-		defer quit()
-	}
-
-	apply := func(client apixv1client.CustomResourceDefinitionInterface, crd *apixv1.CustomResourceDefinition) error {
+	// nolint:dupl
+	applyFn = func(ctx context.Context, client apixv1client.CustomResourceDefinitionInterface, crd *apixv1.CustomResourceDefinition) error {
+		log.Info("Fetching CRD", "Name", crd.Name)
 		found, err := client.Get(ctx, crd.Name, metav1.GetOptions{})
 
 		if apierrors.IsNotFound(err) {
-			log.Info("Creating CRD", "Name", crd.Name)
+			log.Info("CRD not found, creating", "Name", crd.Name)
 			_, err = client.Create(ctx, crd, metav1.CreateOptions{})
 		} else if err == nil {
-			log.Info("Updating CRD", "Name", crd.Name)
+			log.Info("CRD found, updating", "Name", crd.Name)
 			crd.SetResourceVersion(found.ResourceVersion)
 			_, err = client.Update(ctx, crd, metav1.UpdateOptions{})
 		}
@@ -48,21 +39,7 @@ func Apply(ctx context.Context, istioEnabled bool) error {
 		return err
 	}
 
-	return processCRDs(apply)
-}
-
-// Delete will remove all project CRDs from a Kubernetes cluster.
-func Delete(ctx context.Context, istioEnabled bool) error {
-	if istioEnabled {
-		quit, err := waitForIstioSidecar()
-		if err != nil {
-			return err
-		}
-
-		defer quit()
-	}
-
-	deleteFn := func(client apixv1client.CustomResourceDefinitionInterface, crd *apixv1.CustomResourceDefinition) error {
+	deleteFn = func(ctx context.Context, client apixv1client.CustomResourceDefinitionInterface, crd *apixv1.CustomResourceDefinition) error {
 		log.Info("Deleting CRD", "Name", crd.Name)
 		err := client.Delete(ctx, crd.Name, metav1.DeleteOptions{})
 
@@ -73,30 +50,70 @@ func Delete(ctx context.Context, istioEnabled bool) error {
 
 		return err
 	}
+)
 
-	return processCRDs(deleteFn)
+// Apply will create or update all project CRDs inside a Kubernetes cluster.
+// The latest available version of the CRD will be used to perform this operation.
+func Apply(ctx context.Context, istioEnabled bool) error {
+	return operate(ctx, istioEnabled, applyFn, applyV1Beta1Fn)
 }
 
-// processCRDs loads all available CRDs and uses a processor func to act upon them.
-func processCRDs(processor func(client apixv1client.CustomResourceDefinitionInterface, crd *apixv1.CustomResourceDefinition) error) error {
+// Delete will remove all project CRDs from a Kubernetes cluster.
+func Delete(ctx context.Context, istioEnabled bool) error {
+	return operate(ctx, istioEnabled, deleteFn, deleteV1Beta1Fn)
+}
+
+func operate(ctx context.Context, istio bool, p crdProcessor, bp v1Beta1CRDProcessor) error {
+	if istio {
+		quit, err := waitForIstioSidecar()
+		if err != nil {
+			return err
+		}
+
+		defer quit()
+	}
+
+	log.Info("Loading all CRDs")
+	allDefs, err := crd.ReadAll()
+	if err != nil {
+		return err
+	}
+
+	log.Info("Checking CRD API version")
+	useV1, err := isV1CRDAPIAvailable()
+	if err != nil {
+		return err
+	}
+	log.Info("CRD V1 API", "available", useV1)
+
+	var defs []crd.Definition
+	for _, def := range allDefs {
+		if useV1 != def.BetaVersion {
+			defs = append(defs, def)
+		}
+	}
+
+	if useV1 {
+		return processCRDs(ctx, p, defs)
+	}
+
+	return processV1Beta1CRDs(ctx, bp, defs)
+}
+
+// processCRDs uses a processor func to act upon a list of CRDs.
+func processCRDs(ctx context.Context, processor crdProcessor, defs []crd.Definition) error {
 	client, err := crdClientFn()
 	if err != nil {
 		return err
 	}
 
-	log.Info("Loading CRDs")
-	definitions, err := crd.ReadAll()
-	if err != nil {
-		return err
-	}
-
-	for _, def := range definitions {
-		customResourceDefinition, err := loadCRD(def)
+	for _, def := range defs {
+		customResourceDefinition, err := loadCRD(def.Contents)
 		if err != nil {
 			return err
 		}
 
-		if err := processor(client, customResourceDefinition); err != nil {
+		if err := processor(ctx, client, customResourceDefinition); err != nil {
 			return err
 		}
 	}
@@ -121,7 +138,7 @@ func loadCRD(bs []byte) (*apixv1.CustomResourceDefinition, error) {
 
 // getCRDClient returns a client configured to work with custom resource definitions.
 func getCRDClient() (apixv1client.CustomResourceDefinitionInterface, error) {
-	log.Info("Initializing Kubernetes CRD client")
+	log.Info("Initializing Kubernetes V1 CRD client")
 
 	config, err := loadKubernetesConfig()
 	if err != nil {

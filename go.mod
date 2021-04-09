@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/banzaicloud/k8s-objectmatcher v1.5.1
+	github.com/blang/semver v3.5.1+incompatible
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/go-logr/logr v0.3.0
 	github.com/hashicorp/go-retryablehttp v0.6.8

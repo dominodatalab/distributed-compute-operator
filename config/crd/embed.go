@@ -3,6 +3,7 @@ package crd
 import (
 	"embed"
 	"path/filepath"
+	"strings"
 )
 
 // NOTE: If we start using conversion webhooks in the future and need to
@@ -13,10 +14,20 @@ import (
 //go:embed bases/*.yaml
 var bases embed.FS
 
-const contentDir = "bases"
+const (
+	contentDir        = "bases"
+	v1beta1FileSuffix = ".v1beta1.yaml"
+)
 
-// ReadAll returns a slice containing the contents of all base custom resource definitions.
-func ReadAll() (definitions [][]byte, err error) {
+// Definition represents the metadata and contents of a single custom resource definition.
+type Definition struct {
+	Filename    string
+	Contents    []byte
+	BetaVersion bool
+}
+
+// ReadAll returns a slice of Definition objects for all of the embedded custom resource definitions.
+func ReadAll() (definitions []Definition, err error) {
 	files, err := bases.ReadDir(contentDir)
 	if err != nil {
 		return
@@ -27,13 +38,18 @@ func ReadAll() (definitions [][]byte, err error) {
 			continue
 		}
 
-		var content []byte
-		content, err = bases.ReadFile(filepath.Join(contentDir, f.Name()))
+		var contents []byte
+		contents, err = bases.ReadFile(filepath.Join(contentDir, f.Name()))
 		if err != nil {
 			return
 		}
+		betaVersion := strings.HasSuffix(f.Name(), v1beta1FileSuffix)
 
-		definitions = append(definitions, content)
+		definitions = append(definitions, Definition{
+			Filename:    f.Name(),
+			Contents:    contents,
+			BetaVersion: betaVersion,
+		})
 	}
 
 	return definitions, nil
