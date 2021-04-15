@@ -16,11 +16,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Inspect env
-      run: |
-        env
-        exit 1
-
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
@@ -65,7 +60,7 @@ jobs:
       with:
         registry: ghcr.io
         username: ${{ github.repository_owner }}
-        password: ${{ secrets.CR_PAT }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Prepare Docker image
       id: docker_prep
@@ -141,7 +136,7 @@ jobs:
           IMAGE="$(echo ${{ github.repository }} | awk -F / '{ print $(NF-1)  "/helm/" $NF }')"
           REF="$REGISTRY/$IMAGE:${{ needs.build.outputs.version }}"
 
-          ./scripts/release/helm.sh login -h "$REGISTRY" -u "${{ github.repository_owner }}" -p "${{ secrets.CR_PAT }}"
+          ./scripts/release/helm.sh login -h "$REGISTRY" -u "${{ github.repository_owner }}" -p "${{ secrets.GITHUB_TOKEN }}"
           ./scripts/release/helm.sh push -r "$REF"
 
       - name: Package and push chart to gcr.io
