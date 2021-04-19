@@ -60,7 +60,7 @@ jobs:
       with:
         registry: ghcr.io
         username: ${{ github.repository_owner }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ secrets.BOT_CR_PAT }}
 
     - name: Prepare Docker image
       id: docker_prep
