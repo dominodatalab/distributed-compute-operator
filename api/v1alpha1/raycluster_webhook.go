@@ -83,6 +83,7 @@ func (r *RayCluster) Default() {
 	}
 	if r.Spec.WorkerPorts == nil {
 		log.Info("setting default worker ports", "value", rayDefaultWorkerPorts)
+		r.Spec.WorkerPorts = rayDefaultWorkerPorts
 	}
 	if r.Spec.NodeManagerPort == 0 {
 		log.Info("setting default node manager port", "value", rayDefaultNodeManagerPort)
@@ -239,6 +240,13 @@ func (r *RayCluster) validatePorts() field.ErrorList {
 
 	for idx, port := range r.Spec.RedisShardPorts {
 		name := fmt.Sprintf("redisShardPorts[%d]", idx)
+		if err := r.validatePort(port, field.NewPath("spec").Child(name)); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	for idx, port := range r.Spec.WorkerPorts {
+		name := fmt.Sprintf("workerPorts[%d]", idx)
 		if err := r.validatePort(port, field.NewPath("spec").Child(name)); err != nil {
 			errs = append(errs, err)
 		}
