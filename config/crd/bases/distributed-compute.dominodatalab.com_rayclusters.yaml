@@ -199,6 +199,10 @@ spec:
                   - name
                   type: object
                 type: array
+              gcsServerPort:
+                description: GCSServerPort is the port for the global control store.
+                format: int32
+                type: integer
               head:
                 description: Head node configuration parameters.
                 properties:
@@ -7410,6 +7414,13 @@ spec:
                       type: object
                     type: array
                 type: object
+              workerPorts:
+                description: WorkerPorts specifies the range of ports used by worker
+                  processes.
+                items:
+                  format: int32
+                  type: integer
+                type: array
             type: object
           status:
             description: RayClusterStatus defines the observed state of a RayCluster

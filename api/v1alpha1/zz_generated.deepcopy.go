@@ -280,6 +280,11 @@ func (in *RayClusterSpec) DeepCopyInto(out *RayClusterSpec) {
 		*out = make([]int32, len(*in))
 		copy(*out, *in)
 	}
+	if in.WorkerPorts != nil {
+		in, out := &in.WorkerPorts, &out.WorkerPorts
+		*out = make([]int32, len(*in))
+		copy(*out, *in)
+	}
 	if in.ObjectStoreMemoryBytes != nil {
 		in, out := &in.ObjectStoreMemoryBytes, &out.ObjectStoreMemoryBytes
 		*out = new(int64)

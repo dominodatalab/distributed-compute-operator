@@ -25,7 +25,9 @@ var (
 	rayDefaultClientServerPort    int32 = 10001
 	rayDefaultObjectManagerPort   int32 = 2384
 	rayDefaultNodeManagerPort     int32 = 2385
+	rayDefaultGCSServerPort       int32 = 2386
 	rayDefaultDashboardPort       int32 = 8265
+	rayDefaultWorkerPorts               = []int32{11_000, 11_001, 11_002, 11_003, 11_004}
 	rayDefaultRedisShardPorts           = []int32{6380, 6381}
 	rayDefaultEnableDashboard           = pointer.BoolPtr(true)
 	rayDefaultEnableNetworkPolicy       = pointer.BoolPtr(true)
@@ -36,7 +38,7 @@ var (
 
 	rayDefaultImage = &OCIImageDefinition{
 		Repository: "rayproject/ray",
-		Tag:        "1.2.0-cpu",
+		Tag:        "1.3.0-cpu",
 	}
 )
 
@@ -75,6 +77,13 @@ func (r *RayCluster) Default() {
 		log.Info("setting default object manager port", "value", rayDefaultObjectManagerPort)
 		r.Spec.ObjectManagerPort = rayDefaultObjectManagerPort
 	}
+	if r.Spec.GCSServerPort == 0 {
+		log.Info("setting default gcs server port", "value", rayDefaultGCSServerPort)
+		r.Spec.GCSServerPort = rayDefaultGCSServerPort
+	}
+	if r.Spec.WorkerPorts == nil {
+		log.Info("setting default worker ports", "value", rayDefaultWorkerPorts)
+	}
 	if r.Spec.NodeManagerPort == 0 {
 		log.Info("setting default node manager port", "value", rayDefaultNodeManagerPort)
 		r.Spec.NodeManagerPort = rayDefaultNodeManagerPort
@@ -103,7 +112,6 @@ func (r *RayCluster) Default() {
 		log.Info("setting default worker replicas", "value", *rayDefaultWorkerReplicas)
 		r.Spec.Worker.Replicas = rayDefaultWorkerReplicas
 	}
-
 	if r.Spec.Image == nil {
 		log.Info("setting default image", "value", *rayDefaultImage)
 		r.Spec.Image = rayDefaultImage
@@ -243,6 +251,9 @@ func (r *RayCluster) validatePorts() field.ErrorList {
 		errs = append(errs, err)
 	}
 	if err := r.validatePort(r.Spec.NodeManagerPort, field.NewPath("spec").Child("nodeManagerPort")); err != nil {
+		errs = append(errs, err)
+	}
+	if err := r.validatePort(r.Spec.GCSServerPort, field.NewPath("spec").Child("gcsServerPort")); err != nil {
 		errs = append(errs, err)
 	}
 	if err := r.validatePort(r.Spec.DashboardPort, field.NewPath("spec").Child("dashboardPort")); err != nil {
