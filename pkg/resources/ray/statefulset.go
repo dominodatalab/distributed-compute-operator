@@ -75,6 +75,7 @@ func NewStatefulSet(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Stateful
 	args := p.processArgs()
 	ports := p.processPorts()
 	labels := p.processLabels()
+	serviceName := p.processServiceName()
 	envVars := append(defaultEnv, rc.Spec.EnvVars...)
 	volumes := append(defaultVolumes, nodeAttrs.Volumes...)
 	volumeMounts := append(defaultVolumeMounts, nodeAttrs.VolumeMounts...)
@@ -87,7 +88,8 @@ func NewStatefulSet(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Stateful
 			Labels:    labels,
 		},
 		Spec: appsv1.StatefulSetSpec{
-			Replicas: pointer.Int32Ptr(replicas),
+			ServiceName: serviceName,
+			Replicas:    pointer.Int32Ptr(replicas),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: SelectorLabelsWithComponent(rc, comp),
 			},
@@ -96,6 +98,7 @@ func NewStatefulSet(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Stateful
 					Labels:      labels,
 					Annotations: nodeAttrs.Annotations,
 				},
+
 				Spec: corev1.PodSpec{
 					ServiceAccountName: serviceAccountName,
 					NodeSelector:       nodeAttrs.NodeSelector,
@@ -151,6 +154,7 @@ type configProcessor interface {
 	processArgs() []string
 	processPorts() []corev1.ContainerPort
 	processLabels() map[string]string
+	processServiceName() string
 }
 
 func newConfigProcessor(rc *dcv1alpha1.RayCluster, comp Component) (configProcessor, error) {
@@ -183,6 +187,7 @@ func (p *headProcessor) processArgs() []string {
 		fmt.Sprintf("--ray-client-server-port=%d", rc.Spec.ClientServerPort),
 		fmt.Sprintf("--port=%d", rc.Spec.Port),
 		fmt.Sprintf("--redis-shard-ports=%s", strings.Join(util.IntsToStrings(rc.Spec.RedisShardPorts), ",")),
+		fmt.Sprintf("--gcs-server-port=%d", rc.Spec.GCSServerPort),
 	}
 
 	if util.BoolPtrIsTrue(rc.Spec.EnableDashboard) {
@@ -200,24 +205,57 @@ func (p *headProcessor) processArgs() []string {
 func (p *headProcessor) processPorts() []corev1.ContainerPort {
 	rc := p.rc
 
-	redisPorts := []corev1.ContainerPort{
+	ports := []corev1.ContainerPort{
+		{
+			Name:          "client",
+			ContainerPort: rc.Spec.ClientServerPort,
+		},
+		{
+			Name:          "object-manager",
+			ContainerPort: rc.Spec.ObjectManagerPort,
+		},
+		{
+			Name:          "node-manager",
+			ContainerPort: rc.Spec.NodeManagerPort,
+		},
+		{
+			Name:          "gcs-server",
+			ContainerPort: rc.Spec.GCSServerPort,
+		},
 		{
 			Name:          "redis-primary",
 			ContainerPort: rc.Spec.Port,
 		},
 	}
 	for idx, port := range rc.Spec.RedisShardPorts {
-		redisPorts = append(redisPorts, corev1.ContainerPort{
+		ports = append(ports, corev1.ContainerPort{
 			Name:          fmt.Sprintf("redis-shard-%d", idx),
 			ContainerPort: port,
 		})
 	}
+	for idx, port := range rc.Spec.WorkerPorts {
+		ports = append(ports, corev1.ContainerPort{
+			Name:          fmt.Sprintf("worker-%d", idx),
+			ContainerPort: port,
+		})
+	}
 
-	return append(processPorts(rc), redisPorts...)
+	if util.BoolPtrIsTrue(rc.Spec.EnableDashboard) {
+		ports = append(ports, corev1.ContainerPort{
+			Name:          "dashboard",
+			ContainerPort: rc.Spec.DashboardPort,
+		})
+	}
+
+	return ports
 }
 
 func (p *headProcessor) processLabels() map[string]string {
 	return processLabels(p.rc, ComponentHead, p.rc.Spec.Head.RayClusterNode.Labels)
+}
+
+func (p *headProcessor) processServiceName() string {
+	return HeadlessHeadServiceName(p.rc.Name)
 }
 
 type workerProcessor struct {
@@ -234,15 +272,41 @@ func (p *workerProcessor) nodeAttributes() *dcv1alpha1.RayClusterNode {
 
 func (p *workerProcessor) processArgs() []string {
 	rc := p.rc
-	return append(processArgs(rc), fmt.Sprintf("--address=%s:%d", HeadServiceName(rc.Name), rc.Spec.Port))
+	headNodeAddr := fmt.Sprintf("%s-0", InstanceObjectName(rc.Name, ComponentHead))
+
+	return append(
+		processArgs(rc),
+		fmt.Sprintf("--address=%s.%s:%d", headNodeAddr, HeadlessHeadServiceName(rc.Name), rc.Spec.Port),
+	)
 }
 
 func (p *workerProcessor) processPorts() []corev1.ContainerPort {
-	return processPorts(p.rc)
+	ports := []corev1.ContainerPort{
+		{
+			Name:          "object-manager",
+			ContainerPort: p.rc.Spec.ObjectManagerPort,
+		},
+		{
+			Name:          "node-manager",
+			ContainerPort: p.rc.Spec.NodeManagerPort,
+		},
+	}
+	for idx, port := range p.rc.Spec.WorkerPorts {
+		ports = append(ports, corev1.ContainerPort{
+			Name:          fmt.Sprintf("worker-%d", idx),
+			ContainerPort: port,
+		})
+	}
+
+	return ports
 }
 
 func (p *workerProcessor) processLabels() map[string]string {
 	return processLabels(p.rc, ComponentWorker, p.rc.Spec.Worker.RayClusterNode.Labels)
+}
+
+func (p *workerProcessor) processServiceName() string {
+	return HeadlessWorkerServiceName(p.rc.Name)
 }
 
 // common head/worker command arguments
@@ -254,6 +318,7 @@ func processArgs(rc *dcv1alpha1.RayCluster) []string {
 		"--num-cpus=$(MY_CPU_REQUEST)",
 		fmt.Sprintf("--object-manager-port=%d", rc.Spec.ObjectManagerPort),
 		fmt.Sprintf("--node-manager-port=%d", rc.Spec.NodeManagerPort),
+		fmt.Sprintf("--worker-port-list=%s", strings.Join(util.IntsToStrings(rc.Spec.WorkerPorts), ",")),
 	}
 
 	if rc.Spec.ObjectStoreMemoryBytes != nil {
@@ -261,20 +326,6 @@ func processArgs(rc *dcv1alpha1.RayCluster) []string {
 	}
 
 	return args
-}
-
-// common head/worker ports
-func processPorts(rc *dcv1alpha1.RayCluster) []corev1.ContainerPort {
-	return []corev1.ContainerPort{
-		{
-			Name:          "object-manager",
-			ContainerPort: rc.Spec.ObjectManagerPort,
-		},
-		{
-			Name:          "node-manager",
-			ContainerPort: rc.Spec.NodeManagerPort,
-		},
-	}
 }
 
 // common head/worker labels

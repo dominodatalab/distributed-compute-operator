@@ -152,7 +152,7 @@ func (r *RayClusterReconciler) reconcileResources(ctx context.Context, rc *dcv1a
 	if err := r.reconcileServiceAccount(ctx, rc); err != nil {
 		return err
 	}
-	if err := r.reconcileHeadService(ctx, rc); err != nil {
+	if err := r.reconcileServices(ctx, rc); err != nil {
 		return err
 	}
 	if err := r.reconcileNetworkPolicies(ctx, rc); err != nil {
@@ -183,12 +183,22 @@ func (r *RayClusterReconciler) reconcileServiceAccount(ctx context.Context, rc *
 	return nil
 }
 
-// reconcileHeadService creates a service that points to the head Ray pod and
+// reconcileServices creates services that point to head and worker pods and
 // applies updates when the parent CR changes.
-func (r *RayClusterReconciler) reconcileHeadService(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
-	svc := ray.NewHeadService(rc)
+func (r *RayClusterReconciler) reconcileServices(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
+	svc := ray.NewClientService(rc)
 	if err := r.createOrUpdateOwnedResource(ctx, rc, svc); err != nil {
-		return fmt.Errorf("failed to reconcile head service: %w", err)
+		return fmt.Errorf("failed to reconcile client service: %w", err)
+	}
+
+	svc = ray.NewHeadlessHeadService(rc)
+	if err := r.createOrUpdateOwnedResource(ctx, rc, svc); err != nil {
+		return fmt.Errorf("failed to reconcile headless head service: %w", err)
+	}
+
+	svc = ray.NewHeadlessWorkerService(rc)
+	if err := r.createOrUpdateOwnedResource(ctx, rc, svc); err != nil {
+		return fmt.Errorf("failed to reconcile headless worker service: %w", err)
 	}
 
 	return nil
