@@ -332,5 +332,24 @@ var _ = Describe("RayCluster", func() {
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 			})
 		})
+
+		DescribeTable("With mutal tls mode set",
+			func(smode string, expectErr bool) {
+				rc := rayFixture(testNS.Name)
+				rc.Spec.MutualTLSMode = smode
+
+				if expectErr {
+					Expect(k8sClient.Create(ctx, rc)).To(HaveOccurred())
+				} else {
+					Expect(k8sClient.Create(ctx, rc)).NotTo(HaveOccurred())
+				}
+			},
+			Entry("empty string is valid", "", false),
+			Entry("UNSET is valid", "UNSET", false),
+			Entry("DISABLE is valid", "DISABLE", false),
+			Entry("PERMISSIVE is valid", "PERMISSIVE", false),
+			Entry("STRICT is valid", "STRICT", false),
+			Entry("GARBAGE is not valid", "GARBAGE", true),
+		)
 	})
 })
