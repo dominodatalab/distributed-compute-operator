@@ -136,6 +136,9 @@ type RayClusterSpec struct {
 	// EnvVars added to all every ray pod container.
 	EnvVars []corev1.EnvVar `json:"envVars,omitempty"`
 
+	// IstioConfig parameters for ray clusters.
+	IstioConfig `json:",inline"`
+
 	// Head node configuration parameters.
 	Head RayClusterHead `json:"head,omitempty"`
 

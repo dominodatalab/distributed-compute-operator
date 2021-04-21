@@ -3,6 +3,7 @@ package v1alpha1
 import (
 	"fmt"
 
+	securityv1beta1 "istio.io/api/security/v1beta1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -146,6 +147,9 @@ func (r *RayCluster) ValidateDelete() error {
 func (r *RayCluster) validateRayCluster() error {
 	var allErrs field.ErrorList
 
+	if err := r.validateMutualTLSMode(); err != nil {
+		allErrs = append(allErrs, err)
+	}
 	if err := r.validateWorkerReplicas(); err != nil {
 		allErrs = append(allErrs, err)
 	}
@@ -170,9 +174,29 @@ func (r *RayCluster) validateRayCluster() error {
 	}
 
 	return apierrors.NewInvalid(
-		schema.GroupKind{Group: "distributed-compute.dominodatalab.com", Kind: "RayCluster"},
+		schema.GroupKind{Group: GroupVersion.Group, Kind: "RayCluster"},
 		r.Name,
 		allErrs,
+	)
+}
+
+func (r *RayCluster) validateMutualTLSMode() *field.Error {
+	if r.Spec.MutualTLSMode == "" {
+		return nil
+	}
+	if _, ok := securityv1beta1.PeerAuthentication_MutualTLS_Mode_value[r.Spec.MutualTLSMode]; ok {
+		return nil
+	}
+
+	var validModes []string
+	for s := range securityv1beta1.PeerAuthentication_MutualTLS_Mode_value {
+		validModes = append(validModes, s)
+	}
+
+	return field.Invalid(
+		field.NewPath("spec").Child("istioMutualTLSMode"),
+		r.Spec.MutualTLSMode,
+		fmt.Sprintf("mode must be one of the following: %v", validModes),
 	)
 }
 
