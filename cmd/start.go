@@ -29,6 +29,7 @@ var startCmd = &cobra.Command{
 			HealthProbeAddr:      probeAddr,
 			WebhookServerPort:    webhookPort,
 			EnableLeaderElection: enableLeaderElection,
+			IstioEnabled:         istioEnabled,
 			ZapOptions:           zapOpts,
 		}
 

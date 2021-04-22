@@ -7,6 +7,7 @@ import (
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	istioscheme "istio.io/client-go/pkg/clientset/versioned/scheme"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -47,9 +48,10 @@ func Start(cfg *Config) error {
 	}
 
 	if err = (&controllers.RayClusterReconciler{
-		Client: mgr.GetClient(),
-		Log:    logging.New(ctrl.Log.WithName("controllers").WithName("RayCluster")),
-		Scheme: mgr.GetScheme(),
+		Client:       mgr.GetClient(),
+		Log:          logging.New(ctrl.Log.WithName("controllers").WithName("RayCluster")),
+		Scheme:       mgr.GetScheme(),
+		IstioEnabled: cfg.IstioEnabled,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RayCluster")
 		return err
@@ -97,7 +99,7 @@ func Start(cfg *Config) error {
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-
 	utilruntime.Must(dcv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(istioscheme.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }

@@ -126,6 +126,16 @@ rules:
   - delete
   - list
   - watch
+- apiGroups:
+  - security.istio.io
+  resources:
+  - peerauthentications
+  verbs:
+  - create
+  - update
+  - delete
+  - list
+  - watch
 {{- if .Values.config.enableLeaderElection }}
 - apiGroups:
   - ""

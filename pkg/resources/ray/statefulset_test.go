@@ -43,7 +43,8 @@ func TestNewStatefulSet(t *testing.T) {
 					},
 				},
 				Spec: appsv1.StatefulSetSpec{
-					Replicas: pointer.Int32Ptr(1),
+					ServiceName: "test-id-ray-head",
+					Replicas:    pointer.Int32Ptr(1),
 					Selector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"app.kubernetes.io/name":      "ray",
@@ -76,10 +77,12 @@ func TestNewStatefulSet(t *testing.T) {
 										"--num-cpus=$(MY_CPU_REQUEST)",
 										"--object-manager-port=2384",
 										"--node-manager-port=2385",
+										"--worker-port-list=11000,11001",
 										"--head",
 										"--ray-client-server-port=10001",
 										"--port=6379",
 										"--redis-shard-ports=6380,6381",
+										"--gcs-server-port=2386",
 									},
 									Env: []corev1.EnvVar{
 										{
@@ -101,12 +104,20 @@ func TestNewStatefulSet(t *testing.T) {
 									},
 									Ports: []corev1.ContainerPort{
 										{
+											Name:          "client",
+											ContainerPort: 10001,
+										},
+										{
 											Name:          "object-manager",
 											ContainerPort: 2384,
 										},
 										{
 											Name:          "node-manager",
 											ContainerPort: 2385,
+										},
+										{
+											Name:          "gcs-server",
+											ContainerPort: 2386,
 										},
 										{
 											Name:          "redis-primary",
@@ -119,6 +130,14 @@ func TestNewStatefulSet(t *testing.T) {
 										{
 											Name:          "redis-shard-1",
 											ContainerPort: 6381,
+										},
+										{
+											Name:          "worker-0",
+											ContainerPort: 11000,
+										},
+										{
+											Name:          "worker-1",
+											ContainerPort: 11001,
 										},
 									},
 									VolumeMounts: []corev1.VolumeMount{
@@ -202,7 +221,8 @@ func TestNewStatefulSet(t *testing.T) {
 					},
 				},
 				Spec: appsv1.StatefulSetSpec{
-					Replicas: pointer.Int32Ptr(5),
+					ServiceName: "test-id-ray-worker",
+					Replicas:    pointer.Int32Ptr(5),
 					Selector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"app.kubernetes.io/name":      "ray",
@@ -235,7 +255,8 @@ func TestNewStatefulSet(t *testing.T) {
 										"--num-cpus=$(MY_CPU_REQUEST)",
 										"--object-manager-port=2384",
 										"--node-manager-port=2385",
-										"--address=test-id-ray-head:6379",
+										"--worker-port-list=11000,11001",
+										"--address=test-id-ray-head-0.test-id-ray-head:6379",
 									},
 									Env: []corev1.EnvVar{
 										{
@@ -263,6 +284,14 @@ func TestNewStatefulSet(t *testing.T) {
 										{
 											Name:          "node-manager",
 											ContainerPort: 2385,
+										},
+										{
+											Name:          "worker-0",
+											ContainerPort: 11000,
+										},
+										{
+											Name:          "worker-1",
+											ContainerPort: 11001,
 										},
 									},
 									VolumeMounts: []corev1.VolumeMount{

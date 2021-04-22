@@ -105,6 +105,12 @@ type RayClusterSpec struct {
 	// NodeManagerPort is the raylet port for the node manager.
 	NodeManagerPort int32 `json:"nodeManagerPort,omitempty"`
 
+	// GCSServerPort is the port for the global control store.
+	GCSServerPort int32 `json:"gcsServerPort,omitempty"`
+
+	// WorkerPorts specifies the range of ports used by worker processes.
+	WorkerPorts []int32 `json:"workerPorts,omitempty"`
+
 	// ObjectStoreMemoryBytes is initial amount of memory with which to start
 	// the object store.
 	ObjectStoreMemoryBytes *int64 `json:"objectStoreMemoryBytes,omitempty"`
@@ -129,6 +135,9 @@ type RayClusterSpec struct {
 
 	// EnvVars added to all every ray pod container.
 	EnvVars []corev1.EnvVar `json:"envVars,omitempty"`
+
+	// IstioConfig parameters for ray clusters.
+	IstioConfig `json:",inline"`
 
 	// Head node configuration parameters.
 	Head RayClusterHead `json:"head,omitempty"`

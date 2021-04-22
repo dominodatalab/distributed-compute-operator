@@ -30,9 +30,16 @@ func InstanceObjectName(instance string, comp Component) string {
 	return fmt.Sprintf("%s-%s-%s", instance, ApplicationName, comp)
 }
 
-// HeadServiceName returns the name of the service that points to the ray head pod.
-func HeadServiceName(name string) string {
+// HeadlessHeadServiceName returns the name of the headless service used to
+// register the head ray pod.
+func HeadlessHeadServiceName(name string) string {
 	return InstanceObjectName(name, ComponentHead)
+}
+
+// HeadlessWorkerServiceName returns the name of the headless service used to
+// register ray worker pods.
+func HeadlessWorkerServiceName(name string) string {
+	return InstanceObjectName(name, ComponentWorker)
 }
 
 // MetadataLabels returns standard metadata for ray resources.

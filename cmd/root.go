@@ -7,6 +7,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var istioEnabled bool
+
 var rootCmd = &cobra.Command{
 	Use:   "distributed-compute-operator",
 	Short: "Kubernetes operator that manages parallel computing clusters.",
@@ -21,22 +23,8 @@ func Execute() {
 	}
 }
 
-func addIstioFlag(cmd *cobra.Command) {
-	cmd.Flags().BoolP("istio-enabled", "i", false, "Enable support for Istio sidecar container")
-}
-
-func processIstioFlag(op func(enabled bool) error) func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		istioEnabled, err := cmd.Flags().GetBool("istio-enabled")
-		if err != nil {
-			return err
-		}
-
-		return op(istioEnabled)
-	}
-}
-
 func init() {
 	// NOTE: required until https://github.com/spf13/cobra/issues/587
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
+	rootCmd.PersistentFlags().BoolVar(&istioEnabled, "istio-enabled", false, "Enable support for Istio sidecar container")
 }

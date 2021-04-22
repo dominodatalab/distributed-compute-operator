@@ -37,7 +37,9 @@ var _ = Describe("RayCluster Controller", func() {
 				obj  client.Object
 			}{
 				{"service account", "it-ray", &corev1.ServiceAccount{}},
-				{"head service", "it-ray-head", &corev1.Service{}},
+				{"client service", "it-ray-client", &corev1.Service{}},
+				{"headless head service", "it-ray-head", &corev1.Service{}},
+				{"headless worker service", "it-ray-worker", &corev1.Service{}},
 				{"cluster network policy", "it-ray-cluster", &networkingv1.NetworkPolicy{}},
 				{"client network policy", "it-ray-client", &networkingv1.NetworkPolicy{}},
 				{"dashboard network policy", "it-ray-dashboard", &networkingv1.NetworkPolicy{}},
@@ -216,6 +218,8 @@ func createCluster(ctx context.Context, name string) (client.ObjectKey, *dcv1alp
 			ClientServerPort:  10001,
 			ObjectManagerPort: 2384,
 			NodeManagerPort:   2385,
+			GCSServerPort:     2386,
+			WorkerPorts:       []int32{11000, 11001},
 			DashboardPort:     8265,
 			PodSecurityPolicy: psp.Name,
 		},

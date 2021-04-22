@@ -9,5 +9,6 @@ type Config struct {
 	HealthProbeAddr      string
 	WebhookServerPort    int
 	EnableLeaderElection bool
+	IstioEnabled         bool
 	ZapOptions           zap.Options
 }

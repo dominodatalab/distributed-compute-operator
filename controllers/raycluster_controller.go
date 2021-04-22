@@ -28,6 +28,7 @@ import (
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/logging"
+	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/istio"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/ray"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
 )
@@ -35,8 +36,9 @@ import (
 // RayClusterReconciler reconciles RayCluster objects.
 type RayClusterReconciler struct {
 	client.Client
-	Log    logging.ContextLogger
-	Scheme *runtime.Scheme
+	Log          logging.ContextLogger
+	Scheme       *runtime.Scheme
+	IstioEnabled bool
 }
 
 // nolint:dupl
@@ -145,14 +147,18 @@ func (r *RayClusterReconciler) manageFinalization(ctx context.Context, rc *dcv1a
 	return false, nil
 }
 
+// nolint:dupl
 // reconcileResources manages the creation and updates of resources that
 // collectively comprise a Ray cluster. Each resource is controlled by a parent
 // RayCluster object so that full cleanup occurs during a delete operation.
 func (r *RayClusterReconciler) reconcileResources(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
+	if err := r.reconcileIstio(ctx, rc); err != nil {
+		return err
+	}
 	if err := r.reconcileServiceAccount(ctx, rc); err != nil {
 		return err
 	}
-	if err := r.reconcileHeadService(ctx, rc); err != nil {
+	if err := r.reconcileServices(ctx, rc); err != nil {
 		return err
 	}
 	if err := r.reconcileNetworkPolicies(ctx, rc); err != nil {
@@ -166,6 +172,29 @@ func (r *RayClusterReconciler) reconcileResources(ctx context.Context, rc *dcv1a
 	}
 
 	return r.reconcileStatefulSets(ctx, rc)
+}
+
+func (r *RayClusterReconciler) reconcileIstio(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
+	if !r.IstioEnabled {
+		return nil
+	}
+
+	peerAuth := istio.NewPeerAuthentication(&istio.PeerAuthInfo{
+		Name:      ray.InstanceObjectName(rc.Name, ray.ComponentNone),
+		Namespace: rc.Namespace,
+		Labels:    ray.MetadataLabels(rc),
+		Selector:  ray.SelectorLabels(rc),
+		Mode:      rc.Spec.IstioConfig.MutualTLSMode,
+	})
+
+	if rc.Spec.IstioConfig.MutualTLSMode == "" {
+		return r.deleteIfExists(ctx, peerAuth)
+	}
+	if err := r.createOrUpdateOwnedResource(ctx, rc, peerAuth); err != nil {
+		return fmt.Errorf("failed to reconcile peer authentication: %w", err)
+	}
+
+	return nil
 }
 
 // reconcileServiceAccount creates a new dedicated service account for a Ray
@@ -183,12 +212,22 @@ func (r *RayClusterReconciler) reconcileServiceAccount(ctx context.Context, rc *
 	return nil
 }
 
-// reconcileHeadService creates a service that points to the head Ray pod and
+// reconcileServices creates services that point to head and worker pods and
 // applies updates when the parent CR changes.
-func (r *RayClusterReconciler) reconcileHeadService(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
-	svc := ray.NewHeadService(rc)
+func (r *RayClusterReconciler) reconcileServices(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
+	svc := ray.NewClientService(rc)
 	if err := r.createOrUpdateOwnedResource(ctx, rc, svc); err != nil {
-		return fmt.Errorf("failed to reconcile head service: %w", err)
+		return fmt.Errorf("failed to reconcile client service: %w", err)
+	}
+
+	svc = ray.NewHeadlessHeadService(rc)
+	if err := r.createOrUpdateOwnedResource(ctx, rc, svc); err != nil {
+		return fmt.Errorf("failed to reconcile headless head service: %w", err)
+	}
+
+	svc = ray.NewHeadlessWorkerService(rc)
+	if err := r.createOrUpdateOwnedResource(ctx, rc, svc); err != nil {
+		return fmt.Errorf("failed to reconcile headless worker service: %w", err)
 	}
 
 	return nil

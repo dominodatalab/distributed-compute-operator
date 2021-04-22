@@ -42,9 +42,21 @@ spec:
 
   # internal port overrides
   # nodeManagerPort: 2385
+  # gcsServerPort: 2386
+  # workerPorts:
+  # - 12000
+  # - 12001
+  # - 12002
+  # - 12003
+  # - 12004
 
   # control the creation of network policies
- # enableNetworkPolicy: true
+  # networkPolicy:
+  #   enabled: true
+  #   clientServerLabels:
+  #     ray-client: "true"
+  #   dashboardLabels:
+  #     ray-dashboard-client: "true"
 
   # bind cluster to existing psp
   # podSecurityPolicy: privileged
@@ -61,8 +73,10 @@ spec:
   # - name: ENV_BASED_SETTING
   #   value: abc123
 
-  ## head configuration parameters
+  # override istio's peer authentication policy
+  # istioMutualTLSMode: PERMISSIVE
 
+  ## head configuration parameters
   head:
   #   labels:
   #     environment: production
@@ -111,7 +125,6 @@ spec:
   #       memory: 512Mi
 
   ## worker configuration parameters
-
   worker:
     # total number of worker pods
     # replicas: 2
