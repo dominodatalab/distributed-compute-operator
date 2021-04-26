@@ -3,6 +3,7 @@ package v1alpha1
 import (
 	"fmt"
 
+	securityv1beta1 "istio.io/api/security/v1beta1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -25,7 +26,9 @@ var (
 	rayDefaultClientServerPort    int32 = 10001
 	rayDefaultObjectManagerPort   int32 = 2384
 	rayDefaultNodeManagerPort     int32 = 2385
+	rayDefaultGCSServerPort       int32 = 2386
 	rayDefaultDashboardPort       int32 = 8265
+	rayDefaultWorkerPorts               = []int32{11_000, 11_001, 11_002, 11_003, 11_004}
 	rayDefaultRedisShardPorts           = []int32{6380, 6381}
 	rayDefaultEnableDashboard           = pointer.BoolPtr(true)
 	rayDefaultEnableNetworkPolicy       = pointer.BoolPtr(true)
@@ -36,7 +39,7 @@ var (
 
 	rayDefaultImage = &OCIImageDefinition{
 		Repository: "rayproject/ray",
-		Tag:        "1.2.0-cpu",
+		Tag:        "1.3.0-cpu",
 	}
 )
 
@@ -75,6 +78,14 @@ func (r *RayCluster) Default() {
 		log.Info("setting default object manager port", "value", rayDefaultObjectManagerPort)
 		r.Spec.ObjectManagerPort = rayDefaultObjectManagerPort
 	}
+	if r.Spec.GCSServerPort == 0 {
+		log.Info("setting default gcs server port", "value", rayDefaultGCSServerPort)
+		r.Spec.GCSServerPort = rayDefaultGCSServerPort
+	}
+	if r.Spec.WorkerPorts == nil {
+		log.Info("setting default worker ports", "value", rayDefaultWorkerPorts)
+		r.Spec.WorkerPorts = rayDefaultWorkerPorts
+	}
 	if r.Spec.NodeManagerPort == 0 {
 		log.Info("setting default node manager port", "value", rayDefaultNodeManagerPort)
 		r.Spec.NodeManagerPort = rayDefaultNodeManagerPort
@@ -103,7 +114,6 @@ func (r *RayCluster) Default() {
 		log.Info("setting default worker replicas", "value", *rayDefaultWorkerReplicas)
 		r.Spec.Worker.Replicas = rayDefaultWorkerReplicas
 	}
-
 	if r.Spec.Image == nil {
 		log.Info("setting default image", "value", *rayDefaultImage)
 		r.Spec.Image = rayDefaultImage
@@ -138,6 +148,9 @@ func (r *RayCluster) ValidateDelete() error {
 func (r *RayCluster) validateRayCluster() error {
 	var allErrs field.ErrorList
 
+	if err := r.validateMutualTLSMode(); err != nil {
+		allErrs = append(allErrs, err)
+	}
 	if err := r.validateWorkerReplicas(); err != nil {
 		allErrs = append(allErrs, err)
 	}
@@ -162,9 +175,29 @@ func (r *RayCluster) validateRayCluster() error {
 	}
 
 	return apierrors.NewInvalid(
-		schema.GroupKind{Group: "distributed-compute.dominodatalab.com", Kind: "RayCluster"},
+		schema.GroupKind{Group: GroupVersion.Group, Kind: "RayCluster"},
 		r.Name,
 		allErrs,
+	)
+}
+
+func (r *RayCluster) validateMutualTLSMode() *field.Error {
+	if r.Spec.MutualTLSMode == "" {
+		return nil
+	}
+	if _, ok := securityv1beta1.PeerAuthentication_MutualTLS_Mode_value[r.Spec.MutualTLSMode]; ok {
+		return nil
+	}
+
+	var validModes []string
+	for s := range securityv1beta1.PeerAuthentication_MutualTLS_Mode_value {
+		validModes = append(validModes, s)
+	}
+
+	return field.Invalid(
+		field.NewPath("spec").Child("istioMutualTLSMode"),
+		r.Spec.MutualTLSMode,
+		fmt.Sprintf("mode must be one of the following: %v", validModes),
 	)
 }
 
@@ -237,6 +270,13 @@ func (r *RayCluster) validatePorts() field.ErrorList {
 		}
 	}
 
+	for idx, port := range r.Spec.WorkerPorts {
+		name := fmt.Sprintf("workerPorts[%d]", idx)
+		if err := r.validatePort(port, field.NewPath("spec").Child(name)); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
 	if err := r.validatePort(r.Spec.ClientServerPort, field.NewPath("spec").Child("clientServerPort")); err != nil {
 		errs = append(errs, err)
 	}
@@ -244,6 +284,9 @@ func (r *RayCluster) validatePorts() field.ErrorList {
 		errs = append(errs, err)
 	}
 	if err := r.validatePort(r.Spec.NodeManagerPort, field.NewPath("spec").Child("nodeManagerPort")); err != nil {
+		errs = append(errs, err)
+	}
+	if err := r.validatePort(r.Spec.GCSServerPort, field.NewPath("spec").Child("gcsServerPort")); err != nil {
 		errs = append(errs, err)
 	}
 	if err := r.validatePort(r.Spec.DashboardPort, field.NewPath("spec").Child("dashboardPort")); err != nil {

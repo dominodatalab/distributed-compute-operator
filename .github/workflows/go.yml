@@ -60,7 +60,7 @@ jobs:
       with:
         registry: ghcr.io
         username: ${{ github.repository_owner }}
-        password: ${{ secrets.CR_PAT }}
+        password: ${{ secrets.BOT_CR_PAT }}
 
     - name: Prepare Docker image
       id: docker_prep
@@ -136,7 +136,7 @@ jobs:
           IMAGE="$(echo ${{ github.repository }} | awk -F / '{ print $(NF-1)  "/helm/" $NF }')"
           REF="$REGISTRY/$IMAGE:${{ needs.build.outputs.version }}"
 
-          ./scripts/release/helm.sh login -h "$REGISTRY" -u "${{ github.repository_owner }}" -p "${{ secrets.CR_PAT }}"
+          ./scripts/release/helm.sh login -h "$REGISTRY" -u "${{ github.repository_owner }}" -p "${{ secrets.BOT_CR_PAT }}"
           ./scripts/release/helm.sh push -r "$REF"
 
       - name: Package and push chart to gcr.io
@@ -146,5 +146,5 @@ jobs:
           REF="$REGISTRY/$IMAGE:${{ needs.build.outputs.version }}"
           PASSWORD="$(echo ${{ secrets.GCR_PASSWORD }} | base64 --decode)"
 
-          ./scripts/release/helm.sh login -h "$REGISTRY" -n "${{ secrets.GCR_NAMESPACE }}" -u _json_key -p "$PASSWORD"
+          ./scripts/release/helm.sh login -h "$REGISTRY" -n "${{ secrets.GCR_NAMESPACE }}" -u "${{ secrets.GCR_USERNAME }}" -p "$PASSWORD"
           ./scripts/release/helm.sh push -r "$REF"

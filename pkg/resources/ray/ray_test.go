@@ -6,11 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestHeadServiceName(t *testing.T) {
-	actual := HeadServiceName("steve-o")
-	assert.Equal(t, "steve-o-ray-head", actual)
-}
-
 func TestInstanceObjectName(t *testing.T) {
 	t.Run("with_component", func(t *testing.T) {
 		comp := Component("test")
@@ -22,6 +17,16 @@ func TestInstanceObjectName(t *testing.T) {
 		actual := InstanceObjectName("steve-o", ComponentNone)
 		assert.Equal(t, "steve-o-ray", actual)
 	})
+}
+
+func TestHeadlessHeadServiceName(t *testing.T) {
+	actual := HeadlessHeadServiceName("steve-o")
+	assert.Equal(t, "steve-o-ray-head", actual)
+}
+
+func TestHeadlessWorkerServiceName(t *testing.T) {
+	actual := HeadlessWorkerServiceName("steve-o")
+	assert.Equal(t, "steve-o-ray-worker", actual)
 }
 
 func TestMetadataLabels(t *testing.T) {
@@ -39,7 +44,7 @@ func TestMetadataLabels(t *testing.T) {
 
 func TestMetadataLabelsWithComponent(t *testing.T) {
 	rc := rayClusterFixture()
-	actual := MetadataLabelsWithComponent(rc, Component("something"))
+	actual := MetadataLabelsWithComponent(rc, "something")
 
 	expected := map[string]string{
 		"app.kubernetes.io/name":       "ray",
@@ -64,7 +69,7 @@ func TestSelectorLabels(t *testing.T) {
 
 func TestSelectorLabelsWithComponent(t *testing.T) {
 	rc := rayClusterFixture()
-	actual := SelectorLabelsWithComponent(rc, Component("something"))
+	actual := SelectorLabelsWithComponent(rc, "something")
 
 	expected := map[string]string{
 		"app.kubernetes.io/name":      "ray",

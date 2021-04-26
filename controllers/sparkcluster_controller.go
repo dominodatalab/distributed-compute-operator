@@ -199,6 +199,7 @@ func hasDeletionTimestamp(sc *dcv1alpha1.SparkCluster) bool {
 	return sc.ObjectMeta.DeletionTimestamp != nil
 }
 
+// nolint:dupl
 // reconcileResources manages the creation and updates of resources that
 // collectively comprise a Spark cluster. Each resource is controlled by a parent
 // SparkCluster object so that full cleanup occurs during a delete operation.

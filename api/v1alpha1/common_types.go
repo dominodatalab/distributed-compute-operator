@@ -22,6 +22,14 @@ type Autoscaling struct {
 	ScaleDownStabilizationWindowSeconds *int32 `json:"scaleDownStabilizationWindowSeconds,omitempty"`
 }
 
+// IstioConfig defines operator configuration parameters.
+type IstioConfig struct {
+	// MutualTLSMode will be used to create a workload-specific peer
+	// authentication policy that takes precedence over a global and/or
+	// namespace-wide policy.
+	MutualTLSMode string `json:"istioMutualTLSMode,omitempty"`
+}
+
 // OCIImageDefinition describes where and when to fetch a container image.
 type OCIImageDefinition struct {
 	// Registry where the container image is hosted.

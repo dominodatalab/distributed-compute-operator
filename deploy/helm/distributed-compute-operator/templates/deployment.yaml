@@ -9,6 +9,8 @@ spec:
   selector:
     matchLabels:
       {{- include "common.labels.matchLabels" . | nindent 6 }}
+  strategy:
+    type: Recreate
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -53,6 +55,9 @@ spec:
             {{- with .logStacktraceLevel }}
             - --zap-stacktrace-level={{ . }}
             {{- end }}
+            {{- end }}
+            {{- if .Values.istio.enabled }}
+            - --istio-enabled
             {{- end }}
           ports:
             - name: webhooks

@@ -61,6 +61,14 @@ var _ = Describe("RayCluster", func() {
 				BeNumerically("==", 2385),
 				"node manager port should equal 2385",
 			)
+			Expect(rc.Spec.GCSServerPort).To(
+				BeNumerically("==", 2386),
+				"gcs server port should equal 2386",
+			)
+			Expect(rc.Spec.WorkerPorts).To(
+				Equal([]int32{11000, 11001, 11002, 11003, 11004}),
+				"worker ports should equal [11000, 11001, 11002, 11003, 11004]",
+			)
 			Expect(rc.Spec.DashboardPort).To(
 				BeNumerically("==", 8265),
 				"dashboard port should equal 8265",
@@ -86,8 +94,8 @@ var _ = Describe("RayCluster", func() {
 				"worker replicas should point to 1",
 			)
 			Expect(rc.Spec.Image).To(
-				Equal(&OCIImageDefinition{Repository: "rayproject/ray", Tag: "1.2.0-cpu"}),
-				`image reference should equal "rayproject/ray:1.2.0-cpu"`,
+				Equal(&OCIImageDefinition{Repository: "rayproject/ray", Tag: "1.3.0-cpu"}),
+				`image reference should equal "rayproject/ray:1.3.0-cpu"`,
 			)
 		})
 
@@ -223,6 +231,12 @@ var _ = Describe("RayCluster", func() {
 			Entry("rejects an invalid node manager port",
 				func(rc *RayCluster, val int32) { rc.Spec.NodeManagerPort = val },
 			),
+			Entry("rejects an invalid gcs server port",
+				func(rc *RayCluster, val int32) { rc.Spec.GCSServerPort = val },
+			),
+			Entry("rejects invalid worker ports",
+				func(rc *RayCluster, val int32) { rc.Spec.WorkerPorts = append(rc.Spec.WorkerPorts, val) },
+			),
 			Entry("rejects an invalid dashboard port",
 				func(rc *RayCluster, val int32) { rc.Spec.DashboardPort = val },
 			),
@@ -318,5 +332,24 @@ var _ = Describe("RayCluster", func() {
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 			})
 		})
+
+		DescribeTable("With mutal tls mode set",
+			func(smode string, expectErr bool) {
+				rc := rayFixture(testNS.Name)
+				rc.Spec.MutualTLSMode = smode
+
+				if expectErr {
+					Expect(k8sClient.Create(ctx, rc)).To(HaveOccurred())
+				} else {
+					Expect(k8sClient.Create(ctx, rc)).NotTo(HaveOccurred())
+				}
+			},
+			Entry("empty string is valid", "", false),
+			Entry("UNSET is valid", "UNSET", false),
+			Entry("DISABLE is valid", "DISABLE", false),
+			Entry("PERMISSIVE is valid", "PERMISSIVE", false),
+			Entry("STRICT is valid", "STRICT", false),
+			Entry("GARBAGE is not valid", "GARBAGE", true),
+		)
 	})
 })

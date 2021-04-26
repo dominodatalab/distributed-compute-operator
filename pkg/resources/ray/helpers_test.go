@@ -34,6 +34,8 @@ func rayClusterFixture() *dcv1alpha1.RayCluster {
 			ClientServerPort:  10001,
 			ObjectManagerPort: 2384,
 			NodeManagerPort:   2385,
+			GCSServerPort:     2386,
+			WorkerPorts:       []int32{11000, 11001},
 			DashboardPort:     8265,
 			Worker: dcv1alpha1.RayClusterWorker{
 				Replicas: pointer.Int32Ptr(5),
