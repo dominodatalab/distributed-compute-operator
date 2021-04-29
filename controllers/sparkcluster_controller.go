@@ -199,7 +199,6 @@ func hasDeletionTimestamp(sc *dcv1alpha1.SparkCluster) bool {
 	return sc.ObjectMeta.DeletionTimestamp != nil
 }
 
-// nolint:dupl
 // reconcileResources manages the creation and updates of resources that
 // collectively comprise a Spark cluster. Each resource is controlled by a parent
 // SparkCluster object so that full cleanup occurs during a delete operation.
@@ -214,6 +213,9 @@ func (r *SparkClusterReconciler) reconcileResources(ctx context.Context, sc *dcv
 		return err
 	}
 	if err := r.reconcileNetworkPolicies(ctx, sc); err != nil {
+		return err
+	}
+	if err := r.reconcileDriverNetworkPolicy(ctx, sc); err != nil {
 		return err
 	}
 	if err := r.reconcilePodSecurityPolicyRBAC(ctx, sc); err != nil {
@@ -279,6 +281,20 @@ func (r *SparkClusterReconciler) reconcileHeadlessService(ctx context.Context, s
 	return nil
 }
 
+func (r SparkClusterReconciler) reconcileDriverNetworkPolicy(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+	driverNetpol := spark.NewClusterExternalNetworkPolicy(sc)
+
+	if !util.BoolPtrIsTrue(sc.Spec.NetworkPolicy.ExternalPolicyEnabled) {
+		return r.deleteIfExists(ctx, driverNetpol)
+	}
+
+	if err := r.createOrUpdateOwnedResource(ctx, sc, driverNetpol); err != nil {
+		return fmt.Errorf("failed to reconcile driver network policy: %w", err)
+	}
+
+	return nil
+}
+
 // reconcileNetworkPolicies optionally creates network policies that control
 // traffic flow between cluster nodes and external clients.
 func (r SparkClusterReconciler) reconcileNetworkPolicies(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
@@ -287,7 +303,7 @@ func (r SparkClusterReconciler) reconcileNetworkPolicies(ctx context.Context, sc
 	dashboardNetpol := spark.NewHeadDashboardNetworkPolicy(sc)
 
 	if !util.BoolPtrIsTrue(sc.Spec.NetworkPolicy.Enabled) {
-		return r.deleteIfExists(ctx, headNetpol, clusterNetpol)
+		return r.deleteIfExists(ctx, headNetpol, clusterNetpol, dashboardNetpol)
 	}
 
 	if err := r.createOrUpdateOwnedResource(ctx, sc, clusterNetpol); err != nil {

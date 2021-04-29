@@ -146,7 +146,6 @@ func (r *RayClusterReconciler) manageFinalization(ctx context.Context, rc *dcv1a
 	return false, nil
 }
 
-// nolint:dupl
 // reconcileResources manages the creation and updates of resources that
 // collectively comprise a Ray cluster. Each resource is controlled by a parent
 // RayCluster object so that full cleanup occurs during a delete operation.

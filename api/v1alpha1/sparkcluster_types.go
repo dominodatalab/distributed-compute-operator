@@ -138,6 +138,15 @@ type SparkClusterNetworkPolicy struct {
 	// DashboardLabels defines the pod selector clause used to grant ingress
 	// access to the head dashboard port.
 	DashboardLabels map[string]string `json:"dashboardLabels,omitempty"`
+
+	// ExternalPolicyEnabled controls creation of network policies which deal with two way traffic to pods that are
+	// external to the cluster entirely. The spark driver, for example, is generally going to live outside the
+	// cluster
+	ExternalPolicyEnabled *bool `json:"externalPolicyEnabled,omitempty"`
+
+	// ExternalPodLabels defines the pod selector clause for used to granted unfettered
+	// access to cluster resources.
+	ExternalPodLabels map[string]string `json:"clusterLabels,omitempty"`
 }
 
 // SparkClusterStatus defines the observed state of a SparkCluster resource.

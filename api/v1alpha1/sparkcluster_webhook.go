@@ -22,12 +22,13 @@ const (
 )
 
 var (
-	sparkDefaultDashboardPort             int32 = 8265
-	sparkDefaultClusterPort               int32 = 7077
-	sparkDefaultEnableNetworkPolicy             = pointer.BoolPtr(true)
-	sparkDefaultWorkerReplicas                  = pointer.Int32Ptr(1)
-	sparkDefaultEnableDashboard                 = pointer.BoolPtr(true)
-	sparkDefaultNetworkPolicyClientLabels       = map[string]string{
+	sparkDefaultDashboardPort               int32 = 8265
+	sparkDefaultClusterPort                 int32 = 7077
+	sparkDefaultEnableNetworkPolicy               = pointer.BoolPtr(true)
+	sparkDefaultEnableExternalNetworkPolicy       = pointer.BoolPtr(false)
+	sparkDefaultWorkerReplicas                    = pointer.Int32Ptr(1)
+	sparkDefaultEnableDashboard                   = pointer.BoolPtr(true)
+	sparkDefaultNetworkPolicyClientLabels         = map[string]string{
 		"spark-client": "true",
 	}
 	sparkDefaultImage = &OCIImageDefinition{
@@ -70,6 +71,10 @@ func (r *SparkCluster) Default() {
 	if r.Spec.NetworkPolicy.Enabled == nil {
 		log.Info("setting enable network policy flag", "value", *sparkDefaultEnableNetworkPolicy)
 		r.Spec.NetworkPolicy.Enabled = sparkDefaultEnableNetworkPolicy
+	}
+	if r.Spec.NetworkPolicy.ExternalPolicyEnabled == nil {
+		log.Info("setting enable external network policy flag", "value", *sparkDefaultEnableExternalNetworkPolicy)
+		r.Spec.NetworkPolicy.ExternalPolicyEnabled = sparkDefaultEnableExternalNetworkPolicy
 	}
 	if r.Spec.NetworkPolicy.ClientServerLabels == nil {
 		log.Info("setting default network policy client labels", "value", sparkDefaultNetworkPolicyClientLabels)
@@ -123,7 +128,6 @@ func (r *SparkCluster) ValidateDelete() error {
 	return nil
 }
 
-// nolint:dupl
 func (r *SparkCluster) validateSparkCluster() error {
 	var allErrs field.ErrorList
 
@@ -146,6 +150,10 @@ func (r *SparkCluster) validateSparkCluster() error {
 		allErrs = append(allErrs, errs...)
 	}
 
+	if err := r.validateNetworkPolicies(); err != nil {
+		allErrs = append(allErrs, err)
+	}
+
 	if len(allErrs) == 0 {
 		return nil
 	}
@@ -155,6 +163,20 @@ func (r *SparkCluster) validateSparkCluster() error {
 		r.Name,
 		allErrs,
 	)
+}
+
+func (r *SparkCluster) validateNetworkPolicies() *field.Error {
+	if r.Spec.NetworkPolicy.ExternalPolicyEnabled != nil &&
+		*r.Spec.NetworkPolicy.ExternalPolicyEnabled &&
+		len(r.Spec.NetworkPolicy.ExternalPodLabels) == 0 {
+		return field.Invalid(
+			field.NewPath("spec").Child("NetworkPolicy").Child("ExternalPodLabels"),
+			r.Spec.NetworkPolicy,
+			"should have at least one item if the policy is enabled",
+		)
+	}
+
+	return nil
 }
 
 func (r *SparkCluster) validateExtraConfigs() field.ErrorList {

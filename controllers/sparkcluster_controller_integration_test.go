@@ -40,6 +40,7 @@ var _ = Describe("SparkCluster Controller", func() {
 				{"cluster network policy", name + "-spark-cluster", &networkingv1.NetworkPolicy{}},
 				{"client network policy", name + "-spark-client", &networkingv1.NetworkPolicy{}},
 				{"dashboard network policy", name + "-spark-dashboard", &networkingv1.NetworkPolicy{}},
+				{"driver network policy", name + "-spark-external", &networkingv1.NetworkPolicy{}},
 				{"pod security policy role", name + "-spark", &rbacv1.Role{}},
 				{"pod security policy role binding", name + "-spark", &rbacv1.RoleBinding{}},
 				{"horizontal pod autoscaler", name + "-spark", &autoscalingv2beta2.HorizontalPodAutoscaler{}},
@@ -178,7 +179,9 @@ func createAndBasicTest(ctx context.Context, name string) {
 				AverageCPUUtilization: pointer.Int32Ptr(50),
 			},
 			NetworkPolicy: dcv1alpha1.SparkClusterNetworkPolicy{
-				Enabled: pointer.BoolPtr(true),
+				Enabled:               pointer.BoolPtr(true),
+				ExternalPodLabels:     map[string]string{"app.kubernetes.io/instance": "spark-driver"},
+				ExternalPolicyEnabled: pointer.BoolPtr(true),
 			},
 			Master: dcv1alpha1.SparkClusterHead{
 				SparkClusterNode: dcv1alpha1.SparkClusterNode{

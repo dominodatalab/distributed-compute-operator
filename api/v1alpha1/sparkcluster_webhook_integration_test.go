@@ -135,6 +135,16 @@ var _ = Describe("SparkCluster", func() {
 				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
 				Expect(rc.Spec.NetworkPolicy.DashboardLabels).To(Equal(expected))
 			})
+
+			It("use provided cluster labels", func() {
+				rc := sparkFixture(testNS.Name)
+
+				expected := map[string]string{"instance": "spark-driver"}
+				rc.Spec.NetworkPolicy.ExternalPodLabels = expected
+
+				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
+				Expect(rc.Spec.NetworkPolicy.ExternalPodLabels).To(Equal(expected))
+			})
 		})
 
 		Context("Annotations", func() {
@@ -306,6 +316,16 @@ var _ = Describe("SparkCluster", func() {
 					Path:    "",
 					Configs: map[string]string{"test": "config"},
 				}
+
+				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
+			})
+		})
+
+		Context("external network policies", func() {
+			It("rejects when policy is enabled but no values are set", func() {
+				rc := sparkFixture(testNS.Name)
+				rc.Spec.NetworkPolicy.ExternalPolicyEnabled = pointer.BoolPtr(true)
+				rc.Spec.NetworkPolicy.ExternalPodLabels = map[string]string{}
 
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 			})

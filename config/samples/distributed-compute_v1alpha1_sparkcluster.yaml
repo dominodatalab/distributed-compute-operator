@@ -9,7 +9,8 @@ spec:
   image:
     registry: ""
     repository: bitnami/spark
-    tag: 3.0.2-debian-10-r0
+#    tag: 3.0.2-debian-10-r0
+    tag: 3.1.1
     pullPolicy: IfNotPresent
 
   # dockerconfigjson used to pull images from private registries
@@ -35,7 +36,13 @@ spec:
 
   # control the creation of network policies
   networkPolicy:
-    enabled: false
+    enabled: true
+    clusterLabels:
+      np: cluster
+    dashboardLabels:
+      np: dash
+    clientServerLabels:
+      np: client
 
   # bind cluster to existing psp
   # podSecurityPolicy: privileged
@@ -73,11 +80,11 @@ spec:
   #  - name: SPARK_MASTER_WEBUI_PORT
   #  - name: SPARK_MASTER_OPTS
 
-  autoscaling:
-    averageCPUUtilization: 5
-    maxReplicas: 3
-    minReplicas: 1
-    scaleDownStabilizationWindowSeconds: 10
+#  autoscaling:
+#    averageCPUUtilization: 5
+#    maxReplicas: 3
+#    minReplicas: 1
+#    scaleDownStabilizationWindowSeconds: 10
 
   ## head configuration parameters
 
@@ -130,14 +137,22 @@ spec:
     frameworkConfig:
       path: /opt/bitnami/spark/conf/spark-defaults.conf
       configs:
-        master1: var1
-        master2: var2
+        spark.driver.host: "run-dc-607624b1336b20009d4d081c-driver.audidco273377-compute.svc.cluster.local"
+        spark.executor.cores: "4"
+        spark.executor.instances: "1"
+#        spark.executor.memory: 15360
+        spark.ui.proxyBase: .
+        spark.ui.reverseProxy: "true"
+        spark.ui.reverseProxyUrl: "/integration-test/quick-start/workspace/607624b1336b20009d4d081c/spark/ui/"
+#        spark.ui.reverseProxy: "true"
+#        spark.ui.reverseProxyUrl: "/master/proxy/base"
+#        spark.ui.proxyBase: "/master/proxy/url"
 
   ## worker configuration parameters
 
   worker:
     # total number of worker pods
-    replicas: 2
+    replicas: 1
 
     # labels:
     #   environment: production
@@ -176,13 +191,13 @@ spec:
     # volumeMounts:
     #   - name: example-vol
     #     mountPath: /mnt/more/space
-    volumes:
-    - name: spark-data
-      persistentVolumeClaim:
-        claimName: spark-data-pvc
-    volumeMounts:
-    - name: spark-data
-      mountPath: /data
+#    volumes:
+#    - name: spark-data
+#      persistentVolumeClaim:
+#        claimName: spark-data-pvc
+#    volumeMounts:
+#    - name: spark-data
+#      mountPath: /data
 
     resources:
       requests:
@@ -192,6 +207,20 @@ spec:
       limits:
         cpu: 500m
         memory: 512Mi
+
+    frameworkConfig:
+      path: /opt/bitnami/spark/conf/spark-defaults.conf
+      configs:
+        spark.driver.host: "run-dc-607624b1336b20009d4d081c-driver.audidco273377-compute.svc.cluster.local"
+        spark.executor.cores: "4"
+        spark.executor.instances: "1"
+        #        spark.executor.memory: 15360m
+        spark.ui.proxyBase: .
+        spark.ui.reverseProxy: "true"
+        spark.ui.reverseProxyUrl: "/integration-test/quick-start/workspace/607624b1336b20009d4d081c/spark/ui/KK"
+#        spark.ui.reverseProxy: "true"
+#        spark.ui.reverseProxyUrl: "/worker/proxy/url"
+#        spark.ui.proxyBase: "/master/proxy/base"
 
 #    additionalStorage:
 #    - accessModes:

@@ -144,7 +144,6 @@ func (r *RayCluster) ValidateDelete() error {
 	return nil
 }
 
-// nolint:dupl
 func (r *RayCluster) validateRayCluster() error {
 	var allErrs field.ErrorList
 

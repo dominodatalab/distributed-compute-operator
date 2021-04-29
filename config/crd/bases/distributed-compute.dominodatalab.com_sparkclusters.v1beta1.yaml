@@ -839,6 +839,22 @@ spec:
                     type: string
                   description: Annotations applied to spark pods.
                   type: object
+                frameworkConfig:
+                  description: Extra framework-specific configuration for this cluster
+                    For spark this means we'll generate a spark-defaults.conf config
+                    map and mount it in to the requested location
+                  properties:
+                    configs:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    path:
+                      description: Path at which to mount the configmap
+                      type: string
+                  required:
+                  - configs
+                  - path
+                  type: object
                 initContainers:
                   description: InitContainers added to spark pods.
                   items:
@@ -3551,6 +3567,12 @@ spec:
                   description: ClientServerLabels defines the pod selector clause
                     that grant ingress access to the head client server port.
                   type: object
+                clusterLabels:
+                  additionalProperties:
+                    type: string
+                  description: ExternalPodLabels defines the pod selector clause for
+                    used to granted unfettered access to cluster resources.
+                  type: object
                 dashboardLabels:
                   additionalProperties:
                     type: string
@@ -3560,6 +3582,12 @@ spec:
                 enabled:
                   description: Enabled controls the creation of network policies that
                     limit and provide ingress access to the cluster nodes.
+                  type: boolean
+                externalPolicyEnabled:
+                  description: ExternalPolicyEnabled controls creation of network
+                    policies which deal with two way traffic to pods that are external
+                    to the cluster entirely. The spark driver, for example, is generally
+                    going to live outside the cluster
                   type: boolean
               type: object
             podSecurityContext:
@@ -4349,6 +4377,22 @@ spec:
                   additionalProperties:
                     type: string
                   description: Annotations applied to spark pods.
+                  type: object
+                frameworkConfig:
+                  description: Extra framework-specific configuration for this cluster
+                    For spark this means we'll generate a spark-defaults.conf config
+                    map and mount it in to the requested location
+                  properties:
+                    configs:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    path:
+                      description: Path at which to mount the configmap
+                      type: string
+                  required:
+                  - configs
+                  - path
                   type: object
                 initContainers:
                   description: InitContainers added to spark pods.
