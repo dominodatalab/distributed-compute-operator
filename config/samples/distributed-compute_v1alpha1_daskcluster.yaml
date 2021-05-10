@@ -1,0 +1,7 @@
+apiVersion: distributed-compute.dominodatalab.com/v1alpha1
+kind: DaskCluster
+metadata:
+  name: daskcluster-sample
+spec:
+  # Add fields here
+  foo: bar

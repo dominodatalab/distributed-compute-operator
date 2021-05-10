@@ -66,6 +66,15 @@ func Start(cfg *Config) error {
 		return err
 	}
 
+	if err = (&controllers.DaskClusterReconciler{
+		Client: mgr.GetClient(),
+		Log:    logging.New(ctrl.Log.WithName("controllers").WithName("DaskCluster")),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "DaskCluster")
+		return err
+	}
+
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
 		if err = (&dcv1alpha1.RayCluster{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "RayCluster")
@@ -73,6 +82,10 @@ func Start(cfg *Config) error {
 		}
 		if err = (&dcv1alpha1.SparkCluster{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "SparkCluster")
+			return err
+		}
+		if err = (&dcv1alpha1.DaskCluster{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "DaskCluster")
 			return err
 		}
 	}
