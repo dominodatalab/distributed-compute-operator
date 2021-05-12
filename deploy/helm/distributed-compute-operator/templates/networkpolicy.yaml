@@ -17,6 +17,16 @@ spec:
       protocol: TCP
     - port: {{ .Values.config.healthProbePort }}
       protocol: TCP
+  - ports:
     - port: {{ .Values.config.metricsPort }}
       protocol: TCP
+    from:
+    - podSelector:
+        matchLabels:
+          {{- toYaml .Values.prometheus.podLabels | trimSuffix "\n" | nindent 10 }}
+      {{- with .Values.prometheus.namespaceLabels }}
+      namespaceSelector:
+        matchLabels:
+          {{- toYaml . | trimSuffix "\n" | nindent 10 }}
+      {{- end }}
 {{- end }}
