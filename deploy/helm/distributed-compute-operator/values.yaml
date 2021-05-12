@@ -42,7 +42,16 @@ podSecurityPolicy:
 
 networkPolicy:
   # Restrict network ingress to operator pods
+  enabled: false
+
+prometheus:
+  # Enable prometheus scraping
   enabled: true
+  # Allow ingress traffic from prometheus pods with the following labels
+  podLabels:
+    app.kubernetes.io/name: prometheus
+  # Namespace labels where prometheus is running if different from app's namespace
+  namespaceLabels: {}
 
 image:
   registry: ghcr.io
@@ -62,8 +71,8 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+podLabels: {}
 podAnnotations: {}
-
 podSecurityContext: {}
   # fsGroup: 2000
 
