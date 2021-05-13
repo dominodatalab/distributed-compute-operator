@@ -13,12 +13,19 @@ spec:
     type: Recreate
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
+      {{- if .Values.prometheus.enabled }}
+        prometheus.io/port: "{{ .Values.config.metricsPort }}"
+        prometheus.io/scrape: "true"
+      {{- end }}
+      {{- with .Values.podAnnotations }}
+        {{- toYaml . | trimSuffix "\n" | nindent 8 }}
       {{- end }}
       labels:
         {{- include "common.labels.matchLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+          {{- toYaml . | trimSuffix "\n" | nindent 8 }}
+        {{- end }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
