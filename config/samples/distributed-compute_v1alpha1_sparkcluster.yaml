@@ -141,9 +141,9 @@ spec:
         spark.executor.cores: "4"
         spark.executor.instances: "1"
 #        spark.executor.memory: 15360
-        spark.ui.proxyBase: .
+#        spark.ui.proxyBase: .
         spark.ui.reverseProxy: "true"
-        spark.ui.reverseProxyUrl: "/integration-test/quick-start/workspace/607624b1336b20009d4d081c/spark/ui/"
+#        spark.ui.reverseProxyUrl: "/integration-test/quick-start/workspace/607624b1336b20009d4d081c/spark/ui/"
 #        spark.ui.reverseProxy: "true"
 #        spark.ui.reverseProxyUrl: "/master/proxy/base"
 #        spark.ui.proxyBase: "/master/proxy/url"
@@ -208,16 +208,16 @@ spec:
         cpu: 500m
         memory: 512Mi
 
-    frameworkConfig:
-      path: /opt/bitnami/spark/conf/spark-defaults.conf
-      configs:
-        spark.driver.host: "run-dc-607624b1336b20009d4d081c-driver.audidco273377-compute.svc.cluster.local"
-        spark.executor.cores: "4"
-        spark.executor.instances: "1"
-        #        spark.executor.memory: 15360m
-        spark.ui.proxyBase: .
-        spark.ui.reverseProxy: "true"
-        spark.ui.reverseProxyUrl: "/integration-test/quick-start/workspace/607624b1336b20009d4d081c/spark/ui/KK"
+#    frameworkConfig:
+#      path: /opt/bitnami/spark/conf/spark-defaults.conf
+#      configs:
+#        spark.driver.host: "run-dc-607624b1336b20009d4d081c-driver.audidco273377-compute.svc.cluster.local"
+#        spark.executor.cores: "4"
+#        spark.executor.instances: "1"
+#        spark.executor.memory: 15360m
+#        spark.ui.proxyBase: .
+#        spark.ui.reverseProxy: "true"
+#        spark.ui.reverseProxyUrl: "/integration-test/quick-start/workspace/607624b1336b20009d4d081c/spark/ui/KK"
 #        spark.ui.reverseProxy: "true"
 #        spark.ui.reverseProxyUrl: "/worker/proxy/url"
 #        spark.ui.proxyBase: "/master/proxy/base"

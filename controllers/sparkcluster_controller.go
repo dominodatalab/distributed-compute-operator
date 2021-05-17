@@ -84,7 +84,7 @@ const SparkFinalizerName = "distributed-compute.dominodatalab.com/dco-finalizer"
 func (r *SparkClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	ctx, log := r.setLogger(ctx, r.Log.WithValues("sparkcluster", req.NamespacedName))
 
-	log.V(2).Info("reconciliation loop trigged")
+	log.V(2).Info("reconciliation loop triggered")
 
 	rc := &dcv1alpha1.SparkCluster{}
 	if err := r.Get(ctx, req.NamespacedName, rc); err != nil {
