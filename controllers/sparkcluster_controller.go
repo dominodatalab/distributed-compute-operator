@@ -232,13 +232,20 @@ func (r *SparkClusterReconciler) reconcileResources(ctx context.Context, sc *dcv
 }
 
 func (r *SparkClusterReconciler) reconcileConfigMap(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
-	if sc.Spec.Master.FrameworkConfig == nil && sc.Spec.Worker.FrameworkConfig == nil {
-		return nil
+	frameworkCM := spark.NewFrameworkConfigMap(sc)
+
+	if frameworkCM != nil {
+		if err := r.createOrUpdateOwnedResource(ctx, sc, frameworkCM); err != nil {
+			return fmt.Errorf("failed to reconcile framework configmap: %w", err)
+		}
 	}
 
-	cm := spark.NewConfigMap(sc)
-	if err := r.createOrUpdateOwnedResource(ctx, sc, cm); err != nil {
-		return fmt.Errorf("failed to reconcile configmap: %w", err)
+	keytabCM := spark.NewKeyTabConfigMap(sc)
+
+	if keytabCM != nil {
+		if err := r.createOrUpdateOwnedResource(ctx, sc, keytabCM); err != nil {
+			return fmt.Errorf("failed to reconcile keytab configmap: %w", err)
+		}
 	}
 
 	return nil

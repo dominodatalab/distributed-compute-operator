@@ -20,6 +20,8 @@ import (
 func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.StatefulSet, error) {
 	var replicas int32
 	var nodeAttrs dcv1alpha1.SparkClusterNode
+	var volumes []corev1.Volume
+	var volumeMounts []corev1.VolumeMount
 
 	switch comp {
 	case ComponentMaster:
@@ -36,10 +38,6 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	if err != nil {
 		return nil, err
 	}
-
-	var volumes []corev1.Volume
-	var volumeMounts []corev1.VolumeMount
-
 	ports := processPorts(sc)
 	labels := processLabels(sc, comp, nodeAttrs.Labels)
 	envVars := append(componentEnvVars(sc, comp), sc.Spec.EnvVars...)
@@ -47,8 +45,15 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	volumeMounts = nodeAttrs.VolumeMounts
 
 	if nodeAttrs.FrameworkConfig != nil {
-		cmVolume := getConfigMapVolume(sc)
-		cmVolumeMount := getConfigMapVolumeMount(comp, nodeAttrs)
+		cmVolume := getConfigMapVolume("spark-config", FrameworkConfigMapName(sc.Name, ComponentNone))
+		cmVolumeMount := getConfigMapVolumeMount("spark-config", nodeAttrs.FrameworkConfig.Path, string(comp))
+
+		volumes = append(volumes, cmVolume)
+		volumeMounts = append(volumeMounts, cmVolumeMount)
+	}
+	if nodeAttrs.KeyTabConfig != nil {
+		cmVolume := getConfigMapVolume("keytab", KeyTabConfigMapName(sc.Name, ComponentNone))
+		cmVolumeMount := getConfigMapVolumeMount("keytab", nodeAttrs.KeyTabConfig.Path, string(comp))
 
 		volumes = append(volumes, cmVolume)
 		volumeMounts = append(volumeMounts, cmVolumeMount)
@@ -61,15 +66,13 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	if sc.Spec.ServiceAccountName != "" {
 		serviceAccountName = sc.Spec.ServiceAccountName
 	}
-
 	annotations := make(map[string]string)
 	if nodeAttrs.Annotations != nil {
 		for k, v := range nodeAttrs.Annotations {
 			annotations[k] = v
 		}
 	}
-	//TODO: Chart defaults a specific security context if enabled. Always setting for now
-	context := sc.Spec.PodSecurityContext
+	context := sc.Spec.PodSecurityContext //TODO: Chart defaults a specific security context if enabled. Always setting for now
 	if context == nil {
 		const DefaultUser = 1001
 		const DefaultFSGroup = 1001
@@ -78,7 +81,6 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 			FSGroup:   pointer.Int64Ptr(DefaultFSGroup),
 		}
 	}
-
 	podSpec := getPodSpec(sc,
 		comp,
 		serviceAccountName,
@@ -89,7 +91,6 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 		envVars,
 		volumeMounts,
 		volumes)
-
 	statefulSet := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      InstanceObjectName(sc.Name, comp),
@@ -116,25 +117,24 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 			PodManagementPolicy: appsv1.ParallelPodManagement,
 		},
 	}
-
 	return statefulSet, nil
 }
 
-func getConfigMapVolumeMount(comp Component, nodeAttrs dcv1alpha1.SparkClusterNode) corev1.VolumeMount {
+func getConfigMapVolumeMount(name string, path string, subPath string) corev1.VolumeMount {
 	return corev1.VolumeMount{
-		Name:      "spark-config",
-		MountPath: nodeAttrs.FrameworkConfig.Path,
-		SubPath:   string(comp),
+		Name:      name,
+		MountPath: path,
+		SubPath:   subPath,
 	}
 }
 
-func getConfigMapVolume(sc *dcv1alpha1.SparkCluster) corev1.Volume {
+func getConfigMapVolume(name string, cmName string) corev1.Volume {
 	return corev1.Volume{
-		Name: "spark-config",
+		Name: name,
 		VolumeSource: corev1.VolumeSource{
 			ConfigMap: &corev1.ConfigMapVolumeSource{
 				LocalObjectReference: corev1.LocalObjectReference{
-					Name: InstanceObjectName(sc.Name, ComponentNone),
+					Name: cmName,
 				},
 			},
 		},
@@ -269,7 +269,6 @@ func processPorts(sc *dcv1alpha1.SparkCluster) []corev1.ContainerPort {
 			ContainerPort: sc.Spec.ClusterPort,
 		},
 	}
-
 	return ports
 }
 
@@ -278,6 +277,5 @@ func processLabels(sc *dcv1alpha1.SparkCluster, comp Component, extraLabels map[
 	if extraLabels != nil {
 		labels = util.MergeStringMaps(extraLabels, labels)
 	}
-
 	return labels
 }

@@ -1977,6 +1977,19 @@ spec:
                       - name
                       type: object
                     type: array
+                  keyTabConfig:
+                    properties:
+                      configs:
+                        description: need to map to a binary string
+                        format: byte
+                        type: string
+                      path:
+                        description: Path at which to mount the configmap
+                        type: string
+                    required:
+                    - configs
+                    - path
+                    type: object
                   labels:
                     additionalProperties:
                       type: string
@@ -5583,6 +5596,19 @@ spec:
                       - name
                       type: object
                     type: array
+                  keyTabConfig:
+                    properties:
+                      configs:
+                        description: need to map to a binary string
+                        format: byte
+                        type: string
+                      path:
+                        description: Path at which to mount the configmap
+                        type: string
+                    required:
+                    - configs
+                    - path
+                    type: object
                   labels:
                     additionalProperties:
                       type: string

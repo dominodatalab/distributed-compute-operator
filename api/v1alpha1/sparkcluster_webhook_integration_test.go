@@ -321,6 +321,28 @@ var _ = Describe("SparkCluster", func() {
 			})
 		})
 
+		Context("keytab configs", func() {
+			It("rejects a config with only path set", func() {
+				rc := sparkFixture(testNS.Name)
+				rc.Spec.Worker.KeyTabConfig = &KeyTabConfig{
+					Path:   "test/path/",
+					KeyTab: nil,
+				}
+
+				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
+			})
+
+			It("rejects a config with only data set", func() {
+				rc := sparkFixture(testNS.Name)
+				rc.Spec.Worker.KeyTabConfig = &KeyTabConfig{
+					Path:   "",
+					KeyTab: []byte{'c', 'o', 'n', 'f', 'i', 'g'},
+				}
+
+				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
+			})
+		})
+
 		Context("external network policies", func() {
 			It("rejects when policy is enabled but no values are set", func() {
 				rc := sparkFixture(testNS.Name)

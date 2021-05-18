@@ -41,6 +41,15 @@ type SparkClusterNode struct {
 	// For spark this means we'll generate a spark-defaults.conf config map
 	// and mount it in to the requested location
 	FrameworkConfig *FrameworkConfig `json:"frameworkConfig,omitempty"`
+
+	KeyTabConfig *KeyTabConfig `json:"keyTabConfig,omitempty"`
+}
+
+type KeyTabConfig struct {
+	// Path at which to mount the configmap
+	Path string `json:"path"`
+	// need to map to a binary string
+	KeyTab []byte `json:"configs"`
 }
 
 type FrameworkConfig struct {

@@ -593,7 +593,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 				VolumeSource: corev1.VolumeSource{
 					ConfigMap: &corev1.ConfigMapVolumeSource{
 						LocalObjectReference: corev1.LocalObjectReference{
-							Name: "test-id-spark",
+							Name: "test-id-framework-spark",
 						},
 					},
 				},
@@ -603,6 +603,59 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		expectedVolumeMounts := []corev1.VolumeMount{
 			{
 				Name:      "spark-config",
+				ReadOnly:  false,
+				MountPath: fmt.Sprintf("/test/%s/path", comp),
+				SubPath:   string(comp),
+			},
+		}
+
+		actual, err := NewStatefulSet(rc, comp)
+		require.NoError(t, err)
+
+		assert.Equal(t, expectedVolumes, actual.Spec.Template.Spec.Volumes)
+		assert.Equal(t, expectedVolumeMounts, actual.Spec.Template.Spec.Containers[0].VolumeMounts)
+	})
+
+	t.Run("keytab config", func(t *testing.T) {
+		rc := sparkClusterFixture()
+		kcMaster := dcv1alpha1.KeyTabConfig{
+			Path:   "/test/master/path",
+			KeyTab: []byte{'m', 'a', 's', 't', 'e', 'r'},
+		}
+
+		kcWorker := dcv1alpha1.KeyTabConfig{
+			Path:   "/test/worker/path",
+			KeyTab: []byte{'w', 'o', 'r', 'k', 'e', 'r'},
+		}
+
+		rc.Spec.Master = dcv1alpha1.SparkClusterHead{
+			SparkClusterNode: dcv1alpha1.SparkClusterNode{
+				KeyTabConfig: &kcMaster,
+			},
+		}
+		rc.Spec.Worker = dcv1alpha1.SparkClusterWorker{
+			SparkClusterNode: dcv1alpha1.SparkClusterNode{
+				KeyTabConfig: &kcWorker,
+			},
+			Replicas: pointer.Int32Ptr(2),
+		}
+
+		expectedVolumes := []corev1.Volume{
+			{
+				Name: "keytab",
+				VolumeSource: corev1.VolumeSource{
+					ConfigMap: &corev1.ConfigMapVolumeSource{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "test-id-keytab-spark",
+						},
+					},
+				},
+			},
+		}
+
+		expectedVolumeMounts := []corev1.VolumeMount{
+			{
+				Name:      "keytab",
 				ReadOnly:  false,
 				MountPath: fmt.Sprintf("/test/%s/path", comp),
 				SubPath:   string(comp),

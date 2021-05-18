@@ -46,7 +46,8 @@ var _ = Describe("SparkCluster Controller", func() {
 				{"horizontal pod autoscaler", name + "-spark", &autoscalingv2beta2.HorizontalPodAutoscaler{}},
 				{"head statefulset", name + "-spark-master", &appsv1.StatefulSet{}},
 				{"worker statefulset", name + "-spark-worker", &appsv1.StatefulSet{}},
-				{"configmap", name + "-spark", &corev1.ConfigMap{}},
+				{"framework configmap", name + "-framework-spark", &corev1.ConfigMap{}},
+				{"keytab configmap", name + "-keytab-spark", &corev1.ConfigMap{}},
 			}
 			for _, tc := range testcases {
 				By(fmt.Sprintf("Creating a new %s", tc.desc))
@@ -191,6 +192,10 @@ func createAndBasicTest(ctx context.Context, name string) {
 							"m1": "v1",
 						},
 					},
+					KeyTabConfig: &dcv1alpha1.KeyTabConfig{
+						Path:   "/etc/security/keytabs/kerberos.conf",
+						KeyTab: []byte{'m', 'a', 's', 't', 'e', 'r'},
+					},
 				},
 			},
 			Worker: dcv1alpha1.SparkClusterWorker{
@@ -200,6 +205,10 @@ func createAndBasicTest(ctx context.Context, name string) {
 						Configs: map[string]string{
 							"w1": "v1",
 						},
+					},
+					KeyTabConfig: &dcv1alpha1.KeyTabConfig{
+						Path:   "/etc/security/keytabs/kerberos.conf",
+						KeyTab: []byte{'w', 'o', 'r', 'k', 'e', 'r'},
 					},
 				},
 				Replicas: pointer.Int32Ptr(1),

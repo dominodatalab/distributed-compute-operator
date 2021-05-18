@@ -149,6 +149,9 @@ func (r *SparkCluster) validateSparkCluster() error {
 	if errs := r.validateExtraConfigs(); errs != nil {
 		allErrs = append(allErrs, errs...)
 	}
+	if errs := r.validateKeyTabConfigs(); errs != nil {
+		allErrs = append(allErrs, errs...)
+	}
 
 	if err := r.validateNetworkPolicies(); err != nil {
 		allErrs = append(allErrs, err)
@@ -193,6 +196,20 @@ func (r *SparkCluster) validateExtraConfigs() field.ErrorList {
 	return errs
 }
 
+func (r *SparkCluster) validateKeyTabConfigs() field.ErrorList {
+	var errs field.ErrorList
+
+	if err := r.validateKeyTabConfig(r.Spec.Master.KeyTabConfig, "master"); err != nil {
+		errs = append(errs, err...)
+	}
+
+	if err := r.validateKeyTabConfig(r.Spec.Worker.KeyTabConfig, "worker"); err != nil {
+		errs = append(errs, err...)
+	}
+
+	return errs
+}
+
 func (r *SparkCluster) validateExtraConfig(config *FrameworkConfig, comp string) field.ErrorList {
 	var errs field.ErrorList
 	if config == nil {
@@ -215,6 +232,32 @@ func (r *SparkCluster) validateExtraConfig(config *FrameworkConfig, comp string)
 	}
 	return errs
 }
+
+func (r *SparkCluster) validateKeyTabConfig(config *KeyTabConfig, comp string) field.ErrorList {
+	var errs field.ErrorList
+	if config == nil {
+		return nil
+	}
+
+	if config.Path == "" {
+		errs = append(errs, field.Invalid(
+			field.NewPath("spec").Child(comp).Child("keyTabConfig").Child("path"),
+			config.Path,
+			"should be non-empty",
+		))
+	}
+
+	if len(config.KeyTab) == 0 {
+		errs = append(errs, field.Invalid(
+			field.NewPath("spec").Child(comp).Child("keyTabConfig").Child("keytab"),
+			config.KeyTab,
+			"should have at least one item",
+		))
+	}
+
+	return errs
+}
+
 func (r *SparkCluster) validateWorkerReplicas() *field.Error {
 	replicas := r.Spec.Worker.Replicas
 	if replicas == nil || *replicas >= 0 {
