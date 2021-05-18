@@ -23,9 +23,14 @@ import (
 
 const leaderElectionID = "a846cbf2.dominodatalab.com"
 
+type Controllers []func(ctrl.Manager) error
+
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
+	ctrls    = Controllers{
+		controllers.DaskCluster,
+	}
 )
 
 // Start creates a new controller manager, configures and registers all
@@ -47,6 +52,24 @@ func Start(cfg *Config) error {
 		return err
 	}
 
+	if err := mgr.AddHealthzCheck("health", healthz.Ping); err != nil {
+		setupLog.Error(err, "unable to set up health check")
+		return err
+	}
+	if err := mgr.AddReadyzCheck("check", healthz.Ping); err != nil {
+		setupLog.Error(err, "unable to set up ready check")
+		return err
+	}
+
+	for _, c := range ctrls {
+		if err = c(mgr); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", c)
+			return err
+		}
+	}
+
+	// NOTE: old approach to setup
+
 	if err = (&controllers.RayClusterReconciler{
 		Client:       mgr.GetClient(),
 		Log:          logging.New(ctrl.Log.WithName("controllers").WithName("RayCluster")),
@@ -66,15 +89,6 @@ func Start(cfg *Config) error {
 		return err
 	}
 
-	if err = (&controllers.DaskClusterReconciler{
-		Client: mgr.GetClient(),
-		Log:    logging.New(ctrl.Log.WithName("controllers").WithName("DaskCluster")),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "DaskCluster")
-		return err
-	}
-
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
 		if err = (&dcv1alpha1.RayCluster{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "RayCluster")
@@ -84,22 +98,9 @@ func Start(cfg *Config) error {
 			setupLog.Error(err, "unable to create webhook", "webhook", "SparkCluster")
 			return err
 		}
-		if err = (&dcv1alpha1.DaskCluster{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "DaskCluster")
-			return err
-		}
 	}
 
 	// +kubebuilder:scaffold:builder
-
-	if err := mgr.AddHealthzCheck("health", healthz.Ping); err != nil {
-		setupLog.Error(err, "unable to set up health check")
-		return err
-	}
-	if err := mgr.AddReadyzCheck("check", healthz.Ping); err != nil {
-		setupLog.Error(err, "unable to set up ready check")
-		return err
-	}
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
