@@ -102,5 +102,7 @@ tolerations: []
 
 affinity: {}
 
+priorityClassName: ""
+
 nameOverride: ""
 fullnameOverride: ""
