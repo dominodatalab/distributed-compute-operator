@@ -138,14 +138,14 @@ func (r *Reconciler) Complete() error {
 	return err
 }
 
-func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *Reconciler) Reconcile(rootCtx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.log.WithValues(r.name, req.NamespacedName)
 
 	// fetch event api object
 	log.Info("Starting reconcile")
 
 	obj := r.apiType.DeepCopyObject().(client.Object)
-	if err := r.client.Get(ctx, req.NamespacedName, obj); err != nil {
+	if err := r.client.Get(rootCtx, req.NamespacedName, obj); err != nil {
 		if apierrors.IsNotFound(err) {
 			log.Info("Aborting reconcile, object not found (assuming it was deleted)")
 			return ctrl.Result{}, nil
@@ -154,6 +154,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		log.Error(err, "Failed to fetch reconcile object")
 		return ctrl.Result{}, err
 	}
+	cleanObj := obj.DeepCopyObject().(client.Object)
 
 	// skip reconcile when annotated
 	skip, ok := obj.GetAnnotations()[skipReconcileAnnotation]
@@ -164,8 +165,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	// build context for components
 	compLog := log.WithName("components")
-	coreCtx := &Context{
-		Context:  ctx,
+	ctx := &Context{
+		Context:  rootCtx,
 		Object:   obj,
 		Client:   r.client,
 		Patch:    r.patcher,
@@ -180,24 +181,24 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		res := ctrl.Result{}
 		var err error
 
-		coreCtx.Log = compLog.WithName(rc.name)
+		ctx.Log = compLog.WithName(rc.name)
 
-		if coreCtx.Object.GetDeletionTimestamp().IsZero() {
+		if ctx.Object.GetDeletionTimestamp().IsZero() {
 			log.Info("Reconciling component", "component", rc.name)
-			res, err = rc.comp.Reconcile(coreCtx)
+			res, err = rc.comp.Reconcile(ctx)
 
 			if rc.finalizer != nil {
 				log.Info("Registering finalizer", "component", rc.name)
-				controllerutil.AddFinalizer(coreCtx.Object, rc.finalizerName)
+				controllerutil.AddFinalizer(ctx.Object, rc.finalizerName)
 			}
-		} else if rc.finalizer != nil && controllerutil.ContainsFinalizer(coreCtx.Object, rc.finalizerName) {
+		} else if rc.finalizer != nil && controllerutil.ContainsFinalizer(ctx.Object, rc.finalizerName) {
 			log.Info("Finalizing component", "component", rc.name)
 
 			var done bool
-			res, done, err = rc.finalizer.Finalize(coreCtx)
+			res, done, err = rc.finalizer.Finalize(ctx)
 			if done {
 				log.Info("Removing finalizer", "component", rc.name)
-				controllerutil.RemoveFinalizer(coreCtx.Object, rc.finalizerName)
+				controllerutil.RemoveFinalizer(ctx.Object, rc.finalizerName)
 			}
 		}
 
@@ -213,7 +214,28 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		}
 	}
 
-	// TODO: apply status updates
+	// patch metadata when changes occur
+	currentMeta := r.apiType.DeepCopyObject().(client.Object)
+	currentMeta.SetName(ctx.Object.GetName())
+	currentMeta.SetNamespace(ctx.Object.GetNamespace())
+	currentMeta.SetLabels(ctx.Object.GetLabels())
+	currentMeta.SetAnnotations(ctx.Object.GetAnnotations())
+	currentMeta.SetFinalizers(ctx.Object.GetFinalizers())
+
+	cleanMeta := r.apiType.DeepCopyObject().(client.Object)
+	cleanMeta.SetName(cleanObj.GetName())
+	cleanMeta.SetNamespace(cleanObj.GetNamespace())
+	cleanMeta.SetLabels(cleanObj.GetLabels())
+	cleanMeta.SetAnnotations(cleanObj.GetAnnotations())
+	cleanMeta.SetFinalizers(cleanObj.GetFinalizers())
+
+	patch := client.MergeFrom(cleanMeta)
+	json, _ := patch.Data(currentMeta)
+
+	log.V(1).Info("Patching metadata", "type", patch.Type(), "patch", string(json))
+	if err := r.client.Patch(ctx, currentMeta, patch, &client.PatchOptions{FieldManager: r.name}); err != nil {
+		return ctrl.Result{}, fmt.Errorf("error patching metadata: %w", err)
+	}
 
 	// condense all error messages into one
 	var err error
