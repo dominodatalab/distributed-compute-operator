@@ -55,3 +55,21 @@ type PersistentVolumeClaimTemplate struct {
 	// Spec describes the storage attributes of the underlying claim.
 	Spec corev1.PersistentVolumeClaimSpec `json:"spec"`
 }
+
+type PodConfig struct {
+	Labels               map[string]string               `json:"labels,omitempty"`
+	Annotations          map[string]string               `json:"annotations,omitempty"`
+	NodeSelector         map[string]string               `json:"nodeSelector,omitempty"`
+	Affinity             *corev1.Affinity                `json:"affinity,omitempty"`
+	Tolerations          []corev1.Toleration             `json:"tolerations,omitempty"`
+	InitContainers       []corev1.Container              `json:"initContainers,omitempty"`
+	Volumes              []corev1.Volume                 `json:"volumes,omitempty"`
+	VolumeMounts         []corev1.VolumeMount            `json:"volumeMounts,omitempty"`
+	VolumeClaimTemplates []PersistentVolumeClaimTemplate `json:"volumeClaimTemplates,omitempty"`
+	Resources            corev1.ResourceRequirements     `json:"resources,omitempty"`
+}
+
+type ServiceAccountConfig struct {
+	Name                         string `json:"name,omitempty"`
+	AutomountServiceAccountToken bool   `json:"automountServiceAccountToken,omitempty"`
+}

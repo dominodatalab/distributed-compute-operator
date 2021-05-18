@@ -1,28 +1,39 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+type DaskClusterWorker struct {
+	PodConfig `json:",inline"`
 
-// DaskClusterSpec defines the desired state of DaskCluster
+	Replicas int32 `json:"replicas,omitempty"`
+}
+
+// DaskClusterSpec defines the desired state of DaskCluster.
 type DaskClusterSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	Image              *OCIImageDefinition           `json:"image,omitempty"`
+	ImagePullSecrets   []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
+	PodSecurityContext *corev1.PodSecurityContext    `json:"podSecurityContext,omitempty"`
+	ServiceAccount     ServiceAccountConfig          `json:"serviceAccount,omitempty"`
+	EnvVars            []corev1.EnvVar               `json:"envVars,omitempty"`
 
-	// Foo is an example field of DaskCluster. Edit daskcluster_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	SchedulerPort int32 `json:"schedulerPort,omitempty"` // 8786
+	DashboardPort int32 `json:"dashboardPort,omitempty"` // 8787
+	WorkerPort    int32 `json:"workerPort,omitempty"`    // 3000
+	NannyPort     int32 `json:"nannyPort,omitempty"`     // 4000
+
+	Scheduler PodConfig         `json:"scheduler,omitempty"`
+	Worker    DaskClusterWorker `json:"worker,omitempty"`
 }
 
 // DaskClusterStatus defines the observed state of DaskCluster
 type DaskClusterStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
 }
 
 //+kubebuilder:object:root=true
+//+kubebuilder:resource:shortName=dask
 //+kubebuilder:subresource:status
 
 // DaskCluster is the Schema for the daskclusters API

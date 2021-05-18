@@ -46,5 +46,5 @@ func (comp *statefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, err
 }
 
 func (comp *statefulSetComponent) Finalize(ctx *core.Context) (ctrl.Result, bool, error) {
-	return ctrl.Result{}, false, nil
+	return ctrl.Result{}, true, nil
 }

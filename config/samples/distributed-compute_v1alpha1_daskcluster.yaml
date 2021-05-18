@@ -1,7 +1,23 @@
 apiVersion: distributed-compute.dominodatalab.com/v1alpha1
 kind: DaskCluster
 metadata:
-  name: daskcluster-sample
+  name: example
 spec:
-  # Add fields here
-  foo: bar
+  image:
+    registry: ""
+    repository: daskdev/dask
+    tag: 2021.4.1
+    pullPolicy: IfNotPresent
+
+  schedulerPort: 8786
+  dashboardPort: 8787
+  workerPort: 3000
+  nannyPort: 4000
+
+  worker:
+    replicas: 1
+
+  # common fields below
+
+  serviceAccount:
+    name: ""
