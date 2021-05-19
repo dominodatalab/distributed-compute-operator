@@ -3,21 +3,49 @@ kind: DaskCluster
 metadata:
   name: example
 spec:
+  schedulerPort: 8786
+  dashboardPort: 8787
+  workerPort: 3000
+  nannyPort: 3001
+
   image:
     registry: ""
     repository: daskdev/dask
     tag: 2021.4.1
     pullPolicy: IfNotPresent
 
-  schedulerPort: 8786
-  dashboardPort: 8787
-  workerPort: 3000
-  nannyPort: 4000
+  serviceAccount:
+    name: ""
+    automountServiceAccountToken: false
+
+  networkPolicy:
+    enabled: true
+    clientLabels: {}
+    dashboardLabels: {}
+
+  istioMutualTLSMode: ""
+
+  scheduler:
+    # labels: {}
+    # annotations: {}
+    # nodeSelector: {}
+    # affinity: {}
+    # tolerations: []
+    # initContainers: []
+    # volumes: []
+    # volumeMounts: []
+    # volumeClaimTemplates: []
+    # resources: {}
 
   worker:
     replicas: 1
-
-  # common fields below
-
-  serviceAccount:
-    name: ""
+    # labels: {}
+    # annotations: {}
+    # nodeSelector: {}
+    # affinity: {}
+    # tolerations: []
+    # initContainers: []
+    # volumes: []
+    # volumeMounts: []
+    # volumeClaimTemplates: []
+    # resources: {}

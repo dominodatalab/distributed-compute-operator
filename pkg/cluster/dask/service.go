@@ -75,6 +75,11 @@ func (s *serviceDS) ports() []corev1.ServicePort {
 				Port:       s.dc.Spec.NannyPort,
 				TargetPort: intstr.FromString("nanny"),
 			},
+			{
+				Name:       "dashboard",
+				Port:       s.dc.Spec.DashboardPort,
+				TargetPort: intstr.FromString("dashboard"),
+			},
 		}
 	}
 

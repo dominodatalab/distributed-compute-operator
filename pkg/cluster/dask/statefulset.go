@@ -109,7 +109,7 @@ func (s *statefulSetDS) namespace() string {
 
 func (s *statefulSetDS) labels() map[string]string {
 	labels := meta.StandardLabelsWithComponent(s.dc, s.comp)
-	return util.MergeStringMaps(s.tc.PodConfig().Labels, labels)
+	return util.MergeStringMaps(s.tc.podConfig().Labels, labels)
 }
 
 func (s *statefulSetDS) matchLabels() map[string]string {
@@ -137,15 +137,14 @@ func (s *statefulSetDS) securityContext() *corev1.PodSecurityContext {
 }
 
 func (s *statefulSetDS) env() []corev1.EnvVar {
-	return s.dc.Spec.EnvVars
+	envvars := s.dc.Spec.EnvVars
+	envvars = append(envvars, s.tc.containerEnv()...)
+
+	return envvars
 }
 
 func (s *statefulSetDS) replicas() *int32 {
 	return pointer.Int32Ptr(s.tc.replicas())
-}
-
-func (s *statefulSetDS) podAnnotations() map[string]string {
-	return s.tc.PodConfig().Annotations
 }
 
 func (s *statefulSetDS) command() []string {
@@ -156,36 +155,40 @@ func (s *statefulSetDS) commandArgs() []string {
 	return s.tc.commandArgs()
 }
 
-func (s *statefulSetDS) nodeSelector() map[string]string {
-	return s.tc.PodConfig().NodeSelector
-}
-
-func (s *statefulSetDS) affinity() *corev1.Affinity {
-	return s.tc.PodConfig().Affinity
-}
-
-func (s *statefulSetDS) tolerations() []corev1.Toleration {
-	return s.tc.PodConfig().Tolerations
-}
-
-func (s *statefulSetDS) initContainers() []corev1.Container {
-	return s.tc.PodConfig().InitContainers
-}
-
 func (s *statefulSetDS) ports() []corev1.ContainerPort {
 	return s.tc.containerPorts()
 }
 
+func (s *statefulSetDS) podAnnotations() map[string]string {
+	return s.tc.podConfig().Annotations
+}
+
+func (s *statefulSetDS) nodeSelector() map[string]string {
+	return s.tc.podConfig().NodeSelector
+}
+
+func (s *statefulSetDS) affinity() *corev1.Affinity {
+	return s.tc.podConfig().Affinity
+}
+
+func (s *statefulSetDS) tolerations() []corev1.Toleration {
+	return s.tc.podConfig().Tolerations
+}
+
+func (s *statefulSetDS) initContainers() []corev1.Container {
+	return s.tc.podConfig().InitContainers
+}
+
 func (s *statefulSetDS) volumes() []corev1.Volume {
-	return s.tc.PodConfig().Volumes
+	return s.tc.podConfig().Volumes
 }
 
 func (s *statefulSetDS) volumeMounts() []corev1.VolumeMount {
-	return s.tc.PodConfig().VolumeMounts
+	return s.tc.podConfig().VolumeMounts
 }
 
 func (s *statefulSetDS) resources() corev1.ResourceRequirements {
-	return s.tc.PodConfig().Resources
+	return s.tc.podConfig().Resources
 }
 
 func (s *statefulSetDS) probe() *corev1.Probe {
@@ -200,23 +203,24 @@ func (s *statefulSetDS) probe() *corev1.Probe {
 }
 
 type typeConfig interface {
+	podConfig() dcv1alpha1.WorkloadConfig
 	replicas() int32
 	command() []string
 	commandArgs() []string
+	containerEnv() []corev1.EnvVar
 	containerPorts() []corev1.ContainerPort
-	PodConfig() dcv1alpha1.WorkloadConfig
 }
 
 type schedulerConfig struct {
 	dc *dcv1alpha1.DaskCluster
 }
 
-func (c *schedulerConfig) replicas() int32 {
-	return 1
+func (c *schedulerConfig) podConfig() dcv1alpha1.WorkloadConfig {
+	return c.dc.Spec.Scheduler
 }
 
-func (c *schedulerConfig) PodConfig() dcv1alpha1.WorkloadConfig {
-	return c.dc.Spec.Scheduler
+func (c *schedulerConfig) replicas() int32 {
+	return 1
 }
 
 func (c *schedulerConfig) command() []string {
@@ -228,6 +232,10 @@ func (c *schedulerConfig) commandArgs() []string {
 		fmt.Sprintf("--port=%d", c.dc.Spec.SchedulerPort),
 		fmt.Sprintf("--dashboard-address=:%d", c.dc.Spec.DashboardPort),
 	}
+}
+
+func (c *schedulerConfig) containerEnv() []corev1.EnvVar {
+	return nil
 }
 
 func (c *schedulerConfig) containerPorts() []corev1.ContainerPort {
@@ -247,12 +255,12 @@ type workerConfig struct {
 	dc *dcv1alpha1.DaskCluster
 }
 
-func (c *workerConfig) replicas() int32 {
-	return c.dc.Spec.Worker.Replicas
+func (c *workerConfig) podConfig() dcv1alpha1.WorkloadConfig {
+	return c.dc.Spec.Worker.WorkloadConfig
 }
 
-func (c *workerConfig) PodConfig() dcv1alpha1.WorkloadConfig {
-	return c.dc.Spec.Worker.WorkloadConfig
+func (c *workerConfig) replicas() int32 {
+	return c.dc.Spec.Worker.Replicas
 }
 
 func (c *workerConfig) command() []string {
@@ -261,10 +269,43 @@ func (c *workerConfig) command() []string {
 
 func (c *workerConfig) commandArgs() []string {
 	return []string{
+		"--name=$(MY_POD_NAME)",
+		// NOTE: it looks like the dask worker can infer its threads/memory from resource.limits
+		// "--nthreads=$(MY_CPU_LIMIT)",
+		// "--memory=$(MY_MEM_LIMIT)",
 		fmt.Sprintf("--worker-port=%d", c.dc.Spec.WorkerPort),
 		fmt.Sprintf("--nanny-port=%d", c.dc.Spec.NannyPort),
 		fmt.Sprintf("--dashboard-address=:%d", c.dc.Spec.DashboardPort),
-		fmt.Sprintf("example-dask-scheduler:%d", c.dc.Spec.SchedulerPort),
+		fmt.Sprintf("%s:%d", meta.InstanceName(c.dc, ComponentScheduler), c.dc.Spec.SchedulerPort),
+	}
+}
+
+func (c *workerConfig) containerEnv() []corev1.EnvVar {
+	return []corev1.EnvVar{
+		{
+			Name: "MY_POD_NAME",
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{
+					FieldPath: "metadata.name",
+				},
+			},
+		},
+		//{
+		//	Name: "MY_CPU_LIMIT",
+		//	ValueFrom: &corev1.EnvVarSource{
+		//		ResourceFieldRef: &corev1.ResourceFieldSelector{
+		//			Resource: "limits.cpu",
+		//		},
+		//	},
+		//},
+		//{
+		//	Name: "MY_MEM_LIMIT",
+		//	ValueFrom: &corev1.EnvVarSource{
+		//		ResourceFieldRef: &corev1.ResourceFieldSelector{
+		//			Resource: "limits.memory",
+		//		},
+		//	},
+		//},
 	}
 }
 
