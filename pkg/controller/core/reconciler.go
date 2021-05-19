@@ -90,19 +90,14 @@ func (r *Reconciler) Build() (controller.Controller, error) {
 	r.log = logging.New(ctrl.Log.WithName("controllers").WithName(name))
 	r.recorder = r.mgr.GetEventRecorderFor(fmt.Sprintf("%s-%s", r.name, "controller"))
 
+	gvk, err := getGvk(r.apiType, r.mgr.GetScheme())
+	if err != nil {
+		return nil, fmt.Errorf("cannot get GVK for object %#v: %w", r.apiType, err)
+	}
 	if r.finalizerBaseName == "" {
-		gvk, err := getGvk(r.apiType, r.mgr.GetScheme())
-		if err != nil {
-			return nil, fmt.Errorf("cannot get GVK for object %#v: %w", r.apiType, err)
-		}
 		r.finalizerBaseName = fmt.Sprintf("%s.%s/", name, gvk.Group)
 	}
-
 	if r.patcher == nil {
-		gvk, err := getGvk(r.apiType, r.mgr.GetScheme())
-		if err != nil {
-			return nil, fmt.Errorf("cannot get GVK for object %#v: %w", r.apiType, err)
-		}
 		r.patcher = NewPatch(gvk)
 	}
 

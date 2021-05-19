@@ -290,22 +290,6 @@ func (c *workerConfig) containerEnv() []corev1.EnvVar {
 				},
 			},
 		},
-		//{
-		//	Name: "MY_CPU_LIMIT",
-		//	ValueFrom: &corev1.EnvVarSource{
-		//		ResourceFieldRef: &corev1.ResourceFieldSelector{
-		//			Resource: "limits.cpu",
-		//		},
-		//	},
-		//},
-		//{
-		//	Name: "MY_MEM_LIMIT",
-		//	ValueFrom: &corev1.EnvVarSource{
-		//		ResourceFieldRef: &corev1.ResourceFieldSelector{
-		//			Resource: "limits.memory",
-		//		},
-		//	},
-		//},
 	}
 }
 

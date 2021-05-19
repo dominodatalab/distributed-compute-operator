@@ -52,11 +52,11 @@ func Start(cfg *Config) error {
 		return err
 	}
 
-	if err := mgr.AddHealthzCheck("health", healthz.Ping); err != nil {
+	if err = mgr.AddHealthzCheck("health", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up health check")
 		return err
 	}
-	if err := mgr.AddReadyzCheck("check", healthz.Ping); err != nil {
+	if err = mgr.AddReadyzCheck("check", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up ready check")
 		return err
 	}
