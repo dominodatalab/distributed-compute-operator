@@ -17,19 +17,19 @@ type ServiceDataSource interface {
 
 type serviceDataSourceFactory func(object client.Object) ServiceDataSource
 
-type serviceComponent struct {
+type ServiceComponent struct {
 	factory serviceDataSourceFactory
 }
 
-func Service(f serviceDataSourceFactory) *serviceComponent {
-	return &serviceComponent{factory: f}
+func Service(f serviceDataSourceFactory) *ServiceComponent {
+	return &ServiceComponent{factory: f}
 }
 
-func (comp *serviceComponent) Kind() client.Object {
+func (comp *ServiceComponent) Kind() client.Object {
 	return &corev1.Service{}
 }
 
-func (comp *serviceComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
+func (comp *ServiceComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
 	ds := comp.factory(ctx.Object)
 
 	svc := ds.GetService()

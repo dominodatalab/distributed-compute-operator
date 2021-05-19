@@ -18,19 +18,19 @@ type ServiceAccountDataSource interface {
 
 type serviceAccountDataSourceFactory func(client.Object) ServiceAccountDataSource
 
-type serviceAccountComponent struct {
+type ServiceAccountComponent struct {
 	factory serviceAccountDataSourceFactory
 }
 
-func ServiceAccount(f serviceAccountDataSourceFactory) *serviceAccountComponent {
-	return &serviceAccountComponent{factory: f}
+func ServiceAccount(f serviceAccountDataSourceFactory) *ServiceAccountComponent {
+	return &ServiceAccountComponent{factory: f}
 }
 
-func (comp *serviceAccountComponent) Kind() client.Object {
+func (comp *ServiceAccountComponent) Kind() client.Object {
 	return &corev1.ServiceAccount{}
 }
 
-func (comp *serviceAccountComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
+func (comp *ServiceAccountComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
 	ds := comp.factory(ctx.Object)
 	sa := ds.GetServiceAccount()
 

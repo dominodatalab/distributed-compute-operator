@@ -17,19 +17,19 @@ type StatefulSetDataSource interface {
 
 type statefulSetDataSourceFactory func(object client.Object) StatefulSetDataSource
 
-type statefulSetComponent struct {
+type StatefulSetComponent struct {
 	factory statefulSetDataSourceFactory
 }
 
-func StatefulSet(f statefulSetDataSourceFactory) *statefulSetComponent {
-	return &statefulSetComponent{factory: f}
+func StatefulSet(f statefulSetDataSourceFactory) *StatefulSetComponent {
+	return &StatefulSetComponent{factory: f}
 }
 
-func (comp *statefulSetComponent) Kind() client.Object {
+func (comp *StatefulSetComponent) Kind() client.Object {
 	return &appsv1.StatefulSet{}
 }
 
-func (comp *statefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
+func (comp *StatefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
 	ds := comp.factory(ctx.Object)
 
 	sts, err := ds.GetStatefulSet()
@@ -45,6 +45,6 @@ func (comp *statefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, err
 	return ctrl.Result{}, err
 }
 
-func (comp *statefulSetComponent) Finalize(ctx *core.Context) (ctrl.Result, bool, error) {
+func (comp *StatefulSetComponent) Finalize(ctx *core.Context) (ctrl.Result, bool, error) {
 	return ctrl.Result{}, true, nil
 }
