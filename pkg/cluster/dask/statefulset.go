@@ -204,7 +204,7 @@ type typeConfig interface {
 	command() []string
 	commandArgs() []string
 	containerPorts() []corev1.ContainerPort
-	PodConfig() dcv1alpha1.PodConfig
+	PodConfig() dcv1alpha1.WorkloadConfig
 }
 
 type schedulerConfig struct {
@@ -215,7 +215,7 @@ func (c *schedulerConfig) replicas() int32 {
 	return 1
 }
 
-func (c *schedulerConfig) PodConfig() dcv1alpha1.PodConfig {
+func (c *schedulerConfig) PodConfig() dcv1alpha1.WorkloadConfig {
 	return c.dc.Spec.Scheduler
 }
 
@@ -251,8 +251,8 @@ func (c *workerConfig) replicas() int32 {
 	return c.dc.Spec.Worker.Replicas
 }
 
-func (c *workerConfig) PodConfig() dcv1alpha1.PodConfig {
-	return c.dc.Spec.Worker.PodConfig
+func (c *workerConfig) PodConfig() dcv1alpha1.WorkloadConfig {
+	return c.dc.Spec.Worker.WorkloadConfig
 }
 
 func (c *workerConfig) command() []string {

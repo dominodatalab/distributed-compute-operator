@@ -22,7 +22,7 @@ spec:
     status: {}
   validation:
     openAPIV3Schema:
-      description: DaskCluster is the Schema for the daskclusters API
+      description: DaskCluster is the Schema for the daskclusters API.
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -39,6 +39,39 @@ spec:
         spec:
           description: DaskClusterSpec defines the desired state of DaskCluster.
           properties:
+            autoscaling:
+              description: Autoscaling configuration for scalable workloads.
+              properties:
+                averageCPUUtilization:
+                  description: AverageCPUUtilization is the target value of the average
+                    of the resource metric across all relevant pods. This is represented
+                    as a percentage of the requested value of the resource for the
+                    pods.
+                  format: int32
+                  type: integer
+                maxReplicas:
+                  description: MaxReplicas is the upper limit for the number of replicas
+                    to which the autoscaler can scale up. This value cannot be less
+                    than the replica count for your workload.
+                  format: int32
+                  type: integer
+                minReplicas:
+                  description: MinReplicas is the lower limit for the number of replicas
+                    to which the autoscaler can scale down. This value must be greater
+                    than zero and less than the MaxReplicas.
+                  format: int32
+                  type: integer
+                scaleDownStabilizationWindowSeconds:
+                  description: ScaleDownStabilizationWindowSeconds is the number of
+                    seconds for which past recommendations should be considered when
+                    scaling down. A shorter window will trigger scale down events
+                    quicker, but too short a window may cause replica flapping when
+                    metrics used for scaling keep fluctuating.
+                  format: int32
+                  type: integer
+              required:
+              - maxReplicas
+              type: object
             dashboardPort:
               format: int32
               type: integer
@@ -172,9 +205,27 @@ spec:
                     type: string
                 type: object
               type: array
+            istioMutualTLSMode:
+              description: MutualTLSMode will be used to create a workload-specific
+                peer authentication policy that takes precedence over a global and/or
+                namespace-wide policy.
+              type: string
             nannyPort:
               format: int32
               type: integer
+            networkPolicy:
+              properties:
+                clientLabels:
+                  additionalProperties:
+                    type: string
+                  type: object
+                dashboardLabels:
+                  additionalProperties:
+                    type: string
+                  type: object
+                enabled:
+                  type: boolean
+              type: object
             podSecurityContext:
               description: PodSecurityContext holds pod-level security attributes
                 and common container settings. Some fields are also present in container.securityContext.  Field
@@ -320,6 +371,8 @@ spec:
                       type: string
                   type: object
               type: object
+            podSecurityPolicy:
+              type: string
             scheduler:
               properties:
                 affinity:
@@ -3740,6 +3793,7 @@ spec:
                   type: string
               type: object
             worker:
+              description: DaskClusterWorker defines worker-specific workload settings.
               properties:
                 affinity:
                   description: Affinity is a group of affinity scheduling rules.

@@ -187,7 +187,7 @@ func (r *Reconciler) Reconcile(rootCtx context.Context, req ctrl.Request) (ctrl.
 			log.Info("Reconciling component", "component", rc.name)
 			res, err = rc.comp.Reconcile(ctx)
 
-			if rc.finalizer != nil {
+			if rc.finalizer != nil && !controllerutil.ContainsFinalizer(ctx.Object, rc.finalizerName) {
 				log.Info("Registering finalizer", "component", rc.name)
 				controllerutil.AddFinalizer(ctx.Object, rc.finalizerName)
 			}
