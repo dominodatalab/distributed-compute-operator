@@ -100,9 +100,6 @@ var _ = BeforeSuite(func() {
 	err = (&SparkCluster{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&DaskCluster{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
 	//+kubebuilder:scaffold:webhook
 
 	go func() {

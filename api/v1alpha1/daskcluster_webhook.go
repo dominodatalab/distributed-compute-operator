@@ -9,6 +9,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
+const nobodyUID int64 = 65534
+
 var (
 	daskDefaultSchedulerPort int32 = 8786
 	daskDefaultDashboardPort int32 = 8787
@@ -20,7 +22,7 @@ var (
 		PullPolicy: corev1.PullIfNotPresent,
 	}
 	daskDefaultPodSecurityContext = &corev1.PodSecurityContext{
-		RunAsUser: pointer.Int64Ptr(65534),
+		RunAsUser: pointer.Int64Ptr(nobodyUID),
 	}
 )
 
@@ -33,7 +35,7 @@ var _ webhook.Defaulter = &DaskCluster{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (dc *DaskCluster) Default() {
-	//daskclusterlog.Info("default", "name", dc.Name)
+	// daskclusterlog.Info("default", "name", dc.Name)
 	log := daskclusterlog.WithValues("daskcluster", client.ObjectKeyFromObject(dc))
 
 	spec := &dc.Spec
@@ -68,24 +70,24 @@ func (dc *DaskCluster) Default() {
 var _ webhook.Validator = &DaskCluster{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *DaskCluster) ValidateCreate() error {
-	daskclusterlog.Info("validate create", "name", r.Name)
+func (dc *DaskCluster) ValidateCreate() error {
+	daskclusterlog.Info("validate create", "name", dc.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
 	return nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *DaskCluster) ValidateUpdate(old runtime.Object) error {
-	daskclusterlog.Info("validate update", "name", r.Name)
+func (dc *DaskCluster) ValidateUpdate(old runtime.Object) error {
+	daskclusterlog.Info("validate update", "name", dc.Name)
 
 	// TODO(user): fill in your validation logic upon object update.
 	return nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *DaskCluster) ValidateDelete() error {
-	daskclusterlog.Info("validate delete", "name", r.Name)
+func (dc *DaskCluster) ValidateDelete() error {
+	daskclusterlog.Info("validate delete", "name", dc.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil
