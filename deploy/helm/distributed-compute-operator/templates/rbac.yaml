@@ -41,15 +41,18 @@ rules:
 - apiGroups:
   - distributed-compute.dominodatalab.com
   resources:
+  - daskclusters
   - rayclusters
   - sparkclusters
   verbs:
+  - patch
   - update
   - list
   - watch
 - apiGroups:
   - distributed-compute.dominodatalab.com
   resources:
+  - daskclusters/status
   - rayclusters/status
   - sparkclusters/status
   verbs:
@@ -57,6 +60,7 @@ rules:
 - apiGroups:
   - distributed-compute.dominodatalab.com
   resources:
+  - daskclusters/finalizers
   - rayclusters/finalizers
   - sparkclusters/finalizers
   verbs:

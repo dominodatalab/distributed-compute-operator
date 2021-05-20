@@ -11,19 +11,27 @@ spec:
   image:
     registry: ""
     repository: daskdev/dask
-    tag: 2021.4.1
+    tag: 2021.5.0
     pullPolicy: IfNotPresent
 
-  serviceAccount:
-    name: ""
-    automountServiceAccountToken: false
+#  autoscaling: {}
 
   networkPolicy:
     enabled: true
     clientLabels: {}
     dashboardLabels: {}
 
-  istioMutualTLSMode: ""
+  serviceAccount:
+    name: ""
+    automountServiceAccountToken: false
+
+  podSecurityContext:
+    runAsUser: 65534
+
+#  envVars: []
+#  imagePullSecrets: []
+#  podSecurityPolicy: ""
+#  istioMutualTLSMode: ""
 
   scheduler:
     # labels: {}

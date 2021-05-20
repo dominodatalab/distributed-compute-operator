@@ -270,6 +270,7 @@ func (c *workerConfig) command() []string {
 func (c *workerConfig) commandArgs() []string {
 	return []string{
 		"--name=$(MY_POD_NAME)",
+		"--local-directory=/tmp",
 		// NOTE: it looks like the dask worker can infer its threads/memory from resource.limits
 		// "--nthreads=$(MY_CPU_LIMIT)",
 		// "--memory=$(MY_MEM_LIMIT)",
