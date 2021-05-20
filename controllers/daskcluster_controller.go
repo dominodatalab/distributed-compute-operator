@@ -21,6 +21,6 @@ func DaskCluster(mgr ctrl.Manager) error {
 		Component("sts-scheduler", components.StatefulSet(dask.SchedulerStatefulSet)).
 		Component("svc-workers", components.Service(dask.WorkerService)).
 		Component("sts-workers", components.StatefulSet(dask.WorkerStatefulSet)).
-		// WithWebhooks().
+		WithWebhooks().
 		Complete()
 }

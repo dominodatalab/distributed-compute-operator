@@ -3,35 +3,41 @@ kind: DaskCluster
 metadata:
   name: example
 spec:
-  schedulerPort: 8786
-  dashboardPort: 8787
-  workerPort: 3000
-  nannyPort: 3001
+  # schedulerPort: 8786
+  # dashboardPort: 8787
+  # workerPort: 3000
+  # nannyPort: 3001
 
-  image:
-    registry: ""
-    repository: daskdev/dask
-    tag: 2021.5.0
-    pullPolicy: IfNotPresent
+  # image:
+  #   registry: ""
+  #   repository: daskdev/dask
+  #   tag: 2021.5.0
+  #   pullPolicy: IfNotPresent
 
-#  autoscaling: {}
+  # autoscaling:
+  #   minReplicas:
+  #   maxReplicas:
+  #   averageCPUUtilization:
+  #   scaleDownStabilizationWindowSeconds:
 
-  networkPolicy:
-    enabled: true
-    clientLabels: {}
-    dashboardLabels: {}
+  # networkPolicy:
+  #   enabled: true
+  #   clientLabels: {}
+  #   dashboardLabels: {}
 
-  serviceAccount:
-    name: ""
-    automountServiceAccountToken: false
+  # serviceAccount:
+  #   name: ""
+  #   automountServiceAccountToken: false
 
-  podSecurityContext:
-    runAsUser: 65534
+  # podSecurityContext:
+  #   runAsUser:
+  #   runAsGroup:
+  #   fsGroup:
 
-#  envVars: []
-#  imagePullSecrets: []
-#  podSecurityPolicy: ""
-#  istioMutualTLSMode: ""
+  # envVars: []
+  # imagePullSecrets: []
+  # podSecurityPolicy: ""
+  # istioMutualTLSMode: ""
 
   scheduler:
     # labels: {}
