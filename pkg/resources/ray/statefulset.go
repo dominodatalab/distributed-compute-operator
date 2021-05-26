@@ -318,7 +318,10 @@ func processArgs(rc *dcv1alpha1.RayCluster) []string {
 		"--num-cpus=$(MY_CPU_REQUEST)",
 		fmt.Sprintf("--object-manager-port=%d", rc.Spec.ObjectManagerPort),
 		fmt.Sprintf("--node-manager-port=%d", rc.Spec.NodeManagerPort),
-		fmt.Sprintf("--worker-port-list=%s", strings.Join(util.IntsToStrings(rc.Spec.WorkerPorts), ",")),
+	}
+
+	if rc.Spec.WorkerPorts != nil {
+		args = append(args, fmt.Sprintf("--worker-port-list=%s", strings.Join(util.IntsToStrings(rc.Spec.WorkerPorts), ",")))
 	}
 
 	if rc.Spec.ObjectStoreMemoryBytes != nil {

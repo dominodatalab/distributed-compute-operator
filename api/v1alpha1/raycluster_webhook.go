@@ -28,7 +28,6 @@ var (
 	rayDefaultNodeManagerPort     int32 = 2385
 	rayDefaultGCSServerPort       int32 = 2386
 	rayDefaultDashboardPort       int32 = 8265
-	rayDefaultWorkerPorts               = []int32{11_000, 11_001, 11_002, 11_003, 11_004}
 	rayDefaultRedisShardPorts           = []int32{6380, 6381}
 	rayDefaultEnableDashboard           = pointer.BoolPtr(true)
 	rayDefaultEnableNetworkPolicy       = pointer.BoolPtr(true)
@@ -81,10 +80,6 @@ func (r *RayCluster) Default() {
 	if r.Spec.GCSServerPort == 0 {
 		log.Info("setting default gcs server port", "value", rayDefaultGCSServerPort)
 		r.Spec.GCSServerPort = rayDefaultGCSServerPort
-	}
-	if r.Spec.WorkerPorts == nil {
-		log.Info("setting default worker ports", "value", rayDefaultWorkerPorts)
-		r.Spec.WorkerPorts = rayDefaultWorkerPorts
 	}
 	if r.Spec.NodeManagerPort == 0 {
 		log.Info("setting default node manager port", "value", rayDefaultNodeManagerPort)
