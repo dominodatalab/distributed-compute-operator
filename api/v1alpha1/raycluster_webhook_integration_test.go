@@ -65,10 +65,6 @@ var _ = Describe("RayCluster", func() {
 				BeNumerically("==", 2386),
 				"gcs server port should equal 2386",
 			)
-			Expect(rc.Spec.WorkerPorts).To(
-				Equal([]int32{11000, 11001, 11002, 11003, 11004}),
-				"worker ports should equal [11000, 11001, 11002, 11003, 11004]",
-			)
 			Expect(rc.Spec.DashboardPort).To(
 				BeNumerically("==", 8265),
 				"dashboard port should equal 8265",
