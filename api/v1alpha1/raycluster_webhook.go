@@ -82,10 +82,6 @@ func (r *RayCluster) Default() {
 		log.Info("setting default gcs server port", "value", rayDefaultGCSServerPort)
 		r.Spec.GCSServerPort = rayDefaultGCSServerPort
 	}
-	if r.Spec.WorkerPorts == nil && ctrl.Manager.Config.IstioEnabled {
-		log.Info("setting default worker ports", "value", rayDefaultWorkerPorts)
-		r.Spec.WorkerPorts = rayDefaultWorkerPorts
-	}
 	if r.Spec.NodeManagerPort == 0 {
 		log.Info("setting default node manager port", "value", rayDefaultNodeManagerPort)
 		r.Spec.NodeManagerPort = rayDefaultNodeManagerPort
