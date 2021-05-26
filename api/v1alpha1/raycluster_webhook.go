@@ -28,7 +28,6 @@ var (
 	rayDefaultNodeManagerPort     int32 = 2385
 	rayDefaultGCSServerPort       int32 = 2386
 	rayDefaultDashboardPort       int32 = 8265
-	rayDefaultWorkerPorts               = []int32{11_000, 11_001, 11_002, 11_003, 11_004}
 	rayDefaultRedisShardPorts           = []int32{6380, 6381}
 	rayDefaultEnableDashboard           = pointer.BoolPtr(true)
 	rayDefaultEnableNetworkPolicy       = pointer.BoolPtr(true)
