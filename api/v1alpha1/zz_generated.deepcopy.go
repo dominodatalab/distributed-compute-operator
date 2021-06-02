@@ -666,6 +666,7 @@ func (in *SparkClusterSpec) DeepCopyInto(out *SparkClusterSpec) {
 		*out = new(Autoscaling)
 		(*in).DeepCopyInto(*out)
 	}
+	out.IstioConfig = in.IstioConfig
 	if in.EnableDashboard != nil {
 		in, out := &in.EnableDashboard, &out.EnableDashboard
 		*out = new(bool)

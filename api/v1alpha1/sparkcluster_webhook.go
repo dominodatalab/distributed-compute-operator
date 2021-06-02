@@ -3,6 +3,8 @@ package v1alpha1
 import (
 	"fmt"
 
+	securityv1beta1 "istio.io/api/security/v1beta1"
+
 	v1 "k8s.io/api/core/v1"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -17,13 +19,15 @@ import (
 )
 
 const (
-	sparkMinValidPort int32 = 1024
+	sparkMinValidPort int32 = 80
 	sparkMaxValidPort int32 = 65535
 )
 
 var (
 	sparkDefaultDashboardPort               int32 = 8265
 	sparkDefaultClusterPort                 int32 = 7077
+	sparkDefaultMasterWebPort               int32 = 80
+	sparkDefaultWorkerWebPort               int32 = 8081
 	sparkDefaultEnableNetworkPolicy               = pointer.BoolPtr(true)
 	sparkDefaultEnableExternalNetworkPolicy       = pointer.BoolPtr(false)
 	sparkDefaultWorkerReplicas                    = pointer.Int32Ptr(1)
@@ -59,6 +63,14 @@ func (r *SparkCluster) Default() {
 	if r.Spec.ClusterPort == 0 {
 		log.Info("setting default cluster port", "value", sparkDefaultClusterPort)
 		r.Spec.ClusterPort = sparkDefaultClusterPort
+	}
+	if r.Spec.TCPWorkerWebPort == 0 {
+		log.Info("setting default worker web port", "value", sparkDefaultWorkerWebPort)
+		r.Spec.TCPWorkerWebPort = sparkDefaultWorkerWebPort
+	}
+	if r.Spec.TCPMasterWebPort == 0 {
+		log.Info("setting default master web port", "value", sparkDefaultMasterWebPort)
+		r.Spec.TCPMasterWebPort = sparkDefaultMasterWebPort
 	}
 	if r.Spec.DashboardPort == 0 {
 		log.Info("setting default dashboard port", "value", sparkDefaultDashboardPort)
@@ -100,7 +112,6 @@ func (r *SparkCluster) Default() {
 		if node.Annotations == nil {
 			node.Annotations = make(map[string]string)
 		}
-		node.Annotations["sidecar.istio.io/inject"] = "false"
 	}
 }
 
@@ -131,6 +142,9 @@ func (r *SparkCluster) ValidateDelete() error {
 func (r *SparkCluster) validateSparkCluster() error {
 	var allErrs field.ErrorList
 
+	if err := r.validateMutualTLSMode(); err != nil {
+		allErrs = append(allErrs, err)
+	}
 	if err := r.validateWorkerReplicas(); err != nil {
 		allErrs = append(allErrs, err)
 	}
@@ -152,7 +166,6 @@ func (r *SparkCluster) validateSparkCluster() error {
 	if errs := r.validateKeyTabConfigs(); errs != nil {
 		allErrs = append(allErrs, errs...)
 	}
-
 	if err := r.validateNetworkPolicies(); err != nil {
 		allErrs = append(allErrs, err)
 	}
@@ -258,6 +271,26 @@ func (r *SparkCluster) validateKeyTabConfig(config *KeyTabConfig, comp string) f
 	return errs
 }
 
+func (r *SparkCluster) validateMutualTLSMode() *field.Error {
+	if r.Spec.MutualTLSMode == "" {
+		return nil
+	}
+	if _, ok := securityv1beta1.PeerAuthentication_MutualTLS_Mode_value[r.Spec.MutualTLSMode]; ok {
+		return nil
+	}
+
+	var validModes []string
+	for s := range securityv1beta1.PeerAuthentication_MutualTLS_Mode_value {
+		validModes = append(validModes, s)
+	}
+
+	return field.Invalid(
+		field.NewPath("spec").Child("istioMutualTLSMode"),
+		r.Spec.MutualTLSMode,
+		fmt.Sprintf("mode must be one of the following: %v", validModes),
+	)
+}
+
 func (r *SparkCluster) validateWorkerReplicas() *field.Error {
 	replicas := r.Spec.Worker.Replicas
 	if replicas == nil || *replicas >= 0 {
@@ -275,6 +308,12 @@ func (r *SparkCluster) validatePorts() field.ErrorList {
 	var errs field.ErrorList
 
 	if err := r.validatePort(r.Spec.ClusterPort, field.NewPath("spec").Child("clusterPort")); err != nil {
+		errs = append(errs, err)
+	}
+	if err := r.validatePort(r.Spec.TCPMasterWebPort, field.NewPath("spec").Child("tcpMasterWebPort")); err != nil {
+		errs = append(errs, err)
+	}
+	if err := r.validatePort(r.Spec.TCPWorkerWebPort, field.NewPath("spec").Child("tcpWorkerWebPort")); err != nil {
 		errs = append(errs, err)
 	}
 	if err := r.validatePort(r.Spec.DashboardPort, field.NewPath("spec").Child("dashboardPort")); err != nil {

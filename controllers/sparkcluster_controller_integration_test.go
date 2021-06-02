@@ -37,6 +37,7 @@ var _ = Describe("SparkCluster Controller", func() {
 			}{
 				{"service account", name + "-spark", &corev1.ServiceAccount{}},
 				{"head service", name + "-spark-master", &corev1.Service{}},
+				{"worker headless service", name + "-spark-worker", &corev1.Service{}},
 				{"cluster network policy", name + "-spark-cluster", &networkingv1.NetworkPolicy{}},
 				{"client network policy", name + "-spark-client", &networkingv1.NetworkPolicy{}},
 				{"dashboard network policy", name + "-spark-dashboard", &networkingv1.NetworkPolicy{}},
@@ -214,6 +215,8 @@ func createAndBasicTest(ctx context.Context, name string) {
 				Replicas: pointer.Int32Ptr(1),
 			},
 			ClusterPort:       7077,
+			TCPMasterWebPort:  80,
+			TCPWorkerWebPort:  8081,
 			DashboardPort:     8265,
 			PodSecurityPolicy: psp.Name,
 		},

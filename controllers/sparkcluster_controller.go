@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/istio"
+
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
@@ -48,8 +50,9 @@ var (
 // SparkClusterReconciler reconciles SparkCluster objects.
 type SparkClusterReconciler struct {
 	client.Client
-	Log    logging.ContextLogger
-	Scheme *runtime.Scheme
+	Log          logging.ContextLogger
+	Scheme       *runtime.Scheme
+	IstioEnabled bool
 }
 
 // SetupWithManager creates and registers this controller with the manager.
@@ -203,6 +206,9 @@ func hasDeletionTimestamp(sc *dcv1alpha1.SparkCluster) bool {
 // collectively comprise a Spark cluster. Each resource is controlled by a parent
 // SparkCluster object so that full cleanup occurs during a delete operation.
 func (r *SparkClusterReconciler) reconcileResources(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+	if err := r.reconcileIstio(ctx, sc); err != nil {
+		return err
+	}
 	if err := r.reconcileServiceAccount(ctx, sc); err != nil {
 		return err
 	}
@@ -229,6 +235,29 @@ func (r *SparkClusterReconciler) reconcileResources(ctx context.Context, sc *dcv
 	}
 
 	return r.reconcileStatefulSets(ctx, sc)
+}
+
+func (r *SparkClusterReconciler) reconcileIstio(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+	if !r.IstioEnabled {
+		return nil
+	}
+
+	peerAuth := istio.NewPeerAuthentication(&istio.PeerAuthInfo{
+		Name:      spark.InstanceObjectName(sc.Name, spark.ComponentNone),
+		Namespace: sc.Namespace,
+		Labels:    spark.MetadataLabels(sc),
+		Selector:  spark.SelectorLabels(sc),
+		Mode:      sc.Spec.IstioConfig.MutualTLSMode,
+	})
+
+	if sc.Spec.IstioConfig.MutualTLSMode == "" {
+		return r.deleteIfExists(ctx, peerAuth)
+	}
+	if err := r.createOrUpdateOwnedResource(ctx, sc, peerAuth); err != nil {
+		return fmt.Errorf("failed to reconcile peer authentication: %w", err)
+	}
+
+	return nil
 }
 
 func (r *SparkClusterReconciler) reconcileConfigMap(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {

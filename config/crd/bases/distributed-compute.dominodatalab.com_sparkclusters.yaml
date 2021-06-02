@@ -84,8 +84,7 @@ spec:
                 - maxReplicas
                 type: object
               clusterPort:
-                description: Cluster port is the port on which the spark protocol
-                  communicates
+                description: ClusterPort is the port on which the spark protocol communicates
                 format: int32
                 type: integer
               dashboardPort:
@@ -3630,6 +3629,11 @@ spec:
                       type: string
                   type: object
                 type: array
+              istioMutualTLSMode:
+                description: MutualTLSMode will be used to create a workload-specific
+                  peer authentication policy that takes precedence over a global and/or
+                  namespace-wide policy.
+                type: string
               networkPolicy:
                 description: NetworkPolicyClientLabels will create a pod selector
                   clause for each set of labels. This is used to grant ingress access
@@ -3817,6 +3821,13 @@ spec:
                   cluster service account. The service account referenced by the provided
                   name will be used instead.
                 type: string
+              tcpMasterWebPort:
+                description: These two are meant for istio compatibility on spark
+                format: int32
+                type: integer
+              tcpWorkerWebPort:
+                format: int32
+                type: integer
               worker:
                 description: Worker node configuration parameters.
                 properties:

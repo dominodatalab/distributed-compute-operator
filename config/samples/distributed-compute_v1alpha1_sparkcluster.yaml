@@ -33,6 +33,8 @@ spec:
 
   # internal port overrides
   clusterPort: 7077
+  workerWebPort: 8081
+  webPort: 80
 
   # control the creation of network policies
   networkPolicy:
@@ -85,6 +87,9 @@ spec:
 #    maxReplicas: 3
 #    minReplicas: 1
 #    scaleDownStabilizationWindowSeconds: 10
+
+  # override istio's peer authentication policy
+  # istioMutualTLSMode: PERMISSIVE
 
   ## head configuration parameters
 
@@ -147,9 +152,9 @@ spec:
 #        spark.ui.reverseProxy: "true"
 #        spark.ui.reverseProxyUrl: "/master/proxy/base"
 #        spark.ui.proxyBase: "/master/proxy/url"
-    keyTabConfig:
-      path: /tmp/keytab.conf
-      configs: dGVzdHZhbHVlCg==
+#    keyTabConfig:
+#      path: /tmp/keytab.conf
+#      configs: dGVzdHZhbHVlCg==
 
 
   ## worker configuration parameters

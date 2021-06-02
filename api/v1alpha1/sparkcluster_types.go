@@ -100,8 +100,15 @@ type SparkClusterSpec struct {
 	// Autoscaling parameters used to scale up/down spark worker nodes.
 	Autoscaling *Autoscaling `json:"autoscaling,omitempty"`
 
-	// Cluster port is the port on which the spark protocol communicates
+	// ClusterPort is the port on which the spark protocol communicates
 	ClusterPort int32 `json:"clusterPort,omitempty"`
+
+	// These two are meant for istio compatibility on spark
+	TCPMasterWebPort int32 `json:"tcpMasterWebPort,omitempty"`
+	TCPWorkerWebPort int32 `json:"tcpWorkerWebPort,omitempty"`
+
+	// IstioConfig parameters for Spark clusters.
+	IstioConfig `json:",inline"`
 
 	// DashboardPort is the port used by the dashboard server.
 	DashboardPort int32 `json:"dashboardPort,omitempty"`

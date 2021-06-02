@@ -83,6 +83,22 @@ func TestNewHeadlessService(t *testing.T) {
 				"app.kubernetes.io/name":      "spark",
 				"app.kubernetes.io/instance":  "test-id",
 			},
+			Ports: []corev1.ServicePort{
+				{
+					Name:       "cluster",
+					Port:       7077,
+					TargetPort: intstr.FromInt(7077),
+				},
+				{
+					Name:       "tcp-master-webport",
+					Port:       80,
+					TargetPort: intstr.FromInt(80),
+				}, {
+					Name:       "tcp-worker-webport",
+					Port:       8081,
+					TargetPort: intstr.FromInt(8081),
+				},
+			},
 		},
 	}
 	assert.Equal(t, expected, svc)

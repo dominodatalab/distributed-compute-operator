@@ -43,7 +43,15 @@ var _ = Describe("SparkCluster", func() {
 
 			Expect(rc.Spec.ClusterPort).To(
 				BeNumerically("==", 7077),
-				"port should equal 8265",
+				"port should equal 7077",
+			)
+			Expect(rc.Spec.TCPWorkerWebPort).To(
+				BeNumerically("==", 8081),
+				"worker web port should equal 8081",
+			)
+			Expect(rc.Spec.TCPMasterWebPort).To(
+				BeNumerically("==", 80),
+				"master web port should equal 80",
 			)
 			Expect(rc.Spec.DashboardPort).To(
 				BeNumerically("==", 8265),
@@ -73,14 +81,6 @@ var _ = Describe("SparkCluster", func() {
 				Equal(&OCIImageDefinition{Repository: "bitnami/spark", Tag: "3.0.2-debian-10-r0"}),
 				`image reference should equal "bitnami/spark:3.0.2-debian-10-r0"`,
 			)
-			Expect(rc.Spec.Master.Annotations).To(
-				Equal(map[string]string{"sidecar.istio.io/inject": "false"}),
-				`master annotations should equal {"sidecar.istio.io/inject": "false"}`,
-			)
-			Expect(rc.Spec.Worker.Annotations).To(
-				Equal(map[string]string{"sidecar.istio.io/inject": "false"}),
-				`worker annotations should equal {"sidecar.istio.io/inject": "false"}`,
-			)
 		})
 
 		It("does not set the cluster port when present", func() {
@@ -89,6 +89,22 @@ var _ = Describe("SparkCluster", func() {
 
 			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
 			Expect(rc.Spec.ClusterPort).To(BeNumerically("==", 3000))
+		})
+
+		It("does not set the worker web port when present", func() {
+			rc := sparkFixture(testNS.Name)
+			rc.Spec.TCPWorkerWebPort = 3000
+
+			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
+			Expect(rc.Spec.TCPWorkerWebPort).To(BeNumerically("==", 3000))
+		})
+
+		It("does not set the master web port when present", func() {
+			rc := sparkFixture(testNS.Name)
+			rc.Spec.TCPMasterWebPort = 3000
+
+			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
+			Expect(rc.Spec.TCPMasterWebPort).To(BeNumerically("==", 3000))
 		})
 
 		It("does not set the dashboard port when present", func() {
@@ -148,32 +164,32 @@ var _ = Describe("SparkCluster", func() {
 		})
 
 		Context("Annotations", func() {
-			It("add istio annotation to provided annotations", func() {
-				rc := sparkFixture(testNS.Name)
-				provided := map[string]string{"annotation": "test"}
-				rc.Spec.Master.Annotations = provided
-				rc.Spec.Worker.Annotations = provided
+			//It("add istio annotation to provided annotations", func() {
+			//	rc := sparkFixture(testNS.Name)
+			//	provided := map[string]string{"annotation": "test"}
+			//	rc.Spec.Master.Annotations = provided
+			//	rc.Spec.Worker.Annotations = provided
+			//
+			//	expected := map[string]string{
+			//		"annotation":              "test",
+			//		"sidecar.istio.io/inject": "false",
+			//	}
+			//	Expect(k8sClient.Create(ctx, rc)).To(Succeed())
+			//	Expect(rc.Spec.Master.Annotations).To(Equal(expected))
+			//	Expect(rc.Spec.Worker.Annotations).To(Equal(expected))
+			//})
 
-				expected := map[string]string{
-					"annotation":              "test",
-					"sidecar.istio.io/inject": "false",
-				}
-				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
-				Expect(rc.Spec.Master.Annotations).To(Equal(expected))
-				Expect(rc.Spec.Worker.Annotations).To(Equal(expected))
-			})
-
-			It("override provided istio annotation", func() {
-				rc := sparkFixture(testNS.Name)
-				provided := map[string]string{"sidecar.istio.io/inject": "true"}
-				rc.Spec.Master.Annotations = provided
-				rc.Spec.Worker.Annotations = provided
-
-				expected := map[string]string{"sidecar.istio.io/inject": "false"}
-				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
-				Expect(rc.Spec.Master.Annotations).To(Equal(expected))
-				Expect(rc.Spec.Worker.Annotations).To(Equal(expected))
-			})
+			//It("override provided istio annotation", func() {
+			//	rc := sparkFixture(testNS.Name)
+			//	provided := map[string]string{"sidecar.istio.io/inject": "true"}
+			//	rc.Spec.Master.Annotations = provided
+			//	rc.Spec.Worker.Annotations = provided
+			//
+			//	expected := map[string]string{"sidecar.istio.io/inject": "false"}
+			//	Expect(k8sClient.Create(ctx, rc)).To(Succeed())
+			//	Expect(rc.Spec.Master.Annotations).To(Equal(expected))
+			//	Expect(rc.Spec.Worker.Annotations).To(Equal(expected))
+			//})
 		})
 	})
 
@@ -194,18 +210,43 @@ var _ = Describe("SparkCluster", func() {
 			func(portSetter func(*SparkCluster, int32)) {
 				rc := sparkFixture(testNS.Name)
 
-				portSetter(rc, 1023)
+				portSetter(rc, 79)
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 
 				portSetter(rc, 65536)
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 			},
-			Entry("rejects an invalid port",
+			Entry("rejects an invalid cluster port",
 				func(rc *SparkCluster, val int32) { rc.Spec.ClusterPort = val },
+			),
+			Entry("rejects an invalid worker web port",
+				func(rc *SparkCluster, val int32) { rc.Spec.TCPWorkerWebPort = val },
+			),
+			Entry("rejects an invalid master web port",
+				func(rc *SparkCluster, val int32) { rc.Spec.TCPMasterWebPort = val },
 			),
 			Entry("rejects an invalid dashboard port",
 				func(rc *SparkCluster, val int32) { rc.Spec.DashboardPort = val },
 			),
+		)
+
+		DescribeTable("With mutual tls mode set",
+			func(smode string, expectErr bool) {
+				rc := sparkFixture(testNS.Name)
+				rc.Spec.MutualTLSMode = smode
+
+				if expectErr {
+					Expect(k8sClient.Create(ctx, rc)).To(HaveOccurred())
+				} else {
+					Expect(k8sClient.Create(ctx, rc)).NotTo(HaveOccurred())
+				}
+			},
+			Entry("empty string is valid", "", false),
+			Entry("UNSET is valid", "UNSET", false),
+			Entry("DISABLE is valid", "DISABLE", false),
+			Entry("PERMISSIVE is valid", "PERMISSIVE", false),
+			Entry("STRICT is valid", "STRICT", false),
+			Entry("GARBAGE is not valid", "GARBAGE", true),
 		)
 
 		Context("With a provided image", func() {
