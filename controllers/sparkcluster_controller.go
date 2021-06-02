@@ -237,6 +237,7 @@ func (r *SparkClusterReconciler) reconcileResources(ctx context.Context, sc *dcv
 	return r.reconcileStatefulSets(ctx, sc)
 }
 
+// nolint:dupl
 func (r *SparkClusterReconciler) reconcileIstio(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
 	if !r.IstioEnabled {
 		return nil

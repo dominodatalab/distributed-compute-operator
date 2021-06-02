@@ -164,7 +164,7 @@ var _ = Describe("SparkCluster", func() {
 		})
 
 		Context("Annotations", func() {
-			//It("add istio annotation to provided annotations", func() {
+			// It("add istio annotation to provided annotations", func() {
 			//	rc := sparkFixture(testNS.Name)
 			//	provided := map[string]string{"annotation": "test"}
 			//	rc.Spec.Master.Annotations = provided
@@ -177,9 +177,9 @@ var _ = Describe("SparkCluster", func() {
 			//	Expect(k8sClient.Create(ctx, rc)).To(Succeed())
 			//	Expect(rc.Spec.Master.Annotations).To(Equal(expected))
 			//	Expect(rc.Spec.Worker.Annotations).To(Equal(expected))
-			//})
+			// })
 
-			//It("override provided istio annotation", func() {
+			// It("override provided istio annotation", func() {
 			//	rc := sparkFixture(testNS.Name)
 			//	provided := map[string]string{"sidecar.istio.io/inject": "true"}
 			//	rc.Spec.Master.Annotations = provided
@@ -189,7 +189,7 @@ var _ = Describe("SparkCluster", func() {
 			//	Expect(k8sClient.Create(ctx, rc)).To(Succeed())
 			//	Expect(rc.Spec.Master.Annotations).To(Equal(expected))
 			//	Expect(rc.Spec.Worker.Annotations).To(Equal(expected))
-			//})
+			// })
 		})
 	})
 
