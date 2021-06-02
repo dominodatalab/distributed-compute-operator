@@ -172,6 +172,7 @@ func (r *RayClusterReconciler) reconcileResources(ctx context.Context, rc *dcv1a
 	return r.reconcileStatefulSets(ctx, rc)
 }
 
+// nolint:dupl
 func (r *RayClusterReconciler) reconcileIstio(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
 	if !r.IstioEnabled {
 		return nil
