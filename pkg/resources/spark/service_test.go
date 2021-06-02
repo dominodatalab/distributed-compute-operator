@@ -87,16 +87,18 @@ func TestNewHeadlessService(t *testing.T) {
 				{
 					Name:       "cluster",
 					Port:       7077,
-					TargetPort: intstr.FromInt(7077),
+					TargetPort: intstr.FromString("cluster"),
 				},
 				{
 					Name:       "tcp-master-webport",
 					Port:       80,
-					TargetPort: intstr.FromInt(80),
+					TargetPort: intstr.FromString("http"),
+					Protocol:   corev1.ProtocolTCP,
 				}, {
 					Name:       "tcp-worker-webport",
 					Port:       8081,
-					TargetPort: intstr.FromInt(8081),
+					TargetPort: intstr.FromString("http"),
+					Protocol:   corev1.ProtocolTCP,
 				},
 			},
 		},
