@@ -33,8 +33,6 @@ spec:
 
   # internal port overrides
   clusterPort: 7077
-  workerWebPort: 8081
-  webPort: 80
 
   # control the creation of network policies
   networkPolicy:

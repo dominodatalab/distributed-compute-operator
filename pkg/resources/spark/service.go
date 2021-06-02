@@ -63,16 +63,18 @@ func NewHeadlessService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 				{
 					Name:       "cluster",
 					Port:       sc.Spec.ClusterPort,
-					TargetPort: intstr.FromInt(int(sc.Spec.ClusterPort)),
+					TargetPort: intstr.FromString("cluster"),
 				},
 				{
 					Name:       "tcp-master-webport",
 					Port:       sc.Spec.TCPMasterWebPort,
-					TargetPort: intstr.FromInt(int(sc.Spec.TCPMasterWebPort)),
+					TargetPort: intstr.FromString("http"),
+					Protocol:   "TCP",
 				}, {
 					Name:       "tcp-worker-webport",
 					Port:       sc.Spec.TCPWorkerWebPort,
-					TargetPort: intstr.FromInt(int(sc.Spec.TCPWorkerWebPort)),
+					TargetPort: intstr.FromString("http"),
+					Protocol:   "TCP",
 				},
 			},
 		},
