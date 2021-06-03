@@ -24,7 +24,7 @@ func NewClientService(rc *dcv1alpha1.RayCluster) *corev1.Service {
 
 	if util.BoolPtrIsTrue(rc.Spec.EnableDashboard) {
 		ports = append(ports, corev1.ServicePort{
-			Name:       "http-dashboard",
+			Name:       "tcp-dashboard",
 			Port:       rc.Spec.DashboardPort,
 			TargetPort: intstr.FromInt(int(rc.Spec.DashboardPort)),
 		})
