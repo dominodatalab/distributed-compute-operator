@@ -21,6 +21,14 @@ const (
 	ApplicationName = "spark"
 )
 
+func FrameworkConfigMapName(instance string, comp Component) string {
+	return InstanceObjectName(fmt.Sprintf("%s-%s", instance, "framework"), comp)
+}
+
+func KeyTabConfigMapName(instance string, comp Component) string {
+	return InstanceObjectName(fmt.Sprintf("%s-%s", instance, "keytab"), comp)
+}
+
 // InstanceObjectName returns the name that will be used to create most owned cluster resources.
 func InstanceObjectName(instance string, comp Component) string {
 	if comp == ComponentNone {

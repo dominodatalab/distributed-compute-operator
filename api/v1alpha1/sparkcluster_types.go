@@ -36,6 +36,26 @@ type SparkClusterNode struct {
 
 	// Requests for additional storage volumes to be created alongside each pod
 	AdditionalStorage []SparkAdditionalStorage `json:"additionalStorage,omitempty"`
+
+	// Extra framework-specific configuration for this cluster
+	// For spark this means we'll generate a spark-defaults.conf config map
+	// and mount it in to the requested location
+	FrameworkConfig *FrameworkConfig `json:"frameworkConfig,omitempty"`
+
+	KeyTabConfig *KeyTabConfig `json:"keyTabConfig,omitempty"`
+}
+
+type KeyTabConfig struct {
+	// Path at which to mount the configmap
+	Path string `json:"path"`
+	// need to map to a binary string
+	KeyTab []byte `json:"configs"`
+}
+
+type FrameworkConfig struct {
+	// Path at which to mount the configmap
+	Path    string            `json:"path"`
+	Configs map[string]string `json:"configs"`
 }
 
 type SparkAdditionalStorage struct {
@@ -80,8 +100,15 @@ type SparkClusterSpec struct {
 	// Autoscaling parameters used to scale up/down spark worker nodes.
 	Autoscaling *Autoscaling `json:"autoscaling,omitempty"`
 
-	// Cluster port is the port on which the spark protocol communicates
+	// ClusterPort is the port on which the spark protocol communicates
 	ClusterPort int32 `json:"clusterPort,omitempty"`
+
+	// These two are meant for istio compatibility on spark
+	TCPMasterWebPort int32 `json:"tcpMasterWebPort,omitempty"`
+	TCPWorkerWebPort int32 `json:"tcpWorkerWebPort,omitempty"`
+
+	// IstioConfig parameters for Spark clusters.
+	IstioConfig `json:",inline"`
 
 	// DashboardPort is the port used by the dashboard server.
 	DashboardPort int32 `json:"dashboardPort,omitempty"`
@@ -127,6 +154,15 @@ type SparkClusterNetworkPolicy struct {
 	// DashboardLabels defines the pod selector clause used to grant ingress
 	// access to the head dashboard port.
 	DashboardLabels map[string]string `json:"dashboardLabels,omitempty"`
+
+	// ExternalPolicyEnabled controls creation of network policies which deal with two way traffic to pods that are
+	// external to the cluster entirely. The spark driver, for example, is generally going to live outside the
+	// cluster
+	ExternalPolicyEnabled *bool `json:"externalPolicyEnabled,omitempty"`
+
+	// ExternalPodLabels defines the pod selector clause for used to granted unfettered
+	// access to cluster resources.
+	ExternalPodLabels map[string]string `json:"clusterLabels,omitempty"`
 }
 
 // SparkClusterStatus defines the observed state of a SparkCluster resource.

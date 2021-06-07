@@ -136,7 +136,6 @@ rules:
   - delete
   - list
   - watch
-{{- if .Values.config.enableLeaderElection }}
 - apiGroups:
   - ""
   resources:
@@ -145,6 +144,9 @@ rules:
   - get
   - create
   - update
+  - watch
+  - list
+{{- if .Values.config.enableLeaderElection }}
 - apiGroups:
   - ""
   resources:

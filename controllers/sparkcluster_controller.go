@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/istio"
+
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
@@ -48,11 +50,11 @@ var (
 // SparkClusterReconciler reconciles SparkCluster objects.
 type SparkClusterReconciler struct {
 	client.Client
-	Log    logging.ContextLogger
-	Scheme *runtime.Scheme
+	Log          logging.ContextLogger
+	Scheme       *runtime.Scheme
+	IstioEnabled bool
 }
 
-// nolint:dupl
 // SetupWithManager creates and registers this controller with the manager.
 func (r *SparkClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
@@ -64,6 +66,7 @@ func (r *SparkClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&rbacv1.RoleBinding{}).
 		Owns(&networkingv1.NetworkPolicy{}).
 		Owns(&autoscalingv2beta2.HorizontalPodAutoscaler{}).
+		Owns(&corev1.ConfigMap{}).
 		Complete(r)
 }
 
@@ -75,6 +78,7 @@ const SparkFinalizerName = "distributed-compute.dominodatalab.com/dco-finalizer"
 //+kubebuilder:rbac:groups="",resources=pods,verbs=list;watch
 //+kubebuilder:rbac:groups="",resources=services;serviceaccounts,verbs=create;update;list;watch
 //+kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=create;update;list;watch
+//+kubebuilder:rbac:groups=apps,resources=configmaps,verbs=create;update;list;watch
 //+kubebuilder:rbac:groups=autoscaling,resources=horizontalpodautoscalers,verbs=create;update;delete;list;watch
 //+kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=create;update;delete;list;watch
 //+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles;rolebindings,verbs=create;update;delete;list;watch
@@ -83,7 +87,7 @@ const SparkFinalizerName = "distributed-compute.dominodatalab.com/dco-finalizer"
 func (r *SparkClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	ctx, log := r.setLogger(ctx, r.Log.WithValues("sparkcluster", req.NamespacedName))
 
-	log.V(2).Info("reconciliation loop trigged")
+	log.V(2).Info("reconciliation loop triggered")
 
 	rc := &dcv1alpha1.SparkCluster{}
 	if err := r.Get(ctx, req.NamespacedName, rc); err != nil {
@@ -198,11 +202,13 @@ func hasDeletionTimestamp(sc *dcv1alpha1.SparkCluster) bool {
 	return sc.ObjectMeta.DeletionTimestamp != nil
 }
 
-// nolint:dupl
 // reconcileResources manages the creation and updates of resources that
 // collectively comprise a Spark cluster. Each resource is controlled by a parent
 // SparkCluster object so that full cleanup occurs during a delete operation.
 func (r *SparkClusterReconciler) reconcileResources(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+	if err := r.reconcileIstio(ctx, sc); err != nil {
+		return err
+	}
 	if err := r.reconcileServiceAccount(ctx, sc); err != nil {
 		return err
 	}
@@ -215,14 +221,64 @@ func (r *SparkClusterReconciler) reconcileResources(ctx context.Context, sc *dcv
 	if err := r.reconcileNetworkPolicies(ctx, sc); err != nil {
 		return err
 	}
+	if err := r.reconcileDriverNetworkPolicy(ctx, sc); err != nil {
+		return err
+	}
 	if err := r.reconcilePodSecurityPolicyRBAC(ctx, sc); err != nil {
 		return err
 	}
 	if err := r.reconcileAutoscaler(ctx, sc); err != nil {
 		return err
 	}
+	if err := r.reconcileConfigMap(ctx, sc); err != nil {
+		return err
+	}
 
 	return r.reconcileStatefulSets(ctx, sc)
+}
+
+// nolint:dupl
+func (r *SparkClusterReconciler) reconcileIstio(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+	if !r.IstioEnabled {
+		return nil
+	}
+
+	peerAuth := istio.NewPeerAuthentication(&istio.PeerAuthInfo{
+		Name:      spark.InstanceObjectName(sc.Name, spark.ComponentNone),
+		Namespace: sc.Namespace,
+		Labels:    spark.MetadataLabels(sc),
+		Selector:  spark.SelectorLabels(sc),
+		Mode:      sc.Spec.IstioConfig.MutualTLSMode,
+	})
+
+	if sc.Spec.IstioConfig.MutualTLSMode == "" {
+		return r.deleteIfExists(ctx, peerAuth)
+	}
+	if err := r.createOrUpdateOwnedResource(ctx, sc, peerAuth); err != nil {
+		return fmt.Errorf("failed to reconcile peer authentication: %w", err)
+	}
+
+	return nil
+}
+
+func (r *SparkClusterReconciler) reconcileConfigMap(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+	frameworkCM := spark.NewFrameworkConfigMap(sc)
+
+	if frameworkCM != nil {
+		if err := r.createOrUpdateOwnedResource(ctx, sc, frameworkCM); err != nil {
+			return fmt.Errorf("failed to reconcile framework configmap: %w", err)
+		}
+	}
+
+	keytabCM := spark.NewKeyTabConfigMap(sc)
+
+	if keytabCM != nil {
+		if err := r.createOrUpdateOwnedResource(ctx, sc, keytabCM); err != nil {
+			return fmt.Errorf("failed to reconcile keytab configmap: %w", err)
+		}
+	}
+
+	return nil
 }
 
 // reconcileServiceAccount creates a new dedicated service account for a Spark
@@ -262,6 +318,20 @@ func (r *SparkClusterReconciler) reconcileHeadlessService(ctx context.Context, s
 	return nil
 }
 
+func (r SparkClusterReconciler) reconcileDriverNetworkPolicy(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+	driverNetpol := spark.NewClusterExternalNetworkPolicy(sc)
+
+	if !util.BoolPtrIsTrue(sc.Spec.NetworkPolicy.ExternalPolicyEnabled) {
+		return r.deleteIfExists(ctx, driverNetpol)
+	}
+
+	if err := r.createOrUpdateOwnedResource(ctx, sc, driverNetpol); err != nil {
+		return fmt.Errorf("failed to reconcile driver network policy: %w", err)
+	}
+
+	return nil
+}
+
 // reconcileNetworkPolicies optionally creates network policies that control
 // traffic flow between cluster nodes and external clients.
 func (r SparkClusterReconciler) reconcileNetworkPolicies(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
@@ -270,7 +340,7 @@ func (r SparkClusterReconciler) reconcileNetworkPolicies(ctx context.Context, sc
 	dashboardNetpol := spark.NewHeadDashboardNetworkPolicy(sc)
 
 	if !util.BoolPtrIsTrue(sc.Spec.NetworkPolicy.Enabled) {
-		return r.deleteIfExists(ctx, headNetpol, clusterNetpol)
+		return r.deleteIfExists(ctx, headNetpol, clusterNetpol, dashboardNetpol)
 	}
 
 	if err := r.createOrUpdateOwnedResource(ctx, sc, clusterNetpol); err != nil {

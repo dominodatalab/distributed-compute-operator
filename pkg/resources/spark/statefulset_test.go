@@ -1,6 +1,7 @@
 package spark
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -184,6 +185,10 @@ func TestNewStatefulSet(t *testing.T) {
 										{
 											Name:  "SPARK_WORKER_WEBUI_PORT",
 											Value: "8265",
+										},
+										{
+											Name:  "SPARK_WORKER_PORT",
+											Value: "7077",
 										},
 										{
 											Name:  "SPARK_MODE",
@@ -552,5 +557,115 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		}
 		_, err := NewStatefulSet(rc, comp)
 		require.Error(t, err)
+	})
+
+	t.Run("framework config", func(t *testing.T) {
+		rc := sparkClusterFixture()
+		fcMaster := dcv1alpha1.FrameworkConfig{
+			Path: "/test/master/path",
+			Configs: map[string]string{
+				"m1": "v1",
+			},
+		}
+
+		fcWorker := dcv1alpha1.FrameworkConfig{
+			Path: "/test/worker/path",
+			Configs: map[string]string{
+				"w1": "v1",
+			},
+		}
+
+		rc.Spec.Master = dcv1alpha1.SparkClusterHead{
+			SparkClusterNode: dcv1alpha1.SparkClusterNode{
+				FrameworkConfig: &fcMaster,
+			},
+		}
+		rc.Spec.Worker = dcv1alpha1.SparkClusterWorker{
+			SparkClusterNode: dcv1alpha1.SparkClusterNode{
+				FrameworkConfig: &fcWorker,
+			},
+			Replicas: pointer.Int32Ptr(2),
+		}
+
+		expectedVolumes := []corev1.Volume{
+			{
+				Name: "spark-config",
+				VolumeSource: corev1.VolumeSource{
+					ConfigMap: &corev1.ConfigMapVolumeSource{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "test-id-framework-spark",
+						},
+					},
+				},
+			},
+		}
+
+		expectedVolumeMounts := []corev1.VolumeMount{
+			{
+				Name:      "spark-config",
+				ReadOnly:  false,
+				MountPath: fmt.Sprintf("/test/%s/path", comp),
+				SubPath:   string(comp),
+			},
+		}
+
+		actual, err := NewStatefulSet(rc, comp)
+		require.NoError(t, err)
+
+		assert.Equal(t, expectedVolumes, actual.Spec.Template.Spec.Volumes)
+		assert.Equal(t, expectedVolumeMounts, actual.Spec.Template.Spec.Containers[0].VolumeMounts)
+	})
+
+	t.Run("keytab config", func(t *testing.T) {
+		rc := sparkClusterFixture()
+		kcMaster := dcv1alpha1.KeyTabConfig{
+			Path:   "/test/master/path",
+			KeyTab: []byte{'m', 'a', 's', 't', 'e', 'r'},
+		}
+
+		kcWorker := dcv1alpha1.KeyTabConfig{
+			Path:   "/test/worker/path",
+			KeyTab: []byte{'w', 'o', 'r', 'k', 'e', 'r'},
+		}
+
+		rc.Spec.Master = dcv1alpha1.SparkClusterHead{
+			SparkClusterNode: dcv1alpha1.SparkClusterNode{
+				KeyTabConfig: &kcMaster,
+			},
+		}
+		rc.Spec.Worker = dcv1alpha1.SparkClusterWorker{
+			SparkClusterNode: dcv1alpha1.SparkClusterNode{
+				KeyTabConfig: &kcWorker,
+			},
+			Replicas: pointer.Int32Ptr(2),
+		}
+
+		expectedVolumes := []corev1.Volume{
+			{
+				Name: "keytab",
+				VolumeSource: corev1.VolumeSource{
+					ConfigMap: &corev1.ConfigMapVolumeSource{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "test-id-keytab-spark",
+						},
+					},
+				},
+			},
+		}
+
+		expectedVolumeMounts := []corev1.VolumeMount{
+			{
+				Name:      "keytab",
+				ReadOnly:  false,
+				MountPath: fmt.Sprintf("/test/%s/path", comp),
+				SubPath:   string(comp),
+			},
+		}
+
+		actual, err := NewStatefulSet(rc, comp)
+		require.NoError(t, err)
+
+		assert.Equal(t, expectedVolumes, actual.Spec.Template.Spec.Volumes)
+		assert.Equal(t, expectedVolumeMounts, actual.Spec.Template.Spec.Containers[0].VolumeMounts)
 	})
 }

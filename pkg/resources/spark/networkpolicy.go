@@ -12,15 +12,67 @@ import (
 
 const (
 	descriptionCluster   = "Allows all ingress traffic between cluster nodes"
+	descriptionExternal  = "Allows all ingress traffic between cluster and external nodes"
 	descriptionClient    = "Allows client ingress traffic to head client server port"
 	descriptionDashboard = "Allows client ingress traffic to head dashboard port"
 )
 
+func NewClusterExternalNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.NetworkPolicy {
+	driverSelector := metav1.LabelSelector{
+		MatchLabels: sc.Spec.NetworkPolicy.ExternalPodLabels,
+	}
+
+	clusterSelector := metav1.LabelSelector{
+		MatchLabels: SelectorLabels(sc),
+	}
+
+	return &networkingv1.NetworkPolicy{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      InstanceObjectName(sc.Name, Component("external")),
+			Namespace: sc.Namespace,
+			Labels:    MetadataLabels(sc),
+			Annotations: map[string]string{
+				resources.DescriptionAnnotationKey: descriptionExternal,
+			},
+		},
+		Spec: networkingv1.NetworkPolicySpec{
+			PodSelector: driverSelector,
+			Ingress: []networkingv1.NetworkPolicyIngressRule{
+				{
+					From: []networkingv1.NetworkPolicyPeer{
+						{
+							PodSelector: &clusterSelector,
+						},
+					},
+				},
+			},
+			PolicyTypes: []networkingv1.PolicyType{
+				networkingv1.PolicyTypeIngress,
+			},
+		},
+	}
+}
+
 // NewClusterNetworkPolicy generates a network policy that allows all nodes
-// within a single cluster to communicate on all ports.
+// within a single cluster to communicate on all ports. Optionally, it will also
+// allow pods external to the cluster itself to communicate in and out of cluster
 func NewClusterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.NetworkPolicy {
 	labelSelector := metav1.LabelSelector{
 		MatchLabels: SelectorLabels(sc),
+	}
+
+	peers := []networkingv1.NetworkPolicyPeer{
+		{
+			PodSelector: &labelSelector,
+		},
+	}
+
+	if sc.Spec.NetworkPolicy.ExternalPolicyEnabled != nil {
+		peers = append(peers, networkingv1.NetworkPolicyPeer{
+			PodSelector: &metav1.LabelSelector{
+				MatchLabels: sc.Spec.NetworkPolicy.ExternalPodLabels,
+			},
+		})
 	}
 
 	return &networkingv1.NetworkPolicy{
@@ -36,11 +88,7 @@ func NewClusterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.NetworkP
 			PodSelector: labelSelector,
 			Ingress: []networkingv1.NetworkPolicyIngressRule{
 				{
-					From: []networkingv1.NetworkPolicyPeer{
-						{
-							PodSelector: &labelSelector,
-						},
-					},
+					From: peers,
 				},
 			},
 			PolicyTypes: []networkingv1.PolicyType{

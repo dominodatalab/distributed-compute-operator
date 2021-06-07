@@ -3,6 +3,8 @@ package v1alpha1
 import (
 	"fmt"
 
+	securityv1beta1 "istio.io/api/security/v1beta1"
+
 	v1 "k8s.io/api/core/v1"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -17,17 +19,20 @@ import (
 )
 
 const (
-	sparkMinValidPort int32 = 1024
+	sparkMinValidPort int32 = 80
 	sparkMaxValidPort int32 = 65535
 )
 
 var (
-	sparkDefaultDashboardPort             int32 = 8265
-	sparkDefaultClusterPort               int32 = 7077
-	sparkDefaultEnableNetworkPolicy             = pointer.BoolPtr(true)
-	sparkDefaultWorkerReplicas                  = pointer.Int32Ptr(1)
-	sparkDefaultEnableDashboard                 = pointer.BoolPtr(true)
-	sparkDefaultNetworkPolicyClientLabels       = map[string]string{
+	sparkDefaultDashboardPort               int32 = 8265
+	sparkDefaultClusterPort                 int32 = 7077
+	sparkDefaultMasterWebPort               int32 = 80
+	sparkDefaultWorkerWebPort               int32 = 8081
+	sparkDefaultEnableNetworkPolicy               = pointer.BoolPtr(true)
+	sparkDefaultEnableExternalNetworkPolicy       = pointer.BoolPtr(false)
+	sparkDefaultWorkerReplicas                    = pointer.Int32Ptr(1)
+	sparkDefaultEnableDashboard                   = pointer.BoolPtr(true)
+	sparkDefaultNetworkPolicyClientLabels         = map[string]string{
 		"spark-client": "true",
 	}
 	sparkDefaultImage = &OCIImageDefinition{
@@ -59,6 +64,14 @@ func (r *SparkCluster) Default() {
 		log.Info("setting default cluster port", "value", sparkDefaultClusterPort)
 		r.Spec.ClusterPort = sparkDefaultClusterPort
 	}
+	if r.Spec.TCPWorkerWebPort == 0 {
+		log.Info("setting default worker web port", "value", sparkDefaultWorkerWebPort)
+		r.Spec.TCPWorkerWebPort = sparkDefaultWorkerWebPort
+	}
+	if r.Spec.TCPMasterWebPort == 0 {
+		log.Info("setting default master web port", "value", sparkDefaultMasterWebPort)
+		r.Spec.TCPMasterWebPort = sparkDefaultMasterWebPort
+	}
 	if r.Spec.DashboardPort == 0 {
 		log.Info("setting default dashboard port", "value", sparkDefaultDashboardPort)
 		r.Spec.DashboardPort = sparkDefaultDashboardPort
@@ -70,6 +83,10 @@ func (r *SparkCluster) Default() {
 	if r.Spec.NetworkPolicy.Enabled == nil {
 		log.Info("setting enable network policy flag", "value", *sparkDefaultEnableNetworkPolicy)
 		r.Spec.NetworkPolicy.Enabled = sparkDefaultEnableNetworkPolicy
+	}
+	if r.Spec.NetworkPolicy.ExternalPolicyEnabled == nil {
+		log.Info("setting enable external network policy flag", "value", *sparkDefaultEnableExternalNetworkPolicy)
+		r.Spec.NetworkPolicy.ExternalPolicyEnabled = sparkDefaultEnableExternalNetworkPolicy
 	}
 	if r.Spec.NetworkPolicy.ClientServerLabels == nil {
 		log.Info("setting default network policy client labels", "value", sparkDefaultNetworkPolicyClientLabels)
@@ -89,19 +106,12 @@ func (r *SparkCluster) Default() {
 		r.Spec.Image = sparkDefaultImage
 	}
 
-	annotations := make(map[string]string)
-	if r.Spec.Worker.Annotations == nil {
-		r.Spec.Worker.Annotations = annotations
-	}
-	if r.Spec.Master.Annotations == nil {
-		r.Spec.Master.Annotations = annotations
-	}
-
-	for _, node := range []SparkClusterNode{r.Spec.Master.SparkClusterNode, r.Spec.Worker.SparkClusterNode} {
+	nodes := []*SparkClusterNode{&r.Spec.Master.SparkClusterNode, &r.Spec.Worker.SparkClusterNode}
+	for i := range nodes {
+		node := nodes[i]
 		if node.Annotations == nil {
-			node.Annotations = annotations
+			node.Annotations = make(map[string]string)
 		}
-		node.Annotations["sidecar.istio.io/inject"] = "false"
 	}
 }
 
@@ -132,6 +142,9 @@ func (r *SparkCluster) ValidateDelete() error {
 func (r *SparkCluster) validateSparkCluster() error {
 	var allErrs field.ErrorList
 
+	if err := r.validateMutualTLSMode(); err != nil {
+		allErrs = append(allErrs, err)
+	}
 	if err := r.validateWorkerReplicas(); err != nil {
 		allErrs = append(allErrs, err)
 	}
@@ -147,6 +160,15 @@ func (r *SparkCluster) validateSparkCluster() error {
 	if errs := r.validateImage(); errs != nil {
 		allErrs = append(allErrs, errs...)
 	}
+	if errs := r.validateExtraConfigs(); errs != nil {
+		allErrs = append(allErrs, errs...)
+	}
+	if errs := r.validateKeyTabConfigs(); errs != nil {
+		allErrs = append(allErrs, errs...)
+	}
+	if err := r.validateNetworkPolicies(); err != nil {
+		allErrs = append(allErrs, err)
+	}
 
 	if len(allErrs) == 0 {
 		return nil
@@ -156,6 +178,116 @@ func (r *SparkCluster) validateSparkCluster() error {
 		schema.GroupKind{Group: "distributed-compute.dominodatalab.com", Kind: "SparkCluster"},
 		r.Name,
 		allErrs,
+	)
+}
+
+func (r *SparkCluster) validateNetworkPolicies() *field.Error {
+	if r.Spec.NetworkPolicy.ExternalPolicyEnabled != nil &&
+		*r.Spec.NetworkPolicy.ExternalPolicyEnabled &&
+		len(r.Spec.NetworkPolicy.ExternalPodLabels) == 0 {
+		return field.Invalid(
+			field.NewPath("spec").Child("NetworkPolicy").Child("ExternalPodLabels"),
+			r.Spec.NetworkPolicy,
+			"should have at least one item if the policy is enabled",
+		)
+	}
+
+	return nil
+}
+
+func (r *SparkCluster) validateExtraConfigs() field.ErrorList {
+	var errs field.ErrorList
+
+	if err := r.validateExtraConfig(r.Spec.Master.FrameworkConfig, "master"); err != nil {
+		errs = append(errs, err...)
+	}
+
+	if err := r.validateExtraConfig(r.Spec.Worker.FrameworkConfig, "worker"); err != nil {
+		errs = append(errs, err...)
+	}
+
+	return errs
+}
+
+func (r *SparkCluster) validateKeyTabConfigs() field.ErrorList {
+	var errs field.ErrorList
+
+	if err := r.validateKeyTabConfig(r.Spec.Master.KeyTabConfig, "master"); err != nil {
+		errs = append(errs, err...)
+	}
+
+	if err := r.validateKeyTabConfig(r.Spec.Worker.KeyTabConfig, "worker"); err != nil {
+		errs = append(errs, err...)
+	}
+
+	return errs
+}
+
+func (r *SparkCluster) validateExtraConfig(config *FrameworkConfig, comp string) field.ErrorList {
+	var errs field.ErrorList
+	if config == nil {
+		return nil
+	}
+	if len(config.Configs) == 0 {
+		errs = append(errs, field.Invalid(
+			field.NewPath("spec").Child(comp).Child("frameworkConfig").Child("configs"),
+			config.Configs,
+			"should have at least one item",
+		))
+	}
+
+	if config.Path == "" {
+		errs = append(errs, field.Invalid(
+			field.NewPath("spec").Child(comp).Child("frameworkConfig").Child("path"),
+			config.Path,
+			"should be non-empty",
+		))
+	}
+	return errs
+}
+
+func (r *SparkCluster) validateKeyTabConfig(config *KeyTabConfig, comp string) field.ErrorList {
+	var errs field.ErrorList
+	if config == nil {
+		return nil
+	}
+
+	if config.Path == "" {
+		errs = append(errs, field.Invalid(
+			field.NewPath("spec").Child(comp).Child("keyTabConfig").Child("path"),
+			config.Path,
+			"should be non-empty",
+		))
+	}
+
+	if len(config.KeyTab) == 0 {
+		errs = append(errs, field.Invalid(
+			field.NewPath("spec").Child(comp).Child("keyTabConfig").Child("keytab"),
+			config.KeyTab,
+			"should have at least one item",
+		))
+	}
+
+	return errs
+}
+
+func (r *SparkCluster) validateMutualTLSMode() *field.Error {
+	if r.Spec.MutualTLSMode == "" {
+		return nil
+	}
+	if _, ok := securityv1beta1.PeerAuthentication_MutualTLS_Mode_value[r.Spec.MutualTLSMode]; ok {
+		return nil
+	}
+
+	var validModes []string
+	for s := range securityv1beta1.PeerAuthentication_MutualTLS_Mode_value {
+		validModes = append(validModes, s)
+	}
+
+	return field.Invalid(
+		field.NewPath("spec").Child("istioMutualTLSMode"),
+		r.Spec.MutualTLSMode,
+		fmt.Sprintf("mode must be one of the following: %v", validModes),
 	)
 }
 
@@ -176,6 +308,12 @@ func (r *SparkCluster) validatePorts() field.ErrorList {
 	var errs field.ErrorList
 
 	if err := r.validatePort(r.Spec.ClusterPort, field.NewPath("spec").Child("clusterPort")); err != nil {
+		errs = append(errs, err)
+	}
+	if err := r.validatePort(r.Spec.TCPMasterWebPort, field.NewPath("spec").Child("tcpMasterWebPort")); err != nil {
+		errs = append(errs, err)
+	}
+	if err := r.validatePort(r.Spec.TCPWorkerWebPort, field.NewPath("spec").Child("tcpWorkerWebPort")); err != nil {
 		errs = append(errs, err)
 	}
 	if err := r.validatePort(r.Spec.DashboardPort, field.NewPath("spec").Child("dashboardPort")); err != nil {

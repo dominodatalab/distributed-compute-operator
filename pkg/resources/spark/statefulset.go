@@ -20,6 +20,8 @@ import (
 func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.StatefulSet, error) {
 	var replicas int32
 	var nodeAttrs dcv1alpha1.SparkClusterNode
+	var volumes []corev1.Volume
+	var volumeMounts []corev1.VolumeMount
 
 	switch comp {
 	case ComponentMaster:
@@ -36,13 +38,26 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	if err != nil {
 		return nil, err
 	}
-
 	ports := processPorts(sc)
 	labels := processLabels(sc, comp, nodeAttrs.Labels)
 	envVars := append(componentEnvVars(sc, comp), sc.Spec.EnvVars...)
-	volumes := nodeAttrs.Volumes
-	volumeMounts := nodeAttrs.VolumeMounts
+	volumes = nodeAttrs.Volumes
+	volumeMounts = nodeAttrs.VolumeMounts
 
+	if nodeAttrs.FrameworkConfig != nil {
+		cmVolume := getConfigMapVolume("spark-config", FrameworkConfigMapName(sc.Name, ComponentNone))
+		cmVolumeMount := getConfigMapVolumeMount("spark-config", nodeAttrs.FrameworkConfig.Path, string(comp))
+
+		volumes = append(volumes, cmVolume)
+		volumeMounts = append(volumeMounts, cmVolumeMount)
+	}
+	if nodeAttrs.KeyTabConfig != nil {
+		cmVolume := getConfigMapVolume("keytab", KeyTabConfigMapName(sc.Name, ComponentNone))
+		cmVolumeMount := getConfigMapVolumeMount("keytab", nodeAttrs.KeyTabConfig.Path, string(comp))
+
+		volumes = append(volumes, cmVolume)
+		volumeMounts = append(volumeMounts, cmVolumeMount)
+	}
 	volumeClaimTemplates, err := processVolumeClaimTemplates(nodeAttrs.AdditionalStorage)
 	if err != nil {
 		return nil, err
@@ -51,15 +66,13 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	if sc.Spec.ServiceAccountName != "" {
 		serviceAccountName = sc.Spec.ServiceAccountName
 	}
-
 	annotations := make(map[string]string)
 	if nodeAttrs.Annotations != nil {
 		for k, v := range nodeAttrs.Annotations {
 			annotations[k] = v
 		}
 	}
-	//TODO: Chart defaults a specific security context if enabled. Always setting for now
-	context := sc.Spec.PodSecurityContext
+	context := sc.Spec.PodSecurityContext //TODO: Chart defaults a specific security context if enabled. Always setting for now
 	if context == nil {
 		const DefaultUser = 1001
 		const DefaultFSGroup = 1001
@@ -68,7 +81,6 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 			FSGroup:   pointer.Int64Ptr(DefaultFSGroup),
 		}
 	}
-
 	podSpec := getPodSpec(sc,
 		comp,
 		serviceAccountName,
@@ -79,7 +91,6 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 		envVars,
 		volumeMounts,
 		volumes)
-
 	statefulSet := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      InstanceObjectName(sc.Name, comp),
@@ -106,8 +117,28 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 			PodManagementPolicy: appsv1.ParallelPodManagement,
 		},
 	}
-
 	return statefulSet, nil
+}
+
+func getConfigMapVolumeMount(name string, path string, subPath string) corev1.VolumeMount {
+	return corev1.VolumeMount{
+		Name:      name,
+		MountPath: path,
+		SubPath:   subPath,
+	}
+}
+
+func getConfigMapVolume(name string, cmName string) corev1.Volume {
+	return corev1.Volume{
+		Name: name,
+		VolumeSource: corev1.VolumeSource{
+			ConfigMap: &corev1.ConfigMapVolumeSource{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: cmName,
+				},
+			},
+		},
+	}
 }
 
 func getPodSpec(sc *dcv1alpha1.SparkCluster,
@@ -214,6 +245,10 @@ func componentEnvVars(sc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 				Value: strconv.Itoa(int(sc.Spec.DashboardPort)),
 			},
 			{
+				Name:  "SPARK_WORKER_PORT",
+				Value: strconv.Itoa(int(sc.Spec.ClusterPort)),
+			},
+			{
 				Name:  "SPARK_MODE",
 				Value: "worker",
 			},
@@ -234,7 +269,6 @@ func processPorts(sc *dcv1alpha1.SparkCluster) []corev1.ContainerPort {
 			ContainerPort: sc.Spec.ClusterPort,
 		},
 	}
-
 	return ports
 }
 
@@ -243,6 +277,5 @@ func processLabels(sc *dcv1alpha1.SparkCluster, comp Component, extraLabels map[
 	if extraLabels != nil {
 		labels = util.MergeStringMaps(extraLabels, labels)
 	}
-
 	return labels
 }

@@ -41,7 +41,6 @@ type RayClusterReconciler struct {
 	IstioEnabled bool
 }
 
-// nolint:dupl
 // SetupWithManager creates and registers this controller with the manager.
 func (r *RayClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
@@ -147,7 +146,6 @@ func (r *RayClusterReconciler) manageFinalization(ctx context.Context, rc *dcv1a
 	return false, nil
 }
 
-// nolint:dupl
 // reconcileResources manages the creation and updates of resources that
 // collectively comprise a Ray cluster. Each resource is controlled by a parent
 // RayCluster object so that full cleanup occurs during a delete operation.
@@ -174,6 +172,7 @@ func (r *RayClusterReconciler) reconcileResources(ctx context.Context, rc *dcv1a
 	return r.reconcileStatefulSets(ctx, rc)
 }
 
+// nolint:dupl
 func (r *RayClusterReconciler) reconcileIstio(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
 	if !r.IstioEnabled {
 		return nil

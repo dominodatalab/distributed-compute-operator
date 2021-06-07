@@ -73,3 +73,21 @@ func TestSelectorLabelsWithComponent(t *testing.T) {
 	}
 	assert.Equal(t, expected, actual)
 }
+
+func TestFrameworkConfigMapName(t *testing.T) {
+	rc := sparkClusterFixture()
+	actual := FrameworkConfigMapName(rc.Name, Component("something"))
+
+	expected := "test-id-framework-spark-something"
+
+	assert.Equal(t, expected, actual)
+}
+
+func TestKeyTabConfigMapName(t *testing.T) {
+	rc := sparkClusterFixture()
+	actual := KeyTabConfigMapName(rc.Name, Component("something"))
+
+	expected := "test-id-keytab-spark-something"
+
+	assert.Equal(t, expected, actual)
+}
