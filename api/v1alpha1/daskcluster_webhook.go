@@ -16,11 +16,13 @@ var (
 	daskDefaultDashboardPort int32 = 8787
 	daskDefaultWorkerPort    int32 = 3000
 	daskDefaultNannyPort     int32 = 3001
-	daskDefaultImage               = &OCIImageDefinition{
+
+	daskDefaultImage = &OCIImageDefinition{
 		Repository: "daskdev/dask",
 		Tag:        "2021.5.0",
 		PullPolicy: corev1.PullIfNotPresent,
 	}
+
 	daskDefaultPodSecurityContext = &corev1.PodSecurityContext{
 		RunAsUser: pointer.Int64Ptr(nobodyUID),
 	}
@@ -62,6 +64,10 @@ func (dc *DaskCluster) Default() {
 	if spec.PodSecurityContext == nil {
 		log.Info("Setting default pod security context", "value", daskDefaultPodSecurityContext)
 		spec.PodSecurityContext = daskDefaultPodSecurityContext
+	}
+	if spec.NetworkPolicy.Enabled == nil {
+		log.Info("Setting enable network policy flag", "value", pointer.BoolPtr(true))
+		spec.NetworkPolicy.Enabled = pointer.BoolPtr(true)
 	}
 }
 

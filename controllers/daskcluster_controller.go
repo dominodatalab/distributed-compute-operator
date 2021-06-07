@@ -18,9 +18,11 @@ func DaskCluster(mgr ctrl.Manager) error {
 		For(&dcv1alpha1.DaskCluster{}).
 		Component("serviceaccount", components.ServiceAccount(dask.ServiceAccount)).
 		Component("svc-scheduler", components.Service(dask.SchedulerService)).
+		Component("svc-worker", components.Service(dask.WorkerService)).
+		Component("netpol-scheduler", dask.NetworkPolicyScheduler()).
+		Component("netpol-worker", dask.NetworkPolicyWorker()).
 		Component("sts-scheduler", components.StatefulSet(dask.SchedulerStatefulSet)).
-		Component("svc-workers", components.Service(dask.WorkerService)).
-		Component("sts-workers", components.StatefulSet(dask.WorkerStatefulSet)).
+		Component("sts-worker", components.StatefulSet(dask.WorkerStatefulSet)).
 		WithWebhooks().
 		Complete()
 }
