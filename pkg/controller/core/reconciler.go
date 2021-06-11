@@ -16,8 +16,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
-	"github.com/dominodatalab/distributed-compute-operator/pkg/logging"
 )
 
 var getGvk = apiutil.GVKForObject
@@ -89,7 +87,7 @@ func (r *Reconciler) Build() (controller.Controller, error) {
 		return nil, fmt.Errorf("cannot compute controller name: %w", err)
 	}
 	r.name = name
-	r.log = logging.New(ctrl.Log.WithName("controllers").WithName(name))
+	r.log = ctrl.Log.WithName("controllers").WithName(name)
 	r.recorder = r.mgr.GetEventRecorderFor(fmt.Sprintf("%s-%s", r.name, "controller"))
 
 	gvk, err := getGvk(r.apiType, r.mgr.GetScheme())

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -13,6 +14,7 @@ import (
 
 type StatefulSetDataSource interface {
 	StatefulSet() (*appsv1.StatefulSet, error)
+	PVCListOpts() []client.ListOption
 }
 
 type StatefulSetDataSourceFactory func(client.Object) StatefulSetDataSource
@@ -46,5 +48,27 @@ func (c *statefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 }
 
 func (c *statefulSetComponent) Finalize(ctx *core.Context) (ctrl.Result, bool, error) {
+	ds := c.factory(ctx.Object)
+
+	pvcList := &corev1.PersistentVolumeClaimList{}
+	listOpts := ds.PVCListOpts()
+
+	ctx.Log.Info("Querying for persistent volume claims", "opts", listOpts)
+	if err := ctx.Client.List(ctx, pvcList, listOpts...); err != nil {
+		ctx.Log.Error(err, "cannot list persistent volume claims")
+		return ctrl.Result{}, false, err
+	}
+
+	for idx := range pvcList.Items {
+		pvc := &pvcList.Items[idx]
+		key := client.ObjectKeyFromObject(pvc)
+
+		ctx.Log.Info("Deleting persistent volume claim", "claim", key)
+		if err := ctx.Client.Delete(ctx, pvc); err != nil {
+			ctx.Log.Error(err, "cannot delete persistent volume claim", "claim", key)
+			return ctrl.Result{}, false, err
+		}
+	}
+
 	return ctrl.Result{}, true, nil
 }

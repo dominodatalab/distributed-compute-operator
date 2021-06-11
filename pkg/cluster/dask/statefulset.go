@@ -90,7 +90,8 @@ func (s *statefulSetDS) StatefulSet() (*appsv1.StatefulSet, error) {
 					},
 				},
 			},
-			PodManagementPolicy: appsv1.ParallelPodManagement,
+			VolumeClaimTemplates: s.pvcTemplates(),
+			PodManagementPolicy:  appsv1.ParallelPodManagement,
 			UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
 				Type: appsv1.RollingUpdateStatefulSetStrategyType,
 			},
@@ -98,6 +99,13 @@ func (s *statefulSetDS) StatefulSet() (*appsv1.StatefulSet, error) {
 	}
 
 	return sts, nil
+}
+
+func (s *statefulSetDS) PVCListOpts() []client.ListOption {
+	return []client.ListOption{
+		client.InNamespace(s.dc.Namespace),
+		client.MatchingLabels(meta.MatchLabels(s.dc)),
+	}
 }
 
 func (s *statefulSetDS) applicationName() string {
@@ -205,6 +213,24 @@ func (s *statefulSetDS) probe() *corev1.Probe {
 			},
 		},
 	}
+}
+
+func (s *statefulSetDS) pvcTemplates() (tmpls []corev1.PersistentVolumeClaim) {
+	mode := corev1.PersistentVolumeFilesystem
+
+	for _, vct := range s.tc.podConfig().VolumeClaimTemplates {
+		spec := vct.Spec.DeepCopy()
+		spec.VolumeMode = &mode
+
+		tmpls = append(tmpls, corev1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: vct.Name,
+			},
+			Spec: vct.Spec,
+		})
+	}
+
+	return
 }
 
 type typeConfig interface {
