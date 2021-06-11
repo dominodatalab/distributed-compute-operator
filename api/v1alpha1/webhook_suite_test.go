@@ -57,7 +57,7 @@ var _ = BeforeSuite(func() {
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		BinaryAssetsDirectory: test.KubebuilderBinaryAssetsDir(),
+		//BinaryAssetsDirectory: test.KubebuilderBinaryAssetsDir(),
 		CRDDirectoryPaths:     []string{crdPath},
 		ErrorIfCRDPathMissing: false,
 		WebhookInstallOptions: envtest.WebhookInstallOptions{
