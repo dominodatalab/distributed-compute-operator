@@ -66,8 +66,10 @@ func (r *Reconciler) For(apiType client.Object, opts ...builder.ForOption) *Reco
 
 func (r *Reconciler) Component(name string, comp Component, opts ...builder.OwnsOption) *Reconciler {
 	rc := &reconcilerComponent{name: name, comp: comp}
-	r.controllerBuilder.Owns(comp.Kind(), opts...)
 
+	if ownedComp, ok := comp.(OwnedComponent); ok {
+		r.controllerBuilder.Owns(ownedComp.Kind(), opts...)
+	}
 	if finalizer, ok := comp.(FinalizerComponent); ok {
 		rc.finalizer = finalizer
 	}

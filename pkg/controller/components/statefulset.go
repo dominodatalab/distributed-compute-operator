@@ -12,27 +12,27 @@ import (
 )
 
 type StatefulSetDataSource interface {
-	GetStatefulSet() (*appsv1.StatefulSet, error)
+	StatefulSet() (*appsv1.StatefulSet, error)
 }
 
-type statefulSetDataSourceFactory func(object client.Object) StatefulSetDataSource
+type StatefulSetDataSourceFactory func(client.Object) StatefulSetDataSource
 
-type StatefulSetComponent struct {
-	factory statefulSetDataSourceFactory
+func StatefulSet(f StatefulSetDataSourceFactory) core.OwnedComponent {
+	return &statefulSetComponent{factory: f}
 }
 
-func StatefulSet(f statefulSetDataSourceFactory) *StatefulSetComponent {
-	return &StatefulSetComponent{factory: f}
+type statefulSetComponent struct {
+	factory StatefulSetDataSourceFactory
 }
 
-func (comp *StatefulSetComponent) Kind() client.Object {
+func (c *statefulSetComponent) Kind() client.Object {
 	return &appsv1.StatefulSet{}
 }
 
-func (comp *StatefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
-	ds := comp.factory(ctx.Object)
+func (c *statefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
+	ds := c.factory(ctx.Object)
 
-	sts, err := ds.GetStatefulSet()
+	sts, err := ds.StatefulSet()
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to build statefulset: %w", err)
 	}
@@ -45,6 +45,6 @@ func (comp *StatefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, err
 	return ctrl.Result{}, err
 }
 
-func (comp *StatefulSetComponent) Finalize(ctx *core.Context) (ctrl.Result, bool, error) {
+func (c *statefulSetComponent) Finalize(ctx *core.Context) (ctrl.Result, bool, error) {
 	return ctrl.Result{}, true, nil
 }

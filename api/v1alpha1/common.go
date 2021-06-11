@@ -64,6 +64,7 @@ type ServiceAccountConfig struct {
 type ClusterConfig struct {
 	IstioConfig `json:",inline"`
 
+	GlobalLabels   map[string]string    `json:"globalLabels,omitempty"`
 	Image          *OCIImageDefinition  `json:"image,omitempty"`
 	Autoscaling    *Autoscaling         `json:"autoscaling,omitempty"`
 	NetworkPolicy  NetworkPolicyConfig  `json:"networkPolicy,omitempty"`
@@ -86,4 +87,10 @@ type WorkloadConfig struct {
 	Volumes              []corev1.Volume                 `json:"volumes,omitempty"`
 	VolumeMounts         []corev1.VolumeMount            `json:"volumeMounts,omitempty"`
 	VolumeClaimTemplates []PersistentVolumeClaimTemplate `json:"volumeClaimTemplates,omitempty"`
+}
+
+type ClusterStatusConfig struct {
+	Nodes          []string `json:"nodes,omitempty"`
+	WorkerReplicas int32    `json:"workerReplicas,omitempty"`
+	WorkerSelector string   `json:"workerSelector,omitempty"`
 }

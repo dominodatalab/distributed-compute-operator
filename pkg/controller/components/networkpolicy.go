@@ -1,3 +1,4 @@
+//nolint:dupl
 package components
 
 import (
@@ -11,29 +12,30 @@ import (
 	"github.com/dominodatalab/distributed-compute-operator/pkg/controller/core"
 )
 
-type DeletePredicateFn func(client.Object) bool
-type NetworkPolicyFactory func(client.Object) *networkingv1.NetworkPolicy
-
-type networkPolicy struct {
-	factory NetworkPolicyFactory
-	delete  DeletePredicateFn
+type NetworkPolicyDataSource interface {
+	NetworkPolicy() *networkingv1.NetworkPolicy
+	Delete() bool
 }
 
-func NetworkPolicy(f NetworkPolicyFactory, fn DeletePredicateFn) core.Component {
-	return &networkPolicy{
-		factory: f,
-		delete:  fn,
-	}
+type NetworkPolicyDataSourceFactory func(client.Object) NetworkPolicyDataSource
+
+func NetworkPolicy(f NetworkPolicyDataSourceFactory) core.OwnedComponent {
+	return &networkPolicyComponent{factory: f}
 }
 
-func (c *networkPolicy) Kind() client.Object {
+type networkPolicyComponent struct {
+	factory NetworkPolicyDataSourceFactory
+}
+
+func (c *networkPolicyComponent) Kind() client.Object {
 	return &networkingv1.NetworkPolicy{}
 }
 
-func (c *networkPolicy) Reconcile(ctx *core.Context) (ctrl.Result, error) {
-	netpol := c.factory(ctx.Object)
+func (c *networkPolicyComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
+	ds := c.factory(ctx.Object)
+	netpol := ds.NetworkPolicy()
 
-	if c.delete(ctx.Object) {
+	if ds.Delete() {
 		return ctrl.Result{}, actions.DeleteIfExists(ctx, netpol)
 	}
 

@@ -25,12 +25,13 @@ type DaskClusterSpec struct {
 
 // DaskClusterStatus defines the observed state of DaskCluster
 type DaskClusterStatus struct {
-	// TODO: add worker scaling fields (replicas/selector)
+	ClusterStatusConfig `json:",inline"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:resource:shortName=dask
 //+kubebuilder:subresource:status
+//+kubebuilder:subresource:scale:specpath=.spec.worker.replicas,statuspath=.status.workerReplicas,selectorpath=.status.workerSelector
 
 // DaskCluster is the Schema for the daskclusters API.
 type DaskCluster struct {

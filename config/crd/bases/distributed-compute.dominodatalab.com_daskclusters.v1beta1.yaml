@@ -19,6 +19,10 @@ spec:
   preserveUnknownFields: false
   scope: Namespaced
   subresources:
+    scale:
+      labelSelectorPath: .status.workerSelector
+      specReplicasPath: .spec.worker.replicas
+      statusReplicasPath: .status.workerReplicas
     status: {}
   validation:
     openAPIV3Schema:
@@ -177,6 +181,10 @@ spec:
                 - name
                 type: object
               type: array
+            globalLabels:
+              additionalProperties:
+                type: string
+              type: object
             image:
               description: OCIImageDefinition describes where and when to fetch a
                 container image.
@@ -7211,6 +7219,16 @@ spec:
           type: object
         status:
           description: DaskClusterStatus defines the observed state of DaskCluster
+          properties:
+            nodes:
+              items:
+                type: string
+              type: array
+            workerReplicas:
+              format: int32
+              type: integer
+            workerSelector:
+              type: string
           type: object
       type: object
   version: v1alpha1

@@ -12,27 +12,27 @@ import (
 )
 
 type ServiceDataSource interface {
-	GetService() *corev1.Service
+	Service() *corev1.Service
 }
 
-type serviceDataSourceFactory func(object client.Object) ServiceDataSource
+type ServiceDataSourceFactory func(client.Object) ServiceDataSource
 
-type ServiceComponent struct {
-	factory serviceDataSourceFactory
+func Service(f ServiceDataSourceFactory) core.OwnedComponent {
+	return &serviceComponent{factory: f}
 }
 
-func Service(f serviceDataSourceFactory) *ServiceComponent {
-	return &ServiceComponent{factory: f}
+type serviceComponent struct {
+	factory ServiceDataSourceFactory
 }
 
-func (comp *ServiceComponent) Kind() client.Object {
+func (c *serviceComponent) Kind() client.Object {
 	return &corev1.Service{}
 }
 
-func (comp *ServiceComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
-	ds := comp.factory(ctx.Object)
+func (c *serviceComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
+	ds := c.factory(ctx.Object)
+	svc := ds.Service()
 
-	svc := ds.GetService()
 	err := actions.CreateOrUpdateOwnedResource(ctx, ctx.Object, svc)
 	if err != nil {
 		err = fmt.Errorf("cannot reconcile service: %w", err)

@@ -6,8 +6,12 @@ import (
 )
 
 type Component interface {
-	Kind() client.Object
 	Reconcile(*Context) (ctrl.Result, error)
+}
+
+type OwnedComponent interface {
+	Component
+	Kind() client.Object
 }
 
 type FinalizerComponent interface {

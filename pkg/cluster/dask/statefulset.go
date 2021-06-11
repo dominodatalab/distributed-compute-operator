@@ -13,8 +13,27 @@ import (
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/cluster/metadata"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/controller/components"
+	"github.com/dominodatalab/distributed-compute-operator/pkg/controller/core"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
 )
+
+func StatefulSetScheduler() core.OwnedComponent {
+	return components.StatefulSet(func(obj client.Object) components.StatefulSetDataSource {
+		dc := daskCluster(obj)
+		tc := &schedulerConfig{dc: dc}
+
+		return &statefulSetDS{tc, dc, ComponentScheduler}
+	})
+}
+
+func StatefulSetWorker() core.OwnedComponent {
+	return components.StatefulSet(func(obj client.Object) components.StatefulSetDataSource {
+		dc := daskCluster(obj)
+		tc := &workerConfig{dc: dc}
+
+		return &statefulSetDS{tc, dc, ComponentWorker}
+	})
+}
 
 type statefulSetDS struct {
 	tc   typeConfig
@@ -22,21 +41,7 @@ type statefulSetDS struct {
 	comp metadata.Component
 }
 
-func SchedulerStatefulSet(obj client.Object) components.StatefulSetDataSource {
-	dc := obj.(*dcv1alpha1.DaskCluster)
-	tc := &schedulerConfig{dc: dc}
-
-	return &statefulSetDS{tc, dc, ComponentScheduler}
-}
-
-func WorkerStatefulSet(obj client.Object) components.StatefulSetDataSource {
-	dc := obj.(*dcv1alpha1.DaskCluster)
-	tc := &workerConfig{dc: dc}
-
-	return &statefulSetDS{tc, dc, ComponentWorker}
-}
-
-func (s *statefulSetDS) GetStatefulSet() (*appsv1.StatefulSet, error) {
+func (s *statefulSetDS) StatefulSet() (*appsv1.StatefulSet, error) {
 	imageDef, err := util.ParseImageDefinition(s.image())
 	if err != nil {
 		return nil, fmt.Errorf("cannot parse image: %w", err)

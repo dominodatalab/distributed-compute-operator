@@ -15,5 +15,10 @@ const (
 
 var meta = metadata.NewProvider(
 	ApplicationName,
-	func(obj client.Object) string { return obj.(*dcv1alpha1.DaskCluster).Spec.Image.Tag },
+	func(obj client.Object) string { return daskCluster(obj).Spec.Image.Tag },
+	func(obj client.Object) map[string]string { return daskCluster(obj).Spec.GlobalLabels },
 )
+
+func daskCluster(obj client.Object) *dcv1alpha1.DaskCluster {
+	return obj.(*dcv1alpha1.DaskCluster)
+}

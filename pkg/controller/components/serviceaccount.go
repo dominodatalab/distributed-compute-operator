@@ -1,3 +1,4 @@
+//nolint:dupl
 package components
 
 import (
@@ -12,29 +13,29 @@ import (
 )
 
 type ServiceAccountDataSource interface {
-	GetServiceAccount() *corev1.ServiceAccount
-	IsDelete() bool
+	ServiceAccount() *corev1.ServiceAccount
+	Delete() bool
 }
 
-type serviceAccountDataSourceFactory func(client.Object) ServiceAccountDataSource
+type ServiceAccountDataSourceFactory func(client.Object) ServiceAccountDataSource
 
-type ServiceAccountComponent struct {
-	factory serviceAccountDataSourceFactory
+func ServiceAccount(f ServiceAccountDataSourceFactory) core.OwnedComponent {
+	return &serviceAccountComponent{factory: f}
 }
 
-func ServiceAccount(f serviceAccountDataSourceFactory) *ServiceAccountComponent {
-	return &ServiceAccountComponent{factory: f}
+type serviceAccountComponent struct {
+	factory ServiceAccountDataSourceFactory
 }
 
-func (comp *ServiceAccountComponent) Kind() client.Object {
+func (c *serviceAccountComponent) Kind() client.Object {
 	return &corev1.ServiceAccount{}
 }
 
-func (comp *ServiceAccountComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
-	ds := comp.factory(ctx.Object)
-	sa := ds.GetServiceAccount()
+func (c *serviceAccountComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
+	ds := c.factory(ctx.Object)
+	sa := ds.ServiceAccount()
 
-	if ds.IsDelete() {
+	if ds.Delete() {
 		return ctrl.Result{}, actions.DeleteIfExists(ctx, sa)
 	}
 

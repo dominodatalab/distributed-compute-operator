@@ -5,7 +5,6 @@ import (
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/cluster/dask"
-	"github.com/dominodatalab/distributed-compute-operator/pkg/controller/components"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/controller/core"
 )
 
@@ -16,13 +15,15 @@ import (
 func DaskCluster(mgr ctrl.Manager) error {
 	return core.NewReconciler(mgr).
 		For(&dcv1alpha1.DaskCluster{}).
-		Component("serviceaccount", components.ServiceAccount(dask.ServiceAccount)).
-		Component("svc-scheduler", components.Service(dask.SchedulerService)).
-		Component("svc-worker", components.Service(dask.WorkerService)).
-		Component("netpol-scheduler", dask.NetworkPolicyScheduler()).
-		Component("netpol-worker", dask.NetworkPolicyWorker()).
-		Component("sts-scheduler", components.StatefulSet(dask.SchedulerStatefulSet)).
-		Component("sts-worker", components.StatefulSet(dask.WorkerStatefulSet)).
+		Component("serviceaccount", dask.ServiceAccount()).
+		Component("service-scheduler", dask.ServiceScheduler()).
+		Component("service-worker", dask.ServiceWorker()).
+		Component("networkpolicy-scheduler", dask.NetworkPolicyScheduler()).
+		Component("networkpolicy-worker", dask.NetworkPolicyWorker()).
+		Component("statefulset-scheduler", dask.StatefulSetScheduler()).
+		Component("statefulset-worker", dask.StatefulSetWorker()).
+		Component("horizontalpodautoscaler", dask.HorizontalPodAutoscaler()).
+		Component("statusupdate", dask.ClusterStatusUpdate()).
 		WithWebhooks().
 		Complete()
 }
