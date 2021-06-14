@@ -76,7 +76,6 @@ func (s *statefulSetDS) StatefulSet() (*appsv1.StatefulSet, error) {
 					Containers: []corev1.Container{
 						{
 							Name:            s.applicationName(),
-							Command:         s.command(),
 							Args:            s.commandArgs(),
 							Image:           imageDef,
 							ImagePullPolicy: s.image().PullPolicy,
@@ -160,10 +159,6 @@ func (s *statefulSetDS) replicas() *int32 {
 	return pointer.Int32Ptr(s.tc.replicas())
 }
 
-func (s *statefulSetDS) command() []string {
-	return s.tc.command()
-}
-
 func (s *statefulSetDS) commandArgs() []string {
 	return s.tc.commandArgs()
 }
@@ -236,7 +231,6 @@ func (s *statefulSetDS) pvcTemplates() (tmpls []corev1.PersistentVolumeClaim) {
 type typeConfig interface {
 	podConfig() dcv1alpha1.WorkloadConfig
 	replicas() int32
-	command() []string
 	commandArgs() []string
 	containerEnv() []corev1.EnvVar
 	containerPorts() []corev1.ContainerPort
@@ -254,12 +248,9 @@ func (c *schedulerConfig) replicas() int32 {
 	return 1
 }
 
-func (c *schedulerConfig) command() []string {
-	return []string{"dask-scheduler"}
-}
-
 func (c *schedulerConfig) commandArgs() []string {
 	return []string{
+		"dask-scheduler",
 		fmt.Sprintf("--port=%d", c.dc.Spec.SchedulerPort),
 		fmt.Sprintf("--dashboard-address=:%d", c.dc.Spec.DashboardPort),
 	}
@@ -294,12 +285,9 @@ func (c *workerConfig) replicas() int32 {
 	return c.dc.Spec.Worker.Replicas
 }
 
-func (c *workerConfig) command() []string {
-	return []string{"dask-worker"}
-}
-
 func (c *workerConfig) commandArgs() []string {
 	return []string{
+		"dask-worker",
 		"--name=$(MY_POD_NAME)",
 		"--local-directory=/tmp",
 		// NOTE: it looks like the dask worker can infer its threads/memory from resource.limits

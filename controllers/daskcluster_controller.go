@@ -12,9 +12,10 @@ import (
 //+kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=daskclusters/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=daskclusters/finalizers,verbs=update
 
-func DaskCluster(mgr ctrl.Manager) error {
+func DaskCluster(mgr ctrl.Manager, istioEnabled bool) error {
 	return core.NewReconciler(mgr).
 		For(&dcv1alpha1.DaskCluster{}).
+		Component("istio-peerauthentication", dask.IstioPeerAuthentication(istioEnabled)).
 		Component("serviceaccount", dask.ServiceAccount()).
 		Component("service-scheduler", dask.ServiceScheduler()).
 		Component("service-worker", dask.ServiceWorker()).

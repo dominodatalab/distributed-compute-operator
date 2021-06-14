@@ -48,12 +48,12 @@ func (s *serviceDS) ports() []corev1.ServicePort {
 	if s.comp == ComponentScheduler {
 		return []corev1.ServicePort{
 			{
-				Name:       "serve",
+				Name:       "tcp-serve",
 				Port:       s.dc.Spec.SchedulerPort,
 				TargetPort: intstr.FromString("serve"),
 			},
 			{
-				Name:       "dashboard",
+				Name:       "tcp-dashboard",
 				Port:       s.dc.Spec.DashboardPort,
 				TargetPort: intstr.FromString("dashboard"),
 			},
@@ -62,17 +62,17 @@ func (s *serviceDS) ports() []corev1.ServicePort {
 
 	return []corev1.ServicePort{
 		{
-			Name:       "worker",
+			Name:       "tcp-worker",
 			Port:       s.dc.Spec.WorkerPort,
 			TargetPort: intstr.FromString("worker"),
 		},
 		{
-			Name:       "nanny",
+			Name:       "tcp-nanny",
 			Port:       s.dc.Spec.NannyPort,
 			TargetPort: intstr.FromString("nanny"),
 		},
 		{
-			Name:       "dashboard",
+			Name:       "tcp-dashboard",
 			Port:       s.dc.Spec.DashboardPort,
 			TargetPort: intstr.FromString("dashboard"),
 		},

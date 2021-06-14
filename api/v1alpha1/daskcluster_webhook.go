@@ -19,7 +19,7 @@ var (
 
 	daskDefaultImage = &OCIImageDefinition{
 		Repository: "daskdev/dask",
-		Tag:        "2021.5.0",
+		Tag:        "2021.6.0",
 		PullPolicy: corev1.PullIfNotPresent,
 	}
 

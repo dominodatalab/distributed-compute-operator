@@ -23,15 +23,12 @@ import (
 
 const leaderElectionID = "a846cbf2.dominodatalab.com"
 
-type Controllers []func(ctrl.Manager) error
-
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
-	ctrls    = Controllers{
-		controllers.DaskCluster,
-	}
 )
+
+type Controllers []func(ctrl.Manager, bool) error
 
 // Start creates a new controller manager, configures and registers all
 // reconcilers/webhooks with the manager, and starts their control loops.
@@ -61,8 +58,11 @@ func Start(cfg *Config) error {
 		return err
 	}
 
+	ctrls := Controllers{
+		controllers.DaskCluster,
+	}
 	for _, c := range ctrls {
-		if err = c(mgr); err != nil {
+		if err = c(mgr, cfg.IstioEnabled); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", c)
 			return err
 		}
