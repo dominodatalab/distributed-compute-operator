@@ -361,10 +361,10 @@ func (r *SparkCluster) validateDriverConfigs() field.ErrorList {
 	//	))
 	// }
 
-	// if r.Spec.Driver.ClusterName == "" {
+	// if r.Spec.Driver.SparkClusterName == "" {
 	//	errs = append(errs, field.Invalid(
-	//		field.NewPath("spec").Child("sparkClusterDriver").Child("clusterName"),
-	//		r.Spec.Driver.ClusterName,
+	//		field.NewPath("spec").Child("sparkClusterDriver").Child("sparkClusterName"),
+	//		r.Spec.Driver.SparkClusterName,
 	//		"should be non-empty",
 	//	))
 	// }

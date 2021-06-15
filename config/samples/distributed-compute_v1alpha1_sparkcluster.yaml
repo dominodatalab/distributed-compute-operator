@@ -35,18 +35,15 @@ spec:
   clusterPort: 7077
 
   # driver service config
-#  driver:
-#    clusterName: abcdef
-#    executionName: run-abcdef
-#    driverPortName: spark-driver-port
-#    driverPort: 4040
-#    driverUIPort: spark-ui-port
-#    driverUIPortName: 4041
-#    driverBlockManagerPortName: spark-block-manager-port
-#    driverBlockManagerPort: 4042
-
-
-
+  sparkClusterDriver:
+    sparkClusterName: example-spark
+    executionName: run-example-spark
+    driverPortName: spark-driver-port
+    driverPort: 4040
+    driverUIPortName: spark-ui-port
+    driverUIPort: 4041
+    driverBlockManagerPortName: spark-block-manager-port
+    driverBlockManagerPort: 4042
 
   # control the creation of network policies
   networkPolicy:

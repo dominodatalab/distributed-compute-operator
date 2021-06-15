@@ -38,7 +38,7 @@ var _ = Describe("SparkCluster Controller", func() {
 				{"service account", name + "-spark", &corev1.ServiceAccount{}},
 				{"head service", name + "-spark-master", &corev1.Service{}},
 				{"worker headless service", name + "-spark-worker", &corev1.Service{}},
-				{"driver service", fmt.Sprintf("spark-%s-driver", name), &corev1.Service{}},
+				{"driver service", fmt.Sprintf("%s-driver", name), &corev1.Service{}},
 				{"cluster network policy", name + "-spark-cluster", &networkingv1.NetworkPolicy{}},
 				{"client network policy", name + "-spark-client", &networkingv1.NetworkPolicy{}},
 				{"dashboard network policy", name + "-spark-dashboard", &networkingv1.NetworkPolicy{}},
@@ -221,7 +221,7 @@ func createAndBasicTest(ctx context.Context, name string) {
 			DashboardPort:     8265,
 			PodSecurityPolicy: psp.Name,
 			Driver: dcv1alpha1.SparkClusterDriver{
-				ClusterName:                "spark-functional",
+				SparkClusterName:           "functional",
 				ExecutionName:              "functional",
 				DriverPortName:             "spark-driver-port",
 				DriverPort:                 4040,

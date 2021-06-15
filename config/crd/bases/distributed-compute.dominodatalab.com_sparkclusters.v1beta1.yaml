@@ -3763,8 +3763,6 @@ spec:
               description: Driver is the configuration that is passed along from Nucleus
                 to the DCO to set up the Spark Driver
               properties:
-                clusterName:
-                  type: string
                 driverBlockManagerPort:
                   format: int32
                   type: integer
@@ -3781,6 +3779,8 @@ spec:
                 driverUIPortName:
                   type: string
                 executionName:
+                  type: string
+                sparkClusterName:
                   type: string
               type: object
             tcpMasterWebPort:
