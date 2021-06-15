@@ -133,6 +133,10 @@ func (s *statefulSetDS) serviceName() string {
 }
 
 func (s *statefulSetDS) serviceAccountName() string {
+	if s.dc.Spec.ServiceAccount.Name != "" {
+		return s.dc.Spec.ServiceAccount.Name
+	}
+
 	return meta.InstanceName(s.dc, metadata.ComponentNone)
 }
 
@@ -156,7 +160,7 @@ func (s *statefulSetDS) env() []corev1.EnvVar {
 }
 
 func (s *statefulSetDS) replicas() *int32 {
-	return pointer.Int32Ptr(s.tc.replicas())
+	return s.tc.replicas()
 }
 
 func (s *statefulSetDS) commandArgs() []string {
@@ -230,7 +234,7 @@ func (s *statefulSetDS) pvcTemplates() (tmpls []corev1.PersistentVolumeClaim) {
 
 type typeConfig interface {
 	podConfig() dcv1alpha1.WorkloadConfig
-	replicas() int32
+	replicas() *int32
 	commandArgs() []string
 	containerEnv() []corev1.EnvVar
 	containerPorts() []corev1.ContainerPort
@@ -244,8 +248,8 @@ func (c *schedulerConfig) podConfig() dcv1alpha1.WorkloadConfig {
 	return c.dc.Spec.Scheduler
 }
 
-func (c *schedulerConfig) replicas() int32 {
-	return 1
+func (c *schedulerConfig) replicas() *int32 {
+	return pointer.Int32Ptr(1)
 }
 
 func (c *schedulerConfig) commandArgs() []string {
@@ -281,7 +285,7 @@ func (c *workerConfig) podConfig() dcv1alpha1.WorkloadConfig {
 	return c.dc.Spec.Worker.WorkloadConfig
 }
 
-func (c *workerConfig) replicas() int32 {
+func (c *workerConfig) replicas() *int32 {
 	return c.dc.Spec.Worker.Replicas
 }
 

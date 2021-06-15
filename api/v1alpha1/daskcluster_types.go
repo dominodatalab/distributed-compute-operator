@@ -7,7 +7,7 @@ import (
 // DaskClusterWorker defines worker-specific workload settings.
 type DaskClusterWorker struct {
 	WorkloadConfig `json:",inline"`
-	Replicas       int32 `json:"replicas,omitempty"`
+	Replicas       *int32 `json:"replicas,omitempty"`
 }
 
 // DaskClusterSpec defines the desired state of DaskCluster.
