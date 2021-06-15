@@ -110,6 +110,9 @@ type SparkClusterSpec struct {
 	// IstioConfig parameters for Spark clusters.
 	IstioConfig `json:",inline"`
 
+	// Driver is the configuration that is passed along from Nucleus to the DCO to set up the Spark Driver
+	Driver SparkClusterDriver `json:"sparkClusterDriver,omitempty"`
+
 	// DashboardPort is the port used by the dashboard server.
 	DashboardPort int32 `json:"dashboardPort,omitempty"`
 
@@ -139,6 +142,18 @@ type SparkClusterSpec struct {
 
 	// Worker node configuration parameters.
 	Worker SparkClusterWorker `json:"worker,omitempty"`
+}
+
+// SparkClusterDriver defines the configuration for the driver service
+type SparkClusterDriver struct {
+	ClusterName                string `json:"clusterName,omitempty"`
+	ExecutionName              string `json:"executionName,omitempty"`
+	DriverPortName             string `json:"driverPortName,omitempty"`
+	DriverPort                 int32  `json:"driverPort,omitempty"`
+	DriverBlockManagerPortName string `json:"driverBlockManagerPortName,omitempty"`
+	DriverBlockManagerPort     int32  `json:"driverBlockManagerPort,omitempty"`
+	DriverUIPortName           string `json:"driverUIPortName,omitempty"`
+	DriverUIPort               int32  `json:"driverUIPort,omitempty"`
 }
 
 // SparkClusterNetworkPolicy defines network policy configuration options.

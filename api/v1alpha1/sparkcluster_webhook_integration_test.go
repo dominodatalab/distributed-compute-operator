@@ -61,6 +61,30 @@ var _ = Describe("SparkCluster", func() {
 				PointTo(Equal(true)),
 				"enable dashboard should point to true",
 			)
+			Expect(rc.Spec.Driver.DriverUIPort).To(
+				BeNumerically("==", 4040),
+				"driver ui port should equal 4040",
+			)
+			Expect(rc.Spec.Driver.DriverPort).To(
+				BeNumerically("==", 4041),
+				"driver port should equal 4041",
+			)
+			Expect(rc.Spec.Driver.DriverBlockManagerPort).To(
+				BeNumerically("==", 4042),
+				"driver block manager port should equal 4042",
+			)
+			Expect(rc.Spec.Driver.DriverPortName).To(
+				Equal("spark-driver-port"),
+				"driver port name should equal spark-driver-port",
+			)
+			Expect(rc.Spec.Driver.DriverUIPortName).To(
+				Equal("spark-ui-port"),
+				"driver port name should equal spark-ui-port",
+			)
+			Expect(rc.Spec.Driver.DriverBlockManagerPortName).To(
+				Equal("spark-block-manager-port"),
+				"driver block manager port name should equal spark-block-manager-port",
+			)
 			Expect(rc.Spec.NetworkPolicy.Enabled).To(
 				PointTo(Equal(true)),
 				"enable network policy should point to true",
@@ -161,35 +185,6 @@ var _ = Describe("SparkCluster", func() {
 				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
 				Expect(rc.Spec.NetworkPolicy.ExternalPodLabels).To(Equal(expected))
 			})
-		})
-
-		Context("Annotations", func() {
-			// It("add istio annotation to provided annotations", func() {
-			//	rc := sparkFixture(testNS.Name)
-			//	provided := map[string]string{"annotation": "test"}
-			//	rc.Spec.Master.Annotations = provided
-			//	rc.Spec.Worker.Annotations = provided
-			//
-			//	expected := map[string]string{
-			//		"annotation":              "test",
-			//		"sidecar.istio.io/inject": "false",
-			//	}
-			//	Expect(k8sClient.Create(ctx, rc)).To(Succeed())
-			//	Expect(rc.Spec.Master.Annotations).To(Equal(expected))
-			//	Expect(rc.Spec.Worker.Annotations).To(Equal(expected))
-			// })
-
-			// It("override provided istio annotation", func() {
-			//	rc := sparkFixture(testNS.Name)
-			//	provided := map[string]string{"sidecar.istio.io/inject": "true"}
-			//	rc.Spec.Master.Annotations = provided
-			//	rc.Spec.Worker.Annotations = provided
-			//
-			//	expected := map[string]string{"sidecar.istio.io/inject": "false"}
-			//	Expect(k8sClient.Create(ctx, rc)).To(Succeed())
-			//	Expect(rc.Spec.Master.Annotations).To(Equal(expected))
-			//	Expect(rc.Spec.Worker.Annotations).To(Equal(expected))
-			// })
 		})
 	})
 

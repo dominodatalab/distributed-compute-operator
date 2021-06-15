@@ -3821,6 +3821,30 @@ spec:
                   cluster service account. The service account referenced by the provided
                   name will be used instead.
                 type: string
+              sparkClusterDriver:
+                description: Driver is the configuration that is passed along from
+                  Nucleus to the DCO to set up the Spark Driver
+                properties:
+                  clusterName:
+                    type: string
+                  driverBlockManagerPort:
+                    format: int32
+                    type: integer
+                  driverBlockManagerPortName:
+                    type: string
+                  driverPort:
+                    format: int32
+                    type: integer
+                  driverPortName:
+                    type: string
+                  driverUIPort:
+                    format: int32
+                    type: integer
+                  driverUIPortName:
+                    type: string
+                  executionName:
+                    type: string
+                type: object
               tcpMasterWebPort:
                 description: These two are meant for istio compatibility on spark
                 format: int32

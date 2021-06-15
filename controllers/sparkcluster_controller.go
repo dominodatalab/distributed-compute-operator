@@ -218,6 +218,9 @@ func (r *SparkClusterReconciler) reconcileResources(ctx context.Context, sc *dcv
 	if err := r.reconcileHeadlessService(ctx, sc); err != nil {
 		return err
 	}
+	if err := r.reconcileDriverService(ctx, sc); err != nil {
+		return err
+	}
 	if err := r.reconcileNetworkPolicies(ctx, sc); err != nil {
 		return err
 	}
@@ -313,6 +316,16 @@ func (r *SparkClusterReconciler) reconcileHeadlessService(ctx context.Context, s
 	svc := spark.NewHeadlessService(sc)
 	if err := r.createOrUpdateOwnedResource(ctx, sc, svc); err != nil {
 		return fmt.Errorf("failed to reconcile headless service: %w", err)
+	}
+
+	return nil
+}
+
+// reconcileDriverService creates a service that points to the Spark Driver
+func (r *SparkClusterReconciler) reconcileDriverService(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+	svc := spark.NewSparkDriverService(sc)
+	if err := r.createOrUpdateOwnedResource(ctx, sc, svc); err != nil {
+		return fmt.Errorf("failed to reconcile spark driver service: %w", err)
 	}
 
 	return nil

@@ -24,7 +24,8 @@ func NewMasterService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 	}
 	if util.BoolPtrIsTrue(sc.Spec.EnableDashboard) {
 		ports = append(ports, corev1.ServicePort{
-			Name:     "tcp", // named tcp to prevent istio from sniffing for Host
+			// deliberately named tcp to prevent istio from sniffing for Host
+			Name:     "tcp",
 			Port:     sc.Spec.DashboardPort,
 			Protocol: corev1.ProtocolTCP,
 			TargetPort: intstr.IntOrString{
@@ -75,6 +76,40 @@ func NewHeadlessService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 					Port:       sc.Spec.TCPWorkerWebPort,
 					TargetPort: intstr.FromString("http"),
 					Protocol:   corev1.ProtocolTCP,
+				},
+			},
+		},
+	}
+}
+
+// NewSparkDriverService creates a ClusterIP service that exposes the driver UI port.
+func NewSparkDriverService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
+	return &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      DriverServiceName(sc.Spec.Driver.ClusterName),
+			Namespace: sc.Namespace,
+			Labels:    MetadataLabelsWithComponent(sc, ComponentNone),
+			// not sure if we need annotations on this service
+		},
+		Spec: corev1.ServiceSpec{
+			ClusterIP: corev1.ClusterIPNone,
+			Type:      "ClusterIP",
+			Selector:  map[string]string{"app.kubernetes.io/instance": sc.Spec.Driver.ExecutionName},
+			Ports: []corev1.ServicePort{
+				{
+					Name:     sc.Spec.Driver.DriverUIPortName,
+					Port:     sc.Spec.Driver.DriverUIPort,
+					Protocol: corev1.ProtocolTCP,
+				},
+				{
+					Name:     sc.Spec.Driver.DriverBlockManagerPortName,
+					Port:     sc.Spec.Driver.DriverBlockManagerPort,
+					Protocol: corev1.ProtocolTCP,
+				},
+				{
+					Name:     sc.Spec.Driver.DriverPortName,
+					Port:     sc.Spec.Driver.DriverPort,
+					Protocol: corev1.ProtocolTCP,
 				},
 			},
 		},

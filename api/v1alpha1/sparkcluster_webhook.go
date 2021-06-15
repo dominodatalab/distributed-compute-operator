@@ -28,6 +28,12 @@ var (
 	sparkDefaultClusterPort                 int32 = 7077
 	sparkDefaultMasterWebPort               int32 = 80
 	sparkDefaultWorkerWebPort               int32 = 8081
+	sparkDefaultDriverUIPort                int32 = 4040
+	sparkDefaultDriverPort                  int32 = 4041
+	sparkDefaultDriverBlockManagerPort      int32 = 4042
+	sparkDefaultDriverBlockManagerPortName        = "spark-block-manager-port"
+	sparkDefaultDriverPortName                    = "spark-driver-port"
+	sparkDefaultDriverUIPortName                  = "spark-ui-port"
 	sparkDefaultEnableNetworkPolicy               = pointer.BoolPtr(true)
 	sparkDefaultEnableExternalNetworkPolicy       = pointer.BoolPtr(false)
 	sparkDefaultWorkerReplicas                    = pointer.Int32Ptr(1)
@@ -56,6 +62,7 @@ func (r *SparkCluster) SetupWebhookWithManager(mgr ctrl.Manager) error {
 var _ webhook.Defaulter = &SparkCluster{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
+// nolint:funlen,gocyclo
 func (r *SparkCluster) Default() {
 	log := sparkLogger.WithValues("sparkcluster", client.ObjectKeyFromObject(r))
 	log.Info("applying defaults")
@@ -100,7 +107,30 @@ func (r *SparkCluster) Default() {
 		log.Info("setting default worker replicas", "value", *sparkDefaultWorkerReplicas)
 		r.Spec.Worker.Replicas = sparkDefaultWorkerReplicas
 	}
-
+	if r.Spec.Driver.DriverPort == 0 {
+		log.Info("setting default driver port", "value", sparkDefaultDriverPort)
+		r.Spec.Driver.DriverPort = sparkDefaultDriverPort
+	}
+	if r.Spec.Driver.DriverPortName == "" {
+		log.Info("setting default driver port name", "value", sparkDefaultDriverPortName)
+		r.Spec.Driver.DriverPortName = sparkDefaultDriverPortName
+	}
+	if r.Spec.Driver.DriverBlockManagerPortName == "" {
+		log.Info("setting default driver block manager port name", "value", sparkDefaultDriverBlockManagerPortName)
+		r.Spec.Driver.DriverBlockManagerPortName = sparkDefaultDriverBlockManagerPortName
+	}
+	if r.Spec.Driver.DriverBlockManagerPort == 0 {
+		log.Info("setting default driver block manager port", "value", sparkDefaultDriverBlockManagerPort)
+		r.Spec.Driver.DriverBlockManagerPort = sparkDefaultDriverBlockManagerPort
+	}
+	if r.Spec.Driver.DriverUIPortName == "" {
+		log.Info("setting default driver ui port name", "value", sparkDefaultDriverUIPortName)
+		r.Spec.Driver.DriverUIPortName = sparkDefaultDriverUIPortName
+	}
+	if r.Spec.Driver.DriverUIPort == 0 {
+		log.Info("setting default driver ui port", "value", sparkDefaultDriverUIPort)
+		r.Spec.Driver.DriverUIPort = sparkDefaultDriverUIPort
+	}
 	if r.Spec.Image == nil {
 		log.Info("setting default image", "value", *sparkDefaultImage)
 		r.Spec.Image = sparkDefaultImage
@@ -152,6 +182,9 @@ func (r *SparkCluster) validateSparkCluster() error {
 		allErrs = append(allErrs, err)
 	}
 	if errs := r.validatePorts(); errs != nil {
+		allErrs = append(allErrs, errs...)
+	}
+	if errs := r.validateDriverConfigs(); errs != nil {
 		allErrs = append(allErrs, errs...)
 	}
 	if errs := r.validateAutoscaler(); errs != nil {
@@ -302,6 +335,65 @@ func (r *SparkCluster) validateWorkerReplicas() *field.Error {
 		replicas,
 		"should be greater than or equal to 0",
 	)
+}
+
+func (r *SparkCluster) validateDriverConfigs() field.ErrorList {
+	var errs field.ErrorList
+
+	// validate driver ports
+	if err := r.validatePort(r.Spec.Driver.DriverPort, field.NewPath("spec").Child("sparkClusterDriver").Child("driverPort")); err != nil {
+		errs = append(errs, err)
+	}
+	if err := r.validatePort(r.Spec.Driver.DriverBlockManagerPort,
+		field.NewPath("spec").Child("sparkClusterDriver").Child("driverBlockManagerPort")); err != nil {
+		errs = append(errs, err)
+	}
+	if err := r.validatePort(r.Spec.Driver.DriverUIPort, field.NewPath("spec").Child("sparkClusterDriver").Child("driverUIPort")); err != nil {
+		errs = append(errs, err)
+	}
+
+	// validate driver name configurations
+	// if r.Spec.Driver.ExecutionName == "" {
+	//	errs = append(errs, field.Invalid(
+	//		field.NewPath("spec").Child("sparkClusterDriver").Child("executionName"),
+	//		r.Spec.Driver.ExecutionName,
+	//		"should be non-empty",
+	//	))
+	// }
+
+	// if r.Spec.Driver.ClusterName == "" {
+	//	errs = append(errs, field.Invalid(
+	//		field.NewPath("spec").Child("sparkClusterDriver").Child("clusterName"),
+	//		r.Spec.Driver.ClusterName,
+	//		"should be non-empty",
+	//	))
+	// }
+
+	if r.Spec.Driver.DriverUIPortName == "" {
+		errs = append(errs, field.Invalid(
+			field.NewPath("spec").Child("sparkClusterDriver").Child("driverUIPortName"),
+			r.Spec.Driver.DriverUIPortName,
+			"should be non-empty",
+		))
+	}
+
+	if r.Spec.Driver.DriverPortName == "" {
+		errs = append(errs, field.Invalid(
+			field.NewPath("spec").Child("sparkClusterDriver").Child("driverPortName"),
+			r.Spec.Driver.DriverPortName,
+			"should be non-empty",
+		))
+	}
+
+	if r.Spec.Driver.DriverBlockManagerPortName == "" {
+		errs = append(errs, field.Invalid(
+			field.NewPath("spec").Child("sparkClusterDriver").Child("driverBlockManagerPortName"),
+			r.Spec.Driver.DriverBlockManagerPort,
+			"should be non-empty",
+		))
+	}
+
+	return errs
 }
 
 func (r *SparkCluster) validatePorts() field.ErrorList {
