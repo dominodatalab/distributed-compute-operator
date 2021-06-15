@@ -34,7 +34,7 @@ func (s *serviceDS) Service() *corev1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      meta.InstanceName(s.dc, s.comp),
 			Namespace: s.dc.Namespace,
-			Labels:    meta.StandardLabels(s.dc),
+			Labels:    meta.StandardLabelsWithComponent(s.dc, s.comp),
 		},
 		Spec: corev1.ServiceSpec{
 			ClusterIP: corev1.ClusterIPNone,
