@@ -75,8 +75,18 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - services
+  - configmaps
   - serviceaccounts
+  verbs:
+  - create
+  - update
+  - delete
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - services
   verbs:
   - create
   - update

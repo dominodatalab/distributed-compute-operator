@@ -34,6 +34,10 @@ spec:
   #   runAsGroup:
   #   fsGroup:
 
+  # kerberosKeyTab:
+  #   contents:
+  #   mountPath:
+
   # globalLabels: {}
   # envVars: []
   # imagePullSecrets: []
@@ -63,4 +67,7 @@ spec:
     # volumes: []
     # volumeMounts: []
     # volumeClaimTemplates: []
-    # resources: {}
+    resources:
+      requests:
+        cpu: 250m
+        memory: 250Mi

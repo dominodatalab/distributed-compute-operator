@@ -129,6 +129,9 @@ func (dc *DaskCluster) validateDaskCluster() error {
 	if errs := validateWorkerResourceRequests(dc.Spec.Worker.Resources); errs != nil {
 		errList = append(errList, errs...)
 	}
+	if errs := validateKerberosKeyTab(dc.Spec.KerberosKeyTab); errs != nil {
+		errList = append(errList, errs...)
+	}
 
 	ports := map[string]int32{
 		"schedulerPort": dc.Spec.SchedulerPort,

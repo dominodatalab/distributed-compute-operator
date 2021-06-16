@@ -213,6 +213,14 @@ spec:
                   peer authentication policy that takes precedence over a global and/or
                   namespace-wide policy.
                 type: string
+              kerberosKeyTab:
+                properties:
+                  contents:
+                    format: byte
+                    type: string
+                  mountPath:
+                    type: string
+                type: object
               nannyPort:
                 format: int32
                 type: integer

@@ -61,14 +61,20 @@ type ServiceAccountConfig struct {
 	AutomountServiceAccountToken bool   `json:"automountServiceAccountToken,omitempty"`
 }
 
+type KerberosKeyTabConfig struct {
+	Contents  []byte `json:"contents,omitempty"`
+	MountPath string `json:"mountPath,omitempty"`
+}
+
 type ClusterConfig struct {
 	IstioConfig `json:",inline"`
 
-	GlobalLabels   map[string]string    `json:"globalLabels,omitempty"`
-	Image          *OCIImageDefinition  `json:"image,omitempty"`
-	Autoscaling    *Autoscaling         `json:"autoscaling,omitempty"`
-	NetworkPolicy  NetworkPolicyConfig  `json:"networkPolicy,omitempty"`
-	ServiceAccount ServiceAccountConfig `json:"serviceAccount,omitempty"`
+	GlobalLabels   map[string]string     `json:"globalLabels,omitempty"`
+	Image          *OCIImageDefinition   `json:"image,omitempty"`
+	Autoscaling    *Autoscaling          `json:"autoscaling,omitempty"`
+	NetworkPolicy  NetworkPolicyConfig   `json:"networkPolicy,omitempty"`
+	ServiceAccount ServiceAccountConfig  `json:"serviceAccount,omitempty"`
+	KerberosKeyTab *KerberosKeyTabConfig `json:"kerberosKeyTab,omitempty"`
 
 	ImagePullSecrets   []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 	PodSecurityContext *corev1.PodSecurityContext    `json:"podSecurityContext,omitempty"`

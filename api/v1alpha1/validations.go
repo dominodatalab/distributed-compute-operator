@@ -150,6 +150,24 @@ func validatePorts(portMap map[string]int32) field.ErrorList {
 	return errs
 }
 
+func validateKerberosKeyTab(keytab *KerberosKeyTabConfig) field.ErrorList {
+	if keytab == nil {
+		return nil
+	}
+
+	var errs field.ErrorList
+	fp := field.NewPath("spec", "kerberosKeyTab")
+
+	if len(keytab.Contents) == 0 {
+		errs = append(errs, field.Required(fp.Child("contents"), "must contain file contents"))
+	}
+	if keytab.MountPath == "" {
+		errs = append(errs, field.Required(fp.Child("mountPath"), "must be a valid file path"))
+	}
+
+	return errs
+}
+
 func invalidIfNotEmpty(kind, name string, errList field.ErrorList) error {
 	if len(errList) == 0 {
 		return nil

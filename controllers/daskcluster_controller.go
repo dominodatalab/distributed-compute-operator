@@ -17,6 +17,7 @@ func DaskCluster(mgr ctrl.Manager, istioEnabled bool) error {
 		For(&dcv1alpha1.DaskCluster{}).
 		Component("istio-peerauthentication", dask.IstioPeerAuthentication(istioEnabled)).
 		Component("serviceaccount", dask.ServiceAccount()).
+		Component("configmap-keytab", dask.ConfigMapKeyTab()).
 		Component("role-podsecuritypolicy", dask.RolePodSecurityPolicy()).
 		Component("rolebinding-podsecuritypolicy", dask.RoleBindingPodSecurityPolicy()).
 		Component("service-scheduler", dask.ServiceScheduler()).
