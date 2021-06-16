@@ -221,7 +221,7 @@ func createAndBasicTest(ctx context.Context, name string) {
 			DashboardPort:     8265,
 			PodSecurityPolicy: psp.Name,
 			Driver: dcv1alpha1.SparkClusterDriver{
-				ClusterName:                "spark-functional",
+				SparkClusterName:           "spark-functional",
 				ExecutionName:              "functional",
 				DriverPortName:             "spark-driver-port",
 				DriverPort:                 4040,

@@ -146,7 +146,7 @@ type SparkClusterSpec struct {
 
 // SparkClusterDriver defines the configuration for the driver service
 type SparkClusterDriver struct {
-	ClusterName                string `json:"clusterName,omitempty"`
+	SparkClusterName           string `json:"sparkClusterName,omitempty"`
 	ExecutionName              string `json:"executionName,omitempty"`
 	DriverPortName             string `json:"driverPortName,omitempty"`
 	DriverPort                 int32  `json:"driverPort,omitempty"`

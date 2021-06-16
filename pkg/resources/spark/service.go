@@ -86,7 +86,7 @@ func NewHeadlessService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 func NewSparkDriverService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      DriverServiceName(sc.Spec.Driver.ClusterName),
+			Name:      DriverServiceName(sc.Spec.Driver.SparkClusterName),
 			Namespace: sc.Namespace,
 			Labels:    MetadataLabelsWithComponent(sc, ComponentNone),
 			// not sure if we need annotations on this service
