@@ -129,7 +129,7 @@ func (dc *DaskCluster) validateDaskCluster() error {
 	if errs := validateWorkerResourceRequests(dc.Spec.Worker.Resources); errs != nil {
 		errList = append(errList, errs...)
 	}
-	if errs := validateKerberosKeyTab(dc.Spec.KerberosKeyTab); errs != nil {
+	if errs := validateKerberosKeytab(dc.Spec.KerberosKeytab); errs != nil {
 		errList = append(errList, errs...)
 	}
 

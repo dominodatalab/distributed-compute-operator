@@ -61,7 +61,7 @@ type ServiceAccountConfig struct {
 	AutomountServiceAccountToken bool   `json:"automountServiceAccountToken,omitempty"`
 }
 
-type KerberosKeyTabConfig struct {
+type KerberosKeytabConfig struct {
 	Contents  []byte `json:"contents,omitempty"`
 	MountPath string `json:"mountPath,omitempty"`
 }
@@ -74,7 +74,7 @@ type ClusterConfig struct {
 	Autoscaling    *Autoscaling          `json:"autoscaling,omitempty"`
 	NetworkPolicy  NetworkPolicyConfig   `json:"networkPolicy,omitempty"`
 	ServiceAccount ServiceAccountConfig  `json:"serviceAccount,omitempty"`
-	KerberosKeyTab *KerberosKeyTabConfig `json:"kerberosKeyTab,omitempty"`
+	KerberosKeytab *KerberosKeytabConfig `json:"kerberosKeytab,omitempty"`
 
 	ImagePullSecrets   []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 	PodSecurityContext *corev1.PodSecurityContext    `json:"podSecurityContext,omitempty"`

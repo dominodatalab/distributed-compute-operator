@@ -193,7 +193,7 @@ func (s *statefulSetDS) initContainers() []corev1.Container {
 
 func (s *statefulSetDS) volumes() []corev1.Volume {
 	volumes := s.tc.podConfig().Volumes
-	if s.dc.Spec.KerberosKeyTab != nil {
+	if s.dc.Spec.KerberosKeytab != nil {
 		volumes = append(volumes, corev1.Volume{
 			Name: "cluster-config",
 			VolumeSource: corev1.VolumeSource{
@@ -211,11 +211,11 @@ func (s *statefulSetDS) volumes() []corev1.Volume {
 
 func (s *statefulSetDS) volumeMounts() []corev1.VolumeMount {
 	mounts := s.tc.podConfig().VolumeMounts
-	if s.dc.Spec.KerberosKeyTab != nil {
+	if s.dc.Spec.KerberosKeytab != nil {
 		mounts = append(mounts, corev1.VolumeMount{
 			Name:      "cluster-config",
 			ReadOnly:  true,
-			MountPath: s.dc.Spec.KerberosKeyTab.MountPath,
+			MountPath: s.dc.Spec.KerberosKeytab.MountPath,
 		})
 	}
 

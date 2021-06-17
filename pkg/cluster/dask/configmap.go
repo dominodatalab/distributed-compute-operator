@@ -30,14 +30,14 @@ func (s *configMapDS) ConfigMap() *corev1.ConfigMap {
 		},
 	}
 
-	if s.dc.Spec.KerberosKeyTab == nil {
+	if s.dc.Spec.KerberosKeytab == nil {
 		return cm
 	}
-	cm.BinaryData = map[string][]byte{"keytab": s.dc.Spec.KerberosKeyTab.Contents}
+	cm.BinaryData = map[string][]byte{"keytab": s.dc.Spec.KerberosKeytab.Contents}
 
 	return cm
 }
 
 func (s *configMapDS) Delete() bool {
-	return s.dc.Spec.KerberosKeyTab == nil
+	return s.dc.Spec.KerberosKeytab == nil
 }

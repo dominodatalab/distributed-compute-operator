@@ -150,7 +150,7 @@ func validatePorts(portMap map[string]int32) field.ErrorList {
 	return errs
 }
 
-func validateKerberosKeyTab(keytab *KerberosKeyTabConfig) field.ErrorList {
+func validateKerberosKeytab(keytab *KerberosKeytabConfig) field.ErrorList {
 	if keytab == nil {
 		return nil
 	}

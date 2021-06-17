@@ -213,7 +213,7 @@ spec:
                   peer authentication policy that takes precedence over a global and/or
                   namespace-wide policy.
                 type: string
-              kerberosKeyTab:
+              kerberosKeytab:
                 properties:
                   contents:
                     format: byte
