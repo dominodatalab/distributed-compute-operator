@@ -156,7 +156,7 @@ func validateKerberosKeytab(keytab *KerberosKeytabConfig) field.ErrorList {
 	}
 
 	var errs field.ErrorList
-	fp := field.NewPath("spec", "kerberosKeyTab")
+	fp := field.NewPath("spec", "kerberosKeytab")
 
 	if len(keytab.Contents) == 0 {
 		errs = append(errs, field.Required(fp.Child("contents"), "must contain file contents"))
