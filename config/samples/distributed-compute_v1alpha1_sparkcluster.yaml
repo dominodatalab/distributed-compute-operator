@@ -36,8 +36,8 @@ spec:
 
   # driver service config
   sparkClusterDriver:
-    sparkClusterName: example
-    executionName: run-example
+    sparkClusterName: example-spark
+    executionName: run-example-spark
     driverPortName: spark-driver-port
     driverPort: 4040
     driverUIPortName: spark-ui-port
