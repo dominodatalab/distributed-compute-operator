@@ -11,7 +11,7 @@ spec:
   # image:
   #   registry: ""
   #   repository: daskdev/dask
-  #   tag: 2021.6.0
+  #   tag: 2021.6.1
   #   pullPolicy: IfNotPresent
 
   # autoscaling:

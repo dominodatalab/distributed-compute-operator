@@ -81,18 +81,12 @@ func DeleteIfExists(ctx *core.Context, objs ...client.Object) error {
 	return nil
 }
 
-func DeleteStorage(ctx *core.Context, obj client.Object) error {
-	ns := obj.GetNamespace()
-	labels := map[string]string{}
-
+func DeleteStorage(ctx *core.Context, opts []client.ListOption) error {
 	pvcList := &corev1.PersistentVolumeClaimList{}
-	listOpts := []client.ListOption{
-		client.InNamespace(obj.GetNamespace()),
-		client.MatchingLabels(labels),
-	}
+	listOpts := (&client.ListOptions{}).ApplyOptions(opts)
 
-	ctx.Log.Info("Querying for persistent volume claims", "namespace", ns, "labels", labels)
-	if err := ctx.Client.List(ctx, pvcList, listOpts...); err != nil {
+	ctx.Log.Info("Querying for persistent volume claims", "namespace", listOpts.Namespace, "labels", listOpts.LabelSelector.String())
+	if err := ctx.Client.List(ctx, pvcList, opts...); err != nil {
 		ctx.Log.Error(err, "Cannot list persistent volume claims")
 		return err
 	}
