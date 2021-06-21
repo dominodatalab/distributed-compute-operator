@@ -217,10 +217,10 @@ func NewClusterMasterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 //		},
 //	}
 // }
-//
-//// NewClusterNetworkPolicy generates a network policy that allows all nodes
-//// within a single cluster to communicate on all ports. Optionally, it will also
-//// allow pods external to the cluster itself to communicate in and out of cluster
+
+// NewClusterNetworkPolicy generates a network policy that allows all nodes
+// within a single cluster to communicate on all ports. Optionally, it will also
+// allow pods external to the cluster itself to communicate in and out of cluster
 // func NewClusterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.NetworkPolicy {
 //	labelSelector := metav1.LabelSelector{
 //		MatchLabels: SelectorLabels(sc),
@@ -262,10 +262,10 @@ func NewClusterMasterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 //		},
 //	}
 // }
-//
-//// NewHeadClientNetworkPolicy generates a network policy that allows client
-//// access to any pods that have been appointed with the configured client
-//// server labels.
+
+// NewHeadClientNetworkPolicy generates a network policy that allows client
+// access to any pods that have been appointed with the configured client
+// server labels.
 // func NewHeadClientNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.NetworkPolicy {
 //	return headNetworkPolicy(
 //		sc,
@@ -275,10 +275,10 @@ func NewClusterMasterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 //		descriptionClient,
 //	)
 // }
-//
-//// NewHeadDashboardNetworkPolicy generates a network policy that allows
-//// dashboard access to any pods that have been appointed with configured
-//// dashboard labels.
+
+// NewHeadDashboardNetworkPolicy generates a network policy that allows
+// dashboard access to any pods that have been appointed with configured
+// dashboard labels.
 // func NewHeadDashboardNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.NetworkPolicy {
 //	return headNetworkPolicy(
 //		sc,
@@ -288,7 +288,7 @@ func NewClusterMasterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 //		descriptionDashboard,
 //	)
 // }
-//
+
 // func headNetworkPolicy(sc *dcv1alpha1.SparkCluster, p int32, l map[string]string, c Component, desc string) *networkingv1.NetworkPolicy {
 //	proto := corev1.ProtocolTCP
 //	targetPort := intstr.FromInt(int(p))
