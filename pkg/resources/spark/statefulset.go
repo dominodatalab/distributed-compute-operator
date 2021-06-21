@@ -227,7 +227,7 @@ func componentEnvVars(sc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 			},
 			{
 				Name:  "SPARK_MASTER_WEBUI_PORT",
-				Value: strconv.Itoa(int(sc.Spec.DashboardPort)),
+				Value: strconv.Itoa(8080),
 			},
 			{
 				Name:  "SPARK_MODE",
@@ -242,7 +242,7 @@ func componentEnvVars(sc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 			},
 			{
 				Name:  "SPARK_WORKER_WEBUI_PORT",
-				Value: strconv.Itoa(int(sc.Spec.DashboardPort)),
+				Value: strconv.Itoa(8080),
 			},
 			{
 				Name:  "SPARK_WORKER_PORT",
