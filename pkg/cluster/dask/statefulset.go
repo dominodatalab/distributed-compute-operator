@@ -195,7 +195,7 @@ func (s *statefulSetDS) volumes() []corev1.Volume {
 	volumes := s.tc.podConfig().Volumes
 	if s.dc.Spec.KerberosKeytab != nil {
 		volumes = append(volumes, corev1.Volume{
-			Name: "cluster-config",
+			Name: "kerberos",
 			VolumeSource: corev1.VolumeSource{
 				ConfigMap: &corev1.ConfigMapVolumeSource{
 					LocalObjectReference: corev1.LocalObjectReference{
@@ -213,7 +213,7 @@ func (s *statefulSetDS) volumeMounts() []corev1.VolumeMount {
 	mounts := s.tc.podConfig().VolumeMounts
 	if s.dc.Spec.KerberosKeytab != nil {
 		mounts = append(mounts, corev1.VolumeMount{
-			Name:      "cluster-config",
+			Name:      "kerberos",
 			ReadOnly:  true,
 			MountPath: s.dc.Spec.KerberosKeytab.MountPath,
 		})
