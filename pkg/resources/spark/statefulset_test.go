@@ -78,7 +78,7 @@ func TestNewStatefulSet(t *testing.T) {
 										},
 										{
 											Name:  "SPARK_MASTER_WEBUI_PORT",
-											Value: "8265",
+											Value: "8080",
 										},
 										{
 											Name:  "SPARK_MODE",
@@ -184,7 +184,7 @@ func TestNewStatefulSet(t *testing.T) {
 										},
 										{
 											Name:  "SPARK_WORKER_WEBUI_PORT",
-											Value: "8265",
+											Value: "8080",
 										},
 										{
 											Name:  "SPARK_WORKER_PORT",
