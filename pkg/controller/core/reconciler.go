@@ -2,13 +2,13 @@ package core
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"path"
 	"strings"
 
 	"github.com/go-logr/logr"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
@@ -233,18 +233,7 @@ func (r *Reconciler) Reconcile(rootCtx context.Context, req ctrl.Request) (ctrl.
 	}
 
 	// condense all error messages into one
-	var err error
-	if len(errs) == 1 {
-		err = errs[0]
-	} else if len(errs) > 1 {
-		sb := strings.Builder{}
-		for _, e := range errs {
-			sb.WriteString(fmt.Sprintf(" %s\n", e.Error()))
-		}
-		err = errors.New(sb.String())
-	}
-
-	return finalRes, err
+	return finalRes, utilerrors.NewAggregate(errs)
 }
 
 func (r *Reconciler) getControllerName() (string, error) {
