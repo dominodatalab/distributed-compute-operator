@@ -50,11 +50,10 @@ fmt: goimports ## Run formatter against code.
 lint: golangci-lint ## Run linters against code.
 	$(GOLANGCI_LINT) run
 
+ENVTEST_VERSION = 1.20.x!
 ENVTEST_ASSETS_DIR = $(shell pwd)/testbin
-test: manifests generate fmt ## Run full test suite.
-	mkdir -p ${ENVTEST_ASSETS_DIR}
-	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.7.0/hack/setup-envtest.sh
-	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -race -covermode atomic -coverprofile cover.out
+test: setup-envtest manifests generate fmt ## Run full test suite.
+	$(shell eval "$(SETUP_ENVTEST) --bin-dir $(ENVTEST_ASSETS_DIR) use --print env $(ENVTEST_VERSION)"); go test ./... -race -covermode atomic -coverprofile cover.out
 
 ##@ Build
 
@@ -86,6 +85,10 @@ undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/confi
 	$(KUSTOMIZE) build config/default | kubectl delete -f -
 
 ##@ Tools
+
+SETUP_ENVTEST = $(shell pwd)/bin/setup-envtest
+setup-envtest: ## Download setup-envtest locally if necessary.
+	$(call go-get-tool,$(SETUP_ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@latest)
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
 controller-gen: ## Download controller-gen locally if necessary.

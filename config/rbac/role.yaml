@@ -45,6 +45,32 @@ rules:
 - apiGroups:
   - distributed-compute.dominodatalab.com
   resources:
+  - daskclusters
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - distributed-compute.dominodatalab.com
+  resources:
+  - daskclusters/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - distributed-compute.dominodatalab.com
+  resources:
+  - daskclusters/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - distributed-compute.dominodatalab.com
+  resources:
   - rayclusters
   verbs:
   - create

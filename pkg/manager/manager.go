@@ -28,6 +28,8 @@ var (
 	setupLog = ctrl.Log.WithName("setup")
 )
 
+type Controllers []func(ctrl.Manager, bool) error
+
 // Start creates a new controller manager, configures and registers all
 // reconcilers/webhooks with the manager, and starts their control loops.
 func Start(cfg *Config) error {
@@ -46,6 +48,27 @@ func Start(cfg *Config) error {
 		setupLog.Error(err, "unable to start manager")
 		return err
 	}
+
+	if err = mgr.AddHealthzCheck("health", healthz.Ping); err != nil {
+		setupLog.Error(err, "unable to set up health check")
+		return err
+	}
+	if err = mgr.AddReadyzCheck("check", healthz.Ping); err != nil {
+		setupLog.Error(err, "unable to set up ready check")
+		return err
+	}
+
+	ctrls := Controllers{
+		controllers.DaskCluster,
+	}
+	for _, c := range ctrls {
+		if err = c(mgr, cfg.IstioEnabled); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", c)
+			return err
+		}
+	}
+
+	// NOTE: old approach to setup
 
 	if err = (&controllers.RayClusterReconciler{
 		Client:       mgr.GetClient(),
@@ -78,15 +101,6 @@ func Start(cfg *Config) error {
 	}
 
 	// +kubebuilder:scaffold:builder
-
-	if err := mgr.AddHealthzCheck("health", healthz.Ping); err != nil {
-		setupLog.Error(err, "unable to set up health check")
-		return err
-	}
-	if err := mgr.AddReadyzCheck("check", healthz.Ping); err != nil {
-		setupLog.Error(err, "unable to set up ready check")
-		return err
-	}
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
