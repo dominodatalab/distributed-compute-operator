@@ -2,11 +2,6 @@ package spark
 
 import (
 	"testing"
-
-	v1 "k8s.io/api/core/v1"
-	networkingv1 "k8s.io/api/networking/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 func TestNewClusterDriverNetworkPolicy(t *testing.T) {
@@ -214,52 +209,52 @@ func TestNewClusterWorkerNetworkPolicy(t *testing.T) {
 //	assert.Equal(t, expected, netpol)
 // }
 
-func getNetworkPolicy(tcpProto v1.Protocol, clusterPort intstr.IntOrString, name string, description string) *networkingv1.NetworkPolicy {
-	return &networkingv1.NetworkPolicy{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: "fake-ns",
-			Labels: map[string]string{
-				"app.kubernetes.io/name":       "spark",
-				"app.kubernetes.io/instance":   "test-id",
-				"app.kubernetes.io/component":  "master",
-				"app.kubernetes.io/version":    "fake-tag",
-				"app.kubernetes.io/managed-by": "distributed-compute-operator",
-			},
-			Annotations: map[string]string{
-				"distributed-compute.dominodatalab.com/description": description,
-			},
-		},
-		Spec: networkingv1.NetworkPolicySpec{
-			PodSelector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"app.kubernetes.io/name":      "spark",
-					"app.kubernetes.io/instance":  "test-id",
-					"app.kubernetes.io/component": "master",
-				},
-			},
-			Ingress: []networkingv1.NetworkPolicyIngressRule{
-				{
-					Ports: []networkingv1.NetworkPolicyPort{
-						{
-							Protocol: &tcpProto,
-							Port:     &clusterPort,
-						},
-					},
-					From: []networkingv1.NetworkPolicyPeer{
-						{
-							PodSelector: &metav1.LabelSelector{
-								MatchLabels: map[string]string{
-									"spark-client": "true",
-								},
-							},
-						},
-					},
-				},
-			},
-			PolicyTypes: []networkingv1.PolicyType{
-				"Ingress",
-			},
-		},
-	}
-}
+// func getNetworkPolicy(tcpProto v1.Protocol, clusterPort intstr.IntOrString, name string, description string) *networkingv1.NetworkPolicy {
+//	return &networkingv1.NetworkPolicy{
+//		ObjectMeta: metav1.ObjectMeta{
+//			Name:      name,
+//			Namespace: "fake-ns",
+//			Labels: map[string]string{
+//				"app.kubernetes.io/name":       "spark",
+//				"app.kubernetes.io/instance":   "test-id",
+//				"app.kubernetes.io/component":  "master",
+//				"app.kubernetes.io/version":    "fake-tag",
+//				"app.kubernetes.io/managed-by": "distributed-compute-operator",
+//			},
+//			Annotations: map[string]string{
+//				"distributed-compute.dominodatalab.com/description": description,
+//			},
+//		},
+//		Spec: networkingv1.NetworkPolicySpec{
+//			PodSelector: metav1.LabelSelector{
+//				MatchLabels: map[string]string{
+//					"app.kubernetes.io/name":      "spark",
+//					"app.kubernetes.io/instance":  "test-id",
+//					"app.kubernetes.io/component": "master",
+//				},
+//			},
+//			Ingress: []networkingv1.NetworkPolicyIngressRule{
+//				{
+//					Ports: []networkingv1.NetworkPolicyPort{
+//						{
+//							Protocol: &tcpProto,
+//							Port:     &clusterPort,
+//						},
+//					},
+//					From: []networkingv1.NetworkPolicyPeer{
+//						{
+//							PodSelector: &metav1.LabelSelector{
+//								MatchLabels: map[string]string{
+//									"spark-client": "true",
+//								},
+//							},
+//						},
+//					},
+//				},
+//			},
+//			PolicyTypes: []networkingv1.PolicyType{
+//				"Ingress",
+//			},
+//		},
+//	}
+// }

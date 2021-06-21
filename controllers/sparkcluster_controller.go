@@ -373,7 +373,6 @@ func (r *SparkClusterReconciler) reconcileDriverService(ctx context.Context, sc 
 // }
 
 func (r SparkClusterReconciler) reconcileNetworkPolicies(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
-
 	driverNetpol := spark.NewClusterDriverNetworkPolicy(sc)
 	masterNetpol := spark.NewClusterMasterNetworkPolicy(sc)
 	workerNetpol := spark.NewClusterWorkerNetworkPolicy(sc)
