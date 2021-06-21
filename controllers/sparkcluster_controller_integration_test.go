@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"time"
 
+	networkingv1 "k8s.io/api/networking/v1"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
 	corev1 "k8s.io/api/core/v1"
-	networkingv1 "k8s.io/api/networking/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,10 +40,13 @@ var _ = Describe("SparkCluster Controller", func() {
 				{"head service", name + "-spark-master", &corev1.Service{}},
 				{"worker headless service", name + "-spark-worker", &corev1.Service{}},
 				{"driver service", name + "-spark-driver", &corev1.Service{}},
-				{"cluster network policy", name + "-spark-cluster", &networkingv1.NetworkPolicy{}},
-				{"client network policy", name + "-spark-client", &networkingv1.NetworkPolicy{}},
-				{"dashboard network policy", name + "-spark-dashboard", &networkingv1.NetworkPolicy{}},
-				{"driver network policy", name + "-spark-external", &networkingv1.NetworkPolicy{}},
+				// {"cluster network policy", name + "-spark-cluster", &networkingv1.NetworkPolicy{}},
+				// {"client network policy", name + "-spark-client", &networkingv1.NetworkPolicy{}},
+				// {"dashboard network policy", name + "-spark-dashboard", &networkingv1.NetworkPolicy{}},
+				// {"driver network policy", name + "-spark-external", &networkingv1.NetworkPolicy{}},
+				{"driver network policy", name + "-spark-driver", &networkingv1.NetworkPolicy{}},
+				{"worker network policy", name + "-spark-worker", &networkingv1.NetworkPolicy{}},
+				{"master network policy", name + "-spark-master", &networkingv1.NetworkPolicy{}},
 				{"pod security policy role", name + "-spark", &rbacv1.Role{}},
 				{"pod security policy role binding", name + "-spark", &rbacv1.RoleBinding{}},
 				{"horizontal pod autoscaler", name + "-spark", &autoscalingv2beta2.HorizontalPodAutoscaler{}},
