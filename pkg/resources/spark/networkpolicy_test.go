@@ -209,7 +209,8 @@ func TestNewClusterWorkerNetworkPolicy(t *testing.T) {
 //	assert.Equal(t, expected, netpol)
 // }
 
-// func getNetworkPolicy(tcpProto v1.Protocol, clusterPort intstr.IntOrString, name string, description string) *networkingv1.NetworkPolicy {
+// func getNetworkPolicy(tcpProto v1.Protocol, clusterPort intstr.IntOrString,
+// name string, description string) *networkingv1.NetworkPolicy {
 //	return &networkingv1.NetworkPolicy{
 //		ObjectMeta: metav1.ObjectMeta{
 //			Name:      name,
