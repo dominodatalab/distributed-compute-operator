@@ -99,7 +99,7 @@ func TestNewStatefulSet(t *testing.T) {
 									LivenessProbe: &corev1.Probe{
 										Handler: corev1.Handler{
 											HTTPGet: &corev1.HTTPGetAction{
-												Port: intstr.FromInt(8081),
+												Port: intstr.FromInt(8080),
 												Path: "/",
 											},
 										},
@@ -107,7 +107,7 @@ func TestNewStatefulSet(t *testing.T) {
 									ReadinessProbe: &corev1.Probe{
 										Handler: corev1.Handler{
 											HTTPGet: &corev1.HTTPGetAction{
-												Port: intstr.FromInt(8081),
+												Port: intstr.FromInt(8080),
 												Path: "/",
 											},
 										},

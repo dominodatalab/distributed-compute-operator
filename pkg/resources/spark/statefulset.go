@@ -170,6 +170,17 @@ func getPodSpec(sc *dcv1alpha1.SparkCluster,
 	envVars []corev1.EnvVar,
 	volumeMounts []corev1.VolumeMount,
 	volumes []corev1.Volume) corev1.PodSpec {
+	var port intstr.IntOrString
+
+	switch comp {
+	case ComponentMaster:
+		port = intstr.FromInt(int(sc.Spec.TCPMasterWebPort))
+	case ComponentWorker:
+		port = intstr.FromInt(int(sc.Spec.TCPWorkerWebPort))
+	case ComponentNone:
+		port = intstr.FromInt(int(sc.Spec.DashboardPort))
+	}
+
 	return corev1.PodSpec{
 		ServiceAccountName: serviceAccountName,
 		NodeSelector:       nodeAttrs.NodeSelector,
@@ -191,7 +202,7 @@ func getPodSpec(sc *dcv1alpha1.SparkCluster,
 					Handler: corev1.Handler{
 						HTTPGet: &corev1.HTTPGetAction{
 							Path: "/",
-							Port: intstr.FromInt(int(sc.Spec.TCPWorkerWebPort)),
+							Port: port,
 						},
 					},
 				},
@@ -199,7 +210,7 @@ func getPodSpec(sc *dcv1alpha1.SparkCluster,
 					Handler: corev1.Handler{
 						HTTPGet: &corev1.HTTPGetAction{
 							Path: "/",
-							Port: intstr.FromInt(int(sc.Spec.TCPWorkerWebPort)),
+							Port: port,
 						},
 					},
 				},
