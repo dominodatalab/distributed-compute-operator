@@ -54,8 +54,12 @@ var _ = Describe("SparkCluster", func() {
 				"master web port should equal 8080",
 			)
 			Expect(rc.Spec.DashboardPort).To(
+				BeNumerically("==", 8080),
+				"dashboard port should equal 8080",
+			)
+			Expect(rc.Spec.DashboardServicePort).To(
 				BeNumerically("==", 80),
-				"dashboard port should equal 80",
+				"port should equal 80",
 			)
 			Expect(rc.Spec.EnableDashboard).To(
 				PointTo(Equal(true)),
@@ -222,6 +226,9 @@ var _ = Describe("SparkCluster", func() {
 			),
 			Entry("rejects an invalid dashboard port",
 				func(rc *SparkCluster, val int32) { rc.Spec.DashboardPort = val },
+			),
+			Entry("rejects an invalid dashboard service port",
+				func(rc *SparkCluster, val int32) { rc.Spec.DashboardServicePort = val },
 			),
 		)
 

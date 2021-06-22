@@ -24,8 +24,9 @@ const (
 )
 
 var (
-	sparkDefaultDashboardPort               int32 = 80
+	sparkDefaultDashboardServicePort        int32 = 80
 	sparkDefaultClusterPort                 int32 = 7077
+	sparkDefaultDashboardPort               int32 = 8080
 	sparkDefaultMasterWebPort               int32 = 8080
 	sparkDefaultWorkerWebPort               int32 = 8081
 	sparkDefaultDriverUIPort                int32 = 4040
@@ -82,6 +83,10 @@ func (r *SparkCluster) Default() {
 	if r.Spec.DashboardPort == 0 {
 		log.Info("setting default dashboard port", "value", sparkDefaultDashboardPort)
 		r.Spec.DashboardPort = sparkDefaultDashboardPort
+	}
+	if r.Spec.DashboardServicePort == 0 {
+		log.Info("setting default dashboard service port", "value", sparkDefaultDashboardServicePort)
+		r.Spec.DashboardServicePort = sparkDefaultDashboardServicePort
 	}
 	if r.Spec.EnableDashboard == nil {
 		log.Info("setting enable dashboard flag", "value", *sparkDefaultEnableDashboard)
@@ -409,6 +414,9 @@ func (r *SparkCluster) validatePorts() field.ErrorList {
 		errs = append(errs, err)
 	}
 	if err := r.validatePort(r.Spec.DashboardPort, field.NewPath("spec").Child("dashboardPort")); err != nil {
+		errs = append(errs, err)
+	}
+	if err := r.validatePort(r.Spec.DashboardServicePort, field.NewPath("spec").Child("dashboardServicePort")); err != nil {
 		errs = append(errs, err)
 	}
 

@@ -122,7 +122,7 @@ func NewClusterMasterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 	}
 
 	protocol := corev1.ProtocolTCP
-	masterDashboardPort := intstr.FromInt(int(sc.Spec.TCPMasterWebPort))
+	masterDashboardPort := intstr.FromInt(int(sc.Spec.DashboardPort))
 	clusterPort := intstr.FromInt(int(sc.Spec.ClusterPort))
 
 	return &networkingv1.NetworkPolicy{

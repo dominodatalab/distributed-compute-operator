@@ -26,7 +26,7 @@ func NewMasterService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 		ports = append(ports, corev1.ServicePort{
 			// deliberately named tcp to prevent istio from sniffing for Host
 			Name:     "tcp",
-			Port:     sc.Spec.DashboardPort,
+			Port:     sc.Spec.DashboardServicePort,
 			Protocol: corev1.ProtocolTCP,
 			TargetPort: intstr.IntOrString{
 				Type:   intstr.String,
