@@ -59,7 +59,7 @@ func NewHeadlessService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 		},
 		Spec: corev1.ServiceSpec{
 			ClusterIP: corev1.ClusterIPNone,
-			Selector:  SelectorLabelsWithComponent(sc, ComponentWorker),
+			Selector:  SelectorLabels(sc),
 			Ports:     []corev1.ServicePort{},
 			// {
 			//	Name:       "cluster",

@@ -49,8 +49,9 @@ func TestNewClusterDriverNetworkPolicy(t *testing.T) {
 						{
 							PodSelector: &metav1.LabelSelector{
 								MatchLabels: map[string]string{
-									"app.kubernetes.io/name":     "spark",
-									"app.kubernetes.io/instance": "test-id",
+									"app.kubernetes.io/component": "master",
+									"app.kubernetes.io/name":      "spark",
+									"app.kubernetes.io/instance":  "test-id",
 								},
 							},
 						},
@@ -59,6 +60,19 @@ func TestNewClusterDriverNetworkPolicy(t *testing.T) {
 						{
 							Protocol: &protocol,
 							Port:     &driverUIPort,
+						},
+					},
+				},
+				{
+					From: []networkingv1.NetworkPolicyPeer{
+						{
+							PodSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"app.kubernetes.io/component": "worker",
+									"app.kubernetes.io/name":      "spark",
+									"app.kubernetes.io/instance":  "test-id",
+								},
+							},
 						},
 					},
 				},

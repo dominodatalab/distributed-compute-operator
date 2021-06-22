@@ -58,8 +58,12 @@ func NewClusterDriverNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 		MatchLabels: sc.Spec.NetworkPolicy.ExternalPodLabels,
 	}
 
-	clusterSelector := metav1.LabelSelector{
-		MatchLabels: SelectorLabels(sc),
+	masterSelector := metav1.LabelSelector{
+		MatchLabels: SelectorLabelsWithComponent(sc, ComponentMaster),
+	}
+
+	workerSelector := metav1.LabelSelector{
+		MatchLabels: SelectorLabelsWithComponent(sc, ComponentWorker),
 	}
 
 	protocol := corev1.ProtocolTCP
@@ -80,13 +84,20 @@ func NewClusterDriverNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 				{
 					From: []networkingv1.NetworkPolicyPeer{
 						{
-							PodSelector: &clusterSelector,
+							PodSelector: &masterSelector,
 						},
 					},
 					Ports: []networkingv1.NetworkPolicyPort{
 						{
 							Protocol: &protocol,
 							Port:     &driverUIPort,
+						},
+					},
+				},
+				{
+					From: []networkingv1.NetworkPolicyPeer{
+						{
+							PodSelector: &workerSelector,
 						},
 					},
 				},
