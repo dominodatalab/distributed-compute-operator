@@ -22,14 +22,33 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	var nodeAttrs dcv1alpha1.SparkClusterNode
 	var volumes []corev1.Volume
 	var volumeMounts []corev1.VolumeMount
+	var ports []corev1.ContainerPort
 
 	switch comp {
 	case ComponentMaster:
 		replicas = 1
 		nodeAttrs = sc.Spec.Master.SparkClusterNode
+		ports = []corev1.ContainerPort{
+			{
+				Name:          "http",
+				Protocol:      corev1.ProtocolTCP,
+				ContainerPort: sc.Spec.TCPMasterWebPort,
+			},
+			{
+				Name:          "cluster",
+				ContainerPort: sc.Spec.ClusterPort,
+			},
+		}
 	case ComponentWorker:
 		replicas = *sc.Spec.Worker.Replicas
 		nodeAttrs = sc.Spec.Worker.SparkClusterNode
+		ports = []corev1.ContainerPort{
+			{
+				Name:          "http",
+				Protocol:      corev1.ProtocolTCP,
+				ContainerPort: sc.Spec.TCPWorkerWebPort,
+			},
+		}
 	default:
 		return nil, fmt.Errorf("invalid spark component: %q", comp)
 	}
@@ -38,7 +57,7 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	if err != nil {
 		return nil, err
 	}
-	ports := processPorts(sc)
+
 	labels := processLabels(sc, comp, nodeAttrs.Labels)
 	envVars := append(componentEnvVars(sc, comp), sc.Spec.EnvVars...)
 	volumes = nodeAttrs.Volumes
@@ -172,7 +191,7 @@ func getPodSpec(sc *dcv1alpha1.SparkCluster,
 					Handler: corev1.Handler{
 						HTTPGet: &corev1.HTTPGetAction{
 							Path: "/",
-							Port: intstr.FromInt(int(sc.Spec.DashboardPort)),
+							Port: intstr.FromInt(int(sc.Spec.TCPWorkerWebPort)),
 						},
 					},
 				},
@@ -180,7 +199,7 @@ func getPodSpec(sc *dcv1alpha1.SparkCluster,
 					Handler: corev1.Handler{
 						HTTPGet: &corev1.HTTPGetAction{
 							Path: "/",
-							Port: intstr.FromInt(int(sc.Spec.DashboardPort)),
+							Port: intstr.FromInt(int(sc.Spec.TCPWorkerWebPort)),
 						},
 					},
 				},
@@ -227,7 +246,7 @@ func componentEnvVars(sc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 			},
 			{
 				Name:  "SPARK_MASTER_WEBUI_PORT",
-				Value: strconv.Itoa(int(sc.Spec.DashboardPort)),
+				Value: strconv.Itoa(int(sc.Spec.TCPMasterWebPort)),
 			},
 			{
 				Name:  "SPARK_MODE",
@@ -242,7 +261,7 @@ func componentEnvVars(sc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 			},
 			{
 				Name:  "SPARK_WORKER_WEBUI_PORT",
-				Value: strconv.Itoa(int(sc.Spec.DashboardPort)),
+				Value: strconv.Itoa(int(sc.Spec.TCPWorkerWebPort)),
 			},
 			{
 				Name:  "SPARK_WORKER_PORT",
@@ -255,21 +274,6 @@ func componentEnvVars(sc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 		}
 	}
 	return envVar
-}
-
-func processPorts(sc *dcv1alpha1.SparkCluster) []corev1.ContainerPort {
-	ports := []corev1.ContainerPort{
-		{
-			Name:          "http",
-			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: sc.Spec.DashboardPort,
-		},
-		{
-			Name:          "cluster",
-			ContainerPort: sc.Spec.ClusterPort,
-		},
-	}
-	return ports
 }
 
 func processLabels(sc *dcv1alpha1.SparkCluster, comp Component, extraLabels map[string]string) map[string]string {

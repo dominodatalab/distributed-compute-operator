@@ -28,7 +28,7 @@ spec:
   # clientServerPort: 10001
 
   # enable dashboard ui and set port
-  dashboardPort: 8080
+  dashboardPort: 80
   enableDashboard: true
 
   # internal port overrides
@@ -38,10 +38,10 @@ spec:
   sparkClusterDriver:
     sparkClusterName: example-spark
     executionName: run-example-spark
-    driverPortName: spark-driver-port
-    driverPort: 4040
     driverUIPortName: spark-ui-port
-    driverUIPort: 4041
+    driverUIPort: 4040
+    driverPortName: spark-driver-port
+    driverPort: 4041
     driverBlockManagerPortName: spark-block-manager-port
     driverBlockManagerPort: 4042
 

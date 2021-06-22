@@ -78,7 +78,7 @@ func TestNewStatefulSet(t *testing.T) {
 										},
 										{
 											Name:  "SPARK_MASTER_WEBUI_PORT",
-											Value: "8265",
+											Value: "8080",
 										},
 										{
 											Name:  "SPARK_MODE",
@@ -88,7 +88,7 @@ func TestNewStatefulSet(t *testing.T) {
 									Ports: []corev1.ContainerPort{
 										{
 											Name:          "http",
-											ContainerPort: 8265,
+											ContainerPort: 8080,
 											Protocol:      "TCP",
 										},
 										{
@@ -99,7 +99,7 @@ func TestNewStatefulSet(t *testing.T) {
 									LivenessProbe: &corev1.Probe{
 										Handler: corev1.Handler{
 											HTTPGet: &corev1.HTTPGetAction{
-												Port: intstr.FromInt(8265),
+												Port: intstr.FromInt(8081),
 												Path: "/",
 											},
 										},
@@ -107,7 +107,7 @@ func TestNewStatefulSet(t *testing.T) {
 									ReadinessProbe: &corev1.Probe{
 										Handler: corev1.Handler{
 											HTTPGet: &corev1.HTTPGetAction{
-												Port: intstr.FromInt(8265),
+												Port: intstr.FromInt(8081),
 												Path: "/",
 											},
 										},
@@ -184,7 +184,7 @@ func TestNewStatefulSet(t *testing.T) {
 										},
 										{
 											Name:  "SPARK_WORKER_WEBUI_PORT",
-											Value: "8265",
+											Value: "8081",
 										},
 										{
 											Name:  "SPARK_WORKER_PORT",
@@ -198,18 +198,14 @@ func TestNewStatefulSet(t *testing.T) {
 									Ports: []corev1.ContainerPort{
 										{
 											Name:          "http",
-											ContainerPort: 8265,
+											ContainerPort: 8081,
 											Protocol:      "TCP",
-										},
-										{
-											Name:          "cluster",
-											ContainerPort: 7077,
 										},
 									},
 									LivenessProbe: &corev1.Probe{
 										Handler: corev1.Handler{
 											HTTPGet: &corev1.HTTPGetAction{
-												Port: intstr.FromInt(8265),
+												Port: intstr.FromInt(8081),
 												Path: "/",
 											},
 										},
@@ -217,7 +213,7 @@ func TestNewStatefulSet(t *testing.T) {
 									ReadinessProbe: &corev1.Probe{
 										Handler: corev1.Handler{
 											HTTPGet: &corev1.HTTPGetAction{
-												Port: intstr.FromInt(8265),
+												Port: intstr.FromInt(8081),
 												Path: "/",
 											},
 										},

@@ -52,7 +52,7 @@ func TestNewHeadService(t *testing.T) {
 		expected.Spec.Ports = append(expected.Spec.Ports, corev1.ServicePort{
 			Name:       "tcp",
 			Protocol:   corev1.ProtocolTCP,
-			Port:       8265,
+			Port:       80,
 			TargetPort: intstr.FromString("http"),
 		})
 
@@ -83,24 +83,24 @@ func TestNewHeadlessService(t *testing.T) {
 				"app.kubernetes.io/name":      "spark",
 				"app.kubernetes.io/instance":  "test-id",
 			},
-			Ports: []corev1.ServicePort{
-				{
-					Name:       "cluster",
-					Port:       7077,
-					TargetPort: intstr.FromString("cluster"),
-				},
-				{
-					Name:       "tcp-master-webport",
-					Port:       80,
-					TargetPort: intstr.FromString("http"),
-					Protocol:   corev1.ProtocolTCP,
-				}, {
-					Name:       "tcp-worker-webport",
-					Port:       8081,
-					TargetPort: intstr.FromString("http"),
-					Protocol:   corev1.ProtocolTCP,
-				},
-			},
+			Ports: []corev1.ServicePort{},
+			// {
+			//	Name:       "cluster",
+			//	Port:       7077,
+			//	TargetPort: intstr.FromString("cluster"),
+			// },
+			// {
+			//	Name:       "tcp-master-webport",
+			//	Port:       80,
+			//	TargetPort: intstr.FromString("http"),
+			//	Protocol:   corev1.ProtocolTCP,
+			// }, {
+			//	Name:       "tcp-worker-webport",
+			//	Port:       8081,
+			//	TargetPort: intstr.FromString("http"),
+			//	Protocol:   corev1.ProtocolTCP,
+			// },
+			// },
 		},
 	}
 	assert.Equal(t, expected, svc)

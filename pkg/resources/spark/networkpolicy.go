@@ -70,7 +70,7 @@ func NewClusterDriverNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 	}
 
 	protocol := corev1.ProtocolTCP
-	driverPort := intstr.FromInt(int(sc.Spec.Driver.DriverPort))
+	driverUIPort := intstr.FromInt(int(sc.Spec.Driver.DriverUIPort))
 
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
@@ -93,7 +93,7 @@ func NewClusterDriverNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 					Ports: []networkingv1.NetworkPolicyPort{
 						{
 							Protocol: &protocol,
-							Port:     &driverPort,
+							Port:     &driverUIPort,
 						},
 					},
 				},
@@ -129,7 +129,7 @@ func NewClusterMasterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 	}
 
 	protocol := corev1.ProtocolTCP
-	dashboardPort := intstr.FromInt(int(sc.Spec.DashboardPort))
+	masterDashboardPort := intstr.FromInt(int(sc.Spec.TCPMasterWebPort))
 	clusterPort := intstr.FromInt(int(sc.Spec.ClusterPort))
 
 	return &networkingv1.NetworkPolicy{
@@ -170,7 +170,7 @@ func NewClusterMasterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 					Ports: []networkingv1.NetworkPolicyPort{
 						{
 							Protocol: &protocol,
-							Port:     &dashboardPort,
+							Port:     &masterDashboardPort,
 						},
 					},
 				},

@@ -24,9 +24,9 @@ const (
 )
 
 var (
-	sparkDefaultDashboardPort               int32 = 8265
+	sparkDefaultDashboardPort               int32 = 80
 	sparkDefaultClusterPort                 int32 = 7077
-	sparkDefaultMasterWebPort               int32 = 80
+	sparkDefaultMasterWebPort               int32 = 8080
 	sparkDefaultWorkerWebPort               int32 = 8081
 	sparkDefaultDriverUIPort                int32 = 4040
 	sparkDefaultDriverPort                  int32 = 4041
@@ -62,7 +62,7 @@ func (r *SparkCluster) SetupWebhookWithManager(mgr ctrl.Manager) error {
 var _ webhook.Defaulter = &SparkCluster{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
-// nolint:funlen,gocyclo
+// nolint:gocyclo
 func (r *SparkCluster) Default() {
 	log := sparkLogger.WithValues("sparkcluster", client.ObjectKeyFromObject(r))
 	log.Info("applying defaults")

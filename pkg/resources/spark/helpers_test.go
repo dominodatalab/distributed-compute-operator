@@ -27,9 +27,9 @@ func sparkClusterFixture() *dcv1alpha1.SparkCluster {
 				PullPolicy: v1.PullIfNotPresent,
 			},
 			ClusterPort:      7077,
-			TCPMasterWebPort: 80,
+			TCPMasterWebPort: 8080,
 			TCPWorkerWebPort: 8081,
-			DashboardPort:    8265,
+			DashboardPort:    80,
 			Worker: dcv1alpha1.SparkClusterWorker{
 				Replicas: pointer.Int32Ptr(5),
 			},
