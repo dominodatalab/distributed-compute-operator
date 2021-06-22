@@ -15,6 +15,8 @@ import (
 	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
 )
 
+const webUIPort = 8080
+
 // NewStatefulSet generates a Deployment configured to manage Spark cluster nodes.
 // The configuration is based the provided spec and the desired Component workload.
 func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.StatefulSet, error) {
@@ -219,6 +221,7 @@ func processVolumeClaimTemplates(storage []dcv1alpha1.SparkAdditionalStorage) ([
 
 func componentEnvVars(sc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvVar {
 	var envVar []corev1.EnvVar
+
 	if comp == ComponentMaster {
 		envVar = []corev1.EnvVar{
 			{
@@ -227,7 +230,7 @@ func componentEnvVars(sc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 			},
 			{
 				Name:  "SPARK_MASTER_WEBUI_PORT",
-				Value: strconv.Itoa(8080),
+				Value: strconv.Itoa(webUIPort),
 			},
 			{
 				Name:  "SPARK_MODE",
@@ -242,7 +245,7 @@ func componentEnvVars(sc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 			},
 			{
 				Name:  "SPARK_WORKER_WEBUI_PORT",
-				Value: strconv.Itoa(8080),
+				Value: strconv.Itoa(webUIPort),
 			},
 			{
 				Name:  "SPARK_WORKER_PORT",
