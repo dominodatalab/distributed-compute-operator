@@ -202,7 +202,41 @@ spec:
                 - name
                 type: object
               type: array
-            head:
+            image:
+              description: Image used to launch master and worker nodes.
+              properties:
+                pullPolicy:
+                  description: PullPolicy used to fetch container image.
+                  type: string
+                registry:
+                  description: Registry where the container image is hosted.
+                  type: string
+                repository:
+                  description: Repository where the container image is stored.
+                  type: string
+                tag:
+                  description: Tag points to a specific container image variant.
+                  type: string
+              type: object
+            imagePullSecrets:
+              description: ImagePullSecrets are references to secrets with credentials
+                to private registries used to pull images.
+              items:
+                description: LocalObjectReference contains enough information to let
+                  you locate the referenced object inside the same namespace.
+                properties:
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                type: object
+              type: array
+            istioMutualTLSMode:
+              description: MutualTLSMode will be used to create a workload-specific
+                peer authentication policy that takes precedence over a global and/or
+                namespace-wide policy.
+              type: string
+            master:
               description: Master node configuration parameters.
               properties:
                 additionalStorage:
@@ -3539,40 +3573,6 @@ spec:
               required:
               - resources
               type: object
-            image:
-              description: Image used to launch head and worker nodes.
-              properties:
-                pullPolicy:
-                  description: PullPolicy used to fetch container image.
-                  type: string
-                registry:
-                  description: Registry where the container image is hosted.
-                  type: string
-                repository:
-                  description: Repository where the container image is stored.
-                  type: string
-                tag:
-                  description: Tag points to a specific container image variant.
-                  type: string
-              type: object
-            imagePullSecrets:
-              description: ImagePullSecrets are references to secrets with credentials
-                to private registries used to pull images.
-              items:
-                description: LocalObjectReference contains enough information to let
-                  you locate the referenced object inside the same namespace.
-                properties:
-                  name:
-                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                      TODO: Add other useful fields. apiVersion, kind, uid?'
-                    type: string
-                type: object
-              type: array
-            istioMutualTLSMode:
-              description: MutualTLSMode will be used to create a workload-specific
-                peer authentication policy that takes precedence over a global and/or
-                namespace-wide policy.
-              type: string
             networkPolicy:
               description: NetworkPolicyClientLabels will create a pod selector clause
                 for each set of labels. This is used to grant ingress access to one
@@ -3583,7 +3583,7 @@ spec:
                   additionalProperties:
                     type: string
                   description: ClientServerLabels defines the pod selector clause
-                    that grant ingress access to the head client server port.
+                    that grant ingress access to the master client server port.
                   type: object
                 clusterLabels:
                   additionalProperties:
@@ -3595,7 +3595,7 @@ spec:
                   additionalProperties:
                     type: string
                   description: DashboardLabels defines the pod selector clause used
-                    to grant ingress access to the head dashboard port.
+                    to grant ingress access to the master dashboard port.
                   type: object
                 enabled:
                   description: Enabled controls the creation of network policies that

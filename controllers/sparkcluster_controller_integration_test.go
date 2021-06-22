@@ -190,7 +190,7 @@ func createAndBasicTest(ctx context.Context, name string) {
 				ExternalPodLabels:     map[string]string{"app.kubernetes.io/instance": "spark-driver"},
 				ExternalPolicyEnabled: pointer.BoolPtr(true),
 			},
-			Master: dcv1alpha1.SparkClusterHead{
+			Master: dcv1alpha1.SparkClusterMaster{
 				SparkClusterNode: dcv1alpha1.SparkClusterNode{
 					FrameworkConfig: &dcv1alpha1.FrameworkConfig{
 						Path: "/opt/bitnami/spark/conf/spark-defaults.conf",

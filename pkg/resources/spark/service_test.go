@@ -11,7 +11,7 @@ import (
 	"k8s.io/utils/pointer"
 )
 
-func TestNewHeadService(t *testing.T) {
+func TestNewMasterService(t *testing.T) {
 	rc := sparkClusterFixture()
 	svc := NewMasterService(rc)
 

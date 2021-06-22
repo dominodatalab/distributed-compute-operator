@@ -268,7 +268,7 @@ func componentEnvVars(sc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 		envVar = []corev1.EnvVar{
 			{
 				Name:  "SPARK_MASTER_URL",
-				Value: "spark://" + HeadServiceName(sc.Name) + ":" + strconv.Itoa(int(sc.Spec.ClusterPort)),
+				Value: "spark://" + MasterServiceName(sc.Name) + ":" + strconv.Itoa(int(sc.Spec.ClusterPort)),
 			},
 			{
 				Name:  "SPARK_WORKER_WEBUI_PORT",

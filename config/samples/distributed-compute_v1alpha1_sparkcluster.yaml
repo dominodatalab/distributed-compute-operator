@@ -102,7 +102,7 @@ spec:
 
   ## head configuration parameters
 
-  head:
+  master:
     #   labels:
     #     environment: production
 

@@ -23,7 +23,7 @@ func TestNewStatefulSet(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	t.Run("head", func(t *testing.T) {
+	t.Run("master", func(t *testing.T) {
 		testCommonFeatures(t, ComponentMaster)
 
 		t.Run("default_values", func(t *testing.T) {
@@ -125,7 +125,7 @@ func TestNewStatefulSet(t *testing.T) {
 					PodManagementPolicy:  appsv1.ParallelPodManagement,
 				},
 			}
-			assert.Equal(t, expected, actual, "head statefulset not correctly generated")
+			assert.Equal(t, expected, actual, "master statefulset not correctly generated")
 		})
 	})
 
@@ -571,7 +571,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			},
 		}
 
-		rc.Spec.Master = dcv1alpha1.SparkClusterHead{
+		rc.Spec.Master = dcv1alpha1.SparkClusterMaster{
 			SparkClusterNode: dcv1alpha1.SparkClusterNode{
 				FrameworkConfig: &fcMaster,
 			},
@@ -624,7 +624,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			KeyTab: []byte{'w', 'o', 'r', 'k', 'e', 'r'},
 		}
 
-		rc.Spec.Master = dcv1alpha1.SparkClusterHead{
+		rc.Spec.Master = dcv1alpha1.SparkClusterMaster{
 			SparkClusterNode: dcv1alpha1.SparkClusterNode{
 				KeyTabConfig: &kcMaster,
 			},

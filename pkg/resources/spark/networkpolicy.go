@@ -10,13 +10,6 @@ import (
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources"
 )
 
-// const (
-//	descriptionCluster   = "Allows all ingress traffic between cluster nodes"
-//	descriptionExternal  = "Allows all ingress traffic between cluster and external nodes"
-//	descriptionClient    = "Allows client ingress traffic to head client server port"
-//	descriptionDashboard = "Allows client ingress traffic to head dashboard port"
-// )
-
 func NewClusterWorkerNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.NetworkPolicy {
 	workerSelector := metav1.LabelSelector{
 		MatchLabels: MetadataLabelsWithComponent(sc, ComponentWorker),

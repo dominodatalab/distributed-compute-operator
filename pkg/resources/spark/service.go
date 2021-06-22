@@ -37,7 +37,7 @@ func NewMasterService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      HeadServiceName(sc.Name),
+			Name:      MasterServiceName(sc.Name),
 			Namespace: sc.Namespace,
 			Labels:    MetadataLabelsWithComponent(sc, ComponentMaster),
 		},

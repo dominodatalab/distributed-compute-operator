@@ -38,8 +38,8 @@ func InstanceObjectName(instance string, comp Component) string {
 	return fmt.Sprintf("%s-%s-%s", instance, ApplicationName, comp)
 }
 
-// HeadServiceName returns the name of the service that points to the spark head pod.
-func HeadServiceName(name string) string {
+// MasterServiceName returns the name of the service that points to the spark master pod.
+func MasterServiceName(name string) string {
 	return InstanceObjectName(name, ComponentMaster)
 }
 

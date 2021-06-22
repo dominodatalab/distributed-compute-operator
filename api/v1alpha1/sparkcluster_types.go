@@ -73,8 +73,8 @@ type SparkAdditionalStorage struct {
 	Name string `json:"name"`
 }
 
-// SparkClusterHead defines head-specific pod settings.
-type SparkClusterHead struct {
+// SparkClusterMaster defines master-specific pod settings.
+type SparkClusterMaster struct {
 	SparkClusterNode `json:",inline"`
 }
 
@@ -91,7 +91,7 @@ type SparkClusterWorker struct {
 
 // SparkClusterSpec defines the desired state of a SparkCluster resource.
 type SparkClusterSpec struct {
-	// Image used to launch head and worker nodes.
+	// Image used to launch master and worker nodes.
 	Image *OCIImageDefinition `json:"image,omitempty"`
 
 	// ImagePullSecrets are references to secrets with credentials to private registries used to pull images.
@@ -139,7 +139,7 @@ type SparkClusterSpec struct {
 	EnvVars []corev1.EnvVar `json:"envVars,omitempty"`
 
 	// Master node configuration parameters.
-	Master SparkClusterHead `json:"head,omitempty"`
+	Master SparkClusterMaster `json:"master,omitempty"`
 
 	// Worker node configuration parameters.
 	Worker SparkClusterWorker `json:"worker,omitempty"`
@@ -164,11 +164,11 @@ type SparkClusterNetworkPolicy struct {
 	Enabled *bool `json:"enabled,omitempty"`
 
 	// ClientServerLabels defines the pod selector clause that grant ingress
-	// access to the head client server port.
+	// access to the master client server port.
 	ClientServerLabels map[string]string `json:"clientServerLabels,omitempty"`
 
 	// DashboardLabels defines the pod selector clause used to grant ingress
-	// access to the head dashboard port.
+	// access to the master dashboard port.
 	DashboardLabels map[string]string `json:"dashboardLabels,omitempty"`
 
 	// ExternalPolicyEnabled controls creation of network policies which deal with two way traffic to pods that are
