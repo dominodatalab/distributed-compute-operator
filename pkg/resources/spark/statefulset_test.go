@@ -194,6 +194,14 @@ func TestNewStatefulSet(t *testing.T) {
 											Name:  "SPARK_MODE",
 											Value: "worker",
 										},
+										{
+											Name:  "SPARK_WORKER_MEMORY",
+											Value: "0",
+										},
+										{
+											Name:  "SPARK_WORKER_CORES",
+											Value: "0",
+										},
 									},
 									Ports: []corev1.ContainerPort{
 										{

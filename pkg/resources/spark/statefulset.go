@@ -282,6 +282,14 @@ func componentEnvVars(sc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 				Name:  "SPARK_MODE",
 				Value: "worker",
 			},
+			{
+				Name:  "SPARK_WORKER_MEMORY",
+				Value: sc.Spec.Worker.Resources.Requests.Memory().String(),
+			},
+			{
+				Name:  "SPARK_WORKER_CORES",
+				Value: sc.Spec.Worker.Resources.Requests.Cpu().String(),
+			},
 		}
 	}
 	return envVar
