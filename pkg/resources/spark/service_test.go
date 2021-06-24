@@ -120,7 +120,7 @@ func TestNewSparkDriverServiceService(t *testing.T) {
 
 	expected := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-id-driver",
+			Name:      "test-id-spark-driver",
 			Namespace: "fake-ns",
 			Labels: map[string]string{
 				"app.kubernetes.io/name":       "spark",

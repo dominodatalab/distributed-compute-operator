@@ -48,7 +48,7 @@ func HeadlessServiceName(name string) string {
 }
 
 func DriverServiceName(name string) string {
-	return fmt.Sprintf("%s-driver", name)
+	return InstanceObjectName(name, ComponentNone) + "-driver"
 }
 
 // MetadataLabels returns standard metadata for spark resources.

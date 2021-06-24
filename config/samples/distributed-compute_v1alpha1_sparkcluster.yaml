@@ -152,7 +152,6 @@ spec:
   #    frameworkConfig:
   #      path: /opt/bitnami/spark/conf/spark-defaults.conf
   #      configs:
-  #        spark.master: spark://spark-60d36bc5acdf5d382b6d32a9-master-svc.aws-cloud-dev-compute.svc.cluster.local:7077
   #        spark.driver.host: "run-dc-607624b1336b20009d4d081c-driver.audidco273377-compute.svc.cluster.local"
   #        spark.executor.cores: "4"
   #        spark.executor.instances: "1"
