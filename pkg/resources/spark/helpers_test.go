@@ -32,7 +32,8 @@ func sparkClusterFixture() *dcv1alpha1.SparkCluster {
 			DashboardPort:        8080,
 			DashboardServicePort: 80,
 			Worker: dcv1alpha1.SparkClusterWorker{
-				Replicas: pointer.Int32Ptr(5),
+				Replicas:            pointer.Int32Ptr(5),
+				WorkerMemoryRequest: "4000m",
 			},
 		},
 	}

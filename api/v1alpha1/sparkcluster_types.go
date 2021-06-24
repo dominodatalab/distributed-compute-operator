@@ -87,6 +87,9 @@ type SparkClusterWorker struct {
 	// minimum number of replicas will be set to this value. Additionally, you can specify an "initial cluster size" by
 	// setting this field to some value above the minimum number of replicas.
 	Replicas *int32 `json:"replicas,omitempty"`
+
+	// WorkerMemoryRequest configures the SPARK_WORKER_MEMORY envVar
+	WorkerMemoryRequest string `json:"workerMemoryRequestRequest,omitempty"`
 }
 
 // SparkClusterSpec defines the desired state of a SparkCluster resource.

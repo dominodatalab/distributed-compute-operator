@@ -196,7 +196,7 @@ func TestNewStatefulSet(t *testing.T) {
 										},
 										{
 											Name:  "SPARK_WORKER_MEMORY",
-											Value: "0",
+											Value: "4000m",
 										},
 										{
 											Name:  "SPARK_WORKER_CORES",
