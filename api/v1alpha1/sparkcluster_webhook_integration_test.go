@@ -105,6 +105,10 @@ var _ = Describe("SparkCluster", func() {
 				PointTo(BeNumerically("==", 1)),
 				"worker replicas should point to 1",
 			)
+			Expect(rc.Spec.Worker.WorkerMemoryRequest).To(
+				Equal("4505m"),
+				"worker memory request should equal 4505m",
+			)
 			Expect(rc.Spec.Image).To(
 				Equal(&OCIImageDefinition{Repository: "bitnami/spark", Tag: "3.0.2-debian-10-r0"}),
 				`image reference should equal "bitnami/spark:3.0.2-debian-10-r0"`,

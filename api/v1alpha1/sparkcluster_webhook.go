@@ -38,6 +38,7 @@ var (
 	sparkDefaultEnableNetworkPolicy               = pointer.BoolPtr(true)
 	sparkDefaultEnableExternalNetworkPolicy       = pointer.BoolPtr(false)
 	sparkDefaultWorkerReplicas                    = pointer.Int32Ptr(1)
+	sparkDefaultWorkerMemoryRequest               = "4505m"
 	sparkDefaultEnableDashboard                   = pointer.BoolPtr(true)
 	sparkDefaultNetworkPolicyClientLabels         = map[string]string{
 		"spark-client": "true",
@@ -68,6 +69,10 @@ func (r *SparkCluster) Default() {
 	log := sparkLogger.WithValues("sparkcluster", client.ObjectKeyFromObject(r))
 	log.Info("applying defaults")
 
+	if r.Spec.Worker.WorkerMemoryRequest == "" {
+		log.Info("setting default worker memory request", "value", sparkDefaultWorkerMemoryRequest)
+		r.Spec.Worker.WorkerMemoryRequest = sparkDefaultWorkerMemoryRequest
+	}
 	if r.Spec.ClusterPort == 0 {
 		log.Info("setting default cluster port", "value", sparkDefaultClusterPort)
 		r.Spec.ClusterPort = sparkDefaultClusterPort
@@ -181,6 +186,9 @@ func (r *SparkCluster) validateSparkCluster() error {
 		allErrs = append(allErrs, err)
 	}
 	if err := r.validateWorkerReplicas(); err != nil {
+		allErrs = append(allErrs, err)
+	}
+	if err := r.validateWorkerMemoryRequest(); err != nil {
 		allErrs = append(allErrs, err)
 	}
 	if err := r.validateWorkerResourceRequestsCPU(); err != nil {
@@ -327,6 +335,19 @@ func (r *SparkCluster) validateMutualTLSMode() *field.Error {
 		r.Spec.MutualTLSMode,
 		fmt.Sprintf("mode must be one of the following: %v", validModes),
 	)
+}
+
+func (r *SparkCluster) validateWorkerMemoryRequest() *field.Error {
+	request := r.Spec.Worker.WorkerMemoryRequest
+	if request == "" {
+		return field.Invalid(
+			field.NewPath("spec").Child("worker").Child("workerMemoryRequest"),
+			request,
+			"should be non-empty",
+		)
+	}
+
+	return nil
 }
 
 func (r *SparkCluster) validateWorkerReplicas() *field.Error {
