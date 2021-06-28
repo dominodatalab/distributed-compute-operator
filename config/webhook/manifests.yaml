@@ -13,6 +13,27 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /mutate-distributed-compute-dominodatalab-com-v1alpha1-daskcluster
+  failurePolicy: Fail
+  name: mdaskcluster.kb.io
+  rules:
+  - apiGroups:
+    - distributed-compute.dominodatalab.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - daskclusters
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /mutate-distributed-compute-dominodatalab-com-v1alpha1-raycluster
   failurePolicy: Fail
   name: mraycluster.kb.io
@@ -56,6 +77,27 @@ metadata:
   creationTimestamp: null
   name: validating-webhook-configuration
 webhooks:
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-distributed-compute-dominodatalab-com-v1alpha1-daskcluster
+  failurePolicy: Fail
+  name: vdaskcluster.kb.io
+  rules:
+  - apiGroups:
+    - distributed-compute.dominodatalab.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - daskclusters
+  sideEffects: None
 - admissionReviewVersions:
   - v1
   - v1beta1

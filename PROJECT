@@ -1,5 +1,6 @@
 domain: dominodatalab.com
-layout: go.kubebuilder.io/v3
+layout:
+- go.kubebuilder.io/v3
 projectName: distributed-compute-operator
 repo: github.com/dominodatalab/distributed-compute-operator
 resources:
@@ -10,6 +11,19 @@ resources:
   domain: dominodatalab.com
   group: distributed-compute
   kind: RayCluster
+  path: github.com/dominodatalab/distributed-compute-operator/api/v1alpha1
+  version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: dominodatalab.com
+  group: distributed-compute
+  kind: DaskCluster
   path: github.com/dominodatalab/distributed-compute-operator/api/v1alpha1
   version: v1alpha1
   webhooks:

@@ -57,7 +57,7 @@ var _ = BeforeSuite(func() {
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		BinaryAssetsDirectory: test.KubebuilderBinaryAssetsDir(),
+		//BinaryAssetsDirectory: test.KubebuilderBinaryAssetsDir(),
 		CRDDirectoryPaths:     []string{crdPath},
 		ErrorIfCRDPathMissing: false,
 		WebhookInstallOptions: envtest.WebhookInstallOptions{
@@ -96,6 +96,7 @@ var _ = BeforeSuite(func() {
 
 	err = (&RayCluster{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
+
 	err = (&SparkCluster{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 

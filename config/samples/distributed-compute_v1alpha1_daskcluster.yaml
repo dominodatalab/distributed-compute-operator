@@ -1,0 +1,73 @@
+apiVersion: distributed-compute.dominodatalab.com/v1alpha1
+kind: DaskCluster
+metadata:
+  name: example
+spec:
+  # schedulerPort: 8786
+  # dashboardPort: 8787
+  # workerPort: 3000
+  # nannyPort: 3001
+
+  # image:
+  #   registry: ""
+  #   repository: daskdev/dask
+  #   tag: 2021.6.1
+  #   pullPolicy: IfNotPresent
+
+  # autoscaling:
+  #   minReplicas:
+  #   maxReplicas:
+  #   averageCPUUtilization:
+  #   scaleDownStabilizationWindowSeconds:
+
+  # networkPolicy:
+  #   enabled: true
+  #   clientLabels: {}
+  #   dashboardLabels: {}
+
+  # serviceAccount:
+  #   name: ""
+  #   automountServiceAccountToken: false
+
+  # podSecurityContext:
+  #   runAsUser:
+  #   runAsGroup:
+  #   fsGroup:
+
+  # kerberosKeytab:
+  #   contents:
+  #   mountPath:
+
+  # globalLabels: {}
+  # envVars: []
+  # imagePullSecrets: []
+  # podSecurityPolicy: ""
+  # istioMutualTLSMode: ""
+
+  scheduler:
+    # labels: {}
+    # annotations: {}
+    # nodeSelector: {}
+    # affinity: {}
+    # tolerations: []
+    # initContainers: []
+    # volumes: []
+    # volumeMounts: []
+    # volumeClaimTemplates: []
+    # resources: {}
+
+  worker:
+    # replicas: 1
+    # labels: {}
+    # annotations: {}
+    # nodeSelector: {}
+    # affinity: {}
+    # tolerations: []
+    # initContainers: []
+    # volumes: []
+    # volumeMounts: []
+    # volumeClaimTemplates: []
+    resources:
+      requests:
+        cpu: 250m
+        memory: 250Mi
