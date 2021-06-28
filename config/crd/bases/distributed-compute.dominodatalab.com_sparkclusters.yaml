@@ -7266,7 +7266,7 @@ spec:
                       - name
                       type: object
                     type: array
-                  workerMemoryRequestRequest:
+                  workerMemoryRequest:
                     description: WorkerMemoryRequest configures the SPARK_WORKER_MEMORY
                       envVar
                     type: string

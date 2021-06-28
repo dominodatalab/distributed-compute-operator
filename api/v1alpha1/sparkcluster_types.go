@@ -89,7 +89,7 @@ type SparkClusterWorker struct {
 	Replicas *int32 `json:"replicas,omitempty"`
 
 	// WorkerMemoryRequest configures the SPARK_WORKER_MEMORY envVar
-	WorkerMemoryRequest string `json:"workerMemoryRequestRequest,omitempty"`
+	WorkerMemoryRequest string `json:"workerMemoryRequest,omitempty"`
 }
 
 // SparkClusterSpec defines the desired state of a SparkCluster resource.

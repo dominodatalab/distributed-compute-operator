@@ -227,6 +227,7 @@ spec:
         cpu: 500m
         memory: 512Mi
 
+#    workerMemoryRequest: 4505m
 #    frameworkConfig:
 #      path: /opt/bitnami/spark/conf/spark-defaults.conf
 #      configs:
