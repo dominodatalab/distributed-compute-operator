@@ -5,7 +5,7 @@ linters-settings:
     default-signifies-exhaustive: true
   funlen:
     lines: 150
-    statements: 75
+    statements: 70
   gci:
     local-prefixes: github.com/dominodatalab/distributed-compute-operator
   goconst:

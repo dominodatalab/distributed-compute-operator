@@ -64,7 +64,6 @@ func (r *SparkCluster) SetupWebhookWithManager(mgr ctrl.Manager) error {
 var _ webhook.Defaulter = &SparkCluster{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
-// nolint:gocyclo
 func (r *SparkCluster) Default() {
 	log := sparkLogger.WithValues("sparkcluster", client.ObjectKeyFromObject(r))
 	log.Info("applying defaults")
@@ -377,23 +376,6 @@ func (r *SparkCluster) validateDriverConfigs() field.ErrorList {
 	if err := r.validatePort(r.Spec.Driver.DriverUIPort, field.NewPath("spec").Child("sparkClusterDriver").Child("driverUIPort")); err != nil {
 		errs = append(errs, err)
 	}
-
-	// validate driver name configurations
-	// if r.Spec.Driver.ExecutionName == "" {
-	//	errs = append(errs, field.Invalid(
-	//		field.NewPath("spec").Child("sparkClusterDriver").Child("executionName"),
-	//		r.Spec.Driver.ExecutionName,
-	//		"should be non-empty",
-	//	))
-	// }
-
-	// if r.Spec.Driver.SparkClusterName == "" {
-	//	errs = append(errs, field.Invalid(
-	//		field.NewPath("spec").Child("sparkClusterDriver").Child("sparkClusterName"),
-	//		r.Spec.Driver.SparkClusterName,
-	//		"should be non-empty",
-	//	))
-	// }
 
 	if r.Spec.Driver.DriverUIPortName == "" {
 		errs = append(errs, field.Invalid(

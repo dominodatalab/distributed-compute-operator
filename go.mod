@@ -11,7 +11,6 @@ require (
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.13.0
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/prometheus/common v0.26.0
 	github.com/spf13/cobra v1.1.3
 	github.com/stretchr/testify v1.7.0
 	istio.io/api v0.0.0-20210318170531-e6e017e575c5

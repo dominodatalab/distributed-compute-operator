@@ -225,9 +225,6 @@ func (r *SparkClusterReconciler) reconcileResources(ctx context.Context, sc *dcv
 	if err := r.reconcileNetworkPolicies(ctx, sc); err != nil {
 		return err
 	}
-	// if err := r.reconcileDriverNetworkPolicy(ctx, sc); err != nil {
-	//	return err
-	// }
 	if err := r.reconcilePodSecurityPolicyRBAC(ctx, sc); err != nil {
 		return err
 	}
@@ -331,46 +328,6 @@ func (r *SparkClusterReconciler) reconcileDriverService(ctx context.Context, sc 
 
 	return nil
 }
-
-// func (r SparkClusterReconciler) reconcileDriverNetworkPolicy(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
-//	driverNetpol := spark.NewClusterExternalNetworkPolicy(sc)
-//
-//	if !util.BoolPtrIsTrue(sc.Spec.NetworkPolicy.ExternalPolicyEnabled) {
-//		return r.deleteIfExists(ctx, driverNetpol)
-//	}
-//
-//	if err := r.createOrUpdateOwnedResource(ctx, sc, driverNetpol); err != nil {
-//		return fmt.Errorf("failed to reconcile driver network policy: %w", err)
-//	}
-//
-//	return nil
-// }
-
-// reconcileNetworkPolicies optionally creates network policies that control
-// traffic flow between cluster nodes and external clients.
-// func (r SparkClusterReconciler) reconcileNetworkPolicies(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
-//	headNetpol := spark.NewHeadClientNetworkPolicy(sc)
-//	clusterNetpol := spark.NewClusterNetworkPolicy(sc)
-//	dashboardNetpol := spark.NewHeadDashboardNetworkPolicy(sc)
-//
-//	if !util.BoolPtrIsTrue(sc.Spec.NetworkPolicy.Enabled) {
-//		return r.deleteIfExists(ctx, headNetpol, clusterNetpol, dashboardNetpol)
-//	}
-//
-//	if err := r.createOrUpdateOwnedResource(ctx, sc, clusterNetpol); err != nil {
-//		return fmt.Errorf("failed to reconcile cluster network policy: %w", err)
-//	}
-//
-//	if err := r.createOrUpdateOwnedResource(ctx, sc, headNetpol); err != nil {
-//		return fmt.Errorf("failed to reconcile head network policy: %w", err)
-//	}
-//
-//	if err := r.createOrUpdateOwnedResource(ctx, sc, dashboardNetpol); err != nil {
-//		return fmt.Errorf("failed to reconcile dashboard network policy: %w", err)
-//	}
-//
-//	return nil
-// }
 
 func (r SparkClusterReconciler) reconcileNetworkPolicies(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
 	driverNetpol := spark.NewClusterDriverNetworkPolicy(sc)
