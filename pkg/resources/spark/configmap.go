@@ -32,6 +32,7 @@ func NewFrameworkConfigMap(sc *dcv1alpha1.SparkCluster) *corev1.ConfigMap {
 	}
 }
 
+// NewKeyTabConfigMap generates a configmap which represents the Kerberos KeyTab configuration out of provided config
 func NewKeyTabConfigMap(sc *dcv1alpha1.SparkCluster) *corev1.ConfigMap {
 	binaryData := map[string][]byte{}
 	if sc.Spec.Master.KeyTabConfig != nil {

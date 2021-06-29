@@ -92,7 +92,6 @@ func NewSparkDriverService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 			Name:      DriverServiceName(sc.Spec.Driver.SparkClusterName),
 			Namespace: sc.Namespace,
 			Labels:    MetadataLabels(sc),
-			// not sure if we need annotations on this service
 		},
 		Spec: corev1.ServiceSpec{
 			ClusterIP: corev1.ClusterIPNone,

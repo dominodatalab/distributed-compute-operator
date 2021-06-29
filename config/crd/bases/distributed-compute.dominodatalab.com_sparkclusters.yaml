@@ -240,8 +240,8 @@ spec:
                 description: Master node configuration parameters.
                 properties:
                   additionalStorage:
-                    description: Requests for additional storage volumes to be created
-                      alongside each pod
+                    description: AdditionalStorage is the request for additional storage
+                      volumes (pvc's) to be created alongside each pod
                     items:
                       properties:
                         accessModes:
@@ -1140,13 +1140,15 @@ spec:
                     description: Annotations applied to spark pods.
                     type: object
                   frameworkConfig:
-                    description: Extra framework-specific configuration for this cluster
-                      For spark this means we'll generate a spark-defaults.conf config
-                      map and mount it in to the requested location
+                    description: FrameworkConfig is the extra framework-specific configuration
+                      for this cluster For spark this means we'll generate a spark-defaults.conf
+                      configmap and mount it at the requested location
                     properties:
                       configs:
                         additionalProperties:
                           type: string
+                        description: Congfigs includes the configuration values to
+                          include in the configmap
                         type: object
                       path:
                         description: Path at which to mount the configmap
@@ -2315,9 +2317,10 @@ spec:
                       type: object
                     type: array
                   keyTabConfig:
+                    description: KeyTabConfig configures the Kerberos Keytab for Spark
                     properties:
                       configs:
-                        description: need to map to a binary string
+                        description: KeyTab contains the actual KeyTab configuration
                         format: byte
                         type: string
                       path:
@@ -3936,10 +3939,10 @@ spec:
                 - resources
                 type: object
               networkPolicy:
-                description: NetworkPolicyClientLabels will create a pod selector
-                  clause for each set of labels. This is used to grant ingress access
-                  to one or more groups of external pods and is only applicable when
-                  EnableNetworkPolicy is true.
+                description: NetworkPolicy will create a pod selector clause for each
+                  set of labels. This is used to grant ingress access to one or more
+                  groups of external pods and is only applicable when EnableNetworkPolicy
+                  is true.
                 properties:
                   clientServerLabels:
                     additionalProperties:
@@ -4123,8 +4126,8 @@ spec:
                   name will be used instead.
                 type: string
               sparkClusterDriver:
-                description: Driver is the configuration that is passed along from
-                  Nucleus to the DCO to set up the Spark Driver
+                description: Driver configures the SparkCluster to communicate with
+                  the Spark Driver
                 properties:
                   driverBlockManagerPort:
                     format: int32
@@ -4157,8 +4160,8 @@ spec:
                 description: Worker node configuration parameters.
                 properties:
                   additionalStorage:
-                    description: Requests for additional storage volumes to be created
-                      alongside each pod
+                    description: AdditionalStorage is the request for additional storage
+                      volumes (pvc's) to be created alongside each pod
                     items:
                       properties:
                         accessModes:
@@ -5057,13 +5060,15 @@ spec:
                     description: Annotations applied to spark pods.
                     type: object
                   frameworkConfig:
-                    description: Extra framework-specific configuration for this cluster
-                      For spark this means we'll generate a spark-defaults.conf config
-                      map and mount it in to the requested location
+                    description: FrameworkConfig is the extra framework-specific configuration
+                      for this cluster For spark this means we'll generate a spark-defaults.conf
+                      configmap and mount it at the requested location
                     properties:
                       configs:
                         additionalProperties:
                           type: string
+                        description: Congfigs includes the configuration values to
+                          include in the configmap
                         type: object
                       path:
                         description: Path at which to mount the configmap
@@ -6232,9 +6237,10 @@ spec:
                       type: object
                     type: array
                   keyTabConfig:
+                    description: KeyTabConfig configures the Kerberos Keytab for Spark
                     properties:
                       configs:
-                        description: need to map to a binary string
+                        description: KeyTab contains the actual KeyTab configuration
                         format: byte
                         type: string
                       path:

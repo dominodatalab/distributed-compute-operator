@@ -34,27 +34,29 @@ type SparkClusterNode struct {
 	// Resources are the requests and limits applied to spark containers.
 	Resources corev1.ResourceRequirements `json:"resources"`
 
-	// Requests for additional storage volumes to be created alongside each pod
+	// AdditionalStorage is the request for additional storage volumes (pvc's) to be created alongside each pod
 	AdditionalStorage []SparkAdditionalStorage `json:"additionalStorage,omitempty"`
 
-	// Extra framework-specific configuration for this cluster
-	// For spark this means we'll generate a spark-defaults.conf config map
-	// and mount it in to the requested location
+	// FrameworkConfig is the extra framework-specific configuration for this cluster
+	// For spark this means we'll generate a spark-defaults.conf configmap
+	// and mount it at the requested location
 	FrameworkConfig *FrameworkConfig `json:"frameworkConfig,omitempty"`
 
+	// KeyTabConfig configures the Kerberos Keytab for Spark
 	KeyTabConfig *KeyTabConfig `json:"keyTabConfig,omitempty"`
 }
 
 type KeyTabConfig struct {
 	// Path at which to mount the configmap
 	Path string `json:"path"`
-	// need to map to a binary string
+	// KeyTab contains the actual KeyTab configuration
 	KeyTab []byte `json:"configs"`
 }
 
 type FrameworkConfig struct {
 	// Path at which to mount the configmap
-	Path    string            `json:"path"`
+	Path string `json:"path"`
+	// Congfigs includes the configuration values to include in the configmap
 	Configs map[string]string `json:"configs"`
 }
 
@@ -100,9 +102,6 @@ type SparkClusterSpec struct {
 	// ImagePullSecrets are references to secrets with credentials to private registries used to pull images.
 	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 
-	// Autoscaling parameters used to scale up/down spark worker nodes.
-	Autoscaling *Autoscaling `json:"autoscaling,omitempty"`
-
 	// ClusterPort is the port on which the spark protocol communicates
 	ClusterPort int32 `json:"clusterPort,omitempty"`
 
@@ -113,7 +112,7 @@ type SparkClusterSpec struct {
 	// IstioConfig parameters for Spark clusters.
 	IstioConfig `json:",inline"`
 
-	// Driver is the configuration that is passed along from Nucleus to the DCO to set up the Spark Driver
+	// Driver configures the SparkCluster to communicate with the Spark Driver
 	Driver SparkClusterDriver `json:"sparkClusterDriver,omitempty"`
 
 	// DashboardPort is the port used by the dashboard server.
@@ -125,7 +124,7 @@ type SparkClusterSpec struct {
 	// EnableDashboard starts the dashboard web UI.
 	EnableDashboard *bool `json:"enableDashboard,omitempty"`
 
-	// NetworkPolicyClientLabels will create a pod selector clause for each set of labels.
+	// NetworkPolicy will create a pod selector clause for each set of labels.
 	// This is used to grant ingress access to one or more groups of external pods and is
 	// only applicable when EnableNetworkPolicy is true.
 	NetworkPolicy SparkClusterNetworkPolicy `json:"networkPolicy,omitempty"`
@@ -148,6 +147,9 @@ type SparkClusterSpec struct {
 
 	// Worker node configuration parameters.
 	Worker SparkClusterWorker `json:"worker,omitempty"`
+
+	// Autoscaling parameters used to scale up/down spark worker nodes.
+	Autoscaling *Autoscaling `json:"autoscaling,omitempty"`
 }
 
 // SparkClusterDriver defines the configuration for the driver service
