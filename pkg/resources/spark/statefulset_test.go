@@ -33,7 +33,7 @@ func TestNewStatefulSet(t *testing.T) {
 
 			expected := &appsv1.StatefulSet{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-id-spark-master",
+					Name:      "test-id-master",
 					Namespace: "fake-ns",
 					Labels: map[string]string{
 						"app.kubernetes.io/name":       "spark",
@@ -44,7 +44,7 @@ func TestNewStatefulSet(t *testing.T) {
 					},
 				},
 				Spec: appsv1.StatefulSetSpec{
-					ServiceName: "test-id-spark-master",
+					ServiceName: "test-id-master",
 					Replicas:    pointer.Int32Ptr(1),
 					Selector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
@@ -65,10 +65,10 @@ func TestNewStatefulSet(t *testing.T) {
 							Annotations: map[string]string{},
 						},
 						Spec: corev1.PodSpec{
-							ServiceAccountName: "test-id-spark",
+							ServiceAccountName: "test-id",
 							Containers: []corev1.Container{
 								{
-									Name:            "test-id-spark-master",
+									Name:            "test-id-master",
 									Image:           "docker.io/fake-reg/fake-repo:fake-tag",
 									ImagePullPolicy: corev1.PullIfNotPresent,
 									Env: []corev1.EnvVar{
@@ -139,7 +139,7 @@ func TestNewStatefulSet(t *testing.T) {
 
 			expected := &appsv1.StatefulSet{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-id-spark-worker",
+					Name:      "test-id-worker",
 					Namespace: "fake-ns",
 					Labels: map[string]string{
 						"app.kubernetes.io/name":       "spark",
@@ -150,7 +150,7 @@ func TestNewStatefulSet(t *testing.T) {
 					},
 				},
 				Spec: appsv1.StatefulSetSpec{
-					ServiceName: "test-id-spark-worker",
+					ServiceName: "test-id-worker",
 					Replicas:    pointer.Int32Ptr(5),
 					Selector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
@@ -171,16 +171,16 @@ func TestNewStatefulSet(t *testing.T) {
 							Annotations: map[string]string{},
 						},
 						Spec: corev1.PodSpec{
-							ServiceAccountName: "test-id-spark",
+							ServiceAccountName: "test-id",
 							Containers: []corev1.Container{
 								{
-									Name:            "test-id-spark-worker",
+									Name:            "test-id-worker",
 									Image:           "docker.io/fake-reg/fake-repo:fake-tag",
 									ImagePullPolicy: corev1.PullIfNotPresent,
 									Env: []corev1.EnvVar{
 										{
 											Name:  "SPARK_MASTER_URL",
-											Value: "spark://test-id-spark-master:7077",
+											Value: "spark://test-id-master:7077",
 										},
 										{
 											Name:  "SPARK_WORKER_WEBUI_PORT",
@@ -387,7 +387,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 										Key:      "instance",
 										Operator: metav1.LabelSelectorOpIn,
 										Values: []string{
-											"test-spark",
+											"test",
 										},
 									},
 								},
@@ -597,7 +597,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 				VolumeSource: corev1.VolumeSource{
 					ConfigMap: &corev1.ConfigMapVolumeSource{
 						LocalObjectReference: corev1.LocalObjectReference{
-							Name: "test-id-framework-spark",
+							Name: "test-id-framework",
 						},
 					},
 				},
@@ -650,7 +650,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 				VolumeSource: corev1.VolumeSource{
 					ConfigMap: &corev1.ConfigMapVolumeSource{
 						LocalObjectReference: corev1.LocalObjectReference{
-							Name: "test-id-keytab-spark",
+							Name: "test-id-keytab",
 						},
 					},
 				},

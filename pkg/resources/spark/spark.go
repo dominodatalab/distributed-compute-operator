@@ -32,10 +32,10 @@ func KeyTabConfigMapName(instance string, comp Component) string {
 // InstanceObjectName returns the name that will be used to create most owned cluster resources.
 func InstanceObjectName(instance string, comp Component) string {
 	if comp == ComponentNone {
-		return fmt.Sprintf("%s-%s", instance, ApplicationName)
+		return instance
 	}
 
-	return fmt.Sprintf("%s-%s-%s", instance, ApplicationName, comp)
+	return fmt.Sprintf("%s-%s", instance, comp)
 }
 
 // MasterServiceName returns the name of the service that points to the spark master pod.

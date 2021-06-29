@@ -25,7 +25,7 @@ func TestNewClusterDriverNetworkPolicy(t *testing.T) {
 
 	expected := &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-id-spark-driver",
+			Name:      "test-id-driver",
 			Namespace: "fake-ns",
 			Labels: map[string]string{
 				"app.kubernetes.io/name":       "spark",
@@ -94,7 +94,7 @@ func TestNewClusterWorkerNetworkPolicy(t *testing.T) {
 
 	expected := &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-id-spark-worker",
+			Name:      "test-id-worker",
 			Namespace: "fake-ns",
 			Labels: map[string]string{
 				"app.kubernetes.io/name":       "spark",
@@ -158,7 +158,7 @@ func TestNewClusterMasterNetworkPolicy(t *testing.T) {
 
 	expected := &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-id-spark-master",
+			Name:      "test-id-master",
 			Namespace: "fake-ns",
 			Labels: map[string]string{
 				"app.kubernetes.io/name":       "spark",

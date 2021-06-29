@@ -31,7 +31,7 @@ func TestNewFrameworkConfigMap(t *testing.T) {
 
 		expected := &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-id-framework-spark",
+				Name:      "test-id-framework",
 				Namespace: "fake-ns",
 				Labels: map[string]string{
 					"app.kubernetes.io/name":       "spark",
@@ -65,7 +65,7 @@ w2 v2
 
 		expected := &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-id-framework-spark",
+				Name:      "test-id-framework",
 				Namespace: "fake-ns",
 				Labels: map[string]string{
 					"app.kubernetes.io/name":       "spark",
@@ -122,7 +122,7 @@ func TestNewKeyTabConfigMap(t *testing.T) {
 
 		expected := &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-id-keytab-spark",
+				Name:      "test-id-keytab",
 				Namespace: "fake-ns",
 				Labels: map[string]string{
 					"app.kubernetes.io/name":       "spark",
@@ -149,7 +149,7 @@ func TestNewKeyTabConfigMap(t *testing.T) {
 
 		expected := &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-id-keytab-spark",
+				Name:      "test-id-keytab",
 				Namespace: "fake-ns",
 				Labels: map[string]string{
 					"app.kubernetes.io/name":       "spark",
