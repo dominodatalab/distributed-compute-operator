@@ -1,6 +1,7 @@
 package spark
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -22,7 +23,7 @@ func TestNewStatefulSet(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	t.Run("head", func(t *testing.T) {
+	t.Run("master", func(t *testing.T) {
 		testCommonFeatures(t, ComponentMaster)
 
 		t.Run("default_values", func(t *testing.T) {
@@ -77,7 +78,7 @@ func TestNewStatefulSet(t *testing.T) {
 										},
 										{
 											Name:  "SPARK_MASTER_WEBUI_PORT",
-											Value: "8265",
+											Value: "8080",
 										},
 										{
 											Name:  "SPARK_MODE",
@@ -87,7 +88,7 @@ func TestNewStatefulSet(t *testing.T) {
 									Ports: []corev1.ContainerPort{
 										{
 											Name:          "http",
-											ContainerPort: 8265,
+											ContainerPort: 8080,
 											Protocol:      "TCP",
 										},
 										{
@@ -98,7 +99,7 @@ func TestNewStatefulSet(t *testing.T) {
 									LivenessProbe: &corev1.Probe{
 										Handler: corev1.Handler{
 											HTTPGet: &corev1.HTTPGetAction{
-												Port: intstr.FromInt(8265),
+												Port: intstr.FromInt(8080),
 												Path: "/",
 											},
 										},
@@ -106,7 +107,7 @@ func TestNewStatefulSet(t *testing.T) {
 									ReadinessProbe: &corev1.Probe{
 										Handler: corev1.Handler{
 											HTTPGet: &corev1.HTTPGetAction{
-												Port: intstr.FromInt(8265),
+												Port: intstr.FromInt(8080),
 												Path: "/",
 											},
 										},
@@ -124,7 +125,7 @@ func TestNewStatefulSet(t *testing.T) {
 					PodManagementPolicy:  appsv1.ParallelPodManagement,
 				},
 			}
-			assert.Equal(t, expected, actual, "head statefulset not correctly generated")
+			assert.Equal(t, expected, actual, "master statefulset not correctly generated")
 		})
 	})
 
@@ -183,28 +184,36 @@ func TestNewStatefulSet(t *testing.T) {
 										},
 										{
 											Name:  "SPARK_WORKER_WEBUI_PORT",
-											Value: "8265",
+											Value: "8081",
+										},
+										{
+											Name:  "SPARK_WORKER_PORT",
+											Value: "7077",
 										},
 										{
 											Name:  "SPARK_MODE",
 											Value: "worker",
 										},
+										{
+											Name:  "SPARK_WORKER_MEMORY",
+											Value: "4505m",
+										},
+										{
+											Name:  "SPARK_WORKER_CORES",
+											Value: "0",
+										},
 									},
 									Ports: []corev1.ContainerPort{
 										{
 											Name:          "http",
-											ContainerPort: 8265,
+											ContainerPort: 8081,
 											Protocol:      "TCP",
-										},
-										{
-											Name:          "cluster",
-											ContainerPort: 7077,
 										},
 									},
 									LivenessProbe: &corev1.Probe{
 										Handler: corev1.Handler{
 											HTTPGet: &corev1.HTTPGetAction{
-												Port: intstr.FromInt(8265),
+												Port: intstr.FromInt(8081),
 												Path: "/",
 											},
 										},
@@ -212,7 +221,7 @@ func TestNewStatefulSet(t *testing.T) {
 									ReadinessProbe: &corev1.Probe{
 										Handler: corev1.Handler{
 											HTTPGet: &corev1.HTTPGetAction{
-												Port: intstr.FromInt(8265),
+												Port: intstr.FromInt(8081),
 												Path: "/",
 											},
 										},
@@ -378,7 +387,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 										Key:      "instance",
 										Operator: metav1.LabelSelectorOpIn,
 										Values: []string{
-											"test-spark",
+											"test",
 										},
 									},
 								},
@@ -552,5 +561,113 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		}
 		_, err := NewStatefulSet(rc, comp)
 		require.Error(t, err)
+	})
+
+	t.Run("framework_config", func(t *testing.T) {
+		rc := sparkClusterFixture()
+		fcMaster := dcv1alpha1.FrameworkConfig{
+			Configs: map[string]string{
+				"m1": "v1",
+			},
+		}
+
+		fcWorker := dcv1alpha1.FrameworkConfig{
+			Configs: map[string]string{
+				"w1": "v1",
+			},
+		}
+
+		rc.Spec.Master = dcv1alpha1.SparkClusterMaster{
+			SparkClusterNode: dcv1alpha1.SparkClusterNode{
+				FrameworkConfig: &fcMaster,
+			},
+		}
+		rc.Spec.Worker = dcv1alpha1.SparkClusterWorker{
+			SparkClusterNode: dcv1alpha1.SparkClusterNode{
+				FrameworkConfig: &fcWorker,
+			},
+			Replicas: pointer.Int32Ptr(2),
+		}
+
+		expectedVolumes := []corev1.Volume{
+			{
+				Name: "spark-config",
+				VolumeSource: corev1.VolumeSource{
+					ConfigMap: &corev1.ConfigMapVolumeSource{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "test-id-framework-spark",
+						},
+					},
+				},
+			},
+		}
+
+		expectedVolumeMounts := []corev1.VolumeMount{
+			{
+				Name:      "spark-config",
+				ReadOnly:  false,
+				MountPath: "/opt/bitnami/spark/conf/spark-defaults.conf",
+				SubPath:   string(comp),
+			},
+		}
+
+		actual, err := NewStatefulSet(rc, comp)
+		require.NoError(t, err)
+
+		assert.Equal(t, expectedVolumes, actual.Spec.Template.Spec.Volumes)
+		assert.Equal(t, expectedVolumeMounts, actual.Spec.Template.Spec.Containers[0].VolumeMounts)
+	})
+
+	t.Run("keytab_config", func(t *testing.T) {
+		rc := sparkClusterFixture()
+		kcMaster := dcv1alpha1.KeyTabConfig{
+			Path:   "/test/master/path",
+			KeyTab: []byte{'m', 'a', 's', 't', 'e', 'r'},
+		}
+
+		kcWorker := dcv1alpha1.KeyTabConfig{
+			Path:   "/test/worker/path",
+			KeyTab: []byte{'w', 'o', 'r', 'k', 'e', 'r'},
+		}
+
+		rc.Spec.Master = dcv1alpha1.SparkClusterMaster{
+			SparkClusterNode: dcv1alpha1.SparkClusterNode{
+				KeyTabConfig: &kcMaster,
+			},
+		}
+		rc.Spec.Worker = dcv1alpha1.SparkClusterWorker{
+			SparkClusterNode: dcv1alpha1.SparkClusterNode{
+				KeyTabConfig: &kcWorker,
+			},
+			Replicas: pointer.Int32Ptr(2),
+		}
+
+		expectedVolumes := []corev1.Volume{
+			{
+				Name: "keytab",
+				VolumeSource: corev1.VolumeSource{
+					ConfigMap: &corev1.ConfigMapVolumeSource{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "test-id-keytab-spark",
+						},
+					},
+				},
+			},
+		}
+
+		expectedVolumeMounts := []corev1.VolumeMount{
+			{
+				Name:      "keytab",
+				ReadOnly:  false,
+				MountPath: fmt.Sprintf("/test/%s/path", comp),
+				SubPath:   string(comp),
+			},
+		}
+
+		actual, err := NewStatefulSet(rc, comp)
+		require.NoError(t, err)
+
+		assert.Equal(t, expectedVolumes, actual.Spec.Template.Spec.Volumes)
+		assert.Equal(t, expectedVolumeMounts, actual.Spec.Template.Spec.Containers[0].VolumeMounts)
 	})
 }

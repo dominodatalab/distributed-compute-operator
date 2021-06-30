@@ -84,12 +84,16 @@ spec:
                 - maxReplicas
                 type: object
               clusterPort:
-                description: Cluster port is the port on which the spark protocol
-                  communicates
+                description: ClusterPort is the port on which the spark protocol communicates
                 format: int32
                 type: integer
               dashboardPort:
                 description: DashboardPort is the port used by the dashboard server.
+                format: int32
+                type: integer
+              dashboardServicePort:
+                description: DashboardServicePort is the port exposed by the master
+                  service
                 format: int32
                 type: integer
               enableDashboard:
@@ -198,12 +202,46 @@ spec:
                   - name
                   type: object
                 type: array
-              head:
+              image:
+                description: Image used to launch master and worker nodes.
+                properties:
+                  pullPolicy:
+                    description: PullPolicy used to fetch container image.
+                    type: string
+                  registry:
+                    description: Registry where the container image is hosted.
+                    type: string
+                  repository:
+                    description: Repository where the container image is stored.
+                    type: string
+                  tag:
+                    description: Tag points to a specific container image variant.
+                    type: string
+                type: object
+              imagePullSecrets:
+                description: ImagePullSecrets are references to secrets with credentials
+                  to private registries used to pull images.
+                items:
+                  description: LocalObjectReference contains enough information to
+                    let you locate the referenced object inside the same namespace.
+                  properties:
+                    name:
+                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                        TODO: Add other useful fields. apiVersion, kind, uid?'
+                      type: string
+                  type: object
+                type: array
+              istioMutualTLSMode:
+                description: MutualTLSMode will be used to create a workload-specific
+                  peer authentication policy that takes precedence over a global and/or
+                  namespace-wide policy.
+                type: string
+              master:
                 description: Master node configuration parameters.
                 properties:
                   additionalStorage:
-                    description: Requests for additional storage volumes to be created
-                      alongside each pod
+                    description: AdditionalStorage is the request for additional storage
+                      volumes (pvc's) to be created alongside each pod
                     items:
                       properties:
                         accessModes:
@@ -1100,6 +1138,20 @@ spec:
                     additionalProperties:
                       type: string
                     description: Annotations applied to spark pods.
+                    type: object
+                  frameworkConfig:
+                    description: FrameworkConfig is the extra framework-specific configuration
+                      for this cluster For spark this means we'll generate a spark-defaults.conf
+                      configmap and mount it at the requested location
+                    properties:
+                      configs:
+                        additionalProperties:
+                          type: string
+                        description: Configs includes the configuration values to
+                          include in the configmap
+                        type: object
+                    required:
+                    - configs
                     type: object
                   initContainers:
                     description: InitContainers added to spark pods.
@@ -2260,6 +2312,20 @@ spec:
                       - name
                       type: object
                     type: array
+                  keyTabConfig:
+                    description: KeyTabConfig configures the Kerberos Keytab for Spark
+                    properties:
+                      configs:
+                        description: KeyTab contains the actual KeyTab configuration
+                        format: byte
+                        type: string
+                      path:
+                        description: Path at which to mount the configmap
+                        type: string
+                    required:
+                    - configs
+                    - path
+                    type: object
                   labels:
                     additionalProperties:
                       type: string
@@ -3868,56 +3934,39 @@ spec:
                 required:
                 - resources
                 type: object
-              image:
-                description: Image used to launch head and worker nodes.
-                properties:
-                  pullPolicy:
-                    description: PullPolicy used to fetch container image.
-                    type: string
-                  registry:
-                    description: Registry where the container image is hosted.
-                    type: string
-                  repository:
-                    description: Repository where the container image is stored.
-                    type: string
-                  tag:
-                    description: Tag points to a specific container image variant.
-                    type: string
-                type: object
-              imagePullSecrets:
-                description: ImagePullSecrets are references to secrets with credentials
-                  to private registries used to pull images.
-                items:
-                  description: LocalObjectReference contains enough information to
-                    let you locate the referenced object inside the same namespace.
-                  properties:
-                    name:
-                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                        TODO: Add other useful fields. apiVersion, kind, uid?'
-                      type: string
-                  type: object
-                type: array
               networkPolicy:
-                description: NetworkPolicyClientLabels will create a pod selector
-                  clause for each set of labels. This is used to grant ingress access
-                  to one or more groups of external pods and is only applicable when
-                  EnableNetworkPolicy is true.
+                description: NetworkPolicy will create a pod selector clause for each
+                  set of labels. This is used to grant ingress access to one or more
+                  groups of external pods and is only applicable when EnableNetworkPolicy
+                  is true.
                 properties:
                   clientServerLabels:
                     additionalProperties:
                       type: string
                     description: ClientServerLabels defines the pod selector clause
-                      that grant ingress access to the head client server port.
+                      that grant ingress access to the master client server port.
+                    type: object
+                  clusterLabels:
+                    additionalProperties:
+                      type: string
+                    description: ExternalPodLabels defines the pod selector clause
+                      for used to granted unfettered access to cluster resources.
                     type: object
                   dashboardLabels:
                     additionalProperties:
                       type: string
                     description: DashboardLabels defines the pod selector clause used
-                      to grant ingress access to the head dashboard port.
+                      to grant ingress access to the master dashboard port.
                     type: object
                   enabled:
                     description: Enabled controls the creation of network policies
                       that limit and provide ingress access to the cluster nodes.
+                    type: boolean
+                  externalPolicyEnabled:
+                    description: ExternalPolicyEnabled controls creation of network
+                      policies which deal with two way traffic to pods that are external
+                      to the cluster entirely. The spark driver, for example, is generally
+                      going to live outside the cluster
                     type: boolean
                 type: object
               podSecurityContext:
@@ -4072,12 +4121,43 @@ spec:
                   cluster service account. The service account referenced by the provided
                   name will be used instead.
                 type: string
+              sparkClusterDriver:
+                description: Driver configures the SparkCluster to communicate with
+                  the Spark Driver
+                properties:
+                  driverBlockManagerPort:
+                    format: int32
+                    type: integer
+                  driverBlockManagerPortName:
+                    type: string
+                  driverPort:
+                    format: int32
+                    type: integer
+                  driverPortName:
+                    type: string
+                  driverUIPort:
+                    format: int32
+                    type: integer
+                  driverUIPortName:
+                    type: string
+                  executionName:
+                    type: string
+                  sparkClusterName:
+                    type: string
+                type: object
+              tcpMasterWebPort:
+                description: These two are meant for istio compatibility on spark
+                format: int32
+                type: integer
+              tcpWorkerWebPort:
+                format: int32
+                type: integer
               worker:
                 description: Worker node configuration parameters.
                 properties:
                   additionalStorage:
-                    description: Requests for additional storage volumes to be created
-                      alongside each pod
+                    description: AdditionalStorage is the request for additional storage
+                      volumes (pvc's) to be created alongside each pod
                     items:
                       properties:
                         accessModes:
@@ -4974,6 +5054,20 @@ spec:
                     additionalProperties:
                       type: string
                     description: Annotations applied to spark pods.
+                    type: object
+                  frameworkConfig:
+                    description: FrameworkConfig is the extra framework-specific configuration
+                      for this cluster For spark this means we'll generate a spark-defaults.conf
+                      configmap and mount it at the requested location
+                    properties:
+                      configs:
+                        additionalProperties:
+                          type: string
+                        description: Configs includes the configuration values to
+                          include in the configmap
+                        type: object
+                    required:
+                    - configs
                     type: object
                   initContainers:
                     description: InitContainers added to spark pods.
@@ -6134,6 +6228,20 @@ spec:
                       - name
                       type: object
                     type: array
+                  keyTabConfig:
+                    description: KeyTabConfig configures the Kerberos Keytab for Spark
+                    properties:
+                      configs:
+                        description: KeyTab contains the actual KeyTab configuration
+                        format: byte
+                        type: string
+                      path:
+                        description: Path at which to mount the configmap
+                        type: string
+                    required:
+                    - configs
+                    - path
+                    type: object
                   labels:
                     additionalProperties:
                       type: string
@@ -7748,6 +7856,10 @@ spec:
                       - name
                       type: object
                     type: array
+                  workerMemoryLimit:
+                    description: WorkerMemoryLimit configures the SPARK_WORKER_MEMORY
+                      envVar
+                    type: string
                 required:
                 - resources
                 type: object

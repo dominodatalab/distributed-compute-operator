@@ -34,8 +34,28 @@ type SparkClusterNode struct {
 	// Resources are the requests and limits applied to spark containers.
 	Resources corev1.ResourceRequirements `json:"resources"`
 
-	// Requests for additional storage volumes to be created alongside each pod
+	// AdditionalStorage is the request for additional storage volumes (pvc's) to be created alongside each pod
 	AdditionalStorage []SparkAdditionalStorage `json:"additionalStorage,omitempty"`
+
+	// FrameworkConfig is the extra framework-specific configuration for this cluster
+	// For spark this means we'll generate a spark-defaults.conf configmap
+	// and mount it at the requested location
+	FrameworkConfig *FrameworkConfig `json:"frameworkConfig,omitempty"`
+
+	// KeyTabConfig configures the Kerberos Keytab for Spark
+	KeyTabConfig *KeyTabConfig `json:"keyTabConfig,omitempty"`
+}
+
+type KeyTabConfig struct {
+	// Path at which to mount the configmap
+	Path string `json:"path"`
+	// KeyTab contains the actual KeyTab configuration
+	KeyTab []byte `json:"configs"`
+}
+
+type FrameworkConfig struct {
+	// Configs includes the configuration values to include in the configmap
+	Configs map[string]string `json:"configs"`
 }
 
 type SparkAdditionalStorage struct {
@@ -53,8 +73,8 @@ type SparkAdditionalStorage struct {
 	Name string `json:"name"`
 }
 
-// SparkClusterHead defines head-specific pod settings.
-type SparkClusterHead struct {
+// SparkClusterMaster defines master-specific pod settings.
+type SparkClusterMaster struct {
 	SparkClusterNode `json:",inline"`
 }
 
@@ -67,29 +87,42 @@ type SparkClusterWorker struct {
 	// minimum number of replicas will be set to this value. Additionally, you can specify an "initial cluster size" by
 	// setting this field to some value above the minimum number of replicas.
 	Replicas *int32 `json:"replicas,omitempty"`
+
+	// WorkerMemoryLimit configures the SPARK_WORKER_MEMORY envVar
+	WorkerMemoryLimit string `json:"workerMemoryLimit,omitempty"`
 }
 
 // SparkClusterSpec defines the desired state of a SparkCluster resource.
 type SparkClusterSpec struct {
-	// Image used to launch head and worker nodes.
+	// Image used to launch master and worker nodes.
 	Image *OCIImageDefinition `json:"image,omitempty"`
 
 	// ImagePullSecrets are references to secrets with credentials to private registries used to pull images.
 	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 
-	// Autoscaling parameters used to scale up/down spark worker nodes.
-	Autoscaling *Autoscaling `json:"autoscaling,omitempty"`
-
-	// Cluster port is the port on which the spark protocol communicates
+	// ClusterPort is the port on which the spark protocol communicates
 	ClusterPort int32 `json:"clusterPort,omitempty"`
+
+	// These two are meant for istio compatibility on spark
+	TCPMasterWebPort int32 `json:"tcpMasterWebPort,omitempty"`
+	TCPWorkerWebPort int32 `json:"tcpWorkerWebPort,omitempty"`
+
+	// IstioConfig parameters for Spark clusters.
+	IstioConfig `json:",inline"`
+
+	// Driver configures the SparkCluster to communicate with the Spark Driver
+	Driver SparkClusterDriver `json:"sparkClusterDriver,omitempty"`
 
 	// DashboardPort is the port used by the dashboard server.
 	DashboardPort int32 `json:"dashboardPort,omitempty"`
 
+	// DashboardServicePort is the port exposed by the master service
+	DashboardServicePort int32 `json:"dashboardServicePort,omitempty"`
+
 	// EnableDashboard starts the dashboard web UI.
 	EnableDashboard *bool `json:"enableDashboard,omitempty"`
 
-	// NetworkPolicyClientLabels will create a pod selector clause for each set of labels.
+	// NetworkPolicy will create a pod selector clause for each set of labels.
 	// This is used to grant ingress access to one or more groups of external pods and is
 	// only applicable when EnableNetworkPolicy is true.
 	NetworkPolicy SparkClusterNetworkPolicy `json:"networkPolicy,omitempty"`
@@ -108,10 +141,25 @@ type SparkClusterSpec struct {
 	EnvVars []corev1.EnvVar `json:"envVars,omitempty"`
 
 	// Master node configuration parameters.
-	Master SparkClusterHead `json:"head,omitempty"`
+	Master SparkClusterMaster `json:"master,omitempty"`
 
 	// Worker node configuration parameters.
 	Worker SparkClusterWorker `json:"worker,omitempty"`
+
+	// Autoscaling parameters used to scale up/down spark worker nodes.
+	Autoscaling *Autoscaling `json:"autoscaling,omitempty"`
+}
+
+// SparkClusterDriver defines the configuration for the driver service
+type SparkClusterDriver struct {
+	SparkClusterName           string `json:"sparkClusterName,omitempty"`
+	ExecutionName              string `json:"executionName,omitempty"`
+	DriverPortName             string `json:"driverPortName,omitempty"`
+	DriverPort                 int32  `json:"driverPort,omitempty"`
+	DriverBlockManagerPortName string `json:"driverBlockManagerPortName,omitempty"`
+	DriverBlockManagerPort     int32  `json:"driverBlockManagerPort,omitempty"`
+	DriverUIPortName           string `json:"driverUIPortName,omitempty"`
+	DriverUIPort               int32  `json:"driverUIPort,omitempty"`
 }
 
 // SparkClusterNetworkPolicy defines network policy configuration options.
@@ -121,12 +169,21 @@ type SparkClusterNetworkPolicy struct {
 	Enabled *bool `json:"enabled,omitempty"`
 
 	// ClientServerLabels defines the pod selector clause that grant ingress
-	// access to the head client server port.
+	// access to the master client server port.
 	ClientServerLabels map[string]string `json:"clientServerLabels,omitempty"`
 
 	// DashboardLabels defines the pod selector clause used to grant ingress
-	// access to the head dashboard port.
+	// access to the master dashboard port.
 	DashboardLabels map[string]string `json:"dashboardLabels,omitempty"`
+
+	// ExternalPolicyEnabled controls creation of network policies which deal with two way traffic to pods that are
+	// external to the cluster entirely. The spark driver, for example, is generally going to live outside the
+	// cluster
+	ExternalPolicyEnabled *bool `json:"externalPolicyEnabled,omitempty"`
+
+	// ExternalPodLabels defines the pod selector clause for used to granted unfettered
+	// access to cluster resources.
+	ExternalPodLabels map[string]string `json:"clusterLabels,omitempty"`
 }
 
 // SparkClusterStatus defines the observed state of a SparkCluster resource.

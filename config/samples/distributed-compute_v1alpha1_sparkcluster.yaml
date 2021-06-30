@@ -9,7 +9,8 @@ spec:
   image:
     registry: ""
     repository: bitnami/spark
-    tag: 3.0.2-debian-10-r0
+    #    tag: 3.0.2-debian-10-r0
+    tag: 3.1.1
     pullPolicy: IfNotPresent
 
   # dockerconfigjson used to pull images from private registries
@@ -27,15 +28,33 @@ spec:
   # clientServerPort: 10001
 
   # enable dashboard ui and set port
+  dashboardServicePort: 80
   dashboardPort: 8080
   enableDashboard: true
 
   # internal port overrides
   clusterPort: 7077
 
+  # driver service config
+  sparkClusterDriver:
+    sparkClusterName: example-spark
+    executionName: run-example-spark
+    driverUIPortName: spark-ui-port
+    driverUIPort: 4040
+    driverPortName: spark-driver-port
+    driverPort: 4041
+    driverBlockManagerPortName: spark-block-manager-port
+    driverBlockManagerPort: 4042
+
   # control the creation of network policies
   networkPolicy:
-    enabled: false
+    enabled: true
+    clusterLabels:
+      np: cluster
+    dashboardLabels:
+      np: dash
+    clientServerLabels:
+      np: client
 
   # bind cluster to existing psp
   # podSecurityPolicy: privileged
@@ -73,15 +92,18 @@ spec:
   #  - name: SPARK_MASTER_WEBUI_PORT
   #  - name: SPARK_MASTER_OPTS
 
-  autoscaling:
-    averageCPUUtilization: 5
-    maxReplicas: 3
-    minReplicas: 1
-    scaleDownStabilizationWindowSeconds: 10
+  #  autoscaling:
+  #    averageCPUUtilization: 5
+  #    maxReplicas: 3
+  #    minReplicas: 1
+  #    scaleDownStabilizationWindowSeconds: 10
+
+  # override istio's peer authentication policy
+  # istioMutualTLSMode: PERMISSIVE
 
   ## head configuration parameters
 
-  head:
+  master:
     #   labels:
     #     environment: production
 
@@ -127,12 +149,30 @@ spec:
       limits:
         cpu: 500m
         memory: 512Mi
+  #    frameworkConfig:
+  #      path: /opt/bitnami/spark/conf/spark-defaults.conf
+  #      configs:
+  #        spark.driver.host: "run-dc-607624b1336b20009d4d081c-driver.audidco273377-compute.svc.cluster.local"
+  #        spark.executor.cores: "4"
+  #        spark.executor.instances: "1"
+  #        spark.executor.memory: 15360
+  #        spark.ui.proxyBase: .
+  #        spark.ui.reverseProxy: "true"
+  #        spark.ui.reverseProxyUrl: "/integration-test/quick-start/workspace/607624b1336b20009d4d081c/spark/ui/"
+  #        spark.ui.reverseProxy: "true"
+  #        spark.ui.reverseProxyUrl: "/master/proxy/base"
+  #        spark.ui.proxyBase: "/master/proxy/url"
+  #    keyTabConfig:
+  #      path: /tmp/keytab.conf
+  #      configs: dGVzdHZhbHVlCg==
+
 
   ## worker configuration parameters
 
   worker:
     # total number of worker pods
-    replicas: 2
+    replicas: 1
+    workerMemoryLimit: 100m
 
     # labels:
     #   environment: production
@@ -171,26 +211,40 @@ spec:
     # volumeMounts:
     #   - name: example-vol
     #     mountPath: /mnt/more/space
-#    volumes:
-#    - name: spark-data
-#      persistentVolumeClaim:
-#        claimName: spark-data-pvc
-    volumeMounts:
-    - name: spark-worker-pvc
-      mountPath: /data
+    #    volumes:
+    #    - name: spark-data
+    #      persistentVolumeClaim:
+    #        claimName: spark-data-pvc
+    #    volumeMounts:
+    #    - name: spark-data
+    #      mountPath: /data
 
     resources:
       requests:
         # NOTE: this must be set when attempting to use HPAs
-        cpu: 100m
+        cpu: 1
         memory: 250Mi
       limits:
-        cpu: 500m
+        cpu: 1
         memory: 512Mi
 
-    additionalStorage:
-    - accessModes:
-      - ReadWriteMany
-      size: 1Gi
-      storageClass: nfs
-      name: spark-worker-pvc
+#    frameworkConfig:
+#      path: /opt/bitnami/spark/conf/spark-defaults.conf
+#      configs:
+#        spark.driver.host: "run-dc-607624b1336b20009d4d081c-driver.audidco273377-compute.svc.cluster.local"
+#        spark.executor.cores: "4"
+#        spark.executor.instances: "1"
+#        spark.executor.memory: 15360m
+#        spark.ui.proxyBase: .
+#        spark.ui.reverseProxy: "true"
+#        spark.ui.reverseProxyUrl: "/integration-test/quick-start/workspace/607624b1336b20009d4d081c/spark/ui/KK"
+#        spark.ui.reverseProxy: "true"
+#        spark.ui.reverseProxyUrl: "/worker/proxy/url"
+#        spark.ui.proxyBase: "/master/proxy/base"
+
+#    additionalStorage:
+#    - accessModes:
+#      - ReadWriteMany
+#      size: 1Gi
+#      storageClass: nfs
+#      name: spark-worker-pvc

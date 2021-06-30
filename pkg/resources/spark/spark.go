@@ -21,6 +21,14 @@ const (
 	ApplicationName = "spark"
 )
 
+func FrameworkConfigMapName(instance string, comp Component) string {
+	return InstanceObjectName(fmt.Sprintf("%s-%s", instance, "framework"), comp)
+}
+
+func KeyTabConfigMapName(instance string, comp Component) string {
+	return InstanceObjectName(fmt.Sprintf("%s-%s", instance, "keytab"), comp)
+}
+
 // InstanceObjectName returns the name that will be used to create most owned cluster resources.
 func InstanceObjectName(instance string, comp Component) string {
 	if comp == ComponentNone {
@@ -30,13 +38,17 @@ func InstanceObjectName(instance string, comp Component) string {
 	return fmt.Sprintf("%s-%s-%s", instance, ApplicationName, comp)
 }
 
-// HeadServiceName returns the name of the service that points to the spark head pod.
-func HeadServiceName(name string) string {
+// MasterServiceName returns the name of the service that points to the spark master pod.
+func MasterServiceName(name string) string {
 	return InstanceObjectName(name, ComponentMaster)
 }
 
 func HeadlessServiceName(name string) string {
 	return InstanceObjectName(name, ComponentWorker)
+}
+
+func DriverServiceName(name string) string {
+	return InstanceObjectName(name, ComponentNone) + "-driver"
 }
 
 // MetadataLabels returns standard metadata for spark resources.

@@ -24,8 +24,9 @@ func NewMasterService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 	}
 	if util.BoolPtrIsTrue(sc.Spec.EnableDashboard) {
 		ports = append(ports, corev1.ServicePort{
-			Name:     "tcp", // named tcp to prevent istio from sniffing for Host
-			Port:     sc.Spec.DashboardPort,
+			// deliberately named tcp to prevent istio from sniffing for Host
+			Name:     "tcp",
+			Port:     sc.Spec.DashboardServicePort,
 			Protocol: corev1.ProtocolTCP,
 			TargetPort: intstr.IntOrString{
 				Type:   intstr.String,
@@ -36,7 +37,7 @@ func NewMasterService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      HeadServiceName(sc.Name),
+			Name:      MasterServiceName(sc.Name),
 			Namespace: sc.Namespace,
 			Labels:    MetadataLabelsWithComponent(sc, ComponentMaster),
 		},
@@ -54,11 +55,67 @@ func NewHeadlessService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      HeadlessServiceName(sc.Name),
 			Namespace: sc.Namespace,
-			Labels:    MetadataLabelsWithComponent(sc, ComponentMaster),
+			Labels:    MetadataLabelsWithComponent(sc, ComponentWorker),
 		},
 		Spec: corev1.ServiceSpec{
 			ClusterIP: corev1.ClusterIPNone,
 			Selector:  SelectorLabels(sc),
+			Ports:     []corev1.ServicePort{},
+			// TODO enable these ports for Istio support
+			// {
+			//	Name:       "cluster",
+			//	Port:       sc.Spec.ClusterPort,
+			//	TargetPort: intstr.FromString("cluster"),
+			// },
+			// {
+			//	Name:       "tcp-master-webport",
+			//	Port:       sc.Spec.TCPMasterWebPort,
+			//	TargetPort: intstr.FromString("http"),
+			//	Protocol:   corev1.ProtocolTCP,
+			// }, {
+			//	Name:       "tcp-worker-webport",
+			//	Port:       sc.Spec.TCPWorkerWebPort,
+			//	TargetPort: intstr.FromString("http"),
+			//	Protocol:   corev1.ProtocolTCP,
+			// },
+			// },
+		},
+	}
+}
+
+// NewSparkDriverService creates a ClusterIP service that exposes the driver UI port.
+func NewSparkDriverService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
+	targetPort := intstr.FromInt(int(sc.Spec.Driver.DriverUIPort))
+
+	return &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      DriverServiceName(sc.Spec.Driver.SparkClusterName),
+			Namespace: sc.Namespace,
+			Labels:    MetadataLabels(sc),
+		},
+		Spec: corev1.ServiceSpec{
+			ClusterIP: corev1.ClusterIPNone,
+			Type:      "ClusterIP",
+			Selector:  map[string]string{"app.kubernetes.io/instance": sc.Spec.Driver.ExecutionName},
+			Ports: []corev1.ServicePort{
+				{
+					Name:       sc.Spec.Driver.DriverUIPortName,
+					Port:       sc.Spec.Driver.DriverUIPort,
+					Protocol:   corev1.ProtocolTCP,
+					TargetPort: targetPort,
+				},
+				// TODO enable these ports for Istio support
+				// {
+				//	Name:     sc.Spec.Driver.DriverBlockManagerPortName,
+				//	Port:     sc.Spec.Driver.DriverBlockManagerPort,
+				//	Protocol: corev1.ProtocolTCP,
+				// },
+				// {
+				//	Name:     sc.Spec.Driver.DriverPortName,
+				//	Port:     sc.Spec.Driver.DriverPort,
+				//	Protocol: corev1.ProtocolTCP,
+				// },
+			},
 		},
 	}
 }

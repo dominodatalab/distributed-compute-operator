@@ -329,7 +329,7 @@ var _ = Describe("RayCluster", func() {
 			})
 		})
 
-		DescribeTable("With mutal tls mode set",
+		DescribeTable("With mutual tls mode set",
 			func(smode string, expectErr bool) {
 				rc := rayFixture(testNS.Name)
 				rc.Spec.MutualTLSMode = smode

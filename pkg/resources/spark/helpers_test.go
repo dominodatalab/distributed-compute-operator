@@ -26,10 +26,14 @@ func sparkClusterFixture() *dcv1alpha1.SparkCluster {
 				Tag:        "fake-tag",
 				PullPolicy: v1.PullIfNotPresent,
 			},
-			ClusterPort:   7077,
-			DashboardPort: 8265,
+			ClusterPort:          7077,
+			TCPMasterWebPort:     8080,
+			TCPWorkerWebPort:     8081,
+			DashboardPort:        8080,
+			DashboardServicePort: 80,
 			Worker: dcv1alpha1.SparkClusterWorker{
-				Replicas: pointer.Int32Ptr(5),
+				Replicas:          pointer.Int32Ptr(5),
+				WorkerMemoryLimit: "4505m",
 			},
 		},
 	}

@@ -37,14 +37,18 @@ var _ = Describe("SparkCluster Controller", func() {
 			}{
 				{"service account", name + "-spark", &corev1.ServiceAccount{}},
 				{"head service", name + "-spark-master", &corev1.Service{}},
-				{"cluster network policy", name + "-spark-cluster", &networkingv1.NetworkPolicy{}},
-				{"client network policy", name + "-spark-client", &networkingv1.NetworkPolicy{}},
-				{"dashboard network policy", name + "-spark-dashboard", &networkingv1.NetworkPolicy{}},
+				{"worker headless service", name + "-spark-worker", &corev1.Service{}},
+				{"driver service", name + "-spark-driver", &corev1.Service{}},
+				{"driver network policy", name + "-spark-driver", &networkingv1.NetworkPolicy{}},
+				{"worker network policy", name + "-spark-worker", &networkingv1.NetworkPolicy{}},
+				{"master network policy", name + "-spark-master", &networkingv1.NetworkPolicy{}},
 				{"pod security policy role", name + "-spark", &rbacv1.Role{}},
 				{"pod security policy role binding", name + "-spark", &rbacv1.RoleBinding{}},
 				{"horizontal pod autoscaler", name + "-spark", &autoscalingv2beta2.HorizontalPodAutoscaler{}},
 				{"head statefulset", name + "-spark-master", &appsv1.StatefulSet{}},
 				{"worker statefulset", name + "-spark-worker", &appsv1.StatefulSet{}},
+				{"framework configmap", name + "-framework-spark", &corev1.ConfigMap{}},
+				{"keytab configmap", name + "-keytab-spark", &corev1.ConfigMap{}},
 			}
 			for _, tc := range testcases {
 				By(fmt.Sprintf("Creating a new %s", tc.desc))
@@ -177,14 +181,52 @@ func createAndBasicTest(ctx context.Context, name string) {
 				AverageCPUUtilization: pointer.Int32Ptr(50),
 			},
 			NetworkPolicy: dcv1alpha1.SparkClusterNetworkPolicy{
-				Enabled: pointer.BoolPtr(true),
+				Enabled:               pointer.BoolPtr(true),
+				ExternalPodLabels:     map[string]string{"app.kubernetes.io/instance": "spark-driver"},
+				ExternalPolicyEnabled: pointer.BoolPtr(true),
+			},
+			Master: dcv1alpha1.SparkClusterMaster{
+				SparkClusterNode: dcv1alpha1.SparkClusterNode{
+					FrameworkConfig: &dcv1alpha1.FrameworkConfig{
+						Configs: map[string]string{
+							"m1": "v1",
+						},
+					},
+					KeyTabConfig: &dcv1alpha1.KeyTabConfig{
+						Path:   "/etc/security/keytabs/kerberos.conf",
+						KeyTab: []byte{'m', 'a', 's', 't', 'e', 'r'},
+					},
+				},
 			},
 			Worker: dcv1alpha1.SparkClusterWorker{
+				SparkClusterNode: dcv1alpha1.SparkClusterNode{
+					FrameworkConfig: &dcv1alpha1.FrameworkConfig{
+						Configs: map[string]string{
+							"w1": "v1",
+						},
+					},
+					KeyTabConfig: &dcv1alpha1.KeyTabConfig{
+						Path:   "/etc/security/keytabs/kerberos.conf",
+						KeyTab: []byte{'w', 'o', 'r', 'k', 'e', 'r'},
+					},
+				},
 				Replicas: pointer.Int32Ptr(1),
 			},
 			ClusterPort:       7077,
+			TCPMasterWebPort:  80,
+			TCPWorkerWebPort:  8081,
 			DashboardPort:     8265,
 			PodSecurityPolicy: psp.Name,
+			Driver: dcv1alpha1.SparkClusterDriver{
+				SparkClusterName:           "functional",
+				ExecutionName:              "functional",
+				DriverPortName:             "spark-driver-port",
+				DriverPort:                 4040,
+				DriverUIPortName:           "spark-ui-port",
+				DriverUIPort:               4041,
+				DriverBlockManagerPortName: "spark-block-manager-port",
+				DriverBlockManagerPort:     4042,
+			},
 		},
 	}
 

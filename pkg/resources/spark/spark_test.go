@@ -7,7 +7,7 @@ import (
 )
 
 func TestHeadServiceName(t *testing.T) {
-	actual := HeadServiceName("steve-o")
+	actual := MasterServiceName("steve-o")
 	assert.Equal(t, "steve-o-spark-master", actual)
 }
 
@@ -71,5 +71,23 @@ func TestSelectorLabelsWithComponent(t *testing.T) {
 		"app.kubernetes.io/instance":  "test-id",
 		"app.kubernetes.io/component": "something",
 	}
+	assert.Equal(t, expected, actual)
+}
+
+func TestFrameworkConfigMapName(t *testing.T) {
+	rc := sparkClusterFixture()
+	actual := FrameworkConfigMapName(rc.Name, Component("something"))
+
+	expected := "test-id-framework-spark-something"
+
+	assert.Equal(t, expected, actual)
+}
+
+func TestKeyTabConfigMapName(t *testing.T) {
+	rc := sparkClusterFixture()
+	actual := KeyTabConfigMapName(rc.Name, Component("something"))
+
+	expected := "test-id-keytab-spark-something"
+
 	assert.Equal(t, expected, actual)
 }

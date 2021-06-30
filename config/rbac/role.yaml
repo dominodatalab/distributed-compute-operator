@@ -26,6 +26,15 @@ rules:
 - apiGroups:
   - apps
   resources:
+  - configmaps
+  verbs:
+  - create
+  - list
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
   - statefulsets
   verbs:
   - create

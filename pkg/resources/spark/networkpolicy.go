@@ -10,35 +10,38 @@ import (
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources"
 )
 
-const (
-	descriptionCluster   = "Allows all ingress traffic between cluster nodes"
-	descriptionClient    = "Allows client ingress traffic to head client server port"
-	descriptionDashboard = "Allows client ingress traffic to head dashboard port"
-)
+func NewClusterWorkerNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.NetworkPolicy {
+	workerSelector := metav1.LabelSelector{
+		MatchLabels: MetadataLabelsWithComponent(sc, ComponentWorker),
+	}
 
-// NewClusterNetworkPolicy generates a network policy that allows all nodes
-// within a single cluster to communicate on all ports.
-func NewClusterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.NetworkPolicy {
-	labelSelector := metav1.LabelSelector{
+	driverSelector := metav1.LabelSelector{
+		MatchLabels: sc.Spec.NetworkPolicy.ExternalPodLabels,
+	}
+
+	clusterSelector := metav1.LabelSelector{
 		MatchLabels: SelectorLabels(sc),
 	}
 
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      InstanceObjectName(sc.Name, Component("cluster")),
+			Name:      InstanceObjectName(sc.Name, ComponentWorker),
 			Namespace: sc.Namespace,
 			Labels:    MetadataLabels(sc),
 			Annotations: map[string]string{
-				resources.DescriptionAnnotationKey: descriptionCluster,
+				resources.DescriptionAnnotationKey: "worker network policy",
 			},
 		},
 		Spec: networkingv1.NetworkPolicySpec{
-			PodSelector: labelSelector,
+			PodSelector: workerSelector,
 			Ingress: []networkingv1.NetworkPolicyIngressRule{
 				{
 					From: []networkingv1.NetworkPolicyPeer{
 						{
-							PodSelector: &labelSelector,
+							PodSelector: &clusterSelector,
+						},
+						{
+							PodSelector: &driverSelector,
 						},
 					},
 				},
@@ -50,62 +53,128 @@ func NewClusterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.NetworkP
 	}
 }
 
-// NewHeadClientNetworkPolicy generates a network policy that allows client
-// access to any pods that have been appointed with the configured client
-// server labels.
-func NewHeadClientNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.NetworkPolicy {
-	return headNetworkPolicy(
-		sc,
-		sc.Spec.ClusterPort,
-		sc.Spec.NetworkPolicy.ClientServerLabels,
-		"client",
-		descriptionClient,
-	)
-}
+func NewClusterDriverNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.NetworkPolicy {
+	driverSelector := metav1.LabelSelector{
+		MatchLabels: sc.Spec.NetworkPolicy.ExternalPodLabels,
+	}
 
-// NewHeadDashboardNetworkPolicy generates a network policy that allows
-// dashboard access to any pods that have been appointed with configured
-// dashboard labels.
-func NewHeadDashboardNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.NetworkPolicy {
-	return headNetworkPolicy(
-		sc,
-		sc.Spec.DashboardPort,
-		sc.Spec.NetworkPolicy.DashboardLabels,
-		"dashboard",
-		descriptionDashboard,
-	)
-}
+	masterSelector := metav1.LabelSelector{
+		MatchLabels: SelectorLabelsWithComponent(sc, ComponentMaster),
+	}
 
-func headNetworkPolicy(sc *dcv1alpha1.SparkCluster, p int32, l map[string]string, c Component, desc string) *networkingv1.NetworkPolicy {
-	proto := corev1.ProtocolTCP
-	targetPort := intstr.FromInt(int(p))
+	workerSelector := metav1.LabelSelector{
+		MatchLabels: SelectorLabelsWithComponent(sc, ComponentWorker),
+	}
+
+	protocol := corev1.ProtocolTCP
+	driverUIPort := intstr.FromInt(int(sc.Spec.Driver.DriverUIPort))
 
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      InstanceObjectName(sc.Name, c),
+			Name:      InstanceObjectName(sc.Name, "driver"),
 			Namespace: sc.Namespace,
-			Labels:    MetadataLabelsWithComponent(sc, ComponentMaster),
+			Labels:    MetadataLabels(sc),
 			Annotations: map[string]string{
-				resources.DescriptionAnnotationKey: desc,
+				resources.DescriptionAnnotationKey: "driver network policy",
 			},
 		},
 		Spec: networkingv1.NetworkPolicySpec{
-			PodSelector: metav1.LabelSelector{
-				MatchLabels: SelectorLabelsWithComponent(sc, ComponentMaster),
-			},
+			PodSelector: driverSelector,
 			Ingress: []networkingv1.NetworkPolicyIngressRule{
 				{
-					Ports: []networkingv1.NetworkPolicyPort{
-						{
-							Protocol: &proto,
-							Port:     &targetPort,
-						},
-					},
 					From: []networkingv1.NetworkPolicyPeer{
 						{
-							PodSelector: &metav1.LabelSelector{
-								MatchLabels: l,
-							},
+							PodSelector: &masterSelector,
+						},
+					},
+					Ports: []networkingv1.NetworkPolicyPort{
+						{
+							Protocol: &protocol,
+							Port:     &driverUIPort,
+						},
+					},
+				},
+				{
+					From: []networkingv1.NetworkPolicyPeer{
+						{
+							PodSelector: &workerSelector,
+						},
+					},
+				},
+			},
+			PolicyTypes: []networkingv1.PolicyType{
+				networkingv1.PolicyTypeIngress,
+			},
+		},
+	}
+}
+
+func NewClusterMasterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.NetworkPolicy {
+	driverSelector := metav1.LabelSelector{
+		MatchLabels: sc.Spec.NetworkPolicy.ExternalPodLabels,
+	}
+
+	masterSelector := metav1.LabelSelector{
+		MatchLabels: MetadataLabelsWithComponent(sc, ComponentMaster),
+	}
+
+	workerSelector := metav1.LabelSelector{
+		MatchLabels: MetadataLabelsWithComponent(sc, ComponentWorker),
+	}
+
+	dashboardSelector := metav1.LabelSelector{
+		MatchLabels: sc.Spec.NetworkPolicy.DashboardLabels,
+	}
+
+	namespaceSelector := metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"domino-platform": "true",
+		},
+	}
+
+	protocol := corev1.ProtocolTCP
+	masterDashboardPort := intstr.FromInt(int(sc.Spec.DashboardPort))
+	clusterPort := intstr.FromInt(int(sc.Spec.ClusterPort))
+
+	return &networkingv1.NetworkPolicy{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      InstanceObjectName(sc.Name, "master"),
+			Namespace: sc.Namespace,
+			Labels:    MetadataLabels(sc),
+			Annotations: map[string]string{
+				resources.DescriptionAnnotationKey: "master network policy",
+			},
+		},
+		Spec: networkingv1.NetworkPolicySpec{
+			PodSelector: masterSelector,
+			Ingress: []networkingv1.NetworkPolicyIngressRule{
+				{
+					From: []networkingv1.NetworkPolicyPeer{
+						{
+							PodSelector: &workerSelector,
+						},
+						{
+							PodSelector: &driverSelector,
+						},
+					},
+					Ports: []networkingv1.NetworkPolicyPort{
+						{
+							Protocol: &protocol,
+							Port:     &clusterPort,
+						},
+					},
+				},
+				{
+					From: []networkingv1.NetworkPolicyPeer{
+						{
+							NamespaceSelector: &namespaceSelector,
+							PodSelector:       &dashboardSelector,
+						},
+					},
+					Ports: []networkingv1.NetworkPolicyPort{
+						{
+							Protocol: &protocol,
+							Port:     &masterDashboardPort,
 						},
 					},
 				},
