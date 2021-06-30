@@ -87,7 +87,7 @@ func TestNewStatefulSet(t *testing.T) {
 									},
 									Ports: []corev1.ContainerPort{
 										{
-											Name:          "http-master-webport",
+											Name:          "http-master",
 											ContainerPort: 8080,
 											Protocol:      "TCP",
 										},
@@ -205,7 +205,7 @@ func TestNewStatefulSet(t *testing.T) {
 									},
 									Ports: []corev1.ContainerPort{
 										{
-											Name:          "http-worker-webport",
+											Name:          "http-worker",
 											ContainerPort: 8081,
 											Protocol:      "TCP",
 										},
