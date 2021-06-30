@@ -16,7 +16,7 @@ func TestNewPodSecurityPolicyRBAC(t *testing.T) {
 	t.Run("role", func(t *testing.T) {
 		expected := &rbacv1.Role{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-id",
+				Name:      "test-id-spark",
 				Namespace: "fake-ns",
 				Labels: map[string]string{
 					"app.kubernetes.io/name":       "spark",
@@ -40,7 +40,7 @@ func TestNewPodSecurityPolicyRBAC(t *testing.T) {
 	t.Run("role_binding", func(t *testing.T) {
 		expected := &rbacv1.RoleBinding{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-id",
+				Name:      "test-id-spark",
 				Namespace: "fake-ns",
 				Labels: map[string]string{
 					"app.kubernetes.io/name":       "spark",
@@ -52,12 +52,12 @@ func TestNewPodSecurityPolicyRBAC(t *testing.T) {
 			RoleRef: rbacv1.RoleRef{
 				APIGroup: "rbac.authorization.k8s.io",
 				Kind:     "Role",
-				Name:     "test-id",
+				Name:     "test-id-spark",
 			},
 			Subjects: []rbacv1.Subject{
 				{
 					Kind:      "ServiceAccount",
-					Name:      "test-id",
+					Name:      "test-id-spark",
 					Namespace: "fake-ns",
 				},
 			},

@@ -17,7 +17,7 @@ func TestNewMasterService(t *testing.T) {
 
 	expected := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-id-master",
+			Name:      "test-id-spark-master",
 			Namespace: "fake-ns",
 			Labels: map[string]string{
 				"app.kubernetes.io/name":       "spark",
@@ -50,7 +50,7 @@ func TestNewMasterService(t *testing.T) {
 		svc := NewMasterService(rc)
 
 		expected.Spec.Ports = append(expected.Spec.Ports, corev1.ServicePort{
-			Name:       "tcp",
+			Name:       "tcp-dashboard",
 			Protocol:   corev1.ProtocolTCP,
 			Port:       80,
 			TargetPort: intstr.FromString("http"),
@@ -66,7 +66,7 @@ func TestNewHeadlessService(t *testing.T) {
 
 	expected := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-id-worker",
+			Name:      "test-id-spark-worker",
 			Namespace: "fake-ns",
 			Labels: map[string]string{
 				"app.kubernetes.io/name":       "spark",
@@ -120,7 +120,7 @@ func TestNewSparkDriverServiceService(t *testing.T) {
 
 	expected := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-id-driver",
+			Name:      "test-id-spark-driver",
 			Namespace: "fake-ns",
 			Labels: map[string]string{
 				"app.kubernetes.io/name":       "spark",

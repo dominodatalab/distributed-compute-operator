@@ -1,6 +1,7 @@
 package spark
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 
@@ -16,7 +17,7 @@ func NewFrameworkConfigMap(sc *dcv1alpha1.SparkCluster) *corev1.ConfigMap {
 	if sc.Spec.Master.FrameworkConfig != nil {
 		data[string(ComponentMaster)] = generateSparkDefaults(sc.Spec.Master.FrameworkConfig.Configs)
 	}
-	if (sc.Spec.Worker.FrameworkConfig) != nil {
+	if sc.Spec.Worker.FrameworkConfig != nil {
 		data[string(ComponentWorker)] = generateSparkDefaults(sc.Spec.Worker.FrameworkConfig.Configs)
 	}
 	if len(data) == 0 {
@@ -64,7 +65,7 @@ func generateSparkDefaults(defaults map[string]string) string {
 	sort.Strings(keys)
 	b := strings.Builder{}
 	for _, k := range keys {
-		b.WriteString(k + " " + defaults[k] + "\n")
+		b.WriteString(fmt.Sprintf("%s %s\n", k, defaults[k]))
 	}
 	return b.String()
 }

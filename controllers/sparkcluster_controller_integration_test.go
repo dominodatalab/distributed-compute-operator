@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	networkingv1 "k8s.io/api/networking/v1"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,20 +35,20 @@ var _ = Describe("SparkCluster Controller", func() {
 				name string
 				obj  client.Object
 			}{
-				{"service account", name + "", &corev1.ServiceAccount{}},
-				{"head service", name + "-master", &corev1.Service{}},
-				{"worker headless service", name + "-worker", &corev1.Service{}},
-				{"driver service", name + "-driver", &corev1.Service{}},
-				{"driver network policy", name + "-driver", &networkingv1.NetworkPolicy{}},
-				{"worker network policy", name + "-worker", &networkingv1.NetworkPolicy{}},
-				{"master network policy", name + "-master", &networkingv1.NetworkPolicy{}},
-				{"pod security policy role", name, &rbacv1.Role{}},
-				{"pod security policy role binding", name, &rbacv1.RoleBinding{}},
-				{"horizontal pod autoscaler", name, &autoscalingv2beta2.HorizontalPodAutoscaler{}},
-				{"head statefulset", name + "-master", &appsv1.StatefulSet{}},
-				{"worker statefulset", name + "-worker", &appsv1.StatefulSet{}},
-				{"framework configmap", name + "-framework", &corev1.ConfigMap{}},
-				{"keytab configmap", name + "-keytab", &corev1.ConfigMap{}},
+				{"service account", name + "-spark", &corev1.ServiceAccount{}},
+				{"head service", name + "-spark-master", &corev1.Service{}},
+				{"worker headless service", name + "-spark-worker", &corev1.Service{}},
+				{"driver service", name + "-spark-driver", &corev1.Service{}},
+				{"driver network policy", name + "-spark-driver", &networkingv1.NetworkPolicy{}},
+				{"worker network policy", name + "-spark-worker", &networkingv1.NetworkPolicy{}},
+				{"master network policy", name + "-spark-master", &networkingv1.NetworkPolicy{}},
+				{"pod security policy role", name + "-spark", &rbacv1.Role{}},
+				{"pod security policy role binding", name + "-spark", &rbacv1.RoleBinding{}},
+				{"horizontal pod autoscaler", name + "-spark", &autoscalingv2beta2.HorizontalPodAutoscaler{}},
+				{"head statefulset", name + "-spark-master", &appsv1.StatefulSet{}},
+				{"worker statefulset", name + "-spark-worker", &appsv1.StatefulSet{}},
+				{"framework configmap", name + "-framework-spark", &corev1.ConfigMap{}},
+				{"keytab configmap", name + "-keytab-spark", &corev1.ConfigMap{}},
 			}
 			for _, tc := range testcases {
 				By(fmt.Sprintf("Creating a new %s", tc.desc))

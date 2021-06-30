@@ -3,10 +3,10 @@ package v1alpha1
 import (
 	"fmt"
 
+	"k8s.io/apimachinery/pkg/api/resource"
+
 	securityv1beta1 "istio.io/api/security/v1beta1"
-
 	v1 "k8s.io/api/core/v1"
-
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -38,7 +38,6 @@ var (
 	sparkDefaultEnableNetworkPolicy               = pointer.BoolPtr(true)
 	sparkDefaultEnableExternalNetworkPolicy       = pointer.BoolPtr(false)
 	sparkDefaultWorkerReplicas                    = pointer.Int32Ptr(1)
-	sparkDefaultWorkerMemoryLimit                 = "4505m"
 	sparkDefaultEnableDashboard                   = pointer.BoolPtr(true)
 	sparkDefaultNetworkPolicyClientLabels         = map[string]string{
 		"spark-client": "true",
@@ -111,10 +110,6 @@ func (sc *SparkCluster) Default() {
 	if sc.Spec.Worker.Replicas == nil {
 		log.Info("setting default worker replicas", "value", *sparkDefaultWorkerReplicas)
 		sc.Spec.Worker.Replicas = sparkDefaultWorkerReplicas
-	}
-	if sc.Spec.Worker.WorkerMemoryLimit == "" {
-		log.Info("setting default worker memory request", "value", sparkDefaultWorkerMemoryLimit)
-		sc.Spec.Worker.WorkerMemoryLimit = sparkDefaultWorkerMemoryLimit
 	}
 	if sc.Spec.Driver.DriverPort == 0 {
 		log.Info("setting default driver port", "value", sparkDefaultDriverPort)
@@ -231,7 +226,7 @@ func (sc *SparkCluster) validateNetworkPolicies() *field.Error {
 		*sc.Spec.NetworkPolicy.ExternalPolicyEnabled &&
 		len(sc.Spec.NetworkPolicy.ExternalPodLabels) == 0 {
 		return field.Invalid(
-			field.NewPath("spec").Child("NetworkPolicy").Child("ExternalPodLabels"),
+			field.NewPath("spec", "networkPolicy", "externalPodLabels"),
 			sc.Spec.NetworkPolicy,
 			"should have at least one item if the policy is enabled",
 		)
@@ -277,7 +272,7 @@ func (sc *SparkCluster) validateFrameworkConfig(config *FrameworkConfig, comp st
 
 	if len(config.Configs) == 0 {
 		errs = append(errs, field.Invalid(
-			field.NewPath("spec").Child(comp).Child("frameworkConfig").Child("configs"),
+			field.NewPath("spec", comp, "frameworkConfig", "configs"),
 			config.Configs,
 			"should have at least one item",
 		))
@@ -294,7 +289,7 @@ func (sc *SparkCluster) validateKeyTabConfig(config *KeyTabConfig, comp string) 
 
 	if config.Path == "" {
 		errs = append(errs, field.Invalid(
-			field.NewPath("spec").Child(comp).Child("keyTabConfig").Child("path"),
+			field.NewPath("spec", comp, "keyTabConfig", "path"),
 			config.Path,
 			"should be non-empty",
 		))
@@ -302,7 +297,7 @@ func (sc *SparkCluster) validateKeyTabConfig(config *KeyTabConfig, comp string) 
 
 	if len(config.KeyTab) == 0 {
 		errs = append(errs, field.Invalid(
-			field.NewPath("spec").Child(comp).Child("keyTabConfig").Child("keytab"),
+			field.NewPath("spec", comp, "keyTabConfig", "keytab"),
 			config.KeyTab,
 			"should have at least one item",
 		))
@@ -325,23 +320,10 @@ func (sc *SparkCluster) validateMutualTLSMode() *field.Error {
 	}
 
 	return field.Invalid(
-		field.NewPath("spec").Child("istioMutualTLSMode"),
+		field.NewPath("spec", "istioMutualTLSMode"),
 		sc.Spec.MutualTLSMode,
 		fmt.Sprintf("mode must be one of the following: %v", validModes),
 	)
-}
-
-func (sc *SparkCluster) validateWorkerMemoryLimit() *field.Error {
-	request := sc.Spec.Worker.WorkerMemoryLimit
-	if request == "" {
-		return field.Invalid(
-			field.NewPath("spec").Child("worker").Child("workerMemoryLimit"),
-			request,
-			"should be non-empty",
-		)
-	}
-
-	return nil
 }
 
 func (sc *SparkCluster) validateWorkerReplicas() *field.Error {
@@ -351,31 +333,53 @@ func (sc *SparkCluster) validateWorkerReplicas() *field.Error {
 	}
 
 	return field.Invalid(
-		field.NewPath("spec").Child("worker").Child("replicas"),
+		field.NewPath("spec", "worker", "replicas"),
 		replicas,
 		"should be greater than or equal to 0",
 	)
+}
+
+func (sc *SparkCluster) validateWorkerMemoryLimit() *field.Error {
+	request := sc.Spec.Worker.WorkerMemoryLimit
+
+	if request == "" {
+		return field.Invalid(
+			field.NewPath("spec", "worker", "workerMemoryLimit"),
+			request,
+			"should be non-empty",
+		)
+	}
+
+	if _, err := resource.ParseQuantity(request); err != nil {
+		return field.Invalid(
+			field.NewPath("spec", "worker", "workerMemoryLimit"),
+			request,
+			"should be a valid parsable quantity",
+		)
+	}
+
+	return nil
 }
 
 func (sc *SparkCluster) validateDriverConfigs() field.ErrorList {
 	var errs field.ErrorList
 
 	// validate driver ports
-	if err := sc.validatePort(sc.Spec.Driver.DriverPort, field.NewPath("spec").Child("sparkClusterDriver").Child("driverPort")); err != nil {
+	if err := sc.validatePort(sc.Spec.Driver.DriverPort, field.NewPath("spec", "sparkClusterDriver", "driverPort")); err != nil {
 		errs = append(errs, err)
 	}
 	if err := sc.validatePort(sc.Spec.Driver.DriverBlockManagerPort,
-		field.NewPath("spec").Child("sparkClusterDriver").Child("driverBlockManagerPort")); err != nil {
+		field.NewPath("spec", "sparkClusterDriver", "driverBlockManagerPort")); err != nil {
 		errs = append(errs, err)
 	}
 	if err := sc.validatePort(sc.Spec.Driver.DriverUIPort,
-		field.NewPath("spec").Child("sparkClusterDriver").Child("driverUIPort")); err != nil {
+		field.NewPath("spec", "sparkClusterDriver", "driverUIPort")); err != nil {
 		errs = append(errs, err)
 	}
 
 	if sc.Spec.Driver.DriverUIPortName == "" {
 		errs = append(errs, field.Invalid(
-			field.NewPath("spec").Child("sparkClusterDriver").Child("driverUIPortName"),
+			field.NewPath("spec", "sparkClusterDriver", "driverUIPortName"),
 			sc.Spec.Driver.DriverUIPortName,
 			"should be non-empty",
 		))
@@ -383,7 +387,7 @@ func (sc *SparkCluster) validateDriverConfigs() field.ErrorList {
 
 	if sc.Spec.Driver.DriverPortName == "" {
 		errs = append(errs, field.Invalid(
-			field.NewPath("spec").Child("sparkClusterDriver").Child("driverPortName"),
+			field.NewPath("spec", "sparkClusterDriver", "driverPortName"),
 			sc.Spec.Driver.DriverPortName,
 			"should be non-empty",
 		))
@@ -391,7 +395,7 @@ func (sc *SparkCluster) validateDriverConfigs() field.ErrorList {
 
 	if sc.Spec.Driver.DriverBlockManagerPortName == "" {
 		errs = append(errs, field.Invalid(
-			field.NewPath("spec").Child("sparkClusterDriver").Child("driverBlockManagerPortName"),
+			field.NewPath("spec", "sparkClusterDriver", "driverBlockManagerPortName"),
 			sc.Spec.Driver.DriverBlockManagerPort,
 			"should be non-empty",
 		))
@@ -403,19 +407,19 @@ func (sc *SparkCluster) validateDriverConfigs() field.ErrorList {
 func (sc *SparkCluster) validatePorts() field.ErrorList {
 	var errs field.ErrorList
 
-	if err := sc.validatePort(sc.Spec.ClusterPort, field.NewPath("spec").Child("clusterPort")); err != nil {
+	if err := sc.validatePort(sc.Spec.ClusterPort, field.NewPath("spec", "clusterPort")); err != nil {
 		errs = append(errs, err)
 	}
-	if err := sc.validatePort(sc.Spec.TCPMasterWebPort, field.NewPath("spec").Child("tcpMasterWebPort")); err != nil {
+	if err := sc.validatePort(sc.Spec.TCPMasterWebPort, field.NewPath("spec", "tcpMasterWebPort")); err != nil {
 		errs = append(errs, err)
 	}
-	if err := sc.validatePort(sc.Spec.TCPWorkerWebPort, field.NewPath("spec").Child("tcpWorkerWebPort")); err != nil {
+	if err := sc.validatePort(sc.Spec.TCPWorkerWebPort, field.NewPath("spec", "tcpWorkerWebPort")); err != nil {
 		errs = append(errs, err)
 	}
-	if err := sc.validatePort(sc.Spec.DashboardPort, field.NewPath("spec").Child("dashboardPort")); err != nil {
+	if err := sc.validatePort(sc.Spec.DashboardPort, field.NewPath("spec", "dashboardPort")); err != nil {
 		errs = append(errs, err)
 	}
-	if err := sc.validatePort(sc.Spec.DashboardServicePort, field.NewPath("spec").Child("dashboardServicePort")); err != nil {
+	if err := sc.validatePort(sc.Spec.DashboardServicePort, field.NewPath("spec", "dashboardServicePort")); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -435,7 +439,6 @@ func (sc *SparkCluster) validatePort(port int32, fldPath *field.Path) *field.Err
 	return nil
 }
 
-// nolint:dupl
 func (sc *SparkCluster) validateAutoscaler() field.ErrorList {
 	var errs field.ErrorList
 
@@ -444,7 +447,7 @@ func (sc *SparkCluster) validateAutoscaler() field.ErrorList {
 		return nil
 	}
 
-	fldPath := field.NewPath("spec").Child("autoscaling")
+	fldPath := field.NewPath("spec", "autoscaling")
 
 	if as.MinReplicas != nil {
 		if *as.MinReplicas < 1 {
@@ -495,19 +498,20 @@ func (sc *SparkCluster) validateWorkerResourceRequestsCPU() *field.Error {
 	if sc.Spec.Autoscaling == nil {
 		return nil
 	}
+
 	if _, ok := sc.Spec.Worker.Resources.Requests[v1.ResourceCPU]; ok {
 		return nil
 	}
 
 	return field.Required(
-		field.NewPath("spec").Child("worker").Child("resources").Child("requests").Child("cpu"),
+		field.NewPath("spec", "worker", "resources", "requests", "cpu"),
 		"is mandatory when autoscaling is enabled",
 	)
 }
 
 func (sc *SparkCluster) validateImage() field.ErrorList {
 	var errs field.ErrorList
-	fldPath := field.NewPath("spec").Child("image")
+	fldPath := field.NewPath("spec", "image")
 
 	if sc.Spec.Image.Repository == "" {
 		errs = append(errs, field.Required(fldPath.Child("repository"), "cannot be blank"))

@@ -15,7 +15,7 @@ func TestNewServiceAccount(t *testing.T) {
 
 	expected := &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-id",
+			Name:      "test-id-spark",
 			Namespace: "fake-ns",
 			Labels: map[string]string{
 				"app.kubernetes.io/name":       "spark",

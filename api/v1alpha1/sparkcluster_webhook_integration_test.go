@@ -17,6 +17,10 @@ func sparkFixture(nsName string) *SparkCluster {
 			GenerateName: "test-",
 			Namespace:    nsName,
 		},
+		// need this value to be preset to pass webhook tests
+		Spec: SparkClusterSpec{
+			Worker: SparkClusterWorker{WorkerMemoryLimit: "4505m"},
+		},
 	}
 }
 
@@ -104,10 +108,6 @@ var _ = Describe("SparkCluster", func() {
 			Expect(sc.Spec.Worker.Replicas).To(
 				PointTo(BeNumerically("==", 1)),
 				"worker replicas should point to 1",
-			)
-			Expect(sc.Spec.Worker.WorkerMemoryLimit).To(
-				Equal("4505m"),
-				"worker memory request should equal 4505m",
 			)
 			Expect(sc.Spec.Image).To(
 				Equal(&OCIImageDefinition{Repository: "bitnami/spark", Tag: "3.0.2-debian-10-r0"}),
@@ -341,6 +341,21 @@ var _ = Describe("SparkCluster", func() {
 			It("requires cpu resource requests for worker", func() {
 				sc := clusterWithAutoscaling()
 				sc.Spec.Worker.Resources.Requests = nil
+
+				Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())
+			})
+		})
+
+		Context("worker memory limit", func() {
+			It("rejects an empty limit", func() {
+				sc := sparkFixture(testNS.Name)
+				sc.Spec.Worker.WorkerMemoryLimit = ""
+
+				Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())
+			})
+			It("rejects an invalid limit", func() {
+				sc := sparkFixture(testNS.Name)
+				sc.Spec.Worker.WorkerMemoryLimit = "blah"
 
 				Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())
 			})

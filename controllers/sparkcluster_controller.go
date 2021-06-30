@@ -8,10 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
-
-	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/istio"
-
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
@@ -35,7 +31,9 @@ import (
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/logging"
+	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/istio"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/spark"
+	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
 )
 
 // LastAppliedConfig is the annotation key used to store object state on owned components.

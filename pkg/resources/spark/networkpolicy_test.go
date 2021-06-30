@@ -5,12 +5,11 @@ import (
 
 	"k8s.io/utils/pointer"
 
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
-
 	"github.com/stretchr/testify/assert"
+	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 func TestNewClusterDriverNetworkPolicy(t *testing.T) {
@@ -25,7 +24,7 @@ func TestNewClusterDriverNetworkPolicy(t *testing.T) {
 
 	expected := &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-id-driver",
+			Name:      "test-id-spark-driver",
 			Namespace: "fake-ns",
 			Labels: map[string]string{
 				"app.kubernetes.io/name":       "spark",
@@ -94,7 +93,7 @@ func TestNewClusterWorkerNetworkPolicy(t *testing.T) {
 
 	expected := &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-id-worker",
+			Name:      "test-id-spark-worker",
 			Namespace: "fake-ns",
 			Labels: map[string]string{
 				"app.kubernetes.io/name":       "spark",
@@ -158,7 +157,7 @@ func TestNewClusterMasterNetworkPolicy(t *testing.T) {
 
 	expected := &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-id-master",
+			Name:      "test-id-spark-master",
 			Namespace: "fake-ns",
 			Labels: map[string]string{
 				"app.kubernetes.io/name":       "spark",

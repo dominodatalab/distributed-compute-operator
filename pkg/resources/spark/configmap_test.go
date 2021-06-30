@@ -29,7 +29,7 @@ func TestNewFrameworkConfigMap(t *testing.T) {
 
 		expected := &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-id-framework",
+				Name:      "test-id-framework-spark",
 				Namespace: "fake-ns",
 				Labels: map[string]string{
 					"app.kubernetes.io/name":       "spark",
@@ -39,12 +39,8 @@ func TestNewFrameworkConfigMap(t *testing.T) {
 				},
 			},
 			Data: map[string]string{
-				"master": `m1 v1
-m2 v2
-`,
-				"worker": `w1 v1
-w2 v2
-`,
+				"master": "m1 v1\nm2 v2\n",
+				"worker": "w1 v1\nw2 v2\n",
 			},
 		}
 		assert.Equal(t, expected, cm)
@@ -62,7 +58,7 @@ w2 v2
 
 		expected := &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-id-framework",
+				Name:      "test-id-framework-spark",
 				Namespace: "fake-ns",
 				Labels: map[string]string{
 					"app.kubernetes.io/name":       "spark",
@@ -72,9 +68,7 @@ w2 v2
 				},
 			},
 			Data: map[string]string{
-				"master": `m1 v1
-m2 v2
-`,
+				"master": "m1 v1\nm2 v2\n",
 			},
 		}
 		assert.Equal(t, expected, cm)
@@ -95,12 +89,7 @@ func TestGenerateSparkDefaults(t *testing.T) {
 		"e": "5",
 	})
 
-	expected := `a 1
-b 2
-c 3
-d 4
-e 5
-`
+	expected := "a 1\nb 2\nc 3\nd 4\ne 5\n"
 
 	assert.Equal(t, expected, actual)
 }
@@ -120,7 +109,7 @@ func TestNewKeyTabConfigMap(t *testing.T) {
 
 		expected := &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-id-keytab",
+				Name:      "test-id-keytab-spark",
 				Namespace: "fake-ns",
 				Labels: map[string]string{
 					"app.kubernetes.io/name":       "spark",
@@ -147,7 +136,7 @@ func TestNewKeyTabConfigMap(t *testing.T) {
 
 		expected := &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-id-keytab",
+				Name:      "test-id-keytab-spark",
 				Namespace: "fake-ns",
 				Labels: map[string]string{
 					"app.kubernetes.io/name":       "spark",

@@ -8,19 +8,19 @@ import (
 
 func TestHeadServiceName(t *testing.T) {
 	actual := MasterServiceName("steve-o")
-	assert.Equal(t, "steve-o-master", actual)
+	assert.Equal(t, "steve-o-spark-master", actual)
 }
 
 func TestInstanceObjectName(t *testing.T) {
 	t.Run("with_component", func(t *testing.T) {
 		comp := Component("test")
 		actual := InstanceObjectName("steve-o", comp)
-		assert.Equal(t, "steve-o-test", actual)
+		assert.Equal(t, "steve-o-spark-test", actual)
 	})
 
 	t.Run("component_none", func(t *testing.T) {
 		actual := InstanceObjectName("steve-o", ComponentNone)
-		assert.Equal(t, "steve-o", actual)
+		assert.Equal(t, "steve-o-spark", actual)
 	})
 }
 
@@ -78,7 +78,7 @@ func TestFrameworkConfigMapName(t *testing.T) {
 	rc := sparkClusterFixture()
 	actual := FrameworkConfigMapName(rc.Name, Component("something"))
 
-	expected := "test-id-framework-something"
+	expected := "test-id-framework-spark-something"
 
 	assert.Equal(t, expected, actual)
 }
@@ -87,7 +87,7 @@ func TestKeyTabConfigMapName(t *testing.T) {
 	rc := sparkClusterFixture()
 	actual := KeyTabConfigMapName(rc.Name, Component("something"))
 
-	expected := "test-id-keytab-something"
+	expected := "test-id-keytab-spark-something"
 
 	assert.Equal(t, expected, actual)
 }
