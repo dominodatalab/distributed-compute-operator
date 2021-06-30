@@ -172,6 +172,7 @@ spec:
   worker:
     # total number of worker pods
     replicas: 1
+    workerMemoryLimit: 100m
 
     # labels:
     #   environment: production
@@ -221,13 +222,11 @@ spec:
     resources:
       requests:
         # NOTE: this must be set when attempting to use HPAs
-        cpu: 100m
+        cpu: 1
         memory: 250Mi
       limits:
-        cpu: 500m
+        cpu: 1
         memory: 512Mi
-
-    workerMemoryLimit: 4505m
 
 #    frameworkConfig:
 #      path: /opt/bitnami/spark/conf/spark-defaults.conf
