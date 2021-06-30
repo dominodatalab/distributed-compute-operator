@@ -1126,15 +1126,11 @@ spec:
                     configs:
                       additionalProperties:
                         type: string
-                      description: Congfigs includes the configuration values to include
+                      description: Configs includes the configuration values to include
                         in the configmap
                       type: object
-                    path:
-                      description: Path at which to mount the configmap
-                      type: string
                   required:
                   - configs
-                  - path
                   type: object
                 initContainers:
                   description: InitContainers added to spark pods.
@@ -4971,15 +4967,11 @@ spec:
                     configs:
                       additionalProperties:
                         type: string
-                      description: Congfigs includes the configuration values to include
+                      description: Configs includes the configuration values to include
                         in the configmap
                       type: object
-                    path:
-                      description: Path at which to mount the configmap
-                      type: string
                   required:
                   - configs
-                  - path
                   type: object
                 initContainers:
                   description: InitContainers added to spark pods.
@@ -7720,8 +7712,8 @@ spec:
                     - name
                     type: object
                   type: array
-                workerMemoryRequest:
-                  description: WorkerMemoryRequest configures the SPARK_WORKER_MEMORY
+                workerMemoryLimit:
+                  description: WorkerMemoryLimit configures the SPARK_WORKER_MEMORY
                     envVar
                   type: string
               required:

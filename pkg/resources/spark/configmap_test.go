@@ -14,14 +14,12 @@ func TestNewFrameworkConfigMap(t *testing.T) {
 	t.Run("fully loaded", func(t *testing.T) {
 		rc := sparkClusterFixture()
 		rc.Spec.Master.FrameworkConfig = &v1alpha1.FrameworkConfig{
-			Path: "ignore-me",
 			Configs: map[string]string{
 				"m1": "v1",
 				"m2": "v2",
 			},
 		}
 		rc.Spec.Worker.FrameworkConfig = &v1alpha1.FrameworkConfig{
-			Path: "ignore-me",
 			Configs: map[string]string{
 				"w1": "v1",
 				"w2": "v2",
@@ -55,7 +53,6 @@ w2 v2
 	t.Run("only one node type", func(t *testing.T) {
 		rc := sparkClusterFixture()
 		rc.Spec.Master.FrameworkConfig = &v1alpha1.FrameworkConfig{
-			Path: "ignore-me",
 			Configs: map[string]string{
 				"m1": "v1",
 				"m2": "v2",
@@ -104,6 +101,7 @@ c 3
 d 4
 e 5
 `
+
 	assert.Equal(t, expected, actual)
 }
 

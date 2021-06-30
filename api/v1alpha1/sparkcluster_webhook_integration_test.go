@@ -105,7 +105,7 @@ var _ = Describe("SparkCluster", func() {
 				PointTo(BeNumerically("==", 1)),
 				"worker replicas should point to 1",
 			)
-			Expect(sc.Spec.Worker.WorkerMemoryRequest).To(
+			Expect(sc.Spec.Worker.WorkerMemoryLimit).To(
 				Equal("4505m"),
 				"worker memory request should equal 4505m",
 			)
@@ -338,7 +338,7 @@ var _ = Describe("SparkCluster", func() {
 				Expect(k8sClient.Create(ctx, sc)).To(Succeed())
 			})
 
-			It("requires cpu resousce requests for worker", func() {
+			It("requires cpu resource requests for worker", func() {
 				sc := clusterWithAutoscaling()
 				sc.Spec.Worker.Resources.Requests = nil
 
@@ -347,21 +347,10 @@ var _ = Describe("SparkCluster", func() {
 		})
 
 		Context("framework configs", func() {
-			It("rejects a config with only path set", func() {
+			It("rejects a config with no data set", func() {
 				sc := sparkFixture(testNS.Name)
 				sc.Spec.Worker.FrameworkConfig = &FrameworkConfig{
-					Path:    "test/path/",
 					Configs: nil,
-				}
-
-				Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())
-			})
-
-			It("rejects a config with only data set", func() {
-				sc := sparkFixture(testNS.Name)
-				sc.Spec.Worker.FrameworkConfig = &FrameworkConfig{
-					Path:    "",
-					Configs: map[string]string{"test": "config"},
 				}
 
 				Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())

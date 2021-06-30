@@ -196,7 +196,7 @@ func TestNewStatefulSet(t *testing.T) {
 										},
 										{
 											Name:  "SPARK_WORKER_MEMORY",
-											Value: "4000m",
+											Value: "4505m",
 										},
 										{
 											Name:  "SPARK_WORKER_CORES",
@@ -566,14 +566,12 @@ func testCommonFeatures(t *testing.T, comp Component) {
 	t.Run("framework config", func(t *testing.T) {
 		rc := sparkClusterFixture()
 		fcMaster := dcv1alpha1.FrameworkConfig{
-			Path: "/test/master/path",
 			Configs: map[string]string{
 				"m1": "v1",
 			},
 		}
 
 		fcWorker := dcv1alpha1.FrameworkConfig{
-			Path: "/test/worker/path",
 			Configs: map[string]string{
 				"w1": "v1",
 			},
@@ -608,7 +606,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			{
 				Name:      "spark-config",
 				ReadOnly:  false,
-				MountPath: fmt.Sprintf("/test/%s/path", comp),
+				MountPath: "/opt/bitnami/spark/conf/spark-defaults.conf",
 				SubPath:   string(comp),
 			},
 		}

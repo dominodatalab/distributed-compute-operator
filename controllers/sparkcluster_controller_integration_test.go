@@ -189,7 +189,6 @@ func createAndBasicTest(ctx context.Context, name string) {
 			Master: dcv1alpha1.SparkClusterMaster{
 				SparkClusterNode: dcv1alpha1.SparkClusterNode{
 					FrameworkConfig: &dcv1alpha1.FrameworkConfig{
-						Path: "/opt/bitnami/spark/conf/spark-defaults.conf",
 						Configs: map[string]string{
 							"m1": "v1",
 						},
@@ -203,7 +202,6 @@ func createAndBasicTest(ctx context.Context, name string) {
 			Worker: dcv1alpha1.SparkClusterWorker{
 				SparkClusterNode: dcv1alpha1.SparkClusterNode{
 					FrameworkConfig: &dcv1alpha1.FrameworkConfig{
-						Path: "/opt/bitnami/spark/conf/spark-defaults.conf",
 						Configs: map[string]string{
 							"w1": "v1",
 						},

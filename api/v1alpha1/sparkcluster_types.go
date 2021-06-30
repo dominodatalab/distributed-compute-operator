@@ -54,9 +54,7 @@ type KeyTabConfig struct {
 }
 
 type FrameworkConfig struct {
-	// Path at which to mount the configmap
-	Path string `json:"path"`
-	// Congfigs includes the configuration values to include in the configmap
+	// Configs includes the configuration values to include in the configmap
 	Configs map[string]string `json:"configs"`
 }
 
@@ -90,8 +88,8 @@ type SparkClusterWorker struct {
 	// setting this field to some value above the minimum number of replicas.
 	Replicas *int32 `json:"replicas,omitempty"`
 
-	// WorkerMemoryRequest configures the SPARK_WORKER_MEMORY envVar
-	WorkerMemoryRequest string `json:"workerMemoryRequest,omitempty"`
+	// WorkerMemoryLimit configures the SPARK_WORKER_MEMORY envVar
+	WorkerMemoryLimit string `json:"workerMemoryLimit,omitempty"`
 }
 
 // SparkClusterSpec defines the desired state of a SparkCluster resource.

@@ -15,6 +15,8 @@ import (
 	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
 )
 
+const frameworkConfigMountPath = "/opt/bitnami/spark/conf/spark-defaults.conf"
+
 // NewStatefulSet generates a Deployment configured to manage Spark cluster nodes.
 // The configuration is based the provided spec and the desired Component workload.
 func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.StatefulSet, error) {
@@ -65,7 +67,7 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 
 	if nodeAttrs.FrameworkConfig != nil {
 		cmVolume := getConfigMapVolume("spark-config", FrameworkConfigMapName(sc.Name, ComponentNone))
-		cmVolumeMount := getConfigMapVolumeMount("spark-config", nodeAttrs.FrameworkConfig.Path, string(comp))
+		cmVolumeMount := getConfigMapVolumeMount("spark-config", frameworkConfigMountPath, string(comp))
 
 		volumes = append(volumes, cmVolume)
 		volumeMounts = append(volumeMounts, cmVolumeMount)
@@ -284,7 +286,7 @@ func componentEnvVars(sc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 			},
 			{
 				Name:  "SPARK_WORKER_MEMORY",
-				Value: sc.Spec.Worker.WorkerMemoryRequest,
+				Value: sc.Spec.Worker.WorkerMemoryLimit,
 			},
 			{
 				Name:  "SPARK_WORKER_CORES",

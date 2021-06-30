@@ -38,7 +38,7 @@ var (
 	sparkDefaultEnableNetworkPolicy               = pointer.BoolPtr(true)
 	sparkDefaultEnableExternalNetworkPolicy       = pointer.BoolPtr(false)
 	sparkDefaultWorkerReplicas                    = pointer.Int32Ptr(1)
-	sparkDefaultWorkerMemoryRequest               = "4505m"
+	sparkDefaultWorkerMemoryLimit                 = "4505m"
 	sparkDefaultEnableDashboard                   = pointer.BoolPtr(true)
 	sparkDefaultNetworkPolicyClientLabels         = map[string]string{
 		"spark-client": "true",
@@ -112,9 +112,9 @@ func (sc *SparkCluster) Default() {
 		log.Info("setting default worker replicas", "value", *sparkDefaultWorkerReplicas)
 		sc.Spec.Worker.Replicas = sparkDefaultWorkerReplicas
 	}
-	if sc.Spec.Worker.WorkerMemoryRequest == "" {
-		log.Info("setting default worker memory request", "value", sparkDefaultWorkerMemoryRequest)
-		sc.Spec.Worker.WorkerMemoryRequest = sparkDefaultWorkerMemoryRequest
+	if sc.Spec.Worker.WorkerMemoryLimit == "" {
+		log.Info("setting default worker memory request", "value", sparkDefaultWorkerMemoryLimit)
+		sc.Spec.Worker.WorkerMemoryLimit = sparkDefaultWorkerMemoryLimit
 	}
 	if sc.Spec.Driver.DriverPort == 0 {
 		log.Info("setting default driver port", "value", sparkDefaultDriverPort)
@@ -187,7 +187,7 @@ func (sc *SparkCluster) validateSparkCluster() error {
 	if err := sc.validateWorkerReplicas(); err != nil {
 		allErrs = append(allErrs, err)
 	}
-	if err := sc.validateWorkerMemoryRequest(); err != nil {
+	if err := sc.validateWorkerMemoryLimit(); err != nil {
 		allErrs = append(allErrs, err)
 	}
 	if err := sc.validateWorkerResourceRequestsCPU(); err != nil {
@@ -243,11 +243,11 @@ func (sc *SparkCluster) validateNetworkPolicies() *field.Error {
 func (sc *SparkCluster) validateFrameworkConfigs() field.ErrorList {
 	var errs field.ErrorList
 
-	if err := sc.validateExtraConfig(sc.Spec.Master.FrameworkConfig, "master"); err != nil {
+	if err := sc.validateFrameworkConfig(sc.Spec.Master.FrameworkConfig, "master"); err != nil {
 		errs = append(errs, err...)
 	}
 
-	if err := sc.validateExtraConfig(sc.Spec.Worker.FrameworkConfig, "worker"); err != nil {
+	if err := sc.validateFrameworkConfig(sc.Spec.Worker.FrameworkConfig, "worker"); err != nil {
 		errs = append(errs, err...)
 	}
 
@@ -268,11 +268,13 @@ func (sc *SparkCluster) validateKeyTabConfigs() field.ErrorList {
 	return errs
 }
 
-func (sc *SparkCluster) validateExtraConfig(config *FrameworkConfig, comp string) field.ErrorList {
+func (sc *SparkCluster) validateFrameworkConfig(config *FrameworkConfig, comp string) field.ErrorList {
 	var errs field.ErrorList
+
 	if config == nil {
 		return nil
 	}
+
 	if len(config.Configs) == 0 {
 		errs = append(errs, field.Invalid(
 			field.NewPath("spec").Child(comp).Child("frameworkConfig").Child("configs"),
@@ -281,13 +283,6 @@ func (sc *SparkCluster) validateExtraConfig(config *FrameworkConfig, comp string
 		))
 	}
 
-	if config.Path == "" {
-		errs = append(errs, field.Invalid(
-			field.NewPath("spec").Child(comp).Child("frameworkConfig").Child("path"),
-			config.Path,
-			"should be non-empty",
-		))
-	}
 	return errs
 }
 
@@ -336,11 +331,11 @@ func (sc *SparkCluster) validateMutualTLSMode() *field.Error {
 	)
 }
 
-func (sc *SparkCluster) validateWorkerMemoryRequest() *field.Error {
-	request := sc.Spec.Worker.WorkerMemoryRequest
+func (sc *SparkCluster) validateWorkerMemoryLimit() *field.Error {
+	request := sc.Spec.Worker.WorkerMemoryLimit
 	if request == "" {
 		return field.Invalid(
-			field.NewPath("spec").Child("worker").Child("workerMemoryRequest"),
+			field.NewPath("spec").Child("worker").Child("workerMemoryLimit"),
 			request,
 			"should be non-empty",
 		)
