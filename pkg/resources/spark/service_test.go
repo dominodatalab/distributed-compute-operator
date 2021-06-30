@@ -50,7 +50,7 @@ func TestNewMasterService(t *testing.T) {
 		svc := NewMasterService(rc)
 
 		expected.Spec.Ports = append(expected.Spec.Ports, corev1.ServicePort{
-			Name:       "tcp-dashboard",
+			Name:       "tcp",
 			Protocol:   corev1.ProtocolTCP,
 			Port:       80,
 			TargetPort: intstr.FromString("http"),

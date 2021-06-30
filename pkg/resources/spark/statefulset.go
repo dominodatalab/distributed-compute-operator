@@ -32,7 +32,7 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 		nodeAttrs = sc.Spec.Master.SparkClusterNode
 		ports = []corev1.ContainerPort{
 			{
-				Name:          "http-master",
+				Name:          "http",
 				Protocol:      corev1.ProtocolTCP,
 				ContainerPort: sc.Spec.TCPMasterWebPort,
 			},
@@ -46,7 +46,7 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 		nodeAttrs = sc.Spec.Worker.SparkClusterNode
 		ports = []corev1.ContainerPort{
 			{
-				Name:          "http-worker",
+				Name:          "http",
 				Protocol:      corev1.ProtocolTCP,
 				ContainerPort: sc.Spec.TCPWorkerWebPort,
 			},
