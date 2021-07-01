@@ -207,6 +207,10 @@ spec:
                 - name
                 type: object
               type: array
+            globalLabels:
+              additionalProperties:
+                type: string
+              type: object
             image:
               description: Image used to launch master and worker nodes.
               properties:

@@ -3,6 +3,8 @@ package spark
 import (
 	"fmt"
 
+	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
+
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources"
 )
@@ -59,6 +61,13 @@ func MetadataLabels(sc *dcv1alpha1.SparkCluster) map[string]string {
 // MetadataLabelsWithComponent returns standard component metadata for spark resources.
 func MetadataLabelsWithComponent(sc *dcv1alpha1.SparkCluster, comp Component) map[string]string {
 	return resources.MetadataLabelsWithComponent(ApplicationName, sc.Name, sc.Spec.Image.Tag, string(comp))
+}
+
+func AddGlobalLabels(labels map[string]string, globalLabels map[string]string) map[string]string {
+	if globalLabels != nil {
+		labels = util.MergeStringMaps(globalLabels, labels)
+	}
+	return labels
 }
 
 // SelectorLabels returns a resource selector clause for spark resources.

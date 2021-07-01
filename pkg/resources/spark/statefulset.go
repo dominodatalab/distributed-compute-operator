@@ -60,7 +60,7 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 		return nil, err
 	}
 
-	labels := processLabels(sc, comp, nodeAttrs.Labels)
+	labels := AddGlobalLabels(MetadataLabelsWithComponent(sc, comp), nodeAttrs.Labels)
 	envVars := append(componentEnvVars(sc, comp), sc.Spec.EnvVars...)
 	volumes = nodeAttrs.Volumes
 	volumeMounts = nodeAttrs.VolumeMounts
@@ -295,12 +295,4 @@ func componentEnvVars(sc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 		}
 	}
 	return envVar
-}
-
-func processLabels(sc *dcv1alpha1.SparkCluster, comp Component, extraLabels map[string]string) map[string]string {
-	labels := MetadataLabelsWithComponent(sc, comp)
-	if extraLabels != nil {
-		labels = util.MergeStringMaps(extraLabels, labels)
-	}
-	return labels
 }
