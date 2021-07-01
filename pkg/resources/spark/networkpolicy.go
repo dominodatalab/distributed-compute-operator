@@ -27,7 +27,7 @@ func NewClusterWorkerNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      InstanceObjectName(sc.Name, ComponentWorker),
 			Namespace: sc.Namespace,
-			Labels:    MetadataLabels(sc),
+			Labels:    MetadataAndAdditionalLabels(MetadataLabels(sc), sc.Spec.Worker.Labels),
 			Annotations: map[string]string{
 				resources.DescriptionAnnotationKey: "worker network policy",
 			},
@@ -73,7 +73,7 @@ func NewClusterDriverNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      InstanceObjectName(sc.Name, "driver"),
 			Namespace: sc.Namespace,
-			Labels:    MetadataLabels(sc),
+			Labels:    MetadataAndAdditionalLabels(MetadataLabels(sc), sc.Spec.Master.Labels),
 			Annotations: map[string]string{
 				resources.DescriptionAnnotationKey: "driver network policy",
 			},
@@ -140,7 +140,7 @@ func NewClusterMasterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      InstanceObjectName(sc.Name, "master"),
 			Namespace: sc.Namespace,
-			Labels:    MetadataLabels(sc),
+			Labels:    MetadataAndAdditionalLabels(MetadataLabels(sc), sc.Spec.Master.Labels),
 			Annotations: map[string]string{
 				resources.DescriptionAnnotationKey: "master network policy",
 			},

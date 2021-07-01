@@ -39,7 +39,7 @@ func NewMasterService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      MasterServiceName(sc.Name),
 			Namespace: sc.Namespace,
-			Labels:    MetadataLabelsWithComponent(sc, ComponentMaster),
+			Labels:    MetadataAndAdditionalLabels(MetadataLabelsWithComponent(sc, ComponentMaster), sc.Spec.Master.Labels),
 		},
 		Spec: corev1.ServiceSpec{
 			Type:     corev1.ServiceTypeClusterIP,
@@ -55,7 +55,7 @@ func NewHeadlessService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      HeadlessServiceName(sc.Name),
 			Namespace: sc.Namespace,
-			Labels:    MetadataLabelsWithComponent(sc, ComponentWorker),
+			Labels:    MetadataAndAdditionalLabels(MetadataLabelsWithComponent(sc, ComponentWorker), sc.Spec.Worker.Labels),
 		},
 		Spec: corev1.ServiceSpec{
 			ClusterIP: corev1.ClusterIPNone,
@@ -91,7 +91,7 @@ func NewSparkDriverService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      DriverServiceName(sc.Spec.Driver.SparkClusterName),
 			Namespace: sc.Namespace,
-			Labels:    MetadataLabels(sc),
+			Labels:    MetadataAndAdditionalLabels(MetadataLabels(sc), sc.Spec.Master.Labels),
 		},
 		Spec: corev1.ServiceSpec{
 			ClusterIP: corev1.ClusterIPNone,
