@@ -27,7 +27,7 @@ func NewFrameworkConfigMap(sc *dcv1alpha1.SparkCluster) *corev1.ConfigMap {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      FrameworkConfigMapName(sc.Name, ComponentNone),
 			Namespace: sc.Namespace,
-			Labels:    MetadataLabels(sc),
+			Labels:    AddGlobalLabels(MetadataLabels(sc), sc.Spec.GlobalLabels),
 		},
 		Data: data,
 	}
@@ -49,7 +49,7 @@ func NewKeyTabConfigMap(sc *dcv1alpha1.SparkCluster) *corev1.ConfigMap {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      KeyTabConfigMapName(sc.Name, ComponentNone),
 			Namespace: sc.Namespace,
-			Labels:    MetadataLabels(sc),
+			Labels:    AddGlobalLabels(MetadataLabels(sc), sc.Spec.GlobalLabels),
 		},
 		BinaryData: binaryData,
 	}

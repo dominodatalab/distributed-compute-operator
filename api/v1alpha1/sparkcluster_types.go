@@ -100,6 +100,8 @@ type SparkClusterSpec struct {
 	// ImagePullSecrets are references to secrets with credentials to private registries used to pull images.
 	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 
+	GlobalLabels map[string]string `json:"globalLabels,omitempty"`
+
 	// ClusterPort is the port on which the spark protocol communicates
 	ClusterPort int32 `json:"clusterPort,omitempty"`
 

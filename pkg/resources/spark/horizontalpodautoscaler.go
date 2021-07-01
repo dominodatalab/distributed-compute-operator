@@ -63,6 +63,6 @@ func HorizontalPodAutoscalerObjectMeta(sc *dcv1alpha1.SparkCluster) metav1.Objec
 	return metav1.ObjectMeta{
 		Name:      InstanceObjectName(sc.Name, ComponentNone),
 		Namespace: sc.Namespace,
-		Labels:    MetadataLabels(sc),
+		Labels:    AddGlobalLabels(MetadataLabels(sc), sc.Spec.GlobalLabels),
 	}
 }

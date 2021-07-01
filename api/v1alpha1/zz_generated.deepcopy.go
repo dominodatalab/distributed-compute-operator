@@ -936,6 +936,13 @@ func (in *SparkClusterSpec) DeepCopyInto(out *SparkClusterSpec) {
 		*out = make([]v1.LocalObjectReference, len(*in))
 		copy(*out, *in)
 	}
+	if in.GlobalLabels != nil {
+		in, out := &in.GlobalLabels, &out.GlobalLabels
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	out.IstioConfig = in.IstioConfig
 	out.Driver = in.Driver
 	if in.EnableDashboard != nil {
