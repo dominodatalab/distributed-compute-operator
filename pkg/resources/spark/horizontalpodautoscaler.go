@@ -29,6 +29,22 @@ func NewHorizontalPodAutoscaler(sc *dcv1alpha1.SparkCluster) (*autoscalingv2beta
 		}
 	}
 
+	var metrics []autoscalingv2beta2.MetricSpec
+	if autoscaling.AverageCPUUtilization != nil {
+		metrics = []autoscalingv2beta2.MetricSpec{
+			{
+				Type: autoscalingv2beta2.ResourceMetricSourceType,
+				Resource: &autoscalingv2beta2.ResourceMetricSource{
+					Name: corev1.ResourceCPU,
+					Target: autoscalingv2beta2.MetricTarget{
+						Type:               autoscalingv2beta2.UtilizationMetricType,
+						AverageUtilization: autoscaling.AverageCPUUtilization,
+					},
+				},
+			},
+		}
+	}
+
 	hpa := &autoscalingv2beta2.HorizontalPodAutoscaler{
 		ObjectMeta: HorizontalPodAutoscalerObjectMeta(sc),
 		Spec: autoscalingv2beta2.HorizontalPodAutoscalerSpec{
@@ -39,19 +55,8 @@ func NewHorizontalPodAutoscaler(sc *dcv1alpha1.SparkCluster) (*autoscalingv2beta
 			},
 			MinReplicas: autoscaling.MinReplicas,
 			MaxReplicas: autoscaling.MaxReplicas,
-			Metrics: []autoscalingv2beta2.MetricSpec{
-				{
-					Type: autoscalingv2beta2.ResourceMetricSourceType,
-					Resource: &autoscalingv2beta2.ResourceMetricSource{
-						Name: corev1.ResourceCPU,
-						Target: autoscalingv2beta2.MetricTarget{
-							Type:               autoscalingv2beta2.UtilizationMetricType,
-							AverageUtilization: autoscaling.AverageCPUUtilization,
-						},
-					},
-				},
-			},
-			Behavior: behavior,
+			Metrics:     metrics,
+			Behavior:    behavior,
 		},
 	}
 

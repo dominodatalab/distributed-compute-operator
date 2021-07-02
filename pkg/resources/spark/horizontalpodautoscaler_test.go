@@ -38,18 +38,7 @@ func TestNewHorizontalPodAutoscaler(t *testing.T) {
 				},
 				MinReplicas: nil,
 				MaxReplicas: 0,
-				Metrics: []autoscalingv2beta2.MetricSpec{
-					{
-						Type: "Resource",
-						Resource: &autoscalingv2beta2.ResourceMetricSource{
-							Name: "cpu",
-							Target: autoscalingv2beta2.MetricTarget{
-								Type:               "Utilization",
-								AverageUtilization: nil,
-							},
-						},
-					},
-				},
+				Metrics:     nil,
 			},
 		}
 		assert.Equal(t, expected, actual)
