@@ -219,7 +219,10 @@ func getPodSpec(sc *dcv1alpha1.SparkCluster,
 	}
 }
 
-func processPVCTemplates(sc *dcv1alpha1.SparkCluster, vcts []dcv1alpha1.PersistentVolumeClaimTemplate) (pvcTmpls []corev1.PersistentVolumeClaim) {
+func processPVCTemplates(
+	sc *dcv1alpha1.SparkCluster,
+	vcts []dcv1alpha1.PersistentVolumeClaimTemplate,
+) (pvcTmpls []corev1.PersistentVolumeClaim) {
 	mode := corev1.PersistentVolumeFilesystem
 
 	for _, vct := range vcts {
