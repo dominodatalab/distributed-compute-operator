@@ -63,7 +63,7 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	envVars := append(componentEnvVars(sc, comp), sc.Spec.EnvVars...)
 	volumes = nodeAttrs.Volumes
 	volumeMounts = nodeAttrs.VolumeMounts
-	volumeClaimTemplates := processPVCTemplates(nodeAttrs.VolumeClaimTemplates)
+	volumeClaimTemplates := processPVCTemplates(sc, nodeAttrs.VolumeClaimTemplates)
 
 	if nodeAttrs.FrameworkConfig != nil {
 		cmVolume := getConfigMapVolume("spark-config", FrameworkConfigMapName(sc.Name, ComponentNone))
@@ -219,7 +219,7 @@ func getPodSpec(sc *dcv1alpha1.SparkCluster,
 	}
 }
 
-func processPVCTemplates(vcts []dcv1alpha1.PersistentVolumeClaimTemplate) (pvcTmpls []corev1.PersistentVolumeClaim) {
+func processPVCTemplates(sc *dcv1alpha1.SparkCluster, vcts []dcv1alpha1.PersistentVolumeClaimTemplate) (pvcTmpls []corev1.PersistentVolumeClaim) {
 	mode := corev1.PersistentVolumeFilesystem
 
 	for _, vct := range vcts {
@@ -228,7 +228,8 @@ func processPVCTemplates(vcts []dcv1alpha1.PersistentVolumeClaimTemplate) (pvcTm
 
 		pvcTmpls = append(pvcTmpls, corev1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: vct.Name,
+				Name:   vct.Name,
+				Labels: sc.Spec.GlobalLabels,
 			},
 			Spec: vct.Spec,
 		})
