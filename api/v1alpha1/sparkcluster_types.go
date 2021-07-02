@@ -34,8 +34,10 @@ type SparkClusterNode struct {
 	// Resources are the requests and limits applied to spark containers.
 	Resources corev1.ResourceRequirements `json:"resources"`
 
-	// AdditionalStorage is the request for additional storage volumes (pvc's) to be created alongside each pod
-	AdditionalStorage []SparkAdditionalStorage `json:"additionalStorage,omitempty"`
+	// VolumeClaimTemplates is a list of claims that Spark pods are allowed to
+	// reference. You can enable dynamic provisioning of additional storage
+	// on-demand by using a storage class provisioner.
+	VolumeClaimTemplates []PersistentVolumeClaimTemplate `json:"volumeClaimTemplates,omitempty"`
 
 	// FrameworkConfig is the extra framework-specific configuration for this cluster
 	// For spark this means we'll generate a spark-defaults.conf configmap
@@ -56,21 +58,6 @@ type KeyTabConfig struct {
 type FrameworkConfig struct {
 	// Configs includes the configuration values to include in the configmap
 	Configs map[string]string `json:"configs"`
-}
-
-type SparkAdditionalStorage struct {
-	// Sets the access mode which will be used when mounting the volume to the relevant pod
-	AccessModes []corev1.PersistentVolumeAccessMode `json:"accessModes"`
-
-	// Size of volume specified in any legal kubernetes units (i.e. 1Gi, 1000, etc)
-	Size string `json:"size"`
-
-	// Controls the storage class of the PersistentVolumeClaim
-	StorageClass string `json:"storageClass"`
-
-	// The base of the name that will be used both to name and subsequently mount this volume. This should match
-	// an entry in VolumeMounts
-	Name string `json:"name"`
 }
 
 // SparkClusterMaster defines master-specific pod settings.

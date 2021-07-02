@@ -243,9 +243,11 @@ spec:
 #        spark.ui.reverseProxyUrl: "/worker/proxy/url"
 #        spark.ui.proxyBase: "/master/proxy/base"
 
-#    additionalStorage:
-#    - accessModes:
-#      - ReadWriteMany
-#      size: 1Gi
-#      storageClass: nfs
-#      name: spark-worker-pvc
+    # volumeClaimTemplates:
+    #   - name: scratch
+    #     spec:
+    #       accessModes: [ "ReadWriteOnce" ]
+    #       storageClassName: "standard"
+    #       resources:
+    #         requests:
+    #           storage: 100Mi
