@@ -6,7 +6,6 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/pointer"
@@ -64,6 +63,7 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	envVars := append(componentEnvVars(sc, comp), sc.Spec.EnvVars...)
 	volumes = nodeAttrs.Volumes
 	volumeMounts = nodeAttrs.VolumeMounts
+	volumeClaimTemplates := processPVCTemplates(nodeAttrs.VolumeClaimTemplates)
 
 	if nodeAttrs.FrameworkConfig != nil {
 		cmVolume := getConfigMapVolume("spark-config", FrameworkConfigMapName(sc.Name, ComponentNone))
@@ -79,10 +79,7 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 		volumes = append(volumes, cmVolume)
 		volumeMounts = append(volumeMounts, cmVolumeMount)
 	}
-	volumeClaimTemplates, err := processVolumeClaimTemplates(nodeAttrs.AdditionalStorage)
-	if err != nil {
-		return nil, err
-	}
+
 	serviceAccountName := InstanceObjectName(sc.Name, ComponentNone)
 	if sc.Spec.ServiceAccountName != "" {
 		serviceAccountName = sc.Spec.ServiceAccountName
@@ -222,31 +219,22 @@ func getPodSpec(sc *dcv1alpha1.SparkCluster,
 	}
 }
 
-func processVolumeClaimTemplates(storage []dcv1alpha1.SparkAdditionalStorage) ([]corev1.PersistentVolumeClaim, error) {
-	pvcs := make([]corev1.PersistentVolumeClaim, len(storage))
-	for i, as := range storage {
-		quantity, err := resource.ParseQuantity(as.Size)
-		if err != nil {
-			return nil, err
-		}
-		fs := corev1.PersistentVolumeFilesystem
-		pvcs[i] = corev1.PersistentVolumeClaim{
+func processPVCTemplates(vcts []dcv1alpha1.PersistentVolumeClaimTemplate) (pvcTmpls []corev1.PersistentVolumeClaim) {
+	mode := corev1.PersistentVolumeFilesystem
+
+	for _, vct := range vcts {
+		spec := vct.Spec.DeepCopy()
+		spec.VolumeMode = &mode
+
+		pvcTmpls = append(pvcTmpls, corev1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: as.Name,
+				Name: vct.Name,
 			},
-			Spec: corev1.PersistentVolumeClaimSpec{
-				AccessModes: as.AccessModes,
-				Resources: corev1.ResourceRequirements{
-					Requests: map[corev1.ResourceName]resource.Quantity{
-						corev1.ResourceStorage: quantity,
-					},
-				},
-				StorageClassName: &as.StorageClass,
-				VolumeMode:       &fs,
-			},
-		}
+			Spec: vct.Spec,
+		})
 	}
-	return pvcs, nil
+
+	return
 }
 
 func componentEnvVars(sc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvVar {

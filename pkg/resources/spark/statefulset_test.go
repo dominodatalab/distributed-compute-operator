@@ -120,9 +120,8 @@ func TestNewStatefulSet(t *testing.T) {
 							},
 						},
 					},
-					VolumeClaimTemplates: []corev1.PersistentVolumeClaim{},
-					UpdateStrategy:       appsv1.StatefulSetUpdateStrategy{Type: appsv1.RollingUpdateStatefulSetStrategyType},
-					PodManagementPolicy:  appsv1.ParallelPodManagement,
+					UpdateStrategy:      appsv1.StatefulSetUpdateStrategy{Type: appsv1.RollingUpdateStatefulSetStrategyType},
+					PodManagementPolicy: appsv1.ParallelPodManagement,
 				},
 			}
 			assert.Equal(t, expected, actual, "master statefulset not correctly generated")
@@ -234,9 +233,8 @@ func TestNewStatefulSet(t *testing.T) {
 							},
 						},
 					},
-					VolumeClaimTemplates: []corev1.PersistentVolumeClaim{},
-					UpdateStrategy:       appsv1.StatefulSetUpdateStrategy{Type: appsv1.RollingUpdateStatefulSetStrategyType},
-					PodManagementPolicy:  appsv1.ParallelPodManagement,
+					UpdateStrategy:      appsv1.StatefulSetUpdateStrategy{Type: appsv1.RollingUpdateStatefulSetStrategyType},
+					PodManagementPolicy: appsv1.ParallelPodManagement,
 				},
 			}
 			assert.Equal(t, expected, actual, "worker statefulset not correctly generated")
@@ -493,74 +491,36 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		assert.Equal(t, rc.Spec.ServiceAccountName, actual.Spec.Template.Spec.ServiceAccountName)
 	})
 
-	const fsc = "fixture-storage-class"
 	t.Run("volume_claim_template", func(t *testing.T) {
-		rc := sparkClusterFixture()
-		fixtureStorageClass := fsc
-		fs := corev1.PersistentVolumeFilesystem
-		additionalStorage := []dcv1alpha1.SparkAdditionalStorage{
-			{
-				AccessModes:  []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
-				Size:         "1Gi",
-				StorageClass: fixtureStorageClass,
-				Name:         "worker-additional-storage",
+		sc := sparkClusterFixture()
+
+		elem := dcv1alpha1.PersistentVolumeClaimTemplate{
+			Name: "stuffz",
+			Spec: corev1.PersistentVolumeClaimSpec{
+				StorageClassName: pointer.StringPtr("test-gpu"),
 			},
 		}
+		input := []dcv1alpha1.PersistentVolumeClaimTemplate{elem}
 
 		switch comp {
-		case ComponentWorker:
-			rc.Spec.Worker.SparkClusterNode.AdditionalStorage = additionalStorage
 		case ComponentMaster:
-			rc.Spec.Master.SparkClusterNode.AdditionalStorage = additionalStorage
+			sc.Spec.Master.VolumeClaimTemplates = input
+		case ComponentWorker:
+			sc.Spec.Worker.VolumeClaimTemplates = input
 		}
 
-		quantity, err := resource.ParseQuantity("1Gi")
+		actual, err := NewStatefulSet(sc, comp)
 		require.NoError(t, err)
 
 		expected := []corev1.PersistentVolumeClaim{
 			{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "worker-additional-storage",
+					Name: elem.Name,
 				},
-				Spec: corev1.PersistentVolumeClaimSpec{
-					AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
-					Resources: corev1.ResourceRequirements{
-						Requests: map[corev1.ResourceName]resource.Quantity{
-							corev1.ResourceStorage: quantity,
-						},
-					},
-					StorageClassName: &fixtureStorageClass,
-					VolumeMode:       &fs,
-				},
+				Spec: elem.Spec,
 			},
 		}
-
-		actual, err := NewStatefulSet(rc, comp)
-		require.NoError(t, err)
-
 		assert.Equal(t, expected, actual.Spec.VolumeClaimTemplates)
-	})
-
-	t.Run("invalid_volume_claim", func(t *testing.T) {
-		rc := sparkClusterFixture()
-		fixtureStorageClass := fsc
-		additionalStorage := []dcv1alpha1.SparkAdditionalStorage{
-			{
-				AccessModes:  []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
-				Size:         "FakeSize",
-				StorageClass: fixtureStorageClass,
-				Name:         "worker-additional-storage",
-			},
-		}
-
-		switch comp {
-		case ComponentWorker:
-			rc.Spec.Worker.SparkClusterNode.AdditionalStorage = additionalStorage
-		case ComponentMaster:
-			rc.Spec.Master.SparkClusterNode.AdditionalStorage = additionalStorage
-		}
-		_, err := NewStatefulSet(rc, comp)
-		require.Error(t, err)
 	})
 
 	t.Run("framework_config", func(t *testing.T) {
