@@ -3,6 +3,8 @@ package ray
 import (
 	"fmt"
 
+	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
+
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources"
 )
@@ -60,4 +62,11 @@ func SelectorLabels(rc *dcv1alpha1.RayCluster) map[string]string {
 // SelectorLabelsWithComponent returns a resource component selector clause for ray resources.
 func SelectorLabelsWithComponent(rc *dcv1alpha1.RayCluster, comp Component) map[string]string {
 	return resources.SelectorLabelsWithComponent(ApplicationName, rc.Name, string(comp))
+}
+
+func AddGlobalLabels(labels map[string]string, globalLabels map[string]string) map[string]string {
+	if globalLabels != nil {
+		labels = util.MergeStringMaps(globalLabels, labels)
+	}
+	return labels
 }

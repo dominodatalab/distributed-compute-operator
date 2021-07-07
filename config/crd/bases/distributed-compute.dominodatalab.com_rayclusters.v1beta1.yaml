@@ -207,6 +207,10 @@ spec:
               description: GCSServerPort is the port for the global control store.
               format: int32
               type: integer
+            globalLabels:
+              additionalProperties:
+                type: string
+              type: object
             head:
               description: Head node configuration parameters.
               properties:
