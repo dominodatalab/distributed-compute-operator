@@ -4,6 +4,7 @@ metadata:
   name: example
 spec:
   ## global configurations
+  # globalLabels: {}
 
   # image used by head and worker pods
   # image:
