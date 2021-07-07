@@ -70,6 +70,6 @@ func HorizontalPodAutoscalerObjectMeta(rc *dcv1alpha1.RayCluster) metav1.ObjectM
 	return metav1.ObjectMeta{
 		Name:      InstanceObjectName(rc.Name, ComponentNone),
 		Namespace: rc.Namespace,
-		Labels:    MetadataLabels(rc),
+		Labels:    AddGlobalLabels(MetadataLabels(rc), rc.Spec.GlobalLabels),
 	}
 }

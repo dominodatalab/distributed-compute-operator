@@ -14,7 +14,7 @@ func NewServiceAccount(rc *dcv1alpha1.RayCluster) *corev1.ServiceAccount {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      InstanceObjectName(rc.Name, ComponentNone),
 			Namespace: rc.Namespace,
-			Labels:    MetadataLabels(rc),
+			Labels:    AddGlobalLabels(MetadataLabels(rc), rc.Spec.GlobalLabels),
 		},
 		AutomountServiceAccountToken: pointer.BoolPtr(false),
 	}

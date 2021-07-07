@@ -571,6 +571,13 @@ func (in *RayClusterSpec) DeepCopyInto(out *RayClusterSpec) {
 		*out = make([]v1.LocalObjectReference, len(*in))
 		copy(*out, *in)
 	}
+	if in.GlobalLabels != nil {
+		in, out := &in.GlobalLabels, &out.GlobalLabels
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	if in.Autoscaling != nil {
 		in, out := &in.Autoscaling, &out.Autoscaling
 		*out = new(Autoscaling)

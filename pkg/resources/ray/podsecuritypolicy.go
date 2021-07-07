@@ -22,7 +22,7 @@ func NewPodSecurityPolicyRBAC(rc *dcv1alpha1.RayCluster) (*rbacv1.Role, *rbacv1.
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: rc.Namespace,
-			Labels:    MetadataLabels(rc),
+			Labels:    AddGlobalLabels(MetadataLabels(rc), rc.Spec.GlobalLabels),
 		},
 		Rules: []rbacv1.PolicyRule{
 			{
@@ -38,7 +38,7 @@ func NewPodSecurityPolicyRBAC(rc *dcv1alpha1.RayCluster) (*rbacv1.Role, *rbacv1.
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: rc.Namespace,
-			Labels:    MetadataLabels(rc),
+			Labels:    AddGlobalLabels(MetadataLabels(rc), rc.Spec.GlobalLabels),
 		},
 		RoleRef: rbacv1.RoleRef{
 			APIGroup: rbacv1.GroupName,

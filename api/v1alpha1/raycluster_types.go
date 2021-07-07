@@ -82,6 +82,8 @@ type RayClusterSpec struct {
 	// registries used to pull images.
 	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 
+	GlobalLabels map[string]string `json:"globalLabels,omitempty"`
+
 	// Autoscaling parameters used to scale up/down ray worker nodes.
 	Autoscaling *Autoscaling `json:"autoscaling,omitempty"`
 
