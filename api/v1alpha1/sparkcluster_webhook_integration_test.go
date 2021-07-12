@@ -54,8 +54,8 @@ var _ = Describe("SparkCluster", func() {
 				"worker web port should equal 8081",
 			)
 			Expect(sc.Spec.TCPMasterWebPort).To(
-				BeNumerically("==", 8080),
-				"master web port should equal 8080",
+				BeNumerically("==", 80),
+				"master web port should equal 80",
 			)
 			Expect(sc.Spec.DashboardPort).To(
 				BeNumerically("==", 8080),

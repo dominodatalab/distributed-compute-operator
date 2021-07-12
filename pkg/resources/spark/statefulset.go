@@ -33,7 +33,7 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 			{
 				Name:          "http",
 				Protocol:      corev1.ProtocolTCP,
-				ContainerPort: sc.Spec.TCPMasterWebPort,
+				ContainerPort: sc.Spec.DashboardPort,
 			},
 			{
 				Name:          "cluster",
@@ -173,7 +173,7 @@ func getPodSpec(sc *dcv1alpha1.SparkCluster,
 
 	switch comp {
 	case ComponentMaster:
-		port = intstr.FromInt(int(sc.Spec.TCPMasterWebPort))
+		port = intstr.FromInt(int(sc.Spec.DashboardPort))
 	case ComponentWorker:
 		port = intstr.FromInt(int(sc.Spec.TCPWorkerWebPort))
 	case ComponentNone:
