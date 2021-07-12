@@ -84,9 +84,9 @@ func TestNewHeadlessService(t *testing.T) {
 				"app.kubernetes.io/instance": "test-id",
 			},
 			Ports: []corev1.ServicePort{
-				// TODO enable these ports for Istio support
+				// these ports are exposed for Istio support
 				{
-					Name:       "cluster",
+					Name:       "tcp-cluster",
 					Port:       7077,
 					TargetPort: intstr.FromString("cluster"),
 				},
