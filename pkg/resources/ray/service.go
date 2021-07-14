@@ -34,7 +34,7 @@ func NewClientService(rc *dcv1alpha1.RayCluster) *corev1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      InstanceObjectName(rc.Name, "client"),
 			Namespace: rc.Namespace,
-			Labels:    MetadataLabelsWithComponent(rc, ComponentHead),
+			Labels:    AddGlobalLabels(MetadataLabelsWithComponent(rc, ComponentHead), rc.Spec.GlobalLabels),
 		},
 		Spec: corev1.ServiceSpec{
 			Ports:    ports,
@@ -71,7 +71,7 @@ func NewHeadlessHeadService(rc *dcv1alpha1.RayCluster) *corev1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      HeadlessHeadServiceName(rc.Name),
 			Namespace: rc.Namespace,
-			Labels:    MetadataLabelsWithComponent(rc, ComponentHead),
+			Labels:    AddGlobalLabels(MetadataLabelsWithComponent(rc, ComponentHead), rc.Spec.GlobalLabels),
 		},
 		Spec: corev1.ServiceSpec{
 			Ports:     ports,
@@ -88,7 +88,7 @@ func NewHeadlessWorkerService(rc *dcv1alpha1.RayCluster) *corev1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      HeadlessWorkerServiceName(rc.Name),
 			Namespace: rc.Namespace,
-			Labels:    MetadataLabelsWithComponent(rc, ComponentWorker),
+			Labels:    AddGlobalLabels(MetadataLabelsWithComponent(rc, ComponentWorker), rc.Spec.GlobalLabels),
 		},
 		Spec: corev1.ServiceSpec{
 			Ports:     workerPorts(rc),

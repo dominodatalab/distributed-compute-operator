@@ -45,15 +45,9 @@ func (s *horizontalPodAutoscalerDS) HorizontalPodAutoscaler() *autoscalingv2beta
 		}
 	}
 
-	hpa.Spec = autoscalingv2beta2.HorizontalPodAutoscalerSpec{
-		ScaleTargetRef: autoscalingv2beta2.CrossVersionObjectReference{
-			Kind:       s.dc.Kind,
-			Name:       s.dc.Name,
-			APIVersion: s.dc.APIVersion,
-		},
-		MinReplicas: s.dc.Spec.Autoscaling.MinReplicas,
-		MaxReplicas: s.dc.Spec.Autoscaling.MaxReplicas,
-		Metrics: []autoscalingv2beta2.MetricSpec{
+	var metrics []autoscalingv2beta2.MetricSpec
+	if as.AverageCPUUtilization != nil {
+		metrics = []autoscalingv2beta2.MetricSpec{
 			{
 				Type: autoscalingv2beta2.ResourceMetricSourceType,
 				Resource: &autoscalingv2beta2.ResourceMetricSource{
@@ -64,8 +58,19 @@ func (s *horizontalPodAutoscalerDS) HorizontalPodAutoscaler() *autoscalingv2beta
 					},
 				},
 			},
+		}
+	}
+
+	hpa.Spec = autoscalingv2beta2.HorizontalPodAutoscalerSpec{
+		ScaleTargetRef: autoscalingv2beta2.CrossVersionObjectReference{
+			Kind:       s.dc.Kind,
+			Name:       s.dc.Name,
+			APIVersion: s.dc.APIVersion,
 		},
-		Behavior: behavior,
+		MinReplicas: s.dc.Spec.Autoscaling.MinReplicas,
+		MaxReplicas: s.dc.Spec.Autoscaling.MaxReplicas,
+		Metrics:     metrics,
+		Behavior:    behavior,
 	}
 
 	return hpa

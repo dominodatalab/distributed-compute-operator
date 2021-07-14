@@ -27,7 +27,7 @@ func NewClusterNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.NetworkPol
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      InstanceObjectName(rc.Name, Component("cluster")),
 			Namespace: rc.Namespace,
-			Labels:    MetadataLabels(rc),
+			Labels:    AddGlobalLabels(MetadataLabels(rc), rc.Spec.GlobalLabels),
 			Annotations: map[string]string{
 				resources.DescriptionAnnotationKey: descriptionCluster,
 			},
@@ -84,7 +84,7 @@ func headNetworkPolicy(rc *dcv1alpha1.RayCluster, p int32, l map[string]string, 
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      InstanceObjectName(rc.Name, c),
 			Namespace: rc.Namespace,
-			Labels:    MetadataLabelsWithComponent(rc, ComponentHead),
+			Labels:    AddGlobalLabels(MetadataLabelsWithComponent(rc, ComponentHead), rc.Spec.GlobalLabels),
 			Annotations: map[string]string{
 				resources.DescriptionAnnotationKey: desc,
 			},

@@ -251,7 +251,7 @@ func (p *headProcessor) processPorts() []corev1.ContainerPort {
 }
 
 func (p *headProcessor) processLabels() map[string]string {
-	return processLabels(p.rc, ComponentHead, p.rc.Spec.Head.RayClusterNode.Labels)
+	return processLabels(p.rc, ComponentHead, AddGlobalLabels(p.rc.Spec.Head.RayClusterNode.Labels, p.rc.Spec.GlobalLabels))
 }
 
 func (p *headProcessor) processServiceName() string {
@@ -302,7 +302,7 @@ func (p *workerProcessor) processPorts() []corev1.ContainerPort {
 }
 
 func (p *workerProcessor) processLabels() map[string]string {
-	return processLabels(p.rc, ComponentWorker, p.rc.Spec.Worker.RayClusterNode.Labels)
+	return processLabels(p.rc, ComponentWorker, AddGlobalLabels(p.rc.Spec.Worker.RayClusterNode.Labels, p.rc.Spec.GlobalLabels))
 }
 
 func (p *workerProcessor) processServiceName() string {
