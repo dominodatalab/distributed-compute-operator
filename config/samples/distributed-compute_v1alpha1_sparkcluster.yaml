@@ -60,7 +60,7 @@ spec:
   # KeyTab Config for Kerberos
   #  kerberosKeytab:
   #    mountPath: /tmp/keytab.conf
-  #    configs: dGVzdHZhbHVlCg==
+  #    contents: dGVzdHZhbHVlCg==
 
   # bind cluster to existing psp
   # podSecurityPolicy: privileged
