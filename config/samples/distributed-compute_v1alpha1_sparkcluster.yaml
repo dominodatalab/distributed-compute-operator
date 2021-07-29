@@ -59,7 +59,7 @@ spec:
 
   # KeyTab Config for Kerberos
   #  kerberosKeytab:
-  #    path: /tmp/keytab.conf
+  #    mountPath: /tmp/keytab.conf
   #    configs: dGVzdHZhbHVlCg==
 
   # bind cluster to existing psp
