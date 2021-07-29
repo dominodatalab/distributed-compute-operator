@@ -45,13 +45,6 @@ type SparkClusterNode struct {
 	FrameworkConfig *FrameworkConfig `json:"frameworkConfig,omitempty"`
 }
 
-type KeyTabConfig struct {
-	// Path at which to mount the configmap
-	Path string `json:"path"`
-	// KeyTab contains the actual KeyTab configuration
-	KeyTab []byte `json:"configs"`
-}
-
 type FrameworkConfig struct {
 	// Configs includes the configuration values to include in the configmap
 	Configs map[string]string `json:"configs"`
