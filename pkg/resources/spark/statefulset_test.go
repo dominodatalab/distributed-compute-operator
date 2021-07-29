@@ -1,7 +1,6 @@
 package spark
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -580,27 +579,13 @@ func testCommonFeatures(t *testing.T, comp Component) {
 
 	t.Run("keytab_config", func(t *testing.T) {
 		rc := sparkClusterFixture()
-		kcMaster := dcv1alpha1.KeyTabConfig{
-			Path:   "/test/master/path",
-			KeyTab: []byte{'m', 'a', 's', 't', 'e', 'r'},
+
+		keyTab := dcv1alpha1.KerberosKeytabConfig{
+			MountPath: "/test/path",
+			Contents:  []byte{'t', 'e', 's', 't', 'e', 'r'},
 		}
 
-		kcWorker := dcv1alpha1.KeyTabConfig{
-			Path:   "/test/worker/path",
-			KeyTab: []byte{'w', 'o', 'r', 'k', 'e', 'r'},
-		}
-
-		rc.Spec.Master = dcv1alpha1.SparkClusterMaster{
-			SparkClusterNode: dcv1alpha1.SparkClusterNode{
-				KeyTabConfig: &kcMaster,
-			},
-		}
-		rc.Spec.Worker = dcv1alpha1.SparkClusterWorker{
-			SparkClusterNode: dcv1alpha1.SparkClusterNode{
-				KeyTabConfig: &kcWorker,
-			},
-			Replicas: pointer.Int32Ptr(2),
-		}
+		rc.Spec.KerberosKeytab = &keyTab
 
 		expectedVolumes := []corev1.Volume{
 			{
@@ -619,7 +604,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			{
 				Name:      "keytab",
 				ReadOnly:  false,
-				MountPath: fmt.Sprintf("/test/%s/path", comp),
+				MountPath: "/test/path",
 				SubPath:   string(comp),
 			},
 		}
