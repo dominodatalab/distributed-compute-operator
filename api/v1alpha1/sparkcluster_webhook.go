@@ -252,7 +252,7 @@ func (sc *SparkCluster) validateFrameworkConfigs() field.ErrorList {
 func (sc *SparkCluster) validateKeyTabConfigs() field.ErrorList {
 	var errs field.ErrorList
 
-	if err := sc.validateKeyTabConfig(sc.Spec.KerberosKeytab, "master"); err != nil {
+	if err := sc.validateKeyTabConfig(sc.Spec.KerberosKeytab); err != nil {
 		errs = append(errs, err...)
 	}
 
@@ -277,7 +277,7 @@ func (sc *SparkCluster) validateFrameworkConfig(config *FrameworkConfig, comp st
 	return errs
 }
 
-func (sc *SparkCluster) validateKeyTabConfig(config *KerberosKeytabConfig, comp string) field.ErrorList {
+func (sc *SparkCluster) validateKeyTabConfig(config *KerberosKeytabConfig) field.ErrorList {
 	var errs field.ErrorList
 	if config == nil {
 		return nil
@@ -285,7 +285,7 @@ func (sc *SparkCluster) validateKeyTabConfig(config *KerberosKeytabConfig, comp 
 
 	if config.MountPath == "" {
 		errs = append(errs, field.Invalid(
-			field.NewPath("spec", comp, "kerberosKeytab", "mountPath"),
+			field.NewPath("spec", "kerberosKeytab", "mountPath"),
 			config.MountPath,
 			"should be non-empty",
 		))
@@ -293,7 +293,7 @@ func (sc *SparkCluster) validateKeyTabConfig(config *KerberosKeytabConfig, comp 
 
 	if len(config.Contents) == 0 {
 		errs = append(errs, field.Invalid(
-			field.NewPath("spec", comp, "kerberosKeytab", "contents"),
+			field.NewPath("spec", "kerberosKeytab", "contents"),
 			config.Contents,
 			"should have at least one item",
 		))
