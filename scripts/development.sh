@@ -30,7 +30,8 @@ function dco::minikube_setup() {
       --driver=hyperkit \
       --addons=pod-security-policy \
       --extra-config=apiserver.enable-admission-plugins=PodSecurityPolicy \
-      --cni=calico
+      --cni=calico \
+      --network-plugin=cni
   elif minikube status --profile="$MINIKUBE_PROFILE" | grep -q 'host: Stopped'; then
     dco::_info "Restarting minikube cluster"
     minikube start --profile="$MINIKUBE_PROFILE"
@@ -58,9 +59,9 @@ function dco::minikube_setup() {
     dco::_info "Creating metrics-server helm release"
     helm install metrics-server bitnami/metrics-server \
     --namespace=kube-system \
-    --version=v5.6.0 \
+    --version=v5.9.2 \
     --set=apiService.create=true \
-    --set=extraArgs.kubelet-preferred-address-types=InternalIP,extraArgs.kubelet-insecure-tls=true,extraArgs.metric-resolution=5s \
+    --set=extraArgs.kubelet-preferred-address-types=InternalIP,extraArgs.kubelet-insecure-tls=true,extraArgs.metric-resolution=10s \
     --wait
   else
     dco::_info "Found metrics-server helm release"
@@ -70,7 +71,7 @@ function dco::minikube_setup() {
     dco::_info "Creating cert-manager helm release"
     helm install cert-manager jetstack/cert-manager \
     --namespace=cert-manager \
-    --version=v1.2.0 \
+    --version=v1.4.2 \
     --set=installCRDs=true \
     --create-namespace \
     --wait
@@ -120,7 +121,8 @@ function dco::helm_install() {
     --set image.registry="" \
     --set image.repository="$IMAGE_NAME" \
     --set image.tag="$latest_tag" \
-    --set config.logDevelopmentMode=true
+    --set config.logDevelopmentMode=true \
+    --set istio.enabled=true
 }
 
 function dco::display_usage() {

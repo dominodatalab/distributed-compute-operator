@@ -60,25 +60,25 @@ func NewHeadlessService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 		Spec: corev1.ServiceSpec{
 			ClusterIP: corev1.ClusterIPNone,
 			Selector:  SelectorLabels(sc),
-			Ports: []corev1.ServicePort{
-				// these ports are exposed for Istio support
-				{
-					Name:       "tcp-cluster",
-					Port:       sc.Spec.ClusterPort,
-					TargetPort: intstr.FromString("cluster"),
-				},
-				{
-					Name:       "tcp-master-webport",
-					Port:       sc.Spec.TCPMasterWebPort,
-					TargetPort: intstr.FromString("http"),
-					Protocol:   corev1.ProtocolTCP,
-				}, {
-					Name:       "tcp-worker-webport",
-					Port:       sc.Spec.TCPWorkerWebPort,
-					TargetPort: intstr.FromString("http"),
-					Protocol:   corev1.ProtocolTCP,
-				},
-			},
+			Ports:     []corev1.ServicePort{},
+			// TODO enable these ports for Istio support
+			// {
+			//	Name:       "cluster",
+			//	Port:       sc.Spec.ClusterPort,
+			//	TargetPort: intstr.FromString("cluster"),
+			// },
+			// {
+			//	Name:       "tcp-master-webport",
+			//	Port:       sc.Spec.TCPMasterWebPort,
+			//	TargetPort: intstr.FromString("http"),
+			//	Protocol:   corev1.ProtocolTCP,
+			// }, {
+			//	Name:       "tcp-worker-webport",
+			//	Port:       sc.Spec.TCPWorkerWebPort,
+			//	TargetPort: intstr.FromString("http"),
+			//	Protocol:   corev1.ProtocolTCP,
+			// },
+			// },
 		},
 	}
 }
@@ -104,17 +104,17 @@ func NewSparkDriverService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 					Protocol:   corev1.ProtocolTCP,
 					TargetPort: targetPort,
 				},
-				// these ports are exposed for Istio support
-				{
-					Name:     sc.Spec.Driver.DriverPortName,
-					Port:     sc.Spec.Driver.DriverPort,
-					Protocol: corev1.ProtocolTCP,
-				},
-				{
-					Name:     sc.Spec.Driver.DriverBlockManagerPortName,
-					Port:     sc.Spec.Driver.DriverBlockManagerPort,
-					Protocol: corev1.ProtocolTCP,
-				},
+				// TODO enable these ports for Istio support
+				// {
+				//	Name:     sc.Spec.Driver.DriverBlockManagerPortName,
+				//	Port:     sc.Spec.Driver.DriverBlockManagerPort,
+				//	Protocol: corev1.ProtocolTCP,
+				// },
+				// {
+				//	Name:     sc.Spec.Driver.DriverPortName,
+				//	Port:     sc.Spec.Driver.DriverPort,
+				//	Protocol: corev1.ProtocolTCP,
+				// },
 			},
 		},
 	}
