@@ -52,7 +52,7 @@ func TestNewMasterService(t *testing.T) {
 		expected.Spec.Ports = append(expected.Spec.Ports, corev1.ServicePort{
 			Name:       "tcp",
 			Protocol:   corev1.ProtocolTCP,
-			Port:       80,
+			Port:       8080,
 			TargetPort: intstr.FromString("http"),
 		})
 
@@ -62,7 +62,7 @@ func TestNewMasterService(t *testing.T) {
 
 func TestNewHeadlessService(t *testing.T) {
 	rc := sparkClusterFixture()
-	rc.Spec.TCPMasterWebPort = 80
+	rc.Spec.TCPMasterWebPort = 8080
 	svc := NewHeadlessService(rc)
 
 	expected := &corev1.Service{
@@ -86,13 +86,13 @@ func TestNewHeadlessService(t *testing.T) {
 			Ports: []corev1.ServicePort{
 				// these ports are exposed for Istio support
 				{
-					Name:       "tcp-cluster",
+					Name:       "cluster",
 					Port:       7077,
 					TargetPort: intstr.FromString("cluster"),
 				},
 				{
 					Name:       "tcp-master-webport",
-					Port:       80,
+					Port:       8080,
 					TargetPort: intstr.FromString("http"),
 					Protocol:   corev1.ProtocolTCP,
 				}, {

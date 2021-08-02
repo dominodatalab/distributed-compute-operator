@@ -27,7 +27,7 @@ var (
 	sparkDefaultDashboardServicePort        int32 = 80
 	sparkDefaultClusterPort                 int32 = 7077
 	sparkDefaultDashboardPort               int32 = 8080
-	sparkDefaultMasterWebPort               int32 = 80
+	sparkDefaultMasterWebPort               int32 = 8080
 	sparkDefaultWorkerWebPort               int32 = 8081
 	sparkDefaultDriverUIPort                int32 = 4040
 	sparkDefaultDriverPort                  int32 = 4041
