@@ -252,7 +252,7 @@ func (sc *SparkCluster) validateFrameworkConfigs() field.ErrorList {
 func (sc *SparkCluster) validateKeyTabConfigs() field.ErrorList {
 	var errs field.ErrorList
 
-	if err := sc.validateKeyTabConfig(sc.Spec.KerberosKeytab); err != nil {
+	if err := validateKerberosKeytab(sc.Spec.KerberosKeytab); err != nil {
 		errs = append(errs, err...)
 	}
 
@@ -270,31 +270,6 @@ func (sc *SparkCluster) validateFrameworkConfig(config *FrameworkConfig, comp st
 		errs = append(errs, field.Invalid(
 			field.NewPath("spec", comp, "frameworkConfig", "configs"),
 			config.Configs,
-			"should have at least one item",
-		))
-	}
-
-	return errs
-}
-
-func (sc *SparkCluster) validateKeyTabConfig(config *KerberosKeytabConfig) field.ErrorList {
-	var errs field.ErrorList
-	if config == nil {
-		return nil
-	}
-
-	if config.MountPath == "" {
-		errs = append(errs, field.Invalid(
-			field.NewPath("spec", "kerberosKeytab", "mountPath"),
-			config.MountPath,
-			"should be non-empty",
-		))
-	}
-
-	if len(config.Contents) == 0 {
-		errs = append(errs, field.Invalid(
-			field.NewPath("spec", "kerberosKeytab", "contents"),
-			config.Contents,
 			"should have at least one item",
 		))
 	}

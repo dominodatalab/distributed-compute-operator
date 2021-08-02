@@ -38,8 +38,7 @@ func NewKeyTabConfigMap(sc *dcv1alpha1.SparkCluster) *corev1.ConfigMap {
 	binaryData := map[string][]byte{}
 
 	if sc.Spec.KerberosKeytab != nil {
-		binaryData[string(ComponentMaster)] = sc.Spec.KerberosKeytab.Contents
-		binaryData[string(ComponentWorker)] = sc.Spec.KerberosKeytab.Contents
+		binaryData["keytab"] = sc.Spec.KerberosKeytab.Contents
 	}
 
 	if len(binaryData) == 0 {

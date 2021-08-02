@@ -117,8 +117,7 @@ func TestNewKeyTabConfigMap(t *testing.T) {
 				},
 			},
 			BinaryData: map[string][]byte{
-				"master": {'t', 'e', 's', 't', 'e', 'r'},
-				"worker": {'t', 'e', 's', 't', 'e', 'r'},
+				"keytab": {'t', 'e', 's', 't', 'e', 'r'},
 			},
 		}
 		assert.Equal(t, expected, cm)
