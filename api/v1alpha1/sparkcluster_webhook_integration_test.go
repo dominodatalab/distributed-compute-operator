@@ -368,9 +368,9 @@ var _ = Describe("SparkCluster", func() {
 		Context("keytab configs", func() {
 			It("rejects a config with only path set", func() {
 				sc := sparkFixture(testNS.Name)
-				sc.Spec.Worker.KeyTabConfig = &KeyTabConfig{
-					Path:   "test/path/",
-					KeyTab: nil,
+				sc.Spec.KerberosKeytab = &KerberosKeytabConfig{
+					MountPath: "test/path/",
+					Contents:  nil,
 				}
 
 				Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())
@@ -378,9 +378,9 @@ var _ = Describe("SparkCluster", func() {
 
 			It("rejects a config with only data set", func() {
 				sc := sparkFixture(testNS.Name)
-				sc.Spec.Worker.KeyTabConfig = &KeyTabConfig{
-					Path:   "",
-					KeyTab: []byte{'c', 'o', 'n', 'f', 'i', 'g'},
+				sc.Spec.KerberosKeytab = &KerberosKeytabConfig{
+					MountPath: "",
+					Contents:  []byte{'c', 'o', 'n', 'f', 'i', 'g'},
 				}
 
 				Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())

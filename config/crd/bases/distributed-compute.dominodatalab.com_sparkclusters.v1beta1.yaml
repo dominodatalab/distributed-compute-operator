@@ -240,6 +240,15 @@ spec:
                 peer authentication policy that takes precedence over a global and/or
                 namespace-wide policy.
               type: string
+            kerberosKeytab:
+              description: KerberosKeytab configures the Kerberos Keytab for Spark
+              properties:
+                contents:
+                  format: byte
+                  type: string
+                mountPath:
+                  type: string
+              type: object
             master:
               description: Master node configuration parameters.
               properties:
@@ -2246,20 +2255,6 @@ spec:
                     - name
                     type: object
                   type: array
-                keyTabConfig:
-                  description: KeyTabConfig configures the Kerberos Keytab for Spark
-                  properties:
-                    configs:
-                      description: KeyTab contains the actual KeyTab configuration
-                      format: byte
-                      type: string
-                    path:
-                      description: Path at which to mount the configmap
-                      type: string
-                  required:
-                  - configs
-                  - path
-                  type: object
                 labels:
                   additionalProperties:
                     type: string
@@ -6201,20 +6196,6 @@ spec:
                     - name
                     type: object
                   type: array
-                keyTabConfig:
-                  description: KeyTabConfig configures the Kerberos Keytab for Spark
-                  properties:
-                    configs:
-                      description: KeyTab contains the actual KeyTab configuration
-                      format: byte
-                      type: string
-                    path:
-                      description: Path at which to mount the configmap
-                      type: string
-                  required:
-                  - configs
-                  - path
-                  type: object
                 labels:
                   additionalProperties:
                     type: string

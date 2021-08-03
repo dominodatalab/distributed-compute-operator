@@ -56,6 +56,11 @@ spec:
     clientServerLabels:
       np: client
 
+  # KeyTab Config for Kerberos
+  #  kerberosKeytab:
+  #    mountPath: /tmp/keytab.conf
+  #    contents: dGVzdHZhbHVlCg==
+
   # bind cluster to existing psp
   # podSecurityPolicy: privileged
 
@@ -163,9 +168,6 @@ spec:
   #        spark.ui.reverseProxy: "true"
   #        spark.ui.reverseProxyUrl: "/master/proxy/base"
   #        spark.ui.proxyBase: "/master/proxy/url"
-  #    keyTabConfig:
-  #      path: /tmp/keytab.conf
-  #      configs: dGVzdHZhbHVlCg==
 
 
   ## worker configuration parameters

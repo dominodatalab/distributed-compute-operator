@@ -43,16 +43,6 @@ type SparkClusterNode struct {
 	// For spark this means we'll generate a spark-defaults.conf configmap
 	// and mount it at the requested location
 	FrameworkConfig *FrameworkConfig `json:"frameworkConfig,omitempty"`
-
-	// KeyTabConfig configures the Kerberos Keytab for Spark
-	KeyTabConfig *KeyTabConfig `json:"keyTabConfig,omitempty"`
-}
-
-type KeyTabConfig struct {
-	// Path at which to mount the configmap
-	Path string `json:"path"`
-	// KeyTab contains the actual KeyTab configuration
-	KeyTab []byte `json:"configs"`
 }
 
 type FrameworkConfig struct {
@@ -134,6 +124,9 @@ type SparkClusterSpec struct {
 
 	// Autoscaling parameters used to scale up/down spark worker nodes.
 	Autoscaling *Autoscaling `json:"autoscaling,omitempty"`
+
+	// KerberosKeytab configures the Kerberos Keytab for Spark
+	KerberosKeytab *KerberosKeytabConfig `json:"kerberosKeytab,omitempty"`
 }
 
 // SparkClusterDriver defines the configuration for the driver service
