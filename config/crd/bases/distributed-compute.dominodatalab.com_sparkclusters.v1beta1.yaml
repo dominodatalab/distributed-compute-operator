@@ -96,11 +96,6 @@ spec:
               description: DashboardPort is the port used by the dashboard server.
               format: int32
               type: integer
-            dashboardServicePort:
-              description: DashboardServicePort is the port exposed by the master
-                service
-              format: int32
-              type: integer
             enableDashboard:
               description: EnableDashboard starts the dashboard web UI.
               type: boolean

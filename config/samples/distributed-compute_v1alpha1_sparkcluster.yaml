@@ -29,7 +29,6 @@ spec:
   # clientServerPort: 10001
 
   # enable dashboard ui and set port
-  dashboardServicePort: 80
   dashboardPort: 8080
   enableDashboard: true
 

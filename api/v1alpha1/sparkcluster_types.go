@@ -105,9 +105,6 @@ type SparkClusterSpec struct {
 	// DashboardPort is the port used by the dashboard server.
 	DashboardPort int32 `json:"dashboardPort,omitempty"`
 
-	// DashboardServicePort is the port exposed by the master service
-	DashboardServicePort int32 `json:"dashboardServicePort,omitempty"`
-
 	// EnableDashboard starts the dashboard web UI.
 	EnableDashboard *bool `json:"enableDashboard,omitempty"`
 
