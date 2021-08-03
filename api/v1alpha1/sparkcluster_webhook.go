@@ -24,7 +24,6 @@ const (
 )
 
 var (
-	sparkDefaultDashboardServicePort        int32 = 80
 	sparkDefaultClusterPort                 int32 = 7077
 	sparkDefaultDashboardPort               int32 = 8080
 	sparkDefaultMasterWebPort               int32 = 8080
@@ -82,10 +81,6 @@ func (sc *SparkCluster) Default() {
 	if sc.Spec.DashboardPort == 0 {
 		log.Info("setting default dashboard port", "value", sparkDefaultDashboardPort)
 		sc.Spec.DashboardPort = sparkDefaultDashboardPort
-	}
-	if sc.Spec.DashboardServicePort == 0 {
-		log.Info("setting default dashboard service port", "value", sparkDefaultDashboardServicePort)
-		sc.Spec.DashboardServicePort = sparkDefaultDashboardServicePort
 	}
 	if sc.Spec.EnableDashboard == nil {
 		log.Info("setting enable dashboard flag", "value", *sparkDefaultEnableDashboard)
@@ -252,11 +247,7 @@ func (sc *SparkCluster) validateFrameworkConfigs() field.ErrorList {
 func (sc *SparkCluster) validateKeyTabConfigs() field.ErrorList {
 	var errs field.ErrorList
 
-	if err := sc.validateKeyTabConfig(sc.Spec.Master.KeyTabConfig, "master"); err != nil {
-		errs = append(errs, err...)
-	}
-
-	if err := sc.validateKeyTabConfig(sc.Spec.Worker.KeyTabConfig, "worker"); err != nil {
+	if err := validateKerberosKeytab(sc.Spec.KerberosKeytab); err != nil {
 		errs = append(errs, err...)
 	}
 
@@ -274,31 +265,6 @@ func (sc *SparkCluster) validateFrameworkConfig(config *FrameworkConfig, comp st
 		errs = append(errs, field.Invalid(
 			field.NewPath("spec", comp, "frameworkConfig", "configs"),
 			config.Configs,
-			"should have at least one item",
-		))
-	}
-
-	return errs
-}
-
-func (sc *SparkCluster) validateKeyTabConfig(config *KeyTabConfig, comp string) field.ErrorList {
-	var errs field.ErrorList
-	if config == nil {
-		return nil
-	}
-
-	if config.Path == "" {
-		errs = append(errs, field.Invalid(
-			field.NewPath("spec", comp, "keyTabConfig", "path"),
-			config.Path,
-			"should be non-empty",
-		))
-	}
-
-	if len(config.KeyTab) == 0 {
-		errs = append(errs, field.Invalid(
-			field.NewPath("spec", comp, "keyTabConfig", "keytab"),
-			config.KeyTab,
 			"should have at least one item",
 		))
 	}
@@ -417,9 +383,6 @@ func (sc *SparkCluster) validatePorts() field.ErrorList {
 		errs = append(errs, err)
 	}
 	if err := sc.validatePort(sc.Spec.DashboardPort, field.NewPath("spec", "dashboardPort")); err != nil {
-		errs = append(errs, err)
-	}
-	if err := sc.validatePort(sc.Spec.DashboardServicePort, field.NewPath("spec", "dashboardServicePort")); err != nil {
 		errs = append(errs, err)
 	}
 

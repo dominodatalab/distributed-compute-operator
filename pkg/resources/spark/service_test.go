@@ -52,7 +52,7 @@ func TestNewMasterService(t *testing.T) {
 		expected.Spec.Ports = append(expected.Spec.Ports, corev1.ServicePort{
 			Name:       "tcp",
 			Protocol:   corev1.ProtocolTCP,
-			Port:       80,
+			Port:       8080,
 			TargetPort: intstr.FromString("http"),
 		})
 

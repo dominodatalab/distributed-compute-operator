@@ -61,10 +61,6 @@ var _ = Describe("SparkCluster", func() {
 				BeNumerically("==", 8080),
 				"dashboard port should equal 8080",
 			)
-			Expect(sc.Spec.DashboardServicePort).To(
-				BeNumerically("==", 80),
-				"port should equal 80",
-			)
 			Expect(sc.Spec.EnableDashboard).To(
 				PointTo(Equal(true)),
 				"enable dashboard should point to true",
@@ -231,9 +227,6 @@ var _ = Describe("SparkCluster", func() {
 			Entry("rejects an invalid dashboard port",
 				func(sc *SparkCluster, val int32) { sc.Spec.DashboardPort = val },
 			),
-			Entry("rejects an invalid dashboard service port",
-				func(sc *SparkCluster, val int32) { sc.Spec.DashboardServicePort = val },
-			),
 		)
 
 		DescribeTable("With mutual tls mode set",
@@ -375,9 +368,9 @@ var _ = Describe("SparkCluster", func() {
 		Context("keytab configs", func() {
 			It("rejects a config with only path set", func() {
 				sc := sparkFixture(testNS.Name)
-				sc.Spec.Worker.KeyTabConfig = &KeyTabConfig{
-					Path:   "test/path/",
-					KeyTab: nil,
+				sc.Spec.KerberosKeytab = &KerberosKeytabConfig{
+					MountPath: "test/path/",
+					Contents:  nil,
 				}
 
 				Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())
@@ -385,9 +378,9 @@ var _ = Describe("SparkCluster", func() {
 
 			It("rejects a config with only data set", func() {
 				sc := sparkFixture(testNS.Name)
-				sc.Spec.Worker.KeyTabConfig = &KeyTabConfig{
-					Path:   "",
-					KeyTab: []byte{'c', 'o', 'n', 'f', 'i', 'g'},
+				sc.Spec.KerberosKeytab = &KerberosKeytabConfig{
+					MountPath: "",
+					Contents:  []byte{'c', 'o', 'n', 'f', 'i', 'g'},
 				}
 
 				Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())

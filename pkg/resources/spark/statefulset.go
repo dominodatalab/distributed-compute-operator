@@ -72,9 +72,9 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 		volumes = append(volumes, cmVolume)
 		volumeMounts = append(volumeMounts, cmVolumeMount)
 	}
-	if nodeAttrs.KeyTabConfig != nil {
+	if sc.Spec.KerberosKeytab != nil {
 		cmVolume := getConfigMapVolume("keytab", KeyTabConfigMapName(sc.Name, ComponentNone))
-		cmVolumeMount := getConfigMapVolumeMount("keytab", nodeAttrs.KeyTabConfig.Path, string(comp))
+		cmVolumeMount := getConfigMapVolumeMount("keytab", sc.Spec.KerberosKeytab.MountPath, string(comp))
 
 		volumes = append(volumes, cmVolume)
 		volumeMounts = append(volumeMounts, cmVolumeMount)

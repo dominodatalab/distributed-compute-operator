@@ -185,16 +185,16 @@ func createAndBasicTest(ctx context.Context, name string) {
 				ExternalPodLabels:     map[string]string{"app.kubernetes.io/instance": "spark-driver"},
 				ExternalPolicyEnabled: pointer.BoolPtr(true),
 			},
+			KerberosKeytab: &dcv1alpha1.KerberosKeytabConfig{
+				MountPath: "/etc/security/keytabs/kerberos.conf",
+				Contents:  []byte{'t', 'e', 's', 't', 'e', 'r'},
+			},
 			Master: dcv1alpha1.SparkClusterMaster{
 				SparkClusterNode: dcv1alpha1.SparkClusterNode{
 					FrameworkConfig: &dcv1alpha1.FrameworkConfig{
 						Configs: map[string]string{
 							"m1": "v1",
 						},
-					},
-					KeyTabConfig: &dcv1alpha1.KeyTabConfig{
-						Path:   "/etc/security/keytabs/kerberos.conf",
-						KeyTab: []byte{'m', 'a', 's', 't', 'e', 'r'},
 					},
 				},
 			},
@@ -204,10 +204,6 @@ func createAndBasicTest(ctx context.Context, name string) {
 						Configs: map[string]string{
 							"w1": "v1",
 						},
-					},
-					KeyTabConfig: &dcv1alpha1.KeyTabConfig{
-						Path:   "/etc/security/keytabs/kerberos.conf",
-						KeyTab: []byte{'w', 'o', 'r', 'k', 'e', 'r'},
 					},
 				},
 				Replicas: pointer.Int32Ptr(1),
