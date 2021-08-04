@@ -2,7 +2,7 @@
 #
 # A collection of functions to aid with development efforts.
 
-set -eo pipefail
+set -euo pipefail
 
 MINIKUBE_PROFILE=${MINIKUBE_PROFILE:-"distributed-compute-operator"}
 MINIKUBE_CPUS=${MINIKUBE_CPUS:-"6"}
