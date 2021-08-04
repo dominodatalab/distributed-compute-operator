@@ -31,9 +31,9 @@ var (
 	sparkDefaultDriverUIPort                int32 = 4040
 	sparkDefaultDriverPort                  int32 = 4041
 	sparkDefaultDriverBlockManagerPort      int32 = 4042
-	sparkDefaultDriverBlockManagerPortName        = "spark-block-manager-port"
-	sparkDefaultDriverPortName                    = "spark-driver-port"
 	sparkDefaultDriverUIPortName                  = "spark-ui-port"
+	sparkDefaultDriverPortName                    = "spark-driver-port"
+	sparkDefaultDriverBlockManagerPortName        = "spark-block-manager-port"
 	sparkDefaultEnableNetworkPolicy               = pointer.BoolPtr(true)
 	sparkDefaultEnableExternalNetworkPolicy       = pointer.BoolPtr(false)
 	sparkDefaultWorkerReplicas                    = pointer.Int32Ptr(1)

@@ -60,9 +60,9 @@ function dco::minikube_setup() {
     dco::_info "Creating metrics-server helm release"
     helm install metrics-server bitnami/metrics-server \
     --namespace=kube-system \
-    --version=v5.6.0 \
+    --version=v5.9.2 \
     --set=apiService.create=true \
-    --set=extraArgs.kubelet-preferred-address-types=InternalIP,extraArgs.kubelet-insecure-tls=true,extraArgs.metric-resolution=5s \
+    --set=extraArgs.kubelet-preferred-address-types=InternalIP,extraArgs.kubelet-insecure-tls=true,extraArgs.metric-resolution=10s \
     --wait
   else
     dco::_info "Found metrics-server helm release"
@@ -72,7 +72,7 @@ function dco::minikube_setup() {
     dco::_info "Creating cert-manager helm release"
     helm install cert-manager jetstack/cert-manager \
     --namespace=cert-manager \
-    --version=v1.2.0 \
+    --version=v1.4.2 \
     --set=installCRDs=true \
     --create-namespace \
     --wait

@@ -62,6 +62,7 @@ func TestNewMasterService(t *testing.T) {
 
 func TestNewHeadlessService(t *testing.T) {
 	rc := sparkClusterFixture()
+	rc.Spec.TCPMasterWebPort = 8080
 	svc := NewHeadlessService(rc)
 
 	expected := &corev1.Service{
@@ -79,35 +80,34 @@ func TestNewHeadlessService(t *testing.T) {
 		Spec: corev1.ServiceSpec{
 			ClusterIP: "None",
 			Selector: map[string]string{
-				// "app.kubernetes.io/component": "worker",
 				"app.kubernetes.io/name":     "spark",
 				"app.kubernetes.io/instance": "test-id",
 			},
-			Ports: []corev1.ServicePort{},
-			// TODO enable these ports for Istio support
-			// {
-			//	Name:       "cluster",
-			//	Port:       7077,
-			//	TargetPort: intstr.FromString("cluster"),
-			// },
-			// {
-			//	Name:       "tcp-master-webport",
-			//	Port:       80,
-			//	TargetPort: intstr.FromString("http"),
-			//	Protocol:   corev1.ProtocolTCP,
-			// }, {
-			//	Name:       "tcp-worker-webport",
-			//	Port:       8081,
-			//	TargetPort: intstr.FromString("http"),
-			//	Protocol:   corev1.ProtocolTCP,
-			// },
-			// },
+			Ports: []corev1.ServicePort{
+				// these ports are exposed for Istio support
+				{
+					Name:       "cluster",
+					Port:       7077,
+					TargetPort: intstr.FromString("cluster"),
+				},
+				{
+					Name:       "tcp-master-webport",
+					Port:       8080,
+					TargetPort: intstr.FromString("http"),
+					Protocol:   corev1.ProtocolTCP,
+				}, {
+					Name:       "tcp-worker-webport",
+					Port:       8081,
+					TargetPort: intstr.FromString("http"),
+					Protocol:   corev1.ProtocolTCP,
+				},
+			},
 		},
 	}
 	assert.Equal(t, expected, svc)
 }
 
-func TestNewSparkDriverServiceService(t *testing.T) {
+func TestNewSparkDriverService(t *testing.T) {
 	const clusterName = "test-id"
 
 	rc := sparkClusterFixture()
@@ -115,6 +115,10 @@ func TestNewSparkDriverServiceService(t *testing.T) {
 	rc.Spec.Driver.ExecutionName = clusterName
 	rc.Spec.Driver.DriverUIPort = 4040
 	rc.Spec.Driver.DriverUIPortName = "spark-ui-port"
+	rc.Spec.Driver.DriverPort = 4041
+	rc.Spec.Driver.DriverPortName = "spark-driver-port"
+	rc.Spec.Driver.DriverBlockManagerPort = 4042
+	rc.Spec.Driver.DriverBlockManagerPortName = "spark-block-manager-port"
 
 	svc := NewSparkDriverService(rc)
 
@@ -141,6 +145,16 @@ func TestNewSparkDriverServiceService(t *testing.T) {
 					Port:       4040,
 					TargetPort: intstr.FromInt(4040),
 					Protocol:   corev1.ProtocolTCP,
+				},
+				{
+					Name:     "spark-driver-port",
+					Port:     4041,
+					Protocol: corev1.ProtocolTCP,
+				},
+				{
+					Name:     "spark-block-manager-port",
+					Port:     4042,
+					Protocol: corev1.ProtocolTCP,
 				},
 			},
 		},

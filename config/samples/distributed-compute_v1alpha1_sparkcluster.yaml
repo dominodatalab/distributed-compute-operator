@@ -104,7 +104,8 @@ spec:
   #    scaleDownStabilizationWindowSeconds: 10
 
   # override istio's peer authentication policy
-  # istioMutualTLSMode: PERMISSIVE
+  #  istioMutualTLSMode: PERMISSIVE
+
 
   ## head configuration parameters
 
