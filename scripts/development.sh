@@ -10,6 +10,7 @@ MINIKUBE_MEMORY=${MINIKUBE_MEMORY:-"16384"}
 MINIKUBE_DISK_SIZE=${MINIKUBE_DISK_SIZE:-"50000mb"}
 IMAGE_NAME=${IMAGE_NAME:-"distributed-compute-operator"}
 IMAGE_TAG_PREFIX=${IMAGE_TAG_PREFIX:-"dev-"}
+ISTIOCTL_VERSION=${ISTIOCTL_VERSION:-1.10.2}
 
 function dco::_info {
   echo -e "\033[0;32m[development-workflow]\033[0m INFO: $*"
@@ -125,6 +126,38 @@ function dco::helm_install() {
     --set istio.enabled=true
 }
 
+dco::install_istio() {
+  local bin=bin/istioctl
+
+  if [[ -f $bin ]] && [[ $($bin version) =~ client\ version:\ $ISTIOCTL_VERSION ]]; then
+    dco::_info "Istioctl is present"
+  else
+    dco::_info "Downloading istioctl"
+
+    local osarch="osx"
+    if [[ $(uname -s) == "Linux" ]]; then
+      osarch="linux-amd64"
+    fi
+
+    curl -sLS "https://github.com/istio/istio/releases/download/$ISTIOCTL_VERSION/istioctl-$ISTIOCTL_VERSION-$osarch.tar.gz" \
+      | tar -xz -C ./bin
+  fi
+
+  local operator_manifest=istio/operator-minimal.yaml
+  if $bin verify-install -f $operator_manifest 1> /dev/null && [[ $($bin version) =~ control\ plane\ version:\ $ISTIOCTL_VERSION ]]; then
+    dco::_info "Istio is configured"
+  else
+    dco::_info "Installing istio version $ISTIOCTL_VERSION"
+    $bin install -y -f $operator_manifest
+  fi
+
+  dco::_info "Applying a global STRICT mTLS policy"
+  kubectl apply -f istio/global-strict-mtls.yaml 1> /dev/null
+
+  dco::_info "Adding default namespace to service mesh"
+  kubectl label namespaces default istio-injection=enabled --overwrite 1> /dev/null
+}
+
 function dco::display_usage() {
   echo
   echo "Helper script that automates parts of the DCO developer workflow."
@@ -132,11 +165,12 @@ function dco::display_usage() {
   echo "Usage: $(basename "$0") COMMAND"
   echo
   echo "Commands:"
-  echo "  create    Creates Minikube instance configured for DCO development"
-  echo "  build     Build image locally and load it into Minikube"
-  echo "  deploy    Deploy Helm chart into Minikube using latest "
-  echo "  teardown  Destroy Minikube instance"
-  echo "  help      Display usage"
+  echo "  create   Creates Minikube instance configured for DCO development"
+  echo "  istio    Deploy Istio service mesh into Minikube"
+  echo "  build    Build image locally and load it into Minikube"
+  echo "  deploy   Deploy Helm chart into Minikube using latest "
+  echo "  teardown Destroy Minikube instance"
+  echo "  help     Display usage"
 
   exit 1
 }
@@ -147,6 +181,9 @@ function dco::main() {
   case $command in
     create)
       dco::minikube_setup
+      ;;
+    istio)
+      dco::install_istio
       ;;
     build)
       dco::docker_build
