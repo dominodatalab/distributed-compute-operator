@@ -30,7 +30,7 @@ func TestNewMasterService(t *testing.T) {
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{
 				{
-					Name:       "cluster",
+					Name:       "tcp-cluster",
 					Port:       7077,
 					TargetPort: intstr.FromString("cluster"),
 				},
@@ -86,7 +86,7 @@ func TestNewHeadlessService(t *testing.T) {
 			Ports: []corev1.ServicePort{
 				// these ports are exposed for Istio support
 				{
-					Name:       "cluster",
+					Name:       "tcp-cluster",
 					Port:       7077,
 					TargetPort: intstr.FromString("cluster"),
 				},
@@ -141,18 +141,18 @@ func TestNewSparkDriverService(t *testing.T) {
 			},
 			Ports: []corev1.ServicePort{
 				{
-					Name:       "spark-ui-port",
+					Name:       "tcp-spark-ui-port",
 					Port:       4040,
 					TargetPort: intstr.FromInt(4040),
 					Protocol:   corev1.ProtocolTCP,
 				},
 				{
-					Name:     "spark-driver-port",
+					Name:     "tcp-spark-driver-port",
 					Port:     4041,
 					Protocol: corev1.ProtocolTCP,
 				},
 				{
-					Name:     "spark-block-manager-port",
+					Name:     "tcp-spark-block-manager-port",
 					Port:     4042,
 					Protocol: corev1.ProtocolTCP,
 				},

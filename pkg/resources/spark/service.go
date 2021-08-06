@@ -1,6 +1,8 @@
 package spark
 
 import (
+	"fmt"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -14,7 +16,7 @@ import (
 func NewMasterService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 	ports := []corev1.ServicePort{
 		{
-			Name: "cluster",
+			Name: "tcp-cluster",
 			Port: sc.Spec.ClusterPort,
 			TargetPort: intstr.IntOrString{
 				Type:   intstr.String,
@@ -63,7 +65,7 @@ func NewHeadlessService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 			Ports: []corev1.ServicePort{
 				// TODO enable these ports for Istio support
 				{
-					Name:       "cluster",
+					Name:       "tcp-cluster",
 					Port:       sc.Spec.ClusterPort,
 					TargetPort: intstr.FromString("cluster"),
 				},
@@ -99,19 +101,18 @@ func NewSparkDriverService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 			Selector:  map[string]string{"app.kubernetes.io/instance": sc.Spec.Driver.ExecutionName},
 			Ports: []corev1.ServicePort{
 				{
-					Name:       sc.Spec.Driver.DriverUIPortName,
+					Name:       fmt.Sprintf("tcp-%s", sc.Spec.Driver.DriverUIPortName),
 					Port:       sc.Spec.Driver.DriverUIPort,
 					Protocol:   corev1.ProtocolTCP,
 					TargetPort: targetPort,
 				},
-				// TODO enable these ports for Istio support
 				{
-					Name:     sc.Spec.Driver.DriverPortName,
+					Name:     fmt.Sprintf("tcp-%s", sc.Spec.Driver.DriverPortName),
 					Port:     sc.Spec.Driver.DriverPort,
 					Protocol: corev1.ProtocolTCP,
 				},
 				{
-					Name:     sc.Spec.Driver.DriverBlockManagerPortName,
+					Name:     fmt.Sprintf("tcp-%s", sc.Spec.Driver.DriverBlockManagerPortName),
 					Port:     sc.Spec.Driver.DriverBlockManagerPort,
 					Protocol: corev1.ProtocolTCP,
 				},
