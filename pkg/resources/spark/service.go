@@ -63,7 +63,6 @@ func NewHeadlessService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 			ClusterIP: corev1.ClusterIPNone,
 			Selector:  SelectorLabels(sc),
 			Ports: []corev1.ServicePort{
-				// TODO enable these ports for Istio support
 				{
 					Name:       "tcp-cluster",
 					Port:       sc.Spec.ClusterPort,
