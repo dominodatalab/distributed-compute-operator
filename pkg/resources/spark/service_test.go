@@ -11,6 +11,8 @@ import (
 	"k8s.io/utils/pointer"
 )
 
+const SparkBlockManagerPortName = "spark-block-manager-port"
+
 func TestNewMasterService(t *testing.T) {
 	rc := sparkClusterFixture()
 	svc := NewMasterService(rc)
@@ -63,6 +65,8 @@ func TestNewMasterService(t *testing.T) {
 func TestNewHeadlessService(t *testing.T) {
 	rc := sparkClusterFixture()
 	rc.Spec.TCPMasterWebPort = 8080
+	rc.Spec.Driver.DriverBlockManagerPortName = SparkBlockManagerPortName
+	rc.Spec.Driver.DriverBlockManagerPort = 4042
 	svc := NewHeadlessService(rc)
 
 	expected := &corev1.Service{
@@ -101,6 +105,11 @@ func TestNewHeadlessService(t *testing.T) {
 					TargetPort: intstr.FromString("http"),
 					Protocol:   corev1.ProtocolTCP,
 				},
+				{
+					Name:     "tcp-spark-block-manager-port",
+					Port:     4042,
+					Protocol: corev1.ProtocolTCP,
+				},
 			},
 		},
 	}
@@ -118,7 +127,7 @@ func TestNewSparkDriverService(t *testing.T) {
 	rc.Spec.Driver.DriverPort = 4041
 	rc.Spec.Driver.DriverPortName = "spark-driver-port"
 	rc.Spec.Driver.DriverBlockManagerPort = 4042
-	rc.Spec.Driver.DriverBlockManagerPortName = "spark-block-manager-port"
+	rc.Spec.Driver.DriverBlockManagerPortName = SparkBlockManagerPortName
 
 	svc := NewSparkDriverService(rc)
 

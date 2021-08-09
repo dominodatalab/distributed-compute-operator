@@ -79,6 +79,11 @@ func NewHeadlessService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 					TargetPort: intstr.FromString("http"),
 					Protocol:   corev1.ProtocolTCP,
 				},
+				{
+					Name:     fmt.Sprintf("tcp-%s", sc.Spec.Driver.DriverBlockManagerPortName),
+					Port:     sc.Spec.Driver.DriverBlockManagerPort,
+					Protocol: corev1.ProtocolTCP,
+				},
 			},
 		},
 	}
