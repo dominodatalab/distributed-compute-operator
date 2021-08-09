@@ -11,7 +11,14 @@ import (
 	"k8s.io/utils/pointer"
 )
 
-const SparkBlockManagerPortName = "spark-block-manager-port"
+const (
+	DriverUIPort              = 4040
+	DriverUIPortName          = "spark-ui-port"
+	DriverPort                = 4041
+	DriverPortName            = "spark-driver-port"
+	BlockManagerPort          = 4042
+	SparkBlockManagerPortName = "spark-block-manager-port"
+)
 
 func TestNewMasterService(t *testing.T) {
 	rc := sparkClusterFixture()
@@ -65,8 +72,12 @@ func TestNewMasterService(t *testing.T) {
 func TestNewHeadlessService(t *testing.T) {
 	rc := sparkClusterFixture()
 	rc.Spec.TCPMasterWebPort = 8080
+	rc.Spec.Driver.DriverUIPort = DriverUIPort
+	rc.Spec.Driver.DriverUIPortName = DriverUIPortName
+	rc.Spec.Driver.DriverPort = DriverPort
+	rc.Spec.Driver.DriverPortName = DriverPortName
+	rc.Spec.Driver.DriverBlockManagerPort = BlockManagerPort
 	rc.Spec.Driver.DriverBlockManagerPortName = SparkBlockManagerPortName
-	rc.Spec.Driver.DriverBlockManagerPort = 4042
 	svc := NewHeadlessService(rc)
 
 	expected := &corev1.Service{
@@ -106,6 +117,17 @@ func TestNewHeadlessService(t *testing.T) {
 					Protocol:   corev1.ProtocolTCP,
 				},
 				{
+					Name:       "tcp-spark-ui-port",
+					Port:       4040,
+					TargetPort: intstr.FromInt(4040),
+					Protocol:   corev1.ProtocolTCP,
+				},
+				{
+					Name:     "tcp-spark-driver-port",
+					Port:     4041,
+					Protocol: corev1.ProtocolTCP,
+				},
+				{
 					Name:     "tcp-spark-block-manager-port",
 					Port:     4042,
 					Protocol: corev1.ProtocolTCP,
@@ -122,11 +144,11 @@ func TestNewSparkDriverService(t *testing.T) {
 	rc := sparkClusterFixture()
 	rc.Spec.Driver.SparkClusterName = clusterName
 	rc.Spec.Driver.ExecutionName = clusterName
-	rc.Spec.Driver.DriverUIPort = 4040
-	rc.Spec.Driver.DriverUIPortName = "spark-ui-port"
-	rc.Spec.Driver.DriverPort = 4041
-	rc.Spec.Driver.DriverPortName = "spark-driver-port"
-	rc.Spec.Driver.DriverBlockManagerPort = 4042
+	rc.Spec.Driver.DriverUIPort = DriverUIPort
+	rc.Spec.Driver.DriverUIPortName = DriverUIPortName
+	rc.Spec.Driver.DriverPort = DriverPort
+	rc.Spec.Driver.DriverPortName = DriverPortName
+	rc.Spec.Driver.DriverBlockManagerPort = BlockManagerPort
 	rc.Spec.Driver.DriverBlockManagerPortName = SparkBlockManagerPortName
 
 	svc := NewSparkDriverService(rc)
