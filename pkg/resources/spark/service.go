@@ -53,8 +53,6 @@ func NewMasterService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 
 // NewHeadlessService creates a headless service that points to worker nodes
 func NewHeadlessService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
-	targetPort := intstr.FromInt(int(sc.Spec.Driver.DriverUIPort))
-
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      HeadlessServiceName(sc.Name),
@@ -80,17 +78,6 @@ func NewHeadlessService(sc *dcv1alpha1.SparkCluster) *corev1.Service {
 					Port:       sc.Spec.TCPWorkerWebPort,
 					TargetPort: intstr.FromString("http"),
 					Protocol:   corev1.ProtocolTCP,
-				},
-				{
-					Name:       fmt.Sprintf("tcp-%s", sc.Spec.Driver.DriverUIPortName),
-					Port:       sc.Spec.Driver.DriverUIPort,
-					Protocol:   corev1.ProtocolTCP,
-					TargetPort: targetPort,
-				},
-				{
-					Name:     fmt.Sprintf("tcp-%s", sc.Spec.Driver.DriverPortName),
-					Port:     sc.Spec.Driver.DriverPort,
-					Protocol: corev1.ProtocolTCP,
 				},
 				{
 					Name:     fmt.Sprintf("tcp-%s", sc.Spec.Driver.DriverBlockManagerPortName),
