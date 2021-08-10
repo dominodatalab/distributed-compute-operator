@@ -299,8 +299,8 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		rc := sparkClusterFixture()
 
 		expected := map[string]string{
+			"proxy.istio.io/config":            "      proxyMetadata:\n         ISTIO_META_IDLE_TIMEOUT: \"0s\"",
 			"dominodatalab.com/inject-tooling": "true",
-			"proxy.istio.io/config":            " |-\n      proxyMetadata:\n         ISTIO_META_IDLE_TIMEOUT: \"0s\"",
 		}
 		switch comp {
 		case ComponentMaster:

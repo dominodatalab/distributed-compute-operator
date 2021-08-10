@@ -67,16 +67,18 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(err).NotTo(HaveOccurred())
 
 	err = (&RayClusterReconciler{
-		Client: k8sManager.GetClient(),
-		Scheme: k8sManager.GetScheme(),
-		Log:    logging.New(ctrl.Log.WithName("controllers").WithName("RayCluster")),
+		Client:       k8sManager.GetClient(),
+		Scheme:       k8sManager.GetScheme(),
+		Log:          logging.New(ctrl.Log.WithName("controllers").WithName("RayCluster")),
+		IstioEnabled: false,
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
 	err = (&SparkClusterReconciler{
-		Client: k8sManager.GetClient(),
-		Scheme: k8sManager.GetScheme(),
-		Log:    logging.New(ctrl.Log.WithName("controllers").WithName("SparkCluster")),
+		Client:       k8sManager.GetClient(),
+		Scheme:       k8sManager.GetScheme(),
+		Log:          logging.New(ctrl.Log.WithName("controllers").WithName("SparkCluster")),
+		IstioEnabled: false,
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 

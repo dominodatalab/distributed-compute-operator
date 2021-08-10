@@ -81,9 +81,10 @@ func Start(cfg *Config) error {
 	}
 
 	if err = (&controllers.SparkClusterReconciler{
-		Client: mgr.GetClient(),
-		Log:    logging.New(ctrl.Log.WithName("controllers").WithName("SparkCluster")),
-		Scheme: mgr.GetScheme(),
+		Client:       mgr.GetClient(),
+		Log:          logging.New(ctrl.Log.WithName("controllers").WithName("SparkCluster")),
+		Scheme:       mgr.GetScheme(),
+		IstioEnabled: cfg.IstioEnabled,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "SparkCluster")
 		return err

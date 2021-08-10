@@ -16,7 +16,7 @@ import (
 
 const (
 	frameworkConfigMountPath = "/opt/bitnami/spark/conf/spark-defaults.conf"
-	istioProxyMetadata       = " |-\n      proxyMetadata:\n         ISTIO_META_IDLE_TIMEOUT: \"0s\""
+	istioProxyMetadata       = "      proxyMetadata:\n         ISTIO_META_IDLE_TIMEOUT: \"0s\""
 )
 
 // NewStatefulSet generates a Deployment configured to manage Spark cluster nodes.
@@ -88,13 +88,13 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component, istioEnabled bo
 		serviceAccountName = sc.Spec.ServiceAccountName
 	}
 	annotations := make(map[string]string)
+	if istioEnabled {
+		annotations["proxy.istio.io/config"] = istioProxyMetadata
+	}
 	if nodeAttrs.Annotations != nil {
 		for k, v := range nodeAttrs.Annotations {
 			annotations[k] = v
 		}
-	}
-	if istioEnabled {
-		annotations["proxy.istio.io/config"] = istioProxyMetadata
 	}
 	context := sc.Spec.PodSecurityContext //TODO: Chart defaults a specific security context if enabled. Always setting for now
 	if context == nil {
