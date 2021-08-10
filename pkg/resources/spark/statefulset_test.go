@@ -18,7 +18,7 @@ import (
 func TestNewStatefulSet(t *testing.T) {
 	t.Run("invalid_component", func(t *testing.T) {
 		rc := sparkClusterFixture()
-		_, err := NewStatefulSet(rc, Component("garbage"))
+		_, err := NewStatefulSet(rc, Component("garbage"), false)
 		assert.Error(t, err)
 	})
 
@@ -27,7 +27,7 @@ func TestNewStatefulSet(t *testing.T) {
 
 		t.Run("default_values", func(t *testing.T) {
 			rc := sparkClusterFixture()
-			actual, err := NewStatefulSet(rc, ComponentMaster)
+			actual, err := NewStatefulSet(rc, ComponentMaster, false)
 			require.NoError(t, err)
 
 			expected := &appsv1.StatefulSet{
@@ -132,7 +132,7 @@ func TestNewStatefulSet(t *testing.T) {
 
 		t.Run("default_values", func(t *testing.T) {
 			rc := sparkClusterFixture()
-			actual, err := NewStatefulSet(rc, ComponentWorker)
+			actual, err := NewStatefulSet(rc, ComponentWorker, false)
 			require.NoError(t, err)
 
 			expected := &appsv1.StatefulSet{
@@ -248,7 +248,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		rc := sparkClusterFixture()
 		rc.Spec.Image = &dcv1alpha1.OCIImageDefinition{}
 
-		_, err := NewStatefulSet(rc, comp)
+		_, err := NewStatefulSet(rc, comp, false)
 		assert.Error(t, err)
 	})
 
@@ -265,7 +265,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.Labels = expected
 		}
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		for _, labels := range []map[string]string{actual.Labels, actual.Spec.Template.Labels} {
@@ -276,7 +276,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		}
 	})
 
-	t.Run("annotations", func(t *testing.T) {
+	t.Run("annotations_without_istio", func(t *testing.T) {
 		rc := sparkClusterFixture()
 
 		expected := map[string]string{
@@ -289,7 +289,27 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.Annotations = expected
 		}
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
+		require.NoError(t, err)
+
+		assert.Equal(t, expected, actual.Spec.Template.Annotations)
+	})
+
+	t.Run("annotations_with_istio", func(t *testing.T) {
+		rc := sparkClusterFixture()
+
+		expected := map[string]string{
+			"dominodatalab.com/inject-tooling": "true",
+			"proxy.istio.io/config":            " |-\n      proxyMetadata:\n         ISTIO_META_IDLE_TIMEOUT: \"0s\"",
+		}
+		switch comp {
+		case ComponentMaster:
+			rc.Spec.Master.Annotations = expected
+		case ComponentWorker:
+			rc.Spec.Worker.Annotations = expected
+		}
+
+		actual, err := NewStatefulSet(rc, comp, true)
 		require.NoError(t, err)
 
 		assert.Equal(t, expected, actual.Spec.Template.Annotations)
@@ -317,7 +337,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.VolumeMounts = expectedVolMounts
 		}
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		assert.Subset(t, actual.Spec.Template.Spec.Volumes, expectedVols)
@@ -344,7 +364,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.Resources = expected
 		}
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		assert.Equal(t, expected, actual.Spec.Template.Spec.Containers[0].Resources)
@@ -363,7 +383,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.NodeSelector = expected
 		}
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		assert.Equal(t, expected, actual.Spec.Template.Spec.NodeSelector)
@@ -402,7 +422,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.Affinity = expected
 		}
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		assert.Equal(t, expected, actual.Spec.Template.Spec.Affinity)
@@ -426,7 +446,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.Tolerations = expected
 		}
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		assert.Equal(t, expected, actual.Spec.Template.Spec.Tolerations)
@@ -447,7 +467,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.InitContainers = expected
 		}
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		assert.Equal(t, expected, actual.Spec.Template.Spec.InitContainers)
@@ -462,7 +482,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			},
 		}
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		assert.Subset(t, actual.Spec.Template.Spec.Containers[0].Env, rc.Spec.EnvVars)
@@ -474,7 +494,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			RunAsUser: pointer.Int64Ptr(0),
 		}
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		assert.Equal(t, rc.Spec.PodSecurityContext, actual.Spec.Template.Spec.SecurityContext)
@@ -484,7 +504,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		rc := sparkClusterFixture()
 		rc.Spec.ServiceAccountName = "user-managed-sa"
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		assert.Equal(t, rc.Spec.ServiceAccountName, actual.Spec.Template.Spec.ServiceAccountName)
@@ -508,7 +528,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			sc.Spec.Worker.VolumeClaimTemplates = input
 		}
 
-		actual, err := NewStatefulSet(sc, comp)
+		actual, err := NewStatefulSet(sc, comp, false)
 		require.NoError(t, err)
 
 		expected := []corev1.PersistentVolumeClaim{
@@ -570,7 +590,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			},
 		}
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		assert.Equal(t, expectedVolumes, actual.Spec.Template.Spec.Volumes)
@@ -609,7 +629,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			},
 		}
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		assert.Equal(t, expectedVolumes, actual.Spec.Template.Spec.Volumes)

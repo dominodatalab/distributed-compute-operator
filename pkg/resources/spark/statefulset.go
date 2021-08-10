@@ -14,11 +14,14 @@ import (
 	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
 )
 
-const frameworkConfigMountPath = "/opt/bitnami/spark/conf/spark-defaults.conf"
+const (
+	frameworkConfigMountPath = "/opt/bitnami/spark/conf/spark-defaults.conf"
+	istioProxyMetadata       = " |-\n      proxyMetadata:\n         ISTIO_META_IDLE_TIMEOUT: \"0s\""
+)
 
 // NewStatefulSet generates a Deployment configured to manage Spark cluster nodes.
 // The configuration is based the provided spec and the desired Component workload.
-func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.StatefulSet, error) {
+func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component, istioEnabled bool) (*appsv1.StatefulSet, error) {
 	var replicas int32
 	var nodeAttrs dcv1alpha1.SparkClusterNode
 	var volumes []corev1.Volume
@@ -89,6 +92,9 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 		for k, v := range nodeAttrs.Annotations {
 			annotations[k] = v
 		}
+	}
+	if istioEnabled {
+		annotations["proxy.istio.io/config"] = istioProxyMetadata
 	}
 	context := sc.Spec.PodSecurityContext //TODO: Chart defaults a specific security context if enabled. Always setting for now
 	if context == nil {
