@@ -27,6 +27,7 @@ func testDaskCluster() *dcv1alpha1.DaskCluster {
 						"test-ui-client": "true",
 					},
 				},
+				PodSecurityPolicy: "privileged",
 			},
 			Scheduler:     dcv1alpha1.WorkloadConfig{},
 			Worker:        dcv1alpha1.DaskClusterWorker{},

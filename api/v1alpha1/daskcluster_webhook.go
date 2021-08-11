@@ -18,8 +18,8 @@ var (
 	daskDefaultWorkerPort    int32 = 3000
 	daskDefaultNannyPort     int32 = 3001
 
-	daskDefaultWorkerReplicas      = pointer.Int32Ptr(1)
-	daskDefaultEnableNetworkPolicy = pointer.BoolPtr(true)
+	daskDefaultWorkerReplicas      = pointer.Int32(1)
+	daskDefaultEnableNetworkPolicy = pointer.Bool(true)
 	daskDefaultNetworkPolicyLabels = map[string]string{
 		"dask-client": "true",
 	}
@@ -76,7 +76,7 @@ func (dc *DaskCluster) Default() {
 		spec.PodSecurityContext = daskDefaultPodSecurityContext
 	}
 	if spec.NetworkPolicy.Enabled == nil {
-		log.Info("Setting enable network policy flag", "value", pointer.BoolPtr(true))
+		log.Info("Setting enable network policy flag", "value", pointer.Bool(true))
 		spec.NetworkPolicy.Enabled = daskDefaultEnableNetworkPolicy
 	}
 	if spec.NetworkPolicy.ClientLabels == nil {

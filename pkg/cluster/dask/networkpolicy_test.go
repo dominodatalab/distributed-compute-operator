@@ -8,9 +8,10 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/pointer"
 )
 
-func TestNetworkPolicyDataSource(t *testing.T) {
+func TestNetworkPolicyDS_NetworkPolicy(t *testing.T) {
 	dc := testDaskCluster()
 	tcpProto := corev1.ProtocolTCP
 	dashboardPort := intstr.FromInt(8787)
@@ -203,4 +204,39 @@ func TestNetworkPolicyDataSource(t *testing.T) {
 
 		assert.Equal(t, expected, actual)
 	})
+}
+
+func TestNetworkPolicyDS_Delete(t *testing.T) {
+	testcases := []struct {
+		name    string
+		input   *bool
+		outcome bool
+	}{
+		{
+			name:    "missing",
+			input:   nil,
+			outcome: true,
+		},
+		{
+			name:    "enabled",
+			input:   pointer.Bool(true),
+			outcome: false,
+		},
+		{
+			name:    "disabled",
+			input:   pointer.Bool(false),
+			outcome: true,
+		},
+	}
+
+	dc := testDaskCluster()
+	ds := networkPolicyDS{dc: dc}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			dc.Spec.NetworkPolicy.Enabled = tc.input
+
+			assert.Equal(t, tc.outcome, ds.Delete())
+		})
+	}
 }
