@@ -16,7 +16,7 @@ import (
 
 const (
 	frameworkConfigMountPath = "/opt/bitnami/spark/conf/spark-defaults.conf"
-	istioProxyMetadata       = "      proxyMetadata:\n         ISTIO_META_IDLE_TIMEOUT: \"0s\""
+	istioProxyMetadata       = "    proxyMetadata:\n      ISTIO_META_IDLE_TIMEOUT: \"60s\""
 )
 
 // NewStatefulSet generates a Deployment configured to manage Spark cluster nodes.
