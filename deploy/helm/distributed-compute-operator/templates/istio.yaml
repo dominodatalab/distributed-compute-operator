@@ -20,9 +20,6 @@ kind: EnvoyFilter
 metadata:
   name: listener-timeout-tcp
 spec:
-  workloadSelector:
-    labels:
-      app.kubernetes.io/name: spark
   configPatches:
     - applyTo: NETWORK_FILTER
       match:
