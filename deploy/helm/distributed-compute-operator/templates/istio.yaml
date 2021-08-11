@@ -15,10 +15,13 @@ spec:
     {{ .Values.config.webhookPort }}:
       mode: PERMISSIVE
 ---
+## Disables the Istio TCP idle timeout -- required for SparkClusters
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
-  name: listener-timeout-tcp
+  name: {{ include "dco.envoyFilter.name" .}}
+  labels:
+    {{- include "common.labels.standard" . | nindent 4 }}
 spec:
   configPatches:
     - applyTo: NETWORK_FILTER
