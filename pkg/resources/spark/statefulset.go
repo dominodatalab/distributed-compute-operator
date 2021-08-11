@@ -16,7 +16,7 @@ import (
 
 const (
 	frameworkConfigMountPath = "/opt/bitnami/spark/conf/spark-defaults.conf"
-	istioProxyMetadata       = "    proxyMetadata:\n      ISTIO_META_IDLE_TIMEOUT: \"60s\""
+	istioProxyMetadata       = "    proxyMetadata:\n      ISTIO_META_IDLE_TIMEOUT: \"0s\""
 )
 
 // NewStatefulSet generates a Deployment configured to manage Spark cluster nodes.
@@ -115,6 +115,7 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component, istioEnabled bo
 		envVars,
 		volumeMounts,
 		volumes)
+
 	statefulSet := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      InstanceObjectName(sc.Name, comp),
