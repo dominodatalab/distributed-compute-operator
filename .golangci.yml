@@ -91,3 +91,5 @@ issues:
     - source: "^//\\s*\\+kubebuilder:.+"
       linters:
         - lll
+  exclude:
+    - Using the variable on range scope `tc` in function literal
