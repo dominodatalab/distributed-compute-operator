@@ -122,7 +122,8 @@ function dco::helm_install() {
     --set image.registry="" \
     --set image.repository="$IMAGE_NAME" \
     --set image.tag="$latest_tag" \
-    --set config.logDevelopmentMode=true
+    --set config.logDevelopmentMode=true \
+    --set istio.enabled=true
 }
 
 dco::install_istio() {

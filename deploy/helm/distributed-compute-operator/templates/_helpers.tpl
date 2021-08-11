@@ -77,10 +77,3 @@ Returns the appropriate apiVersion for admission registration resources
 {{- print "admissionregistration.k8s.io/v1" -}}
 {{- end -}}
 {{- end -}}
-
-{{/*
-Returns the EnvoyFilter name
-*/}}
-{{- define "dco.envoyFilter.name" -}}
-{{ include "common.names.fullname" . }}-listener-timeout-tcp
-{{- end -}}

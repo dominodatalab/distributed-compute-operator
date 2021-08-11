@@ -18,19 +18,9 @@ const (
 	frameworkConfigMountPath = "/opt/bitnami/spark/conf/spark-defaults.conf"
 )
 
-// var (
-//	istioProxyConfig = map[string]map[string]string{
-//		"proxyMetadata": {
-//			"ISTIO_META_IDLE_TIMEOUT": "0s",
-//		},
-//	}
-//	istioProxyConfigAnnotationKey   = "proxy.istio.io/config"
-//	istioProxyConfigAnnotationValue string
-// )
-
 // NewStatefulSet generates a Deployment configured to manage Spark cluster nodes.
 // The configuration is based the provided spec and the desired Component workload.
-func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component, istioEnabled bool) (*appsv1.StatefulSet, error) {
+func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.StatefulSet, error) {
 	var replicas int32
 	var nodeAttrs dcv1alpha1.SparkClusterNode
 	var volumes []corev1.Volume
@@ -96,15 +86,14 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component, istioEnabled bo
 	if sc.Spec.ServiceAccountName != "" {
 		serviceAccountName = sc.Spec.ServiceAccountName
 	}
+
 	annotations := make(map[string]string)
-	// if istioEnabled {
-	//	annotations[istioProxyConfigAnnotationKey] = istioProxyConfigAnnotationValue
-	// }
 	if nodeAttrs.Annotations != nil {
 		for k, v := range nodeAttrs.Annotations {
 			annotations[k] = v
 		}
 	}
+
 	context := sc.Spec.PodSecurityContext //TODO: Chart defaults a specific security context if enabled. Always setting for now
 	if context == nil {
 		const DefaultUser = 1001
@@ -304,12 +293,3 @@ func componentEnvVars(sc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 	}
 	return envVar
 }
-
-// func init() {
-//	bs, err := yaml.Marshal(istioProxyConfig)
-//	if err != nil {
-//		panic(fmt.Errorf("cannot marshal istio proxy config: %w", err))
-//	}
-//
-//	istioProxyConfigAnnotationValue = string(bs)
-// }

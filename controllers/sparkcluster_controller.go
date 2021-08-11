@@ -410,7 +410,7 @@ func (r *SparkClusterReconciler) reconcileAutoscaler(ctx context.Context, sc *dc
 // reconcileStatefulSets creates separate Spark head and worker statefulsets that
 // will collectively comprise the execution agents of the cluster.
 func (r *SparkClusterReconciler) reconcileStatefulSets(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
-	head, err := spark.NewStatefulSet(sc, spark.ComponentMaster, r.IstioEnabled)
+	head, err := spark.NewStatefulSet(sc, spark.ComponentMaster)
 	if err != nil {
 		return err
 	}
@@ -418,7 +418,7 @@ func (r *SparkClusterReconciler) reconcileStatefulSets(ctx context.Context, sc *
 		return fmt.Errorf("failed to create head deployment: %w", err)
 	}
 
-	worker, err := spark.NewStatefulSet(sc, spark.ComponentWorker, r.IstioEnabled)
+	worker, err := spark.NewStatefulSet(sc, spark.ComponentWorker)
 	if err != nil {
 		return err
 	}
