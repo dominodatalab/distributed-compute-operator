@@ -18,7 +18,25 @@ spec:
     singular: daskcluster
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.worker.replicas
+      name: Workers
+      type: integer
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - jsonPath: .status.image
+      name: Image
+      type: string
+    - jsonPath: .spec.networkPolicy.enabled
+      name: Network Policy
+      priority: 10
+      type: boolean
+    - jsonPath: .status.nodes
+      name: Pods
+      priority: 10
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: DaskCluster is the Schema for the daskclusters API.
@@ -7952,6 +7970,8 @@ spec:
           status:
             description: DaskClusterStatus defines the observed state of DaskCluster
             properties:
+              image:
+                type: string
               nodes:
                 items:
                   type: string

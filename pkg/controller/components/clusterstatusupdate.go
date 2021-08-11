@@ -13,12 +13,14 @@ import (
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/controller/core"
+	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
 )
 
 type ClusterStatusUpdateDataSource interface {
 	ListOpts() []client.ListOption
 	StatefulSet() *appsv1.StatefulSet
 	ClusterStatusConfig() *dcv1alpha1.ClusterStatusConfig
+	Image() *dcv1alpha1.OCIImageDefinition
 }
 
 type ClusterStatusUpdateDataSourceFactory func(client.Object) ClusterStatusUpdateDataSource
@@ -57,8 +59,7 @@ func (c *clusterStatusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result
 
 	// modify scale subresource fields
 	sts := ds.StatefulSet()
-	err := ctx.Client.Get(ctx, client.ObjectKeyFromObject(sts), sts)
-	if client.IgnoreNotFound(err) != nil {
+	if err := ctx.Client.Get(ctx, client.ObjectKeyFromObject(sts), sts); client.IgnoreNotFound(err) != nil {
 		return ctrl.Result{}, err
 	}
 
@@ -76,6 +77,17 @@ func (c *clusterStatusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result
 		modified = true
 	}
 
+	// store canonical image reference
+	image, err := util.ParseImageDefinition(ds.Image())
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("cannot build cluster image: %w", err)
+	}
+	if csc.Image != image {
+		csc.Image = image
+		modified = true
+	}
+
+	// only update when fields have changed
 	if modified {
 		err = ctx.Client.Status().Update(ctx, ctx.Object)
 	}

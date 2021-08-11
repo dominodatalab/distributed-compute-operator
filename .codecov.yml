@@ -3,7 +3,7 @@ coverage:
     project:
       default:
         target: 75%
-        threshold: 5%
+        threshold: 10%
     patch: off
 ignore:
   - "api/**/zz_generated.deepcopy.go"

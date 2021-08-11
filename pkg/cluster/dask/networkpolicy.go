@@ -55,8 +55,8 @@ func (s *networkPolicyDS) Delete() bool {
 }
 
 func (s *networkPolicyDS) ingressRules() []networkingv1.NetworkPolicyIngressRule {
-	proto := corev1.ProtocolTCP
-	dPort := intstr.FromInt(int(s.dc.Spec.DashboardPort))
+	tcpProto := corev1.ProtocolTCP
+	dashboardPort := intstr.FromInt(int(s.dc.Spec.DashboardPort))
 
 	if s.comp == ComponentScheduler {
 		sPort := intstr.FromInt(int(s.dc.Spec.SchedulerPort))
@@ -78,7 +78,7 @@ func (s *networkPolicyDS) ingressRules() []networkingv1.NetworkPolicyIngressRule
 				Ports: []networkingv1.NetworkPolicyPort{
 					{
 						Port:     &sPort,
-						Protocol: &proto,
+						Protocol: &tcpProto,
 					},
 				},
 			},
@@ -92,18 +92,38 @@ func (s *networkPolicyDS) ingressRules() []networkingv1.NetworkPolicyIngressRule
 				},
 				Ports: []networkingv1.NetworkPolicyPort{
 					{
-						Port:     &dPort,
-						Protocol: &proto,
+						Port:     &dashboardPort,
+						Protocol: &tcpProto,
 					},
 				},
 			},
 		}
 	}
 
-	wPort := intstr.FromInt(int(s.dc.Spec.WorkerPort))
-	nPort := intstr.FromInt(int(s.dc.Spec.NannyPort))
+	workerPort := intstr.FromInt(int(s.dc.Spec.WorkerPort))
+	nannyPort := intstr.FromInt(int(s.dc.Spec.NannyPort))
 
 	return []networkingv1.NetworkPolicyIngressRule{
+		{
+			From: []networkingv1.NetworkPolicyPeer{
+				{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: meta.MatchLabelsWithComponent(s.dc, ComponentScheduler),
+					},
+				},
+				{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: meta.MatchLabelsWithComponent(s.dc, ComponentWorker),
+					},
+				},
+			},
+			Ports: []networkingv1.NetworkPolicyPort{
+				{
+					Port:     &workerPort,
+					Protocol: &tcpProto,
+				},
+			},
+		},
 		{
 			From: []networkingv1.NetworkPolicyPeer{
 				{
@@ -114,16 +134,28 @@ func (s *networkPolicyDS) ingressRules() []networkingv1.NetworkPolicyIngressRule
 			},
 			Ports: []networkingv1.NetworkPolicyPort{
 				{
-					Port:     &wPort,
-					Protocol: &proto,
+					Port:     &nannyPort,
+					Protocol: &tcpProto,
+				},
+			},
+		},
+		{
+			From: []networkingv1.NetworkPolicyPeer{
+				{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: meta.MatchLabelsWithComponent(s.dc, ComponentScheduler),
+					},
 				},
 				{
-					Port:     &nPort,
-					Protocol: &proto,
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: s.dc.Spec.NetworkPolicy.DashboardLabels,
+					},
 				},
+			},
+			Ports: []networkingv1.NetworkPolicyPort{
 				{
-					Port:     &dPort,
-					Protocol: &proto,
+					Port:     &dashboardPort,
+					Protocol: &tcpProto,
 				},
 			},
 		},
