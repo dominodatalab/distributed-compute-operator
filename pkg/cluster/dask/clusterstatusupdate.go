@@ -39,3 +39,7 @@ func (c *clusterStatusUpdateDS) StatefulSet() *appsv1.StatefulSet {
 func (c *clusterStatusUpdateDS) ClusterStatusConfig() *dcv1alpha1.ClusterStatusConfig {
 	return &c.dc.Status.ClusterStatusConfig
 }
+
+func (c *clusterStatusUpdateDS) Image() *dcv1alpha1.OCIImageDefinition {
+	return c.dc.Spec.Image
+}

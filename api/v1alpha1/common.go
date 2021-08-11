@@ -96,6 +96,7 @@ type WorkloadConfig struct {
 }
 
 type ClusterStatusConfig struct {
+	Image          string   `json:"image,omitempty"`
 	Nodes          []string `json:"nodes,omitempty"`
 	WorkerReplicas int32    `json:"workerReplicas,omitempty"`
 	WorkerSelector string   `json:"workerSelector,omitempty"`
