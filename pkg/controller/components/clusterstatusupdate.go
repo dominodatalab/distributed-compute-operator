@@ -39,16 +39,6 @@ func (c *clusterStatusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result
 	ds := c.factory(ctx.Object)
 	csc := ds.ClusterStatusConfig()
 
-	// store canonical image reference
-	image, err := util.ParseImageDefinition(ds.Image())
-	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("cannot build cluster image: %w", err)
-	}
-	if csc.Image != image {
-		csc.Image = image
-		modified = true
-	}
-
 	// modify node list field
 	podList := &corev1.PodList{}
 	listOpts := ds.ListOpts()
@@ -69,8 +59,7 @@ func (c *clusterStatusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result
 
 	// modify scale subresource fields
 	sts := ds.StatefulSet()
-	err = ctx.Client.Get(ctx, client.ObjectKeyFromObject(sts), sts)
-	if client.IgnoreNotFound(err) != nil {
+	if err := ctx.Client.Get(ctx, client.ObjectKeyFromObject(sts), sts); client.IgnoreNotFound(err) != nil {
 		return ctrl.Result{}, err
 	}
 
@@ -85,6 +74,16 @@ func (c *clusterStatusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result
 	}
 	if csc.WorkerReplicas != *sts.Spec.Replicas { // NOTE: panic: runtime error: invalid memory address or nil pointer dereference
 		csc.WorkerReplicas = *sts.Spec.Replicas
+		modified = true
+	}
+
+	// store canonical image reference
+	image, err := util.ParseImageDefinition(ds.Image())
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("cannot build cluster image: %w", err)
+	}
+	if csc.Image != image {
+		csc.Image = image
 		modified = true
 	}
 
