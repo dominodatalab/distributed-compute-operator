@@ -295,26 +295,6 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		assert.Equal(t, expected, actual.Spec.Template.Annotations)
 	})
 
-	t.Run("annotations_with_istio", func(t *testing.T) {
-		rc := sparkClusterFixture()
-
-		expected := map[string]string{
-			"proxy.istio.io/config":            "    proxyMetadata:\n      ISTIO_META_IDLE_TIMEOUT: \"0s\"",
-			"dominodatalab.com/inject-tooling": "true",
-		}
-		switch comp {
-		case ComponentMaster:
-			rc.Spec.Master.Annotations = expected
-		case ComponentWorker:
-			rc.Spec.Worker.Annotations = expected
-		}
-
-		actual, err := NewStatefulSet(rc, comp, true)
-		require.NoError(t, err)
-
-		assert.Equal(t, expected, actual.Spec.Template.Annotations)
-	})
-
 	t.Run("volumes_and_mounts", func(t *testing.T) {
 		rc := sparkClusterFixture()
 

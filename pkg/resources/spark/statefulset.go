@@ -16,8 +16,17 @@ import (
 
 const (
 	frameworkConfigMountPath = "/opt/bitnami/spark/conf/spark-defaults.conf"
-	istioProxyMetadata       = "    proxyMetadata:\n      ISTIO_META_IDLE_TIMEOUT: \"0s\""
 )
+
+// var (
+//	istioProxyConfig = map[string]map[string]string{
+//		"proxyMetadata": {
+//			"ISTIO_META_IDLE_TIMEOUT": "0s",
+//		},
+//	}
+//	istioProxyConfigAnnotationKey   = "proxy.istio.io/config"
+//	istioProxyConfigAnnotationValue string
+// )
 
 // NewStatefulSet generates a Deployment configured to manage Spark cluster nodes.
 // The configuration is based the provided spec and the desired Component workload.
@@ -88,9 +97,9 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component, istioEnabled bo
 		serviceAccountName = sc.Spec.ServiceAccountName
 	}
 	annotations := make(map[string]string)
-	if istioEnabled {
-		annotations["proxy.istio.io/config"] = istioProxyMetadata
-	}
+	// if istioEnabled {
+	//	annotations[istioProxyConfigAnnotationKey] = istioProxyConfigAnnotationValue
+	// }
 	if nodeAttrs.Annotations != nil {
 		for k, v := range nodeAttrs.Annotations {
 			annotations[k] = v
@@ -295,3 +304,12 @@ func componentEnvVars(sc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 	}
 	return envVar
 }
+
+// func init() {
+//	bs, err := yaml.Marshal(istioProxyConfig)
+//	if err != nil {
+//		panic(fmt.Errorf("cannot marshal istio proxy config: %w", err))
+//	}
+//
+//	istioProxyConfigAnnotationValue = string(bs)
+// }
