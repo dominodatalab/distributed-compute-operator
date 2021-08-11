@@ -31,7 +31,7 @@ func (s *serviceAccountDS) ServiceAccount() *corev1.ServiceAccount {
 			Namespace: s.dc.Namespace,
 			Labels:    meta.StandardLabels(s.dc),
 		},
-		AutomountServiceAccountToken: pointer.BoolPtr(s.dc.Spec.ServiceAccount.AutomountServiceAccountToken),
+		AutomountServiceAccountToken: pointer.Bool(s.dc.Spec.ServiceAccount.AutomountServiceAccountToken),
 	}
 }
 
