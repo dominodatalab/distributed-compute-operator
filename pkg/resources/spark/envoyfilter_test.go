@@ -85,9 +85,7 @@ func TestNewEnvoyFilter(t *testing.T) {
 		}
 
 		workloadSelector := v1alpha3.WorkloadSelector{
-			Labels: map[string]string{
-				"app.kubernetes.io/name": "spark",
-			},
+			Labels: sc.Spec.GlobalLabels,
 		}
 
 		expected := v1alpha32.EnvoyFilter{

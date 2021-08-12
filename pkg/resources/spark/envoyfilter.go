@@ -84,9 +84,7 @@ func NewEnvoyFilter(sc *dcv1alpha1.SparkCluster) (v1alpha32.EnvoyFilter, error) 
 	}
 
 	workloadSelector := v1alpha3.WorkloadSelector{
-		Labels: map[string]string{
-			"app.kubernetes.io/name": "spark",
-		},
+		Labels: sc.Spec.GlobalLabels,
 	}
 
 	envoyFilter := v1alpha32.EnvoyFilter{
