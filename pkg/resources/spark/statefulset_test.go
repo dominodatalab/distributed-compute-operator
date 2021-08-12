@@ -276,7 +276,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		}
 	})
 
-	t.Run("annotations_without_istio", func(t *testing.T) {
+	t.Run("annotations", func(t *testing.T) {
 		rc := sparkClusterFixture()
 
 		expected := map[string]string{
