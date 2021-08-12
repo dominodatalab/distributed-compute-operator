@@ -30,19 +30,6 @@ func NewEnvoyFilter(sc *dcv1alpha1.SparkCluster) (v1alpha32.EnvoyFilter, error) 
 		},
 	}
 
-	// matchOutbound := v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
-	//	Context: v1alpha3.EnvoyFilter_SIDECAR_OUTBOUND,
-	//	ObjectTypes: &v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
-	//		Listener: &v1alpha3.EnvoyFilter_ListenerMatch{
-	//			FilterChain: &v1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
-	//				Filter: &v1alpha3.EnvoyFilter_ListenerMatch_FilterMatch{
-	//					Name: filterName,
-	//				},
-	//			},
-	//		},
-	//	},
-	// }
-
 	patch := v1alpha3.EnvoyFilter_Patch{
 		Operation: v1alpha3.EnvoyFilter_Patch_MERGE,
 		Value: &protobuftypes.Struct{
@@ -74,7 +61,6 @@ func NewEnvoyFilter(sc *dcv1alpha1.SparkCluster) (v1alpha32.EnvoyFilter, error) 
 		},
 	}
 
-	// create private function to take in match, one for in/outbound
 	configPatches := []*v1alpha3.EnvoyFilter_EnvoyConfigObjectPatch{
 		{
 			ApplyTo: v1alpha3.EnvoyFilter_NETWORK_FILTER,
@@ -84,7 +70,7 @@ func NewEnvoyFilter(sc *dcv1alpha1.SparkCluster) (v1alpha32.EnvoyFilter, error) 
 	}
 
 	workloadSelector := v1alpha3.WorkloadSelector{
-		Labels: sc.Spec.GlobalLabels,
+		Labels: sc.Spec.EnvoyFilterLabels,
 	}
 
 	envoyFilter := v1alpha32.EnvoyFilter{

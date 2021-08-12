@@ -54,6 +54,23 @@ func TestMergeStringMaps(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
+func TestMergeStringMapsWithEmpty(t *testing.T) {
+	src := map[string]string{
+		"one":    "two",
+		"buckle": "my shoe",
+	}
+
+	dst := map[string]string{}
+
+	expected := map[string]string{
+		"one":    "two",
+		"buckle": "my shoe",
+	}
+	actual := MergeStringMaps(src, dst)
+
+	assert.Equal(t, expected, actual)
+}
+
 func TestParseImageDefinition(t *testing.T) {
 	testcases := []struct {
 		input    *dcv1alpha1.OCIImageDefinition

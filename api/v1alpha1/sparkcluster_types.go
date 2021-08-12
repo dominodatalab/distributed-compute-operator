@@ -79,6 +79,8 @@ type SparkClusterSpec struct {
 
 	GlobalLabels map[string]string `json:"globalLabels,omitempty"`
 
+	EnvoyFilterLabels map[string]string `json:"envoyFilterLabels,omitempty"`
+
 	// ClusterPort is the port on which the spark protocol communicates
 	ClusterPort int32 `json:"clusterPort,omitempty"`
 
