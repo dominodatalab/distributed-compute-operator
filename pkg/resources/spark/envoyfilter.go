@@ -63,7 +63,7 @@ func NewEnvoyFilter(sc *dcv1alpha1.SparkCluster) (v1alpha32.EnvoyFilter, error) 
 								},
 								"idle_timeout": {
 									Kind: &protobuftypes.Value_StringValue{
-										StringValue: "0s",
+										StringValue: "30s",
 									},
 								},
 							},
@@ -89,9 +89,7 @@ func NewEnvoyFilter(sc *dcv1alpha1.SparkCluster) (v1alpha32.EnvoyFilter, error) 
 	}
 
 	workloadSelector := v1alpha3.WorkloadSelector{
-		Labels: map[string]string{
-			"app.kubernetes.io/name": "spark",
-		},
+		Labels: sc.Labels,
 	}
 
 	envoyFilter := v1alpha32.EnvoyFilter{

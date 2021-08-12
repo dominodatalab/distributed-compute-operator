@@ -38,7 +38,7 @@ func TestNewEnvoyFilter(t *testing.T) {
 									},
 									"idle_timeout": {
 										Kind: &protobuftypes.Value_StringValue{
-											StringValue: "0s",
+											StringValue: "30s",
 										},
 									},
 								},
@@ -85,9 +85,7 @@ func TestNewEnvoyFilter(t *testing.T) {
 		}
 
 		workloadSelector := v1alpha3.WorkloadSelector{
-			Labels: map[string]string{
-				"app.kubernetes.io/name": "spark",
-			},
+			Labels: sc.Labels,
 		}
 
 		expected := v1alpha32.EnvoyFilter{
