@@ -79,6 +79,8 @@ type SparkClusterSpec struct {
 
 	GlobalLabels map[string]string `json:"globalLabels,omitempty"`
 
+	// EnvoyFilterLabels are specific labels that must already exist on the spark-driver so that users
+	// can set idle_timeout properly using the EnvoyFilter resource.
 	EnvoyFilterLabels map[string]string `json:"envoyFilterLabels,omitempty"`
 
 	// ClusterPort is the port on which the spark protocol communicates

@@ -14,9 +14,7 @@ import (
 	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
 )
 
-const (
-	frameworkConfigMountPath = "/opt/bitnami/spark/conf/spark-defaults.conf"
-)
+const frameworkConfigMountPath = "/opt/bitnami/spark/conf/spark-defaults.conf"
 
 // NewStatefulSet generates a Deployment configured to manage Spark cluster nodes.
 // The configuration is based the provided spec and the desired Component workload.

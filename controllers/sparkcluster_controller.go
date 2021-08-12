@@ -240,12 +240,9 @@ func (r *SparkClusterReconciler) reconcileIstio(ctx context.Context, sc *dcv1alp
 		return nil
 	}
 
-	envoyFilter, err := spark.NewEnvoyFilter(sc)
-	if err != nil {
-		return err
-	}
+	envoyFilter := spark.NewEnvoyFilter(sc)
 
-	if err = r.createOrUpdateOwnedResource(ctx, sc, &envoyFilter); err != nil {
+	if err := r.createOrUpdateOwnedResource(ctx, sc, envoyFilter); err != nil {
 		return fmt.Errorf("failed to reconcile envoy filter: %w", err)
 	}
 
