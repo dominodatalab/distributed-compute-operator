@@ -18,10 +18,6 @@ func TestNewEnvoyFilter(t *testing.T) {
 		actual, err := NewEnvoyFilter(sc)
 		require.NoError(t, err)
 
-		// workloadSelector := v1alpha3.WorkloadSelector{
-		//	Labels: sc.Labels,
-		// }
-
 		patch := v1alpha3.EnvoyFilter_Patch{
 			Operation: v1alpha3.EnvoyFilter_Patch_MERGE,
 			Value: &protobuftypes.Struct{
@@ -57,7 +53,7 @@ func TestNewEnvoyFilter(t *testing.T) {
 			{
 				ApplyTo: v1alpha3.EnvoyFilter_NETWORK_FILTER,
 				Match: &v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
-					Context: v1alpha3.EnvoyFilter_ANY,
+					Context: v1alpha3.EnvoyFilter_SIDECAR_INBOUND,
 					ObjectTypes: &v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
 						Listener: &v1alpha3.EnvoyFilter_ListenerMatch{
 							FilterChain: &v1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
@@ -70,23 +66,27 @@ func TestNewEnvoyFilter(t *testing.T) {
 				},
 				Patch: &patch,
 			},
-			// {
-			//	ApplyTo: v1alpha3.EnvoyFilter_NETWORK_FILTER,
-			//	Match: &v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
-			//		Context: v1alpha3.EnvoyFilter_SIDECAR_OUTBOUND,
-			//		ObjectTypes: &v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
-			//			Listener: &v1alpha3.EnvoyFilter_ListenerMatch{
-			//				FilterChain: &v1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
-			//					Filter: &v1alpha3.EnvoyFilter_ListenerMatch_FilterMatch{
-			//						Name: "envoy.filters.network.tcp_proxy",
-			//					},
-			//				},
-			//			},
-			//		},
-			//	},
-			//	Patch: &patch,
-			// },
+			{
+				ApplyTo: v1alpha3.EnvoyFilter_NETWORK_FILTER,
+				Match: &v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
+					Context: v1alpha3.EnvoyFilter_SIDECAR_OUTBOUND,
+					ObjectTypes: &v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
+						Listener: &v1alpha3.EnvoyFilter_ListenerMatch{
+							FilterChain: &v1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
+								Filter: &v1alpha3.EnvoyFilter_ListenerMatch_FilterMatch{
+									Name: "envoy.filters.network.tcp_proxy",
+								},
+							},
+						},
+					},
+				},
+				Patch: &patch,
+			},
 		}
+
+		// workloadSelector := v1alpha3.WorkloadSelector{
+		//	Labels: sc.Labels,
+		// }
 
 		expected := v1alpha32.EnvoyFilter{
 			TypeMeta: metav1.TypeMeta{},

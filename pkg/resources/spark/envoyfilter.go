@@ -18,12 +18,8 @@ const (
 
 // NewEnvoyFilter creates a new EnvoyFilter resource to set idle_timeout for Istio-enabled deployments
 func NewEnvoyFilter(sc *dcv1alpha1.SparkCluster) (v1alpha32.EnvoyFilter, error) {
-	// workloadSelector := v1alpha3.WorkloadSelector{
-	//	Labels: sc.Labels,
-	// }
-
 	matchInbound := v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
-		Context: v1alpha3.EnvoyFilter_ANY,
+		Context: v1alpha3.EnvoyFilter_SIDECAR_INBOUND,
 		ObjectTypes: &v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
 			Listener: &v1alpha3.EnvoyFilter_ListenerMatch{
 				FilterChain: &v1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
@@ -35,18 +31,18 @@ func NewEnvoyFilter(sc *dcv1alpha1.SparkCluster) (v1alpha32.EnvoyFilter, error) 
 		},
 	}
 
-	// matchOutbound := v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
-	//	Context: v1alpha3.EnvoyFilter_SIDECAR_OUTBOUND,
-	//	ObjectTypes: &v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
-	//		Listener: &v1alpha3.EnvoyFilter_ListenerMatch{
-	//			FilterChain: &v1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
-	//				Filter: &v1alpha3.EnvoyFilter_ListenerMatch_FilterMatch{
-	//					Name: filterName,
-	//				},
-	//			},
-	//		},
-	//	},
-	// }
+	matchOutbound := v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
+		Context: v1alpha3.EnvoyFilter_SIDECAR_OUTBOUND,
+		ObjectTypes: &v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
+			Listener: &v1alpha3.EnvoyFilter_ListenerMatch{
+				FilterChain: &v1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
+					Filter: &v1alpha3.EnvoyFilter_ListenerMatch_FilterMatch{
+						Name: filterName,
+					},
+				},
+			},
+		},
+	}
 
 	patch := v1alpha3.EnvoyFilter_Patch{
 		Operation: v1alpha3.EnvoyFilter_Patch_MERGE,
@@ -86,7 +82,16 @@ func NewEnvoyFilter(sc *dcv1alpha1.SparkCluster) (v1alpha32.EnvoyFilter, error) 
 			Match:   &matchInbound,
 			Patch:   &patch,
 		},
+		{
+			ApplyTo: v1alpha3.EnvoyFilter_NETWORK_FILTER,
+			Match:   &matchOutbound,
+			Patch:   &patch,
+		},
 	}
+
+	// workloadSelector := v1alpha3.WorkloadSelector{
+	//	Labels: sc.Labels,
+	// }
 
 	envoyFilter := v1alpha32.EnvoyFilter{
 		TypeMeta: metav1.TypeMeta{},
