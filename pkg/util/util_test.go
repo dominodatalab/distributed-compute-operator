@@ -34,24 +34,42 @@ func TestIntsToStrings(t *testing.T) {
 }
 
 func TestMergeStringMaps(t *testing.T) {
-	src := map[string]string{
-		"one":    "two",
-		"buckle": "my shoe",
-	}
-	dst := map[string]string{
-		"three": "four",
-		"knock": "at the door",
-	}
+	t.Run("default", func(t *testing.T) {
+		src := map[string]string{
+			"one":    "two",
+			"buckle": "my shoe",
+		}
+		dst := map[string]string{
+			"three": "four",
+			"knock": "at the door",
+		}
 
-	expected := map[string]string{
-		"one":    "two",
-		"buckle": "my shoe",
-		"three":  "four",
-		"knock":  "at the door",
-	}
-	actual := MergeStringMaps(src, dst)
+		expected := map[string]string{
+			"one":    "two",
+			"buckle": "my shoe",
+			"three":  "four",
+			"knock":  "at the door",
+		}
+		actual := MergeStringMaps(src, dst)
 
-	assert.Equal(t, expected, actual)
+		assert.Equal(t, expected, actual)
+	})
+	t.Run("empty_src", func(t *testing.T) {
+		src := map[string]string{}
+
+		dst := map[string]string{
+			"one":    "two",
+			"buckle": "my shoe",
+		}
+
+		expected := map[string]string{
+			"one":    "two",
+			"buckle": "my shoe",
+		}
+		actual := MergeStringMaps(src, dst)
+
+		assert.Equal(t, expected, actual)
+	})
 }
 
 func TestParseImageDefinition(t *testing.T) {

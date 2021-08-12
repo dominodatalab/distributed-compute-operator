@@ -202,6 +202,10 @@ spec:
                 - name
                 type: object
               type: array
+            envoyFilterLabels:
+              additionalProperties:
+                type: string
+              type: object
             globalLabels:
               additionalProperties:
                 type: string

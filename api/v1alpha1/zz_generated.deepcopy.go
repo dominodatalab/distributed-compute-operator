@@ -905,6 +905,13 @@ func (in *SparkClusterSpec) DeepCopyInto(out *SparkClusterSpec) {
 			(*out)[key] = val
 		}
 	}
+	if in.EnvoyFilterLabels != nil {
+		in, out := &in.EnvoyFilterLabels, &out.EnvoyFilterLabels
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	out.IstioConfig = in.IstioConfig
 	out.Driver = in.Driver
 	if in.EnableDashboard != nil {

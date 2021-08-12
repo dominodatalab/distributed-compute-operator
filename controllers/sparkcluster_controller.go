@@ -8,8 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
@@ -27,6 +25,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
@@ -236,10 +235,15 @@ func (r *SparkClusterReconciler) reconcileResources(ctx context.Context, sc *dcv
 	return r.reconcileStatefulSets(ctx, sc)
 }
 
-// nolint:dupl
 func (r *SparkClusterReconciler) reconcileIstio(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
 	if !r.IstioEnabled {
 		return nil
+	}
+
+	envoyFilter := spark.NewEnvoyFilter(sc)
+
+	if err := r.createOrUpdateOwnedResource(ctx, sc, envoyFilter); err != nil {
+		return fmt.Errorf("failed to reconcile envoy filter: %w", err)
 	}
 
 	peerAuth := istio.NewPeerAuthentication(&istio.PeerAuthInfo{
@@ -253,6 +257,7 @@ func (r *SparkClusterReconciler) reconcileIstio(ctx context.Context, sc *dcv1alp
 	if sc.Spec.IstioConfig.MutualTLSMode == "" {
 		return r.deleteIfExists(ctx, peerAuth)
 	}
+
 	if err := r.createOrUpdateOwnedResource(ctx, sc, peerAuth); err != nil {
 		return fmt.Errorf("failed to reconcile peer authentication: %w", err)
 	}

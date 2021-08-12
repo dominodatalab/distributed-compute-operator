@@ -84,12 +84,14 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	if sc.Spec.ServiceAccountName != "" {
 		serviceAccountName = sc.Spec.ServiceAccountName
 	}
+
 	annotations := make(map[string]string)
 	if nodeAttrs.Annotations != nil {
 		for k, v := range nodeAttrs.Annotations {
 			annotations[k] = v
 		}
 	}
+
 	context := sc.Spec.PodSecurityContext //TODO: Chart defaults a specific security context if enabled. Always setting for now
 	if context == nil {
 		const DefaultUser = 1001
@@ -109,6 +111,7 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 		envVars,
 		volumeMounts,
 		volumes)
+
 	statefulSet := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      InstanceObjectName(sc.Name, comp),
@@ -123,7 +126,7 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels:      labels,
+					Labels:      util.MergeStringMaps(sc.Spec.EnvoyFilterLabels, labels),
 					Annotations: annotations,
 				},
 				Spec: podSpec,
