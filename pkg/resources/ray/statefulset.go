@@ -79,7 +79,7 @@ func NewStatefulSet(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Stateful
 	envVars := append(defaultEnv, rc.Spec.EnvVars...)
 	volumes := append(defaultVolumes, nodeAttrs.Volumes...)
 	volumeMounts := append(defaultVolumeMounts, nodeAttrs.VolumeMounts...)
-	pvcTemplates := processPVCTemplates(nodeAttrs.VolumeClaimTemplates)
+	pvcTemplates := processPVCTemplates(rc, nodeAttrs.VolumeClaimTemplates)
 
 	sts := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -341,7 +341,7 @@ func processLabels(rc *dcv1alpha1.RayCluster, comp Component, extraLabels map[st
 	return labels
 }
 
-func processPVCTemplates(vcts []dcv1alpha1.PersistentVolumeClaimTemplate) (pvcTmpls []corev1.PersistentVolumeClaim) {
+func processPVCTemplates(rc *dcv1alpha1.RayCluster, vcts []dcv1alpha1.PersistentVolumeClaimTemplate) (pvcTmpls []corev1.PersistentVolumeClaim) {
 	mode := corev1.PersistentVolumeFilesystem
 
 	for _, vct := range vcts {
@@ -350,7 +350,8 @@ func processPVCTemplates(vcts []dcv1alpha1.PersistentVolumeClaimTemplate) (pvcTm
 
 		pvcTmpls = append(pvcTmpls, corev1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: vct.Name,
+				Name:   vct.Name,
+				Labels: rc.Spec.GlobalLabels,
 			},
 			Spec: vct.Spec,
 		})
