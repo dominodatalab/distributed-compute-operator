@@ -200,6 +200,9 @@ spec:
               envoyFilterLabels:
                 additionalProperties:
                   type: string
+                description: EnvoyFilterLabels are specific labels that must already
+                  exist on the spark-driver so that users can set idle_timeout properly
+                  using the EnvoyFilter resource.
                 type: object
               globalLabels:
                 additionalProperties:

@@ -3,7 +3,7 @@ type: application
 name: distributed-compute-operator
 version: 0.0.0
 appVersion: "latest"
-kubeVersion: ">= 1.15.0-0"
+kubeVersion: ">= 1.16.0-0"
 description: Kubernetes operator that manages parallel computing clusters.
 home: https://github.com/dominodatalab/distributed-compute-operator
 icon: https://raw.githubusercontent.com/dominodatalab/distributed-compute-operator/main/docs/img/logo.png
