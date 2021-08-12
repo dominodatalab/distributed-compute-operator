@@ -55,12 +55,12 @@ func TestMergeStringMaps(t *testing.T) {
 }
 
 func TestMergeStringMapsWithEmpty(t *testing.T) {
-	src := map[string]string{
+	src := map[string]string{}
+
+	dst := map[string]string{
 		"one":    "two",
 		"buckle": "my shoe",
 	}
-
-	dst := map[string]string{}
 
 	expected := map[string]string{
 		"one":    "two",

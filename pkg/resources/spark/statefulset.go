@@ -128,7 +128,7 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels:      util.MergeStringMaps(labels, sc.Spec.EnvoyFilterLabels),
+					Labels:      util.MergeStringMaps(sc.Spec.EnvoyFilterLabels, labels),
 					Annotations: annotations,
 				},
 				Spec: podSpec,

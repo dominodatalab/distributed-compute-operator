@@ -19,13 +19,10 @@ func IntsToStrings(is []int32) (ss []string) {
 
 // MergeStringMaps merges the src map into the dst.
 func MergeStringMaps(src, dst map[string]string) map[string]string {
-	if dst != nil {
-		for k, v := range src {
-			dst[k] = v
-		}
-		return dst
+	for k, v := range src {
+		dst[k] = v
 	}
-	return src
+	return dst
 }
 
 // ParseImageDefinition generates a fully-qualified image reference to an OCI image.
