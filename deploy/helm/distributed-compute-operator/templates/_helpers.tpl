@@ -66,14 +66,3 @@ Returns a name suitable for all hook RBAC objects
 {{- define "dco.rbac.hookName" -}}
 dominodatalab:operator:{{ include "common.names.fullname" . }}:hook
 {{- end -}}
-
-{{/*
-Returns the appropriate apiVersion for admission registration resources
-*/}}
-{{- define "dco.capabilities.admissionregistration.apiVersion" -}}
-{{- if semverCompare "<1.16-0" (include "common.capabilities.kubeVersion" .) -}}
-{{- print "admissionregistration.k8s.io/v1beta1" -}}
-{{- else -}}
-{{- print "admissionregistration.k8s.io/v1" -}}
-{{- end -}}
-{{- end -}}

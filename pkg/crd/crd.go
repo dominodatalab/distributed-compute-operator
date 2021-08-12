@@ -19,11 +19,9 @@ import (
 type crdProcessor func(context.Context, apixv1client.CustomResourceDefinitionInterface, *apixv1.CustomResourceDefinition) error
 
 var (
-	log           = zap.New()
-	crdClientFn   = getCRDClient
-	crdAPICheckFn = isV1CRDAPIAvailable
+	log         = zap.New()
+	crdClientFn = getCRDClient
 
-	// nolint:dupl
 	applyFn = func(ctx context.Context, client apixv1client.CustomResourceDefinitionInterface, crd *apixv1.CustomResourceDefinition) error {
 		log.Info("Fetching CRD", "Name", crd.Name)
 		found, err := client.Get(ctx, crd.Name, metav1.GetOptions{})
@@ -56,15 +54,15 @@ var (
 // Apply will create or update all project CRDs inside a Kubernetes cluster.
 // The latest available version of the CRD will be used to perform this operation.
 func Apply(ctx context.Context, istioEnabled bool) error {
-	return operate(ctx, istioEnabled, applyFn, applyV1Beta1Fn)
+	return operate(ctx, istioEnabled, applyFn)
 }
 
 // Delete will remove all project CRDs from a Kubernetes cluster.
 func Delete(ctx context.Context, istioEnabled bool) error {
-	return operate(ctx, istioEnabled, deleteFn, deleteV1Beta1Fn)
+	return operate(ctx, istioEnabled, deleteFn)
 }
 
-func operate(ctx context.Context, istio bool, p crdProcessor, bp v1Beta1CRDProcessor) error {
+func operate(ctx context.Context, istio bool, p crdProcessor) error {
 	if istio {
 		quit, err := waitForIstioSidecar()
 		if err != nil {
@@ -80,25 +78,7 @@ func operate(ctx context.Context, istio bool, p crdProcessor, bp v1Beta1CRDProce
 		return err
 	}
 
-	log.Info("Checking CRD API version")
-	useV1, err := crdAPICheckFn()
-	if err != nil {
-		return err
-	}
-	log.Info("CRD V1 API", "available", useV1)
-
-	var defs []crd.Definition
-	for _, def := range allDefs {
-		if useV1 != def.BetaVersion {
-			defs = append(defs, def)
-		}
-	}
-
-	if useV1 {
-		return processCRDs(ctx, p, defs)
-	}
-
-	return processV1Beta1CRDs(ctx, bp, defs)
+	return processCRDs(ctx, p, allDefs)
 }
 
 // processCRDs uses a processor func to act upon a list of CRDs.

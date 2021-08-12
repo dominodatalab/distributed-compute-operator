@@ -6,7 +6,6 @@ replace google.golang.org/grpc v1.39.1 => google.golang.org/grpc v1.29.1
 
 require (
 	github.com/banzaicloud/k8s-objectmatcher v1.5.1
-	github.com/blang/semver v3.5.1+incompatible
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/go-logr/logr v0.4.0
 	github.com/gogo/protobuf v1.3.2
