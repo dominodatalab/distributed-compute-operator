@@ -38,7 +38,7 @@ func TestNewEnvoyFilter(t *testing.T) {
 									},
 									"idle_timeout": {
 										Kind: &protobuftypes.Value_StringValue{
-											StringValue: "30s",
+											StringValue: "0s",
 										},
 									},
 								},

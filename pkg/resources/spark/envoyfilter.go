@@ -64,7 +64,7 @@ func NewEnvoyFilter(sc *dcv1alpha1.SparkCluster) (v1alpha32.EnvoyFilter, error) 
 								},
 								"idle_timeout": {
 									Kind: &protobuftypes.Value_StringValue{
-										StringValue: "30s",
+										StringValue: "0s",
 									},
 								},
 							},
