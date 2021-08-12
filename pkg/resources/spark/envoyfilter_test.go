@@ -84,9 +84,11 @@ func TestNewEnvoyFilter(t *testing.T) {
 			},
 		}
 
-		// workloadSelector := v1alpha3.WorkloadSelector{
-		//	Labels: sc.Labels,
-		// }
+		workloadSelector := v1alpha3.WorkloadSelector{
+			Labels: map[string]string{
+				"app.kubernetes.io/name": "spark",
+			},
+		}
 
 		expected := v1alpha32.EnvoyFilter{
 			TypeMeta: metav1.TypeMeta{},
@@ -96,8 +98,8 @@ func TestNewEnvoyFilter(t *testing.T) {
 				Labels:    MetadataLabels(sc),
 			},
 			Spec: v1alpha3.EnvoyFilter{
-				// WorkloadSelector: &workloadSelector,
-				ConfigPatches: configPatches,
+				WorkloadSelector: &workloadSelector,
+				ConfigPatches:    configPatches,
 			},
 		}
 

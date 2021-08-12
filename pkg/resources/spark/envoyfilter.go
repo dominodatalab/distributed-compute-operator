@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	protobuftypes "github.com/gogo/protobuf/types"
-	"istio.io/api/meta/v1alpha1"
 	"istio.io/api/networking/v1alpha3"
 	v1alpha32 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -89,9 +88,11 @@ func NewEnvoyFilter(sc *dcv1alpha1.SparkCluster) (v1alpha32.EnvoyFilter, error) 
 		},
 	}
 
-	// workloadSelector := v1alpha3.WorkloadSelector{
-	//	Labels: sc.Labels,
-	// }
+	workloadSelector := v1alpha3.WorkloadSelector{
+		Labels: map[string]string{
+			"app.kubernetes.io/name": "spark",
+		},
+	}
 
 	envoyFilter := v1alpha32.EnvoyFilter{
 		TypeMeta: metav1.TypeMeta{},
@@ -101,10 +102,9 @@ func NewEnvoyFilter(sc *dcv1alpha1.SparkCluster) (v1alpha32.EnvoyFilter, error) 
 			Labels:    AddGlobalLabels(MetadataLabels(sc), sc.Labels),
 		},
 		Spec: v1alpha3.EnvoyFilter{
-			// WorkloadSelector: &workloadSelector,
-			ConfigPatches: configPatches,
+			WorkloadSelector: &workloadSelector,
+			ConfigPatches:    configPatches,
 		},
-		Status: v1alpha1.IstioStatus{},
 	}
 
 	return envoyFilter, nil
