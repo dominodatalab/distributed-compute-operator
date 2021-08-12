@@ -18,9 +18,9 @@ func TestNewEnvoyFilter(t *testing.T) {
 		actual, err := NewEnvoyFilter(sc)
 		require.NoError(t, err)
 
-		workloadSelector := v1alpha3.WorkloadSelector{
-			Labels: sc.Labels,
-		}
+		// workloadSelector := v1alpha3.WorkloadSelector{
+		//	Labels: sc.Labels,
+		// }
 
 		patch := v1alpha3.EnvoyFilter_Patch{
 			Operation: v1alpha3.EnvoyFilter_Patch_MERGE,
@@ -57,7 +57,7 @@ func TestNewEnvoyFilter(t *testing.T) {
 			{
 				ApplyTo: v1alpha3.EnvoyFilter_NETWORK_FILTER,
 				Match: &v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
-					Context: v1alpha3.EnvoyFilter_SIDECAR_INBOUND,
+					Context: v1alpha3.EnvoyFilter_ANY,
 					ObjectTypes: &v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
 						Listener: &v1alpha3.EnvoyFilter_ListenerMatch{
 							FilterChain: &v1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
@@ -70,22 +70,22 @@ func TestNewEnvoyFilter(t *testing.T) {
 				},
 				Patch: &patch,
 			},
-			{
-				ApplyTo: v1alpha3.EnvoyFilter_NETWORK_FILTER,
-				Match: &v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
-					Context: v1alpha3.EnvoyFilter_SIDECAR_OUTBOUND,
-					ObjectTypes: &v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
-						Listener: &v1alpha3.EnvoyFilter_ListenerMatch{
-							FilterChain: &v1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
-								Filter: &v1alpha3.EnvoyFilter_ListenerMatch_FilterMatch{
-									Name: "envoy.filters.network.tcp_proxy",
-								},
-							},
-						},
-					},
-				},
-				Patch: &patch,
-			},
+			// {
+			//	ApplyTo: v1alpha3.EnvoyFilter_NETWORK_FILTER,
+			//	Match: &v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
+			//		Context: v1alpha3.EnvoyFilter_SIDECAR_OUTBOUND,
+			//		ObjectTypes: &v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
+			//			Listener: &v1alpha3.EnvoyFilter_ListenerMatch{
+			//				FilterChain: &v1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
+			//					Filter: &v1alpha3.EnvoyFilter_ListenerMatch_FilterMatch{
+			//						Name: "envoy.filters.network.tcp_proxy",
+			//					},
+			//				},
+			//			},
+			//		},
+			//	},
+			//	Patch: &patch,
+			// },
 		}
 
 		expected := v1alpha32.EnvoyFilter{
@@ -96,8 +96,8 @@ func TestNewEnvoyFilter(t *testing.T) {
 				Labels:    MetadataLabels(sc),
 			},
 			Spec: v1alpha3.EnvoyFilter{
-				WorkloadSelector: &workloadSelector,
-				ConfigPatches:    configPatches,
+				// WorkloadSelector: &workloadSelector,
+				ConfigPatches: configPatches,
 			},
 		}
 

@@ -18,12 +18,12 @@ const (
 
 // NewEnvoyFilter creates a new EnvoyFilter resource to set idle_timeout for Istio-enabled deployments
 func NewEnvoyFilter(sc *dcv1alpha1.SparkCluster) (v1alpha32.EnvoyFilter, error) {
-	workloadSelector := v1alpha3.WorkloadSelector{
-		Labels: sc.Labels,
-	}
+	// workloadSelector := v1alpha3.WorkloadSelector{
+	//	Labels: sc.Labels,
+	// }
 
 	matchInbound := v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
-		Context: v1alpha3.EnvoyFilter_SIDECAR_INBOUND,
+		Context: v1alpha3.EnvoyFilter_ANY,
 		ObjectTypes: &v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
 			Listener: &v1alpha3.EnvoyFilter_ListenerMatch{
 				FilterChain: &v1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
@@ -35,18 +35,18 @@ func NewEnvoyFilter(sc *dcv1alpha1.SparkCluster) (v1alpha32.EnvoyFilter, error) 
 		},
 	}
 
-	matchOutbound := v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
-		Context: v1alpha3.EnvoyFilter_SIDECAR_OUTBOUND,
-		ObjectTypes: &v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
-			Listener: &v1alpha3.EnvoyFilter_ListenerMatch{
-				FilterChain: &v1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
-					Filter: &v1alpha3.EnvoyFilter_ListenerMatch_FilterMatch{
-						Name: filterName,
-					},
-				},
-			},
-		},
-	}
+	// matchOutbound := v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
+	//	Context: v1alpha3.EnvoyFilter_SIDECAR_OUTBOUND,
+	//	ObjectTypes: &v1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
+	//		Listener: &v1alpha3.EnvoyFilter_ListenerMatch{
+	//			FilterChain: &v1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
+	//				Filter: &v1alpha3.EnvoyFilter_ListenerMatch_FilterMatch{
+	//					Name: filterName,
+	//				},
+	//			},
+	//		},
+	//	},
+	// }
 
 	patch := v1alpha3.EnvoyFilter_Patch{
 		Operation: v1alpha3.EnvoyFilter_Patch_MERGE,
@@ -86,11 +86,6 @@ func NewEnvoyFilter(sc *dcv1alpha1.SparkCluster) (v1alpha32.EnvoyFilter, error) 
 			Match:   &matchInbound,
 			Patch:   &patch,
 		},
-		{
-			ApplyTo: v1alpha3.EnvoyFilter_NETWORK_FILTER,
-			Match:   &matchOutbound,
-			Patch:   &patch,
-		},
 	}
 
 	envoyFilter := v1alpha32.EnvoyFilter{
@@ -101,8 +96,8 @@ func NewEnvoyFilter(sc *dcv1alpha1.SparkCluster) (v1alpha32.EnvoyFilter, error) 
 			Labels:    AddGlobalLabels(MetadataLabels(sc), sc.Labels),
 		},
 		Spec: v1alpha3.EnvoyFilter{
-			WorkloadSelector: &workloadSelector,
-			ConfigPatches:    configPatches,
+			// WorkloadSelector: &workloadSelector,
+			ConfigPatches: configPatches,
 		},
 		Status: v1alpha1.IstioStatus{},
 	}

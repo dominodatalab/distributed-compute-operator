@@ -341,7 +341,9 @@ func processLabels(rc *dcv1alpha1.RayCluster, comp Component, extraLabels map[st
 	return labels
 }
 
-func processPVCTemplates(rc *dcv1alpha1.RayCluster, vcts []dcv1alpha1.PersistentVolumeClaimTemplate) (pvcTmpls []corev1.PersistentVolumeClaim) {
+func processPVCTemplates(
+	rc *dcv1alpha1.RayCluster,
+	vcts []dcv1alpha1.PersistentVolumeClaimTemplate) (pvcTmpls []corev1.PersistentVolumeClaim) {
 	mode := corev1.PersistentVolumeFilesystem
 
 	for _, vct := range vcts {
