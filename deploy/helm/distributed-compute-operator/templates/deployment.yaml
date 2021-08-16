@@ -42,11 +42,13 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - start
-            - --namespace={{ .Release.Namespace }}
             {{- with .Values.config }}
             - --webhook-server-port={{ .webhookPort }}
             - --metrics-bind-address=:{{ .metricsPort }}
             - --health-probe-bind-address=:{{ .healthProbePort }}
+            {{- with .watchNamespaces }}
+            - --namespaces={{ . | join "," }}
+            {{- end }}
             {{- if .enableLeaderElection }}
             - --leader-elect
             {{- end }}

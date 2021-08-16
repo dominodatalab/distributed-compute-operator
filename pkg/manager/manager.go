@@ -12,6 +12,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
@@ -35,15 +36,22 @@ type Controllers []func(ctrl.Manager, bool) error
 func Start(cfg *Config) error {
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&cfg.ZapOptions)))
 
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	mgrOpts := ctrl.Options{
 		Scheme:                 scheme,
 		MetricsBindAddress:     cfg.MetricsAddr,
 		Port:                   cfg.WebhookServerPort,
 		HealthProbeBindAddress: cfg.HealthProbeAddr,
 		LeaderElection:         cfg.EnableLeaderElection,
 		LeaderElectionID:       leaderElectionID,
-		Namespace:              cfg.Namespace,
-	})
+	}
+	if len(cfg.Namespaces) > 0 {
+		setupLog.Info("Limiting reconciliation watch", "namespaces", cfg.Namespaces)
+		mgrOpts.NewCache = cache.MultiNamespacedCacheBuilder(cfg.Namespaces)
+	} else {
+		setupLog.Info("Watching all namespaces")
+	}
+
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), mgrOpts)
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		return err
