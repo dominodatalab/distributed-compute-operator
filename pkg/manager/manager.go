@@ -42,7 +42,6 @@ func Start(cfg *Config) error {
 		HealthProbeBindAddress: cfg.HealthProbeAddr,
 		LeaderElection:         cfg.EnableLeaderElection,
 		LeaderElectionID:       leaderElectionID,
-		Namespace:              cfg.Namespace,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
