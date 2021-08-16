@@ -10,6 +10,7 @@ import (
 )
 
 var (
+	namespaces           []string
 	probeAddr            string
 	metricsAddr          string
 	webhookPort          int
@@ -23,6 +24,7 @@ var startCmd = &cobra.Command{
 	Short: "Start the controller manager",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg := &manager.Config{
+			Namespaces:           namespaces,
 			MetricsAddr:          metricsAddr,
 			HealthProbeAddr:      probeAddr,
 			WebhookServerPort:    webhookPort,
@@ -42,6 +44,7 @@ func init() {
 	zapOpts.BindFlags(fs)
 
 	startCmd.Flags().AddGoFlagSet(fs)
+	startCmd.Flags().StringSliceVar(&namespaces, "namespaces", nil, "Only reconcile resources in these namespaces")
 	startCmd.Flags().IntVar(&webhookPort, "webhook-server-port", 9443, "Webhook server will bind to this port")
 	startCmd.Flags().StringVar(&metricsAddr, "metrics-bind-address", ":8080",
 		"Metrics endpoint will bind to this address")

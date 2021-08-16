@@ -11,6 +11,9 @@ installCRDs: true
 
 # Controller manager configuration
 config:
+  # Limit watch to a specific set of namespaces, default is all namespaces.
+  watchNamespaces: []
+
   # Webhook server port
   webhookPort: 9443
   # Prometheus metrics port
