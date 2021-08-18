@@ -311,13 +311,23 @@ var _ = Describe("SparkCluster", func() {
 				Expect(k8sClient.Create(ctx, sc)).To(Succeed())
 			})
 
-			It("requires average utilization to be > 0", func() {
+			It("requires average cpu utilization to be > 0", func() {
 				sc := clusterWithAutoscaling()
 
 				sc.Spec.Autoscaling.AverageCPUUtilization = pointer.Int32Ptr(0)
 				Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())
 
 				sc.Spec.Autoscaling.AverageCPUUtilization = pointer.Int32Ptr(75)
+				Expect(k8sClient.Create(ctx, sc)).To(Succeed())
+			})
+
+			It("requires average memory utilization to be > 0", func() {
+				sc := clusterWithAutoscaling()
+
+				sc.Spec.Autoscaling.AverageMemoryUtilization = pointer.Int32Ptr(0)
+				Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())
+
+				sc.Spec.Autoscaling.AverageMemoryUtilization = pointer.Int32Ptr(75)
 				Expect(k8sClient.Create(ctx, sc)).To(Succeed())
 			})
 

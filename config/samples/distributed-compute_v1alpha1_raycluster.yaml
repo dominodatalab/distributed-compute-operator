@@ -22,6 +22,7 @@ spec:
   #   minReplicas: 1
   #   maxReplicas: 5
   #   averageCPUUtilization: 50
+  #   averageMemoryUtilization: 50
   #   scaleDownStabilizationWindowSeconds: 60
 
   # redis port and addition redis shard ports used by head node

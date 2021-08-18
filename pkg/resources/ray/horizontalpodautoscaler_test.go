@@ -96,6 +96,30 @@ func TestNewHorizontalPodAutoscaler(t *testing.T) {
 		assert.Equal(t, expected, hpa.Spec.Metrics)
 	})
 
+	t.Run("avg_memory_util", func(t *testing.T) {
+		rc := rayClusterFixture()
+		rc.Spec.Autoscaling = &dcv1alpha1.Autoscaling{
+			AverageMemoryUtilization: pointer.Int32Ptr(75),
+		}
+
+		hpa, err := NewHorizontalPodAutoscaler(rc)
+		require.NoError(t, err)
+
+		expected := []autoscalingv2beta2.MetricSpec{
+			{
+				Type: "Resource",
+				Resource: &autoscalingv2beta2.ResourceMetricSource{
+					Name: "memory",
+					Target: autoscalingv2beta2.MetricTarget{
+						Type:               "Utilization",
+						AverageUtilization: pointer.Int32Ptr(75),
+					},
+				},
+			},
+		}
+		assert.Equal(t, expected, hpa.Spec.Metrics)
+	})
+
 	t.Run("scale_down_behavior", func(t *testing.T) {
 		rc := rayClusterFixture()
 		rc.Spec.Autoscaling = &dcv1alpha1.Autoscaling{

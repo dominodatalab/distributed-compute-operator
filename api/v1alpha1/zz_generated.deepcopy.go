@@ -22,6 +22,11 @@ func (in *Autoscaling) DeepCopyInto(out *Autoscaling) {
 		*out = new(int32)
 		**out = **in
 	}
+	if in.AverageMemoryUtilization != nil {
+		in, out := &in.AverageMemoryUtilization, &out.AverageMemoryUtilization
+		*out = new(int32)
+		**out = **in
+	}
 	if in.ScaleDownStabilizationWindowSeconds != nil {
 		in, out := &in.ScaleDownStabilizationWindowSeconds, &out.ScaleDownStabilizationWindowSeconds
 		*out = new(int32)
