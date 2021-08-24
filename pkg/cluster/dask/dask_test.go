@@ -1,13 +1,16 @@
 package dask
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func testDaskCluster() *dcv1alpha1.DaskCluster {
 	return &dcv1alpha1.DaskCluster{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "DaskCluster",
+			APIVersion: "distributed-compute.dominodatalab.com/v1test1",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "ns",
