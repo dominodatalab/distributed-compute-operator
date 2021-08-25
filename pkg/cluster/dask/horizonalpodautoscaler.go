@@ -47,18 +47,28 @@ func (s *horizontalPodAutoscalerDS) HorizontalPodAutoscaler() *autoscalingv2beta
 
 	var metrics []autoscalingv2beta2.MetricSpec
 	if as.AverageCPUUtilization != nil {
-		metrics = []autoscalingv2beta2.MetricSpec{
-			{
-				Type: autoscalingv2beta2.ResourceMetricSourceType,
-				Resource: &autoscalingv2beta2.ResourceMetricSource{
-					Name: corev1.ResourceCPU,
-					Target: autoscalingv2beta2.MetricTarget{
-						Type:               autoscalingv2beta2.UtilizationMetricType,
-						AverageUtilization: s.dc.Spec.Autoscaling.AverageCPUUtilization,
-					},
+		metrics = append(metrics, autoscalingv2beta2.MetricSpec{
+			Type: autoscalingv2beta2.ResourceMetricSourceType,
+			Resource: &autoscalingv2beta2.ResourceMetricSource{
+				Name: corev1.ResourceCPU,
+				Target: autoscalingv2beta2.MetricTarget{
+					Type:               autoscalingv2beta2.UtilizationMetricType,
+					AverageUtilization: s.dc.Spec.Autoscaling.AverageCPUUtilization,
 				},
 			},
-		}
+		})
+	}
+	if as.AverageMemoryUtilization != nil {
+		metrics = append(metrics, autoscalingv2beta2.MetricSpec{
+			Type: autoscalingv2beta2.ResourceMetricSourceType,
+			Resource: &autoscalingv2beta2.ResourceMetricSource{
+				Name: corev1.ResourceMemory,
+				Target: autoscalingv2beta2.MetricTarget{
+					Type:               autoscalingv2beta2.UtilizationMetricType,
+					AverageUtilization: s.dc.Spec.Autoscaling.AverageMemoryUtilization,
+				},
+			},
+		})
 	}
 
 	hpa.Spec = autoscalingv2beta2.HorizontalPodAutoscalerSpec{

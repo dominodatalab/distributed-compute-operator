@@ -341,8 +341,16 @@ func (r *RayCluster) validateAutoscaler() field.ErrorList {
 
 	if as.AverageCPUUtilization != nil && *as.AverageCPUUtilization <= 0 {
 		errs = append(errs, field.Invalid(
-			fldPath.Child("averageUtilization"),
+			fldPath.Child("averageCPUUtilization"),
 			as.AverageCPUUtilization,
+			"must be greater than 0",
+		))
+	}
+
+	if as.AverageMemoryUtilization != nil && *as.AverageMemoryUtilization <= 0 {
+		errs = append(errs, field.Invalid(
+			fldPath.Child("averageMemoryUtilization"),
+			as.AverageMemoryUtilization,
 			"must be greater than 0",
 		))
 	}
