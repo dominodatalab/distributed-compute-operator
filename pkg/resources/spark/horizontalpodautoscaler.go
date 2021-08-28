@@ -31,18 +31,28 @@ func NewHorizontalPodAutoscaler(sc *dcv1alpha1.SparkCluster) (*autoscalingv2beta
 
 	var metrics []autoscalingv2beta2.MetricSpec
 	if autoscaling.AverageCPUUtilization != nil {
-		metrics = []autoscalingv2beta2.MetricSpec{
-			{
-				Type: autoscalingv2beta2.ResourceMetricSourceType,
-				Resource: &autoscalingv2beta2.ResourceMetricSource{
-					Name: corev1.ResourceCPU,
-					Target: autoscalingv2beta2.MetricTarget{
-						Type:               autoscalingv2beta2.UtilizationMetricType,
-						AverageUtilization: autoscaling.AverageCPUUtilization,
-					},
+		metrics = append(metrics, autoscalingv2beta2.MetricSpec{
+			Type: autoscalingv2beta2.ResourceMetricSourceType,
+			Resource: &autoscalingv2beta2.ResourceMetricSource{
+				Name: corev1.ResourceCPU,
+				Target: autoscalingv2beta2.MetricTarget{
+					Type:               autoscalingv2beta2.UtilizationMetricType,
+					AverageUtilization: autoscaling.AverageCPUUtilization,
 				},
 			},
-		}
+		})
+	}
+	if autoscaling.AverageMemoryUtilization != nil {
+		metrics = append(metrics, autoscalingv2beta2.MetricSpec{
+			Type: autoscalingv2beta2.ResourceMetricSourceType,
+			Resource: &autoscalingv2beta2.ResourceMetricSource{
+				Name: corev1.ResourceMemory,
+				Target: autoscalingv2beta2.MetricTarget{
+					Type:               autoscalingv2beta2.UtilizationMetricType,
+					AverageUtilization: autoscaling.AverageMemoryUtilization,
+				},
+			},
+		})
 	}
 
 	hpa := &autoscalingv2beta2.HorizontalPodAutoscaler{

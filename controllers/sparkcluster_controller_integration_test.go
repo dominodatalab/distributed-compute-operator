@@ -176,9 +176,10 @@ func createAndBasicTest(ctx context.Context, name string) {
 				Tag:        "bar",
 			},
 			Autoscaling: &dcv1alpha1.Autoscaling{
-				MinReplicas:           pointer.Int32Ptr(1),
-				MaxReplicas:           1,
-				AverageCPUUtilization: pointer.Int32Ptr(50),
+				MinReplicas:              pointer.Int32Ptr(1),
+				MaxReplicas:              1,
+				AverageCPUUtilization:    pointer.Int32Ptr(50),
+				AverageMemoryUtilization: pointer.Int32Ptr(50),
 			},
 			NetworkPolicy: dcv1alpha1.SparkClusterNetworkPolicy{
 				Enabled:               pointer.BoolPtr(true),

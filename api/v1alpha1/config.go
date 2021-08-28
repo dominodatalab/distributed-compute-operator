@@ -13,6 +13,9 @@ type Autoscaling struct {
 	// AverageCPUUtilization is the target value of the average of the resource metric across all relevant pods.
 	// This is represented as a percentage of the requested value of the resource for the pods.
 	AverageCPUUtilization *int32 `json:"averageCPUUtilization,omitempty"`
+	// AverageMemoryUtilization is the target value of the average of the resource metric across all relevant pods.
+	// This is represented as a percentage of the requested value of the resource for the pods.
+	AverageMemoryUtilization *int32 `json:"averageMemoryUtilization,omitempty"`
 	// ScaleDownStabilizationWindowSeconds is the number of seconds for which past recommendations should be considered
 	// when scaling down. A shorter window will trigger scale down events quicker, but too short a window may cause
 	// replica flapping when metrics used for scaling keep fluctuating.

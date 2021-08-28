@@ -60,6 +60,13 @@ spec:
                       resource for the pods.
                     format: int32
                     type: integer
+                  averageMemoryUtilization:
+                    description: AverageMemoryUtilization is the target value of the
+                      average of the resource metric across all relevant pods. This
+                      is represented as a percentage of the requested value of the
+                      resource for the pods.
+                    format: int32
+                    type: integer
                   maxReplicas:
                     description: MaxReplicas is the upper limit for the number of
                       replicas to which the autoscaler can scale up. This value cannot

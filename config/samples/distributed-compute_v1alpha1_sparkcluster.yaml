@@ -22,7 +22,8 @@ spec:
   # autoscaling:
   #   minReplicas: 1
   #   maxReplicas: 5
-  #   averageUtilization: 50
+  #   averageCPUUtilization: 50
+  #   averageMemoryUtilization: 50
   #   scaleDownStabilizationWindowSeconds: 60
 
   # port used to connect clients to spark
@@ -98,7 +99,8 @@ spec:
   #  - name: SPARK_MASTER_OPTS
 
   #  autoscaling:
-  #    averageCPUUtilization: 5
+  #    averageCPUUtilization: 50
+  #    averageMemoryUtilization: 50
   #    maxReplicas: 3
   #    minReplicas: 1
   #    scaleDownStabilizationWindowSeconds: 10
