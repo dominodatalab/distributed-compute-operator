@@ -20,14 +20,22 @@ spec:
   versions:
   - additionalPrinterColumns:
     - jsonPath: .spec.worker.replicas
-      name: Worker Replicas
+      name: Workers
       type: integer
-    - jsonPath: .spec.image
-      name: Image
-      type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
+    - jsonPath: .status.image
+      name: Image
+      type: string
+    - jsonPath: .spec.networkPolicy.enabled
+      name: Network Policy
+      priority: 10
+      type: boolean
+    - jsonPath: .status.nodes
+      name: Pods
+      priority: 10
+      type: string
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -50,21 +58,21 @@ spec:
               resource.
             properties:
               autoscaling:
-                description: Autoscaling parameters used to scale up/down ray worker
+                description: Autoscaling parameters used to scale up/down cluster
                   nodes.
                 properties:
                   averageCPUUtilization:
                     description: AverageCPUUtilization is the target value of the
-                      average of the resource metric across all relevant pods. This
-                      is represented as a percentage of the requested value of the
-                      resource for the pods.
+                      average of the resource cpu metric across all relevant pods.
+                      This is represented as a percentage of the requested value of
+                      the resource for the pods.
                     format: int32
                     type: integer
                   averageMemoryUtilization:
                     description: AverageMemoryUtilization is the target value of the
-                      average of the resource metric across all relevant pods. This
-                      is represented as a percentage of the requested value of the
-                      resource for the pods.
+                      average of the resource memory metric across all relevant pods.
+                      This is represented as a percentage of the requested value of
+                      the resource for the pods.
                     format: int32
                     type: integer
                   maxReplicas:
@@ -104,7 +112,7 @@ spec:
                 description: EnableDashboard starts the dashboard web UI.
                 type: boolean
               envVars:
-                description: EnvVars added to all every ray pod container.
+                description: EnvVars added to all every cluster container.
                 items:
                   description: EnvVar represents an environment variable present in
                     a Container.
@@ -213,12 +221,14 @@ spec:
               globalLabels:
                 additionalProperties:
                   type: string
+                description: GlobalLabels applied to all resources in addition to
+                  stock labels.
                 type: object
               head:
                 description: Head node configuration parameters.
                 properties:
                   affinity:
-                    description: Affinity applied to ray pods.
+                    description: Affinity applied to cluster pods.
                     properties:
                       nodeAffinity:
                         description: Describes node affinity scheduling rules for
@@ -1085,10 +1095,10 @@ spec:
                   annotations:
                     additionalProperties:
                       type: string
-                    description: Annotations applied to ray pods.
+                    description: Annotations applied to cluster pods.
                     type: object
                   initContainers:
-                    description: InitContainers added to ray pods.
+                    description: InitContainers added to cluster pods.
                     items:
                       description: A single application container that you want to
                         run within a pod.
@@ -2249,16 +2259,17 @@ spec:
                   labels:
                     additionalProperties:
                       type: string
-                    description: Labels applied to ray pods in addition to stock labels.
+                    description: Labels applied to cluster pods in addition to stock
+                      labels.
                     type: object
                   nodeSelector:
                     additionalProperties:
                       type: string
-                    description: NodeSelector applied to ray pods.
+                    description: NodeSelector applied to cluster pods.
                     type: object
                   resources:
                     description: Resources are the requests and limits applied to
-                      ray containers.
+                      cluster containers.
                     properties:
                       limits:
                         additionalProperties:
@@ -2284,7 +2295,7 @@ spec:
                         type: object
                     type: object
                   tolerations:
-                    description: Tolerations applied to ray pods.
+                    description: Tolerations applied to cluster pods.
                     items:
                       description: The pod this Toleration is attached to tolerates
                         any taint that matches the triple <key,value,effect> using
@@ -2325,7 +2336,7 @@ spec:
                       type: object
                     type: array
                   volumeClaimTemplates:
-                    description: VolumeClaimTemplates is a list of claims that ray
+                    description: VolumeClaimTemplates is a list of claims that cluster
                       pods are allowed to reference. You can enable dynamic provisioning
                       of additional storage on-demand by using a storage class provisioner.
                     items:
@@ -2472,7 +2483,7 @@ spec:
                       type: object
                     type: array
                   volumeMounts:
-                    description: VolumeMounts added to ray containers.
+                    description: VolumeMounts added to cluster containers.
                     items:
                       description: VolumeMount describes a mounting of a Volume within
                         a container.
@@ -2512,7 +2523,7 @@ spec:
                       type: object
                     type: array
                   volumes:
-                    description: Volumes added to ray pods.
+                    description: Volumes added to cluster pods.
                     items:
                       description: Volume represents a named volume in a pod that
                         may be accessed by any container in the pod.
@@ -3999,7 +4010,7 @@ spec:
                     type: array
                 type: object
               image:
-                description: Image used to launch head and worker nodes.
+                description: Image used to launch cluster nodes.
                 properties:
                   pullPolicy:
                     description: PullPolicy used to fetch container image.
@@ -4015,8 +4026,8 @@ spec:
                     type: string
                 type: object
               imagePullSecrets:
-                description: ImagePullSecrets are references to secrets with credentials
-                  to private registries used to pull images.
+                description: ImagePullSecrets are references to secrets with pull
+                  credentials to private registries where cluster image are stored.
                 items:
                   description: LocalObjectReference contains enough information to
                     let you locate the referenced object inside the same namespace.
@@ -4032,21 +4043,33 @@ spec:
                   peer authentication policy that takes precedence over a global and/or
                   namespace-wide policy.
                 type: string
-              networkPolicy:
-                description: NetworkPolicy parameters that grant intra-cluster and
-                  external network access to cluster nodes.
+              kerberosKeytab:
+                description: KerberosKeytab parameters used to add kerberos authentication.
                 properties:
-                  clientServerLabels:
+                  contents:
+                    description: Contents are the binary data stored in the keytab
+                      file.
+                    format: byte
+                    type: string
+                  mountPath:
+                    description: MountPath where the keytab file should be created
+                      inside a pod.
+                    type: string
+                type: object
+              networkPolicy:
+                description: NetworkPolicy parameters used to IP traffic flow.
+                properties:
+                  clientLabels:
                     additionalProperties:
                       type: string
-                    description: ClientServerLabels defines the pod selector clause
-                      that grant ingress access to the head client server port.
+                    description: ClientLabels defines the pod selector clause that
+                      grants ingress access to the cluster client port(s).
                     type: object
                   dashboardLabels:
                     additionalProperties:
                       type: string
-                    description: DashboardLabels defines the pod selector clause used
-                      to grant ingress access to the head dashboard port.
+                    description: DashboardLabels defines the pod selector clause that
+                      grants ingress access to the cluster dashboard port.
                     type: object
                   enabled:
                     description: Enabled controls the creation of network policies
@@ -4067,7 +4090,7 @@ spec:
                 format: int64
                 type: integer
               podSecurityContext:
-                description: PodSecurityContext added to every ray pod.
+                description: PodSecurityContext added to every cluster pod.
                 properties:
                   fsGroup:
                     description: "A special supplemental group that applies to all
@@ -4210,8 +4233,9 @@ spec:
                     type: object
                 type: object
               podSecurityPolicy:
-                description: PodSecurityPolicy name can be provided to govern execution
-                  of the ray processes within pods.
+                description: PodSecurityPolicy name can be provided to restrict and/or
+                  provide execution permissions to processes running within cluster
+                  pods.
                 type: string
               port:
                 description: Port is the port of the head ray process.
@@ -4224,16 +4248,19 @@ spec:
                   format: int32
                   type: integer
                 type: array
-              serviceAccountName:
-                description: ServiceAccountName will disable the creation of a dedicated
-                  cluster service account. The service account referenced by the provided
-                  name will be used instead.
-                type: string
+              serviceAccount:
+                description: ServiceAccount parameters used to override default behavior.
+                properties:
+                  automountServiceAccountToken:
+                    type: boolean
+                  name:
+                    type: string
+                type: object
               worker:
                 description: Worker node configuration parameters.
                 properties:
                   affinity:
-                    description: Affinity applied to ray pods.
+                    description: Affinity applied to cluster pods.
                     properties:
                       nodeAffinity:
                         description: Describes node affinity scheduling rules for
@@ -5100,10 +5127,10 @@ spec:
                   annotations:
                     additionalProperties:
                       type: string
-                    description: Annotations applied to ray pods.
+                    description: Annotations applied to cluster pods.
                     type: object
                   initContainers:
-                    description: InitContainers added to ray pods.
+                    description: InitContainers added to cluster pods.
                     items:
                       description: A single application container that you want to
                         run within a pod.
@@ -6264,12 +6291,13 @@ spec:
                   labels:
                     additionalProperties:
                       type: string
-                    description: Labels applied to ray pods in addition to stock labels.
+                    description: Labels applied to cluster pods in addition to stock
+                      labels.
                     type: object
                   nodeSelector:
                     additionalProperties:
                       type: string
-                    description: NodeSelector applied to ray pods.
+                    description: NodeSelector applied to cluster pods.
                     type: object
                   replicas:
                     description: Replicas configures the total number of workers in
@@ -6282,7 +6310,7 @@ spec:
                     type: integer
                   resources:
                     description: Resources are the requests and limits applied to
-                      ray containers.
+                      cluster containers.
                     properties:
                       limits:
                         additionalProperties:
@@ -6308,7 +6336,7 @@ spec:
                         type: object
                     type: object
                   tolerations:
-                    description: Tolerations applied to ray pods.
+                    description: Tolerations applied to cluster pods.
                     items:
                       description: The pod this Toleration is attached to tolerates
                         any taint that matches the triple <key,value,effect> using
@@ -6349,7 +6377,7 @@ spec:
                       type: object
                     type: array
                   volumeClaimTemplates:
-                    description: VolumeClaimTemplates is a list of claims that ray
+                    description: VolumeClaimTemplates is a list of claims that cluster
                       pods are allowed to reference. You can enable dynamic provisioning
                       of additional storage on-demand by using a storage class provisioner.
                     items:
@@ -6496,7 +6524,7 @@ spec:
                       type: object
                     type: array
                   volumeMounts:
-                    description: VolumeMounts added to ray containers.
+                    description: VolumeMounts added to cluster containers.
                     items:
                       description: VolumeMount describes a mounting of a Volume within
                         a container.
@@ -6536,7 +6564,7 @@ spec:
                       type: object
                     type: array
                   volumes:
-                    description: Volumes added to ray pods.
+                    description: Volumes added to cluster pods.
                     items:
                       description: Volume represents a named volume in a pod that
                         may be accessed by any container in the pod.
@@ -8031,21 +8059,26 @@ spec:
                 type: array
             type: object
           status:
-            description: RayClusterStatus defines the observed state of a RayCluster
-              resource.
+            description: ClusterStatusConfig defines the observed state of a given
+              cluster. The controllers will generate and populate these fields during
+              reconciliation.
             properties:
+              image:
+                description: Image is the canonical reference url to the cluster container
+                  image.
+                type: string
               nodes:
-                description: Nodes that comprise the cluster.
+                description: Nodes are pods that comprise the cluster.
                 items:
                   type: string
                 type: array
               workerReplicas:
-                description: WorkerReplicas is the scale.status.replicas subresource
+                description: WorkerReplicas is the `scale.status.replicas` subresource
                   field.
                 format: int32
                 type: integer
               workerSelector:
-                description: WorkerSelector is the scale.status.selector subresource
+                description: WorkerSelector is the `scale.status.selector` subresource
                   field.
                 type: string
             type: object

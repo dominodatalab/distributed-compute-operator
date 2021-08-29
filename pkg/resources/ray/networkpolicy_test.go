@@ -9,7 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
+	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 )
 
 func TestNewClusterNetworkPolicy(t *testing.T) {
@@ -61,8 +61,8 @@ func TestNewClusterNetworkPolicy(t *testing.T) {
 
 func TestNewHeadClientNetworkPolicy(t *testing.T) {
 	rc := rayClusterFixture()
-	rc.Spec.NetworkPolicy = v1alpha1.RayClusterNetworkPolicy{
-		ClientServerLabels: map[string]string{
+	rc.Spec.NetworkPolicy = dcv1alpha1.NetworkPolicyConfig{
+		ClientLabels: map[string]string{
 			"server-client": "true",
 		},
 	}
@@ -122,7 +122,7 @@ func TestNewHeadClientNetworkPolicy(t *testing.T) {
 
 func TestNewHeadDashboardNetworkPolicy(t *testing.T) {
 	rc := rayClusterFixture()
-	rc.Spec.NetworkPolicy = v1alpha1.RayClusterNetworkPolicy{
+	rc.Spec.NetworkPolicy = dcv1alpha1.NetworkPolicyConfig{
 		DashboardLabels: map[string]string{
 			"dashboard-client": "true",
 		},

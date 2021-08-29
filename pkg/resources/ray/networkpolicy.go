@@ -57,7 +57,7 @@ func NewHeadClientNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.Network
 	return headNetworkPolicy(
 		rc,
 		rc.Spec.ClientServerPort,
-		rc.Spec.NetworkPolicy.ClientServerLabels,
+		rc.Spec.NetworkPolicy.ClientLabels,
 		Component("client"),
 		descriptionClient,
 	)

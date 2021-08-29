@@ -198,7 +198,7 @@ func (r *RayClusterReconciler) reconcileIstio(ctx context.Context, rc *dcv1alpha
 // reconcileServiceAccount creates a new dedicated service account for a Ray
 // cluster unless a different service account name is provided in the spec.
 func (r *RayClusterReconciler) reconcileServiceAccount(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
-	if rc.Spec.ServiceAccountName != "" {
+	if rc.Spec.ServiceAccount.Name != "" {
 		return nil
 	}
 

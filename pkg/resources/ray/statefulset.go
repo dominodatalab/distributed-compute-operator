@@ -66,8 +66,8 @@ func NewStatefulSet(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Stateful
 	}
 
 	serviceAccountName := InstanceObjectName(rc.Name, ComponentNone)
-	if rc.Spec.ServiceAccountName != "" {
-		serviceAccountName = rc.Spec.ServiceAccountName
+	if rc.Spec.ServiceAccount.Name != "" {
+		serviceAccountName = rc.Spec.ServiceAccount.Name
 	}
 
 	replicas := p.replicas()
@@ -150,7 +150,7 @@ func NewStatefulSet(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Stateful
 
 type configProcessor interface {
 	replicas() int32
-	nodeAttributes() *dcv1alpha1.RayClusterNode
+	nodeAttributes() *dcv1alpha1.WorkloadConfig
 	processArgs() []string
 	processPorts() []corev1.ContainerPort
 	processLabels() map[string]string
@@ -176,8 +176,8 @@ func (p *headProcessor) replicas() int32 {
 	return 1
 }
 
-func (p *headProcessor) nodeAttributes() *dcv1alpha1.RayClusterNode {
-	return &p.rc.Spec.Head.RayClusterNode
+func (p *headProcessor) nodeAttributes() *dcv1alpha1.WorkloadConfig {
+	return &p.rc.Spec.Head
 }
 
 func (p *headProcessor) processArgs() []string {
@@ -251,7 +251,7 @@ func (p *headProcessor) processPorts() []corev1.ContainerPort {
 }
 
 func (p *headProcessor) processLabels() map[string]string {
-	return processLabels(p.rc, ComponentHead, AddGlobalLabels(p.rc.Spec.Head.RayClusterNode.Labels, p.rc.Spec.GlobalLabels))
+	return processLabels(p.rc, ComponentHead, AddGlobalLabels(p.rc.Spec.Head.Labels, p.rc.Spec.GlobalLabels))
 }
 
 func (p *headProcessor) processServiceName() string {
@@ -266,8 +266,8 @@ func (p *workerProcessor) replicas() int32 {
 	return *p.rc.Spec.Worker.Replicas
 }
 
-func (p *workerProcessor) nodeAttributes() *dcv1alpha1.RayClusterNode {
-	return &p.rc.Spec.Worker.RayClusterNode
+func (p *workerProcessor) nodeAttributes() *dcv1alpha1.WorkloadConfig {
+	return &p.rc.Spec.Worker.WorkloadConfig
 }
 
 func (p *workerProcessor) processArgs() []string {
@@ -302,7 +302,7 @@ func (p *workerProcessor) processPorts() []corev1.ContainerPort {
 }
 
 func (p *workerProcessor) processLabels() map[string]string {
-	return processLabels(p.rc, ComponentWorker, AddGlobalLabels(p.rc.Spec.Worker.RayClusterNode.Labels, p.rc.Spec.GlobalLabels))
+	return processLabels(p.rc, ComponentWorker, AddGlobalLabels(p.rc.Spec.Worker.Labels, p.rc.Spec.GlobalLabels))
 }
 
 func (p *workerProcessor) processServiceName() string {

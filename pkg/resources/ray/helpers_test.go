@@ -1,7 +1,7 @@
 package ray
 
 import (
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
 
@@ -20,11 +20,13 @@ func rayClusterFixture() *dcv1alpha1.RayCluster {
 			Namespace: "fake-ns",
 		},
 		Spec: dcv1alpha1.RayClusterSpec{
-			Image: &dcv1alpha1.OCIImageDefinition{
-				Registry:   "fake-reg",
-				Repository: "fake-repo",
-				Tag:        "fake-tag",
-				PullPolicy: v1.PullIfNotPresent,
+			ClusterConfig: dcv1alpha1.ClusterConfig{
+				Image: &dcv1alpha1.OCIImageDefinition{
+					Registry:   "fake-reg",
+					Repository: "fake-repo",
+					Tag:        "fake-tag",
+					PullPolicy: corev1.PullIfNotPresent,
+				},
 			},
 			Port: 6379,
 			RedisShardPorts: []int32{

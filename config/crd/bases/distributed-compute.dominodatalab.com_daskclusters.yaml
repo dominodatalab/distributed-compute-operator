@@ -57,20 +57,21 @@ spec:
             description: DaskClusterSpec defines the desired state of DaskCluster.
             properties:
               autoscaling:
-                description: Autoscaling configuration for scalable workloads.
+                description: Autoscaling parameters used to scale up/down cluster
+                  nodes.
                 properties:
                   averageCPUUtilization:
                     description: AverageCPUUtilization is the target value of the
-                      average of the resource metric across all relevant pods. This
-                      is represented as a percentage of the requested value of the
-                      resource for the pods.
+                      average of the resource cpu metric across all relevant pods.
+                      This is represented as a percentage of the requested value of
+                      the resource for the pods.
                     format: int32
                     type: integer
                   averageMemoryUtilization:
                     description: AverageMemoryUtilization is the target value of the
-                      average of the resource metric across all relevant pods. This
-                      is represented as a percentage of the requested value of the
-                      resource for the pods.
+                      average of the resource memory metric across all relevant pods.
+                      This is represented as a percentage of the requested value of
+                      the resource for the pods.
                     format: int32
                     type: integer
                   maxReplicas:
@@ -100,6 +101,7 @@ spec:
                 format: int32
                 type: integer
               envVars:
+                description: EnvVars added to all every cluster container.
                 items:
                   description: EnvVar represents an environment variable present in
                     a Container.
@@ -204,10 +206,11 @@ spec:
               globalLabels:
                 additionalProperties:
                   type: string
+                description: GlobalLabels applied to all resources in addition to
+                  stock labels.
                 type: object
               image:
-                description: OCIImageDefinition describes where and when to fetch
-                  a container image.
+                description: Image used to launch cluster nodes.
                 properties:
                   pullPolicy:
                     description: PullPolicy used to fetch container image.
@@ -223,6 +226,8 @@ spec:
                     type: string
                 type: object
               imagePullSecrets:
+                description: ImagePullSecrets are references to secrets with pull
+                  credentials to private registries where cluster image are stored.
                 items:
                   description: LocalObjectReference contains enough information to
                     let you locate the referenced object inside the same namespace.
@@ -239,34 +244,43 @@ spec:
                   namespace-wide policy.
                 type: string
               kerberosKeytab:
+                description: KerberosKeytab parameters used to add kerberos authentication.
                 properties:
                   contents:
+                    description: Contents are the binary data stored in the keytab
+                      file.
                     format: byte
                     type: string
                   mountPath:
+                    description: MountPath where the keytab file should be created
+                      inside a pod.
                     type: string
                 type: object
               nannyPort:
                 format: int32
                 type: integer
               networkPolicy:
+                description: NetworkPolicy parameters used to IP traffic flow.
                 properties:
                   clientLabels:
                     additionalProperties:
                       type: string
+                    description: ClientLabels defines the pod selector clause that
+                      grants ingress access to the cluster client port(s).
                     type: object
                   dashboardLabels:
                     additionalProperties:
                       type: string
+                    description: DashboardLabels defines the pod selector clause that
+                      grants ingress access to the cluster dashboard port.
                     type: object
                   enabled:
+                    description: Enabled controls the creation of network policies
+                      that limit and provide ingress access to the cluster nodes.
                     type: boolean
                 type: object
               podSecurityContext:
-                description: PodSecurityContext holds pod-level security attributes
-                  and common container settings. Some fields are also present in container.securityContext.  Field
-                  values of container.securityContext take precedence over field values
-                  of PodSecurityContext.
+                description: PodSecurityContext added to every cluster pod.
                 properties:
                   fsGroup:
                     description: "A special supplemental group that applies to all
@@ -409,11 +423,16 @@ spec:
                     type: object
                 type: object
               podSecurityPolicy:
+                description: PodSecurityPolicy name can be provided to restrict and/or
+                  provide execution permissions to processes running within cluster
+                  pods.
                 type: string
               scheduler:
+                description: WorkloadConfig defines options common to all cluster
+                  nodes.
                 properties:
                   affinity:
-                    description: Affinity is a group of affinity scheduling rules.
+                    description: Affinity applied to cluster pods.
                     properties:
                       nodeAffinity:
                         description: Describes node affinity scheduling rules for
@@ -1280,8 +1299,10 @@ spec:
                   annotations:
                     additionalProperties:
                       type: string
+                    description: Annotations applied to cluster pods.
                     type: object
                   initContainers:
+                    description: InitContainers added to cluster pods.
                     items:
                       description: A single application container that you want to
                         run within a pod.
@@ -2442,14 +2463,17 @@ spec:
                   labels:
                     additionalProperties:
                       type: string
+                    description: Labels applied to cluster pods in addition to stock
+                      labels.
                     type: object
                   nodeSelector:
                     additionalProperties:
                       type: string
+                    description: NodeSelector applied to cluster pods.
                     type: object
                   resources:
-                    description: ResourceRequirements describes the compute resource
-                      requirements.
+                    description: Resources are the requests and limits applied to
+                      cluster containers.
                     properties:
                       limits:
                         additionalProperties:
@@ -2475,6 +2499,7 @@ spec:
                         type: object
                     type: object
                   tolerations:
+                    description: Tolerations applied to cluster pods.
                     items:
                       description: The pod this Toleration is attached to tolerates
                         any taint that matches the triple <key,value,effect> using
@@ -2515,6 +2540,9 @@ spec:
                       type: object
                     type: array
                   volumeClaimTemplates:
+                    description: VolumeClaimTemplates is a list of claims that cluster
+                      pods are allowed to reference. You can enable dynamic provisioning
+                      of additional storage on-demand by using a storage class provisioner.
                     items:
                       description: PersistentVolumeClaimTemplate describes a claim
                         that pods are allowed to reference. These can either pre-exist
@@ -2659,6 +2687,7 @@ spec:
                       type: object
                     type: array
                   volumeMounts:
+                    description: VolumeMounts added to cluster containers.
                     items:
                       description: VolumeMount describes a mounting of a Volume within
                         a container.
@@ -2698,6 +2727,7 @@ spec:
                       type: object
                     type: array
                   volumes:
+                    description: Volumes added to cluster pods.
                     items:
                       description: Volume represents a named volume in a pod that
                         may be accessed by any container in the pod.
@@ -4187,6 +4217,7 @@ spec:
                 format: int32
                 type: integer
               serviceAccount:
+                description: ServiceAccount parameters used to override default behavior.
                 properties:
                   automountServiceAccountToken:
                     type: boolean
@@ -4197,7 +4228,7 @@ spec:
                 description: DaskClusterWorker defines worker-specific workload settings.
                 properties:
                   affinity:
-                    description: Affinity is a group of affinity scheduling rules.
+                    description: Affinity applied to cluster pods.
                     properties:
                       nodeAffinity:
                         description: Describes node affinity scheduling rules for
@@ -5064,8 +5095,10 @@ spec:
                   annotations:
                     additionalProperties:
                       type: string
+                    description: Annotations applied to cluster pods.
                     type: object
                   initContainers:
+                    description: InitContainers added to cluster pods.
                     items:
                       description: A single application container that you want to
                         run within a pod.
@@ -6226,17 +6259,20 @@ spec:
                   labels:
                     additionalProperties:
                       type: string
+                    description: Labels applied to cluster pods in addition to stock
+                      labels.
                     type: object
                   nodeSelector:
                     additionalProperties:
                       type: string
+                    description: NodeSelector applied to cluster pods.
                     type: object
                   replicas:
                     format: int32
                     type: integer
                   resources:
-                    description: ResourceRequirements describes the compute resource
-                      requirements.
+                    description: Resources are the requests and limits applied to
+                      cluster containers.
                     properties:
                       limits:
                         additionalProperties:
@@ -6262,6 +6298,7 @@ spec:
                         type: object
                     type: object
                   tolerations:
+                    description: Tolerations applied to cluster pods.
                     items:
                       description: The pod this Toleration is attached to tolerates
                         any taint that matches the triple <key,value,effect> using
@@ -6302,6 +6339,9 @@ spec:
                       type: object
                     type: array
                   volumeClaimTemplates:
+                    description: VolumeClaimTemplates is a list of claims that cluster
+                      pods are allowed to reference. You can enable dynamic provisioning
+                      of additional storage on-demand by using a storage class provisioner.
                     items:
                       description: PersistentVolumeClaimTemplate describes a claim
                         that pods are allowed to reference. These can either pre-exist
@@ -6446,6 +6486,7 @@ spec:
                       type: object
                     type: array
                   volumeMounts:
+                    description: VolumeMounts added to cluster containers.
                     items:
                       description: VolumeMount describes a mounting of a Volume within
                         a container.
@@ -6485,6 +6526,7 @@ spec:
                       type: object
                     type: array
                   volumes:
+                    description: Volumes added to cluster pods.
                     items:
                       description: Volume represents a named volume in a pod that
                         may be accessed by any container in the pod.
@@ -7978,15 +8020,22 @@ spec:
             description: DaskClusterStatus defines the observed state of DaskCluster
             properties:
               image:
+                description: Image is the canonical reference url to the cluster container
+                  image.
                 type: string
               nodes:
+                description: Nodes are pods that comprise the cluster.
                 items:
                   type: string
                 type: array
               workerReplicas:
+                description: WorkerReplicas is the `scale.status.replicas` subresource
+                  field.
                 format: int32
                 type: integer
               workerSelector:
+                description: WorkerSelector is the `scale.status.selector` subresource
+                  field.
                 type: string
             type: object
         type: object
