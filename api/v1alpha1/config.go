@@ -70,13 +70,14 @@ type PersistentVolumeClaimTemplate struct {
 	Spec corev1.PersistentVolumeClaimSpec `json:"spec"`
 }
 
-// ServiceAccountConfig will disable the creation of a dedicated cluster
-// service account. The service account referenced by the provided name
-// will be used instead, and the injection of a K8s API token can be
-// enabled/disable as well.
+// ServiceAccountConfig defines service account configuration parameters.
 type ServiceAccountConfig struct {
-	Name                         string `json:"name,omitempty"`
-	AutomountServiceAccountToken bool   `json:"automountServiceAccountToken,omitempty"`
+	// Name of an existing service account used by cluster workloads. This
+	// field will disable the creation of a dedicated cluster service account.
+	Name string `json:"name,omitempty"`
+	// AutomountServiceAccountToken into workload pods. This field is only used
+	// when creating a dedicted cluster service account.
+	AutomountServiceAccountToken bool `json:"automountServiceAccountToken,omitempty"`
 }
 
 // KerberosKeytabConfig defines kerberos key table configuration options.

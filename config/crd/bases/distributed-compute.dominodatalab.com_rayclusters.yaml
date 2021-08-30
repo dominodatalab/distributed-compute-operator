@@ -4252,8 +4252,14 @@ spec:
                 description: ServiceAccount parameters used to override default behavior.
                 properties:
                   automountServiceAccountToken:
+                    description: AutomountServiceAccountToken into workload pods.
+                      This field is only used when creating a dedicted cluster service
+                      account.
                     type: boolean
                   name:
+                    description: Name of an existing service account used by cluster
+                      workloads. This field will disable the creation of a dedicated
+                      cluster service account.
                     type: string
                 type: object
               worker:
