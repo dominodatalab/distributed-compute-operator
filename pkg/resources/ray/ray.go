@@ -3,10 +3,9 @@ package ray
 import (
 	"fmt"
 
-	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
-
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources"
+	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
 )
 
 // Component is used to drive Kubernetes object generation for different ray types.

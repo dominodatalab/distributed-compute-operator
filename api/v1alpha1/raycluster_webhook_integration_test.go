@@ -5,7 +5,7 @@ import (
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
@@ -17,14 +17,26 @@ func rayFixture(nsName string) *RayCluster {
 			GenerateName: "test-",
 			Namespace:    nsName,
 		},
+		Spec: RayClusterSpec{
+			Worker: RayClusterWorker{
+				WorkloadConfig: WorkloadConfig{
+					Resources: corev1.ResourceRequirements{
+						Requests: corev1.ResourceList{
+							corev1.ResourceCPU:    resource.MustParse("250m"),
+							corev1.ResourceMemory: resource.MustParse("250Mi"),
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
 var _ = Describe("RayCluster", func() {
-	var testNS *v1.Namespace
+	var testNS *corev1.Namespace
 
 	BeforeEach(func() {
-		testNS = &v1.Namespace{
+		testNS = &corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
 				GenerateName: "test-",
 			},
@@ -77,7 +89,7 @@ var _ = Describe("RayCluster", func() {
 				PointTo(Equal(true)),
 				"enable network policy should point to true",
 			)
-			Expect(rc.Spec.NetworkPolicy.ClientServerLabels).To(
+			Expect(rc.Spec.NetworkPolicy.ClientLabels).To(
 				Equal(map[string]string{"ray-client": "true"}),
 				`network policy client labels should equal [{"ray-client": "true"}]`,
 			)
@@ -90,8 +102,8 @@ var _ = Describe("RayCluster", func() {
 				"worker replicas should point to 1",
 			)
 			Expect(rc.Spec.Image).To(
-				Equal(&OCIImageDefinition{Repository: "rayproject/ray", Tag: "1.3.0-cpu"}),
-				`image reference should equal "rayproject/ray:1.3.0-cpu"`,
+				Equal(&OCIImageDefinition{Repository: "rayproject/ray", Tag: "1.6.0-cpu"}),
+				`image reference should equal "rayproject/ray:1.6.0-cpu"`,
 			)
 		})
 
@@ -164,10 +176,10 @@ var _ = Describe("RayCluster", func() {
 				rc := rayFixture(testNS.Name)
 
 				expected := map[string]string{"server-client": "true"}
-				rc.Spec.NetworkPolicy.ClientServerLabels = expected
+				rc.Spec.NetworkPolicy.ClientLabels = expected
 
 				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
-				Expect(rc.Spec.NetworkPolicy.ClientServerLabels).To(Equal(expected))
+				Expect(rc.Spec.NetworkPolicy.ClientLabels).To(Equal(expected))
 			})
 
 			It("use provided dashboard labels", func() {
@@ -198,6 +210,20 @@ var _ = Describe("RayCluster", func() {
 		It("requires a minimum of 75MB for object store memory", func() {
 			rc := rayFixture(testNS.Name)
 			rc.Spec.ObjectStoreMemoryBytes = pointer.Int64Ptr(74 * 1024 * 1024)
+
+			Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
+		})
+
+		It("requires cpu resource requests for worker", func() {
+			rc := rayFixture(testNS.Name)
+			delete(rc.Spec.Worker.Resources.Requests, corev1.ResourceCPU)
+
+			Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
+		})
+
+		It("requires memory resource requests for worker", func() {
+			rc := rayFixture(testNS.Name)
+			delete(rc.Spec.Worker.Resources.Requests, corev1.ResourceMemory)
 
 			Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 		})
@@ -259,9 +285,6 @@ var _ = Describe("RayCluster", func() {
 				rc := rayFixture(testNS.Name)
 				rc.Spec.Autoscaling = &Autoscaling{
 					MaxReplicas: 1,
-				}
-				rc.Spec.Worker.Resources.Requests = v1.ResourceList{
-					v1.ResourceCPU: resource.MustParse("100m"),
 				}
 
 				return rc
@@ -329,13 +352,6 @@ var _ = Describe("RayCluster", func() {
 
 				rc.Spec.Autoscaling.ScaleDownStabilizationWindowSeconds = pointer.Int32Ptr(0)
 				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
-			})
-
-			It("requires cpu resource requests for worker", func() {
-				rc := clusterWithAutoscaling()
-				rc.Spec.Worker.Resources.Requests = nil
-
-				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 			})
 		})
 

@@ -3,9 +3,8 @@ package ray
 import (
 	"fmt"
 
-	corev1 "k8s.io/api/core/v1"
-
 	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"

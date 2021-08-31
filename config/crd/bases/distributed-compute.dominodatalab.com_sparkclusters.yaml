@@ -55,16 +55,16 @@ spec:
                 properties:
                   averageCPUUtilization:
                     description: AverageCPUUtilization is the target value of the
-                      average of the resource metric across all relevant pods. This
-                      is represented as a percentage of the requested value of the
-                      resource for the pods.
+                      average of the resource cpu metric across all relevant pods.
+                      This is represented as a percentage of the requested value of
+                      the resource for the pods.
                     format: int32
                     type: integer
                   averageMemoryUtilization:
                     description: AverageMemoryUtilization is the target value of the
-                      average of the resource metric across all relevant pods. This
-                      is represented as a percentage of the requested value of the
-                      resource for the pods.
+                      average of the resource memory metric across all relevant pods.
+                      This is represented as a percentage of the requested value of
+                      the resource for the pods.
                     format: int32
                     type: integer
                   maxReplicas:
@@ -253,9 +253,13 @@ spec:
                 description: KerberosKeytab configures the Kerberos Keytab for Spark
                 properties:
                   contents:
+                    description: Contents are the binary data stored in the keytab
+                      file.
                     format: byte
                     type: string
                   mountPath:
+                    description: MountPath where the keytab file should be created
+                      inside a pod.
                     type: string
                 type: object
               master:

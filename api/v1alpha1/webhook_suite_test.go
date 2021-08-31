@@ -11,9 +11,10 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	corev1 "k8s.io/api/core/v1"
 
 	admissionv1beta1 "k8s.io/api/admission/v1beta1"
+	corev1 "k8s.io/api/core/v1"
+
 	//+kubebuilder:scaffold:imports
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
@@ -52,7 +53,7 @@ var _ = BeforeSuite(func() {
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		//BinaryAssetsDirectory: test.KubebuilderBinaryAssetsDir(),
+		// BinaryAssetsDirectory: test.KubebuilderBinaryAssetsDir(),
 		CRDDirectoryPaths:     []string{filepath.Join("..", "..", "config", "crd", "bases")},
 		ErrorIfCRDPathMissing: false,
 		WebhookInstallOptions: envtest.WebhookInstallOptions{
@@ -113,8 +114,8 @@ var _ = BeforeSuite(func() {
 		if err != nil {
 			return err
 		}
-		conn.Close()
-		return nil
+
+		return conn.Close()
 	}).Should(Succeed())
 
 }, 60)

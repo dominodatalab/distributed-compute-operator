@@ -622,11 +622,11 @@ func testCommonFeatures(t *testing.T, comp Component) {
 
 	t.Run("service_account_override", func(t *testing.T) {
 		rc := rayClusterFixture()
-		rc.Spec.ServiceAccountName = "user-managed-sa"
+		rc.Spec.ServiceAccount.Name = "user-managed-sa"
 
 		actual, err := NewStatefulSet(rc, comp)
 		require.NoError(t, err)
 
-		assert.Equal(t, rc.Spec.ServiceAccountName, actual.Spec.Template.Spec.ServiceAccountName)
+		assert.Equal(t, rc.Spec.ServiceAccount.Name, actual.Spec.Template.Spec.ServiceAccountName)
 	})
 }

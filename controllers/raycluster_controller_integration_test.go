@@ -82,13 +82,13 @@ var _ = Describe("RayCluster Controller", func() {
 			}, timeout).Should(ContainElement(DistributedComputeFinalizer))
 
 			By("Updating the status with worker metadata")
-			Eventually(func() dcv1alpha1.RayClusterStatus {
+			Eventually(func() dcv1alpha1.ClusterStatusConfig {
 				cluster := &dcv1alpha1.RayCluster{}
 				if err := k8sClient.Get(ctx, clusterKey, cluster); err != nil {
-					return dcv1alpha1.RayClusterStatus{}
+					return dcv1alpha1.ClusterStatusConfig{}
 				}
 				return cluster.Status
-			}, timeout).Should(Equal(dcv1alpha1.RayClusterStatus{
+			}, timeout).Should(Equal(dcv1alpha1.ClusterStatusConfig{
 				Nodes:          nil,
 				WorkerReplicas: 1,
 				WorkerSelector: "app.kubernetes.io/component=worker,app.kubernetes.io/instance=it,app.kubernetes.io/name=ray",
@@ -199,18 +199,21 @@ func createCluster(ctx context.Context, name string) (client.ObjectKey, *dcv1alp
 			Namespace: "default",
 		},
 		Spec: dcv1alpha1.RayClusterSpec{
-			Image: &dcv1alpha1.OCIImageDefinition{
-				Repository: "foo",
-				Tag:        "bar",
-			},
-			Autoscaling: &dcv1alpha1.Autoscaling{
-				MinReplicas:              pointer.Int32Ptr(1),
-				MaxReplicas:              1,
-				AverageCPUUtilization:    pointer.Int32Ptr(50),
-				AverageMemoryUtilization: pointer.Int32Ptr(50),
-			},
-			NetworkPolicy: dcv1alpha1.RayClusterNetworkPolicy{
-				Enabled: pointer.BoolPtr(true),
+			ClusterConfig: dcv1alpha1.ClusterConfig{
+				Image: &dcv1alpha1.OCIImageDefinition{
+					Repository: "foo",
+					Tag:        "bar",
+				},
+				Autoscaling: &dcv1alpha1.Autoscaling{
+					MinReplicas:              pointer.Int32Ptr(1),
+					MaxReplicas:              1,
+					AverageCPUUtilization:    pointer.Int32Ptr(50),
+					AverageMemoryUtilization: pointer.Int32Ptr(50),
+				},
+				NetworkPolicy: dcv1alpha1.NetworkPolicyConfig{
+					Enabled: pointer.BoolPtr(true),
+				},
+				PodSecurityPolicy: psp.Name,
 			},
 			Worker: dcv1alpha1.RayClusterWorker{
 				Replicas: pointer.Int32Ptr(1),
@@ -222,7 +225,6 @@ func createCluster(ctx context.Context, name string) (client.ObjectKey, *dcv1alp
 			GCSServerPort:     2386,
 			WorkerPorts:       []int32{11000, 11001},
 			DashboardPort:     8265,
-			PodSecurityPolicy: psp.Name,
 		},
 	}
 	clusterKey := client.ObjectKeyFromObject(cluster)
