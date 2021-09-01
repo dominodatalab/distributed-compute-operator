@@ -14,11 +14,11 @@ import (
 // NewFrameworkConfigMap generates a configmap which represents a spark-defaults.conf file out of provided config
 func NewFrameworkConfigMap(sc *dcv1alpha1.SparkCluster) *corev1.ConfigMap {
 	data := map[string]string{}
-	if sc.Spec.Master.FrameworkConfig != nil {
-		data[string(ComponentMaster)] = generateSparkDefaults(sc.Spec.Master.FrameworkConfig.Configs)
+	if sc.Spec.Master.DefaultConfiguration != nil {
+		data[string(ComponentMaster)] = generateSparkDefaults(sc.Spec.Master.DefaultConfiguration)
 	}
-	if sc.Spec.Worker.FrameworkConfig != nil {
-		data[string(ComponentWorker)] = generateSparkDefaults(sc.Spec.Worker.FrameworkConfig.Configs)
+	if sc.Spec.Worker.DefaultConfiguration != nil {
+		data[string(ComponentWorker)] = generateSparkDefaults(sc.Spec.Worker.DefaultConfiguration)
 	}
 	if len(data) == 0 {
 		return nil

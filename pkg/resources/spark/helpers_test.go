@@ -1,7 +1,7 @@
 package spark
 
 import (
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
 
@@ -20,19 +20,20 @@ func sparkClusterFixture() *dcv1alpha1.SparkCluster {
 			Namespace: "fake-ns",
 		},
 		Spec: dcv1alpha1.SparkClusterSpec{
-			Image: &dcv1alpha1.OCIImageDefinition{
-				Registry:   "fake-reg",
-				Repository: "fake-repo",
-				Tag:        "fake-tag",
-				PullPolicy: v1.PullIfNotPresent,
+			ClusterConfig: dcv1alpha1.ClusterConfig{
+				Image: &dcv1alpha1.OCIImageDefinition{
+					Registry:   "fake-reg",
+					Repository: "fake-repo",
+					Tag:        "fake-tag",
+					PullPolicy: corev1.PullIfNotPresent,
+				},
 			},
-			ClusterPort:      7077,
-			TCPMasterWebPort: 8080,
-			TCPWorkerWebPort: 8081,
-			DashboardPort:    8080,
+			ClusterPort:       7077,
+			MasterWebPort:     8080,
+			WorkerWebPort:     8081,
+			WorkerMemoryLimit: "4505m",
 			Worker: dcv1alpha1.SparkClusterWorker{
-				Replicas:          pointer.Int32Ptr(5),
-				WorkerMemoryLimit: "4505m",
+				Replicas: pointer.Int32Ptr(5),
 			},
 		},
 	}

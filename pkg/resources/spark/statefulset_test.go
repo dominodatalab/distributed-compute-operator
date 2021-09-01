@@ -18,7 +18,7 @@ import (
 func TestNewStatefulSet(t *testing.T) {
 	t.Run("invalid_component", func(t *testing.T) {
 		rc := sparkClusterFixture()
-		_, err := NewStatefulSet(rc, Component("garbage"))
+		_, err := NewStatefulSet(rc, "garbage")
 		assert.Error(t, err)
 	})
 
@@ -482,12 +482,12 @@ func testCommonFeatures(t *testing.T, comp Component) {
 
 	t.Run("service_account_override", func(t *testing.T) {
 		rc := sparkClusterFixture()
-		rc.Spec.ServiceAccountName = "user-managed-sa"
+		rc.Spec.ServiceAccount.Name = "user-managed-sa"
 
 		actual, err := NewStatefulSet(rc, comp)
 		require.NoError(t, err)
 
-		assert.Equal(t, rc.Spec.ServiceAccountName, actual.Spec.Template.Spec.ServiceAccountName)
+		assert.Equal(t, rc.Spec.ServiceAccount.Name, actual.Spec.Template.Spec.ServiceAccountName)
 	})
 
 	t.Run("volume_claim_template", func(t *testing.T) {
@@ -522,28 +522,22 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		assert.Equal(t, expected, actual.Spec.VolumeClaimTemplates)
 	})
 
-	t.Run("framework_config", func(t *testing.T) {
+	t.Run("default_configuration", func(t *testing.T) {
 		rc := sparkClusterFixture()
-		fcMaster := dcv1alpha1.FrameworkConfig{
-			Configs: map[string]string{
-				"m1": "v1",
-			},
+		fcMaster := map[string]string{
+			"m1": "v1",
 		}
 
-		fcWorker := dcv1alpha1.FrameworkConfig{
-			Configs: map[string]string{
-				"w1": "v1",
-			},
+		fcWorker := map[string]string{
+			"w1": "v1",
 		}
 
-		rc.Spec.Master = dcv1alpha1.SparkClusterMaster{
-			SparkClusterNode: dcv1alpha1.SparkClusterNode{
-				FrameworkConfig: &fcMaster,
-			},
+		rc.Spec.Master = dcv1alpha1.SparkClusterNode{
+			DefaultConfiguration: fcMaster,
 		}
 		rc.Spec.Worker = dcv1alpha1.SparkClusterWorker{
 			SparkClusterNode: dcv1alpha1.SparkClusterNode{
-				FrameworkConfig: &fcWorker,
+				DefaultConfiguration: fcWorker,
 			},
 			Replicas: pointer.Int32Ptr(2),
 		}

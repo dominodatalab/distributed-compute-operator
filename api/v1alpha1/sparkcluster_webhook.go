@@ -1,15 +1,9 @@
 package v1alpha1
 
 import (
-	"fmt"
-
 	"k8s.io/apimachinery/pkg/api/resource"
 
-	securityv1beta1 "istio.io/api/security/v1beta1"
-	v1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -18,37 +12,25 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
-const (
-	sparkMinValidPort int32 = 80
-	sparkMaxValidPort int32 = 65535
-)
-
 var (
-	sparkDefaultClusterPort                 int32 = 7077
-	sparkDefaultDashboardPort               int32 = 8080
-	sparkDefaultMasterWebPort               int32 = 8080
-	sparkDefaultWorkerWebPort               int32 = 8081
-	sparkDefaultDriverUIPort                int32 = 4040
-	sparkDefaultDriverPort                  int32 = 4041
-	sparkDefaultDriverBlockManagerPort      int32 = 4042
-	sparkDefaultDriverUIPortName                  = "spark-ui-port"
-	sparkDefaultDriverPortName                    = "spark-driver-port"
-	sparkDefaultDriverBlockManagerPortName        = "spark-block-manager-port"
-	sparkDefaultEnableNetworkPolicy               = pointer.BoolPtr(true)
-	sparkDefaultEnableExternalNetworkPolicy       = pointer.BoolPtr(false)
-	sparkDefaultWorkerReplicas                    = pointer.Int32Ptr(1)
-	sparkDefaultEnableDashboard                   = pointer.BoolPtr(true)
-	sparkDefaultNetworkPolicyClientLabels         = map[string]string{
+	sparkDefaultClusterPort               int32 = 7077
+	sparkDefaultMasterWebPort             int32 = 8080
+	sparkDefaultWorkerWebPort             int32 = 8081
+	sparkDefaultDriverUIPort              int32 = 4040
+	sparkDefaultDriverPort                int32 = 4041
+	sparkDefaultDriverBlockManagerPort    int32 = 4042
+	sparkDefaultEnableNetworkPolicy             = pointer.BoolPtr(true)
+	sparkDefaultWorkerReplicas                  = pointer.Int32Ptr(1)
+	sparkDefaultNetworkPolicyClientLabels       = map[string]string{
 		"spark-client": "true",
 	}
 	sparkDefaultImage = &OCIImageDefinition{
 		Repository: "bitnami/spark",
 		Tag:        "3.0.2-debian-10-r0",
 	}
-)
 
-// logger is for webhook logging.
-var sparkLogger = logf.Log.WithName("webhooks").WithName("SparkCluster")
+	sparkLogger = logf.Log.WithName("webhooks").WithName("SparkCluster")
+)
 
 // SetupWebhookWithManager creates and registers this webhook with the manager.
 func (sc *SparkCluster) SetupWebhookWithManager(mgr ctrl.Manager) error {
@@ -64,78 +46,55 @@ var _ webhook.Defaulter = &SparkCluster{}
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (sc *SparkCluster) Default() {
 	log := sparkLogger.WithValues("sparkcluster", client.ObjectKeyFromObject(sc))
-	log.Info("applying defaults")
+	log.Info("Applying defaults")
 
-	if sc.Spec.ClusterPort == 0 {
-		log.Info("setting default cluster port", "value", sparkDefaultClusterPort)
-		sc.Spec.ClusterPort = sparkDefaultClusterPort
+	spec := &sc.Spec
+	if spec.ClusterPort == 0 {
+		log.Info("Setting default cluster port", "value", sparkDefaultClusterPort)
+		spec.ClusterPort = sparkDefaultClusterPort
 	}
-	if sc.Spec.TCPWorkerWebPort == 0 {
-		log.Info("setting default worker web port", "value", sparkDefaultWorkerWebPort)
-		sc.Spec.TCPWorkerWebPort = sparkDefaultWorkerWebPort
+	if spec.WorkerWebPort == 0 {
+		log.Info("Setting default worker web port", "value", sparkDefaultWorkerWebPort)
+		spec.WorkerWebPort = sparkDefaultWorkerWebPort
 	}
-	if sc.Spec.TCPMasterWebPort == 0 {
-		log.Info("setting default master web port", "value", sparkDefaultMasterWebPort)
-		sc.Spec.TCPMasterWebPort = sparkDefaultMasterWebPort
+	if spec.MasterWebPort == 0 {
+		log.Info("Setting default master web port", "value", sparkDefaultMasterWebPort)
+		spec.MasterWebPort = sparkDefaultMasterWebPort
 	}
-	if sc.Spec.DashboardPort == 0 {
-		log.Info("setting default dashboard port", "value", sparkDefaultDashboardPort)
-		sc.Spec.DashboardPort = sparkDefaultDashboardPort
+	if spec.NetworkPolicy.Enabled == nil {
+		log.Info("Setting enable network policy flag", "value", *sparkDefaultEnableNetworkPolicy)
+		spec.NetworkPolicy.Enabled = sparkDefaultEnableNetworkPolicy
 	}
-	if sc.Spec.EnableDashboard == nil {
-		log.Info("setting enable dashboard flag", "value", *sparkDefaultEnableDashboard)
-		sc.Spec.EnableDashboard = sparkDefaultEnableDashboard
+	if spec.NetworkPolicy.ClientLabels == nil {
+		log.Info("Setting default network policy client labels", "value", sparkDefaultNetworkPolicyClientLabels)
+		spec.NetworkPolicy.ClientLabels = sparkDefaultNetworkPolicyClientLabels
 	}
-	if sc.Spec.NetworkPolicy.Enabled == nil {
-		log.Info("setting enable network policy flag", "value", *sparkDefaultEnableNetworkPolicy)
-		sc.Spec.NetworkPolicy.Enabled = sparkDefaultEnableNetworkPolicy
+	if spec.NetworkPolicy.DashboardLabels == nil {
+		log.Info("Setting default network policy dashboard labels", "value", sparkDefaultNetworkPolicyClientLabels)
+		spec.NetworkPolicy.DashboardLabels = sparkDefaultNetworkPolicyClientLabels
 	}
-	if sc.Spec.NetworkPolicy.ExternalPolicyEnabled == nil {
-		log.Info("setting enable external network policy flag", "value", *sparkDefaultEnableExternalNetworkPolicy)
-		sc.Spec.NetworkPolicy.ExternalPolicyEnabled = sparkDefaultEnableExternalNetworkPolicy
+	if spec.Worker.Replicas == nil {
+		log.Info("Setting default worker replicas", "value", *sparkDefaultWorkerReplicas)
+		spec.Worker.Replicas = sparkDefaultWorkerReplicas
 	}
-	if sc.Spec.NetworkPolicy.ClientServerLabels == nil {
-		log.Info("setting default network policy client labels", "value", sparkDefaultNetworkPolicyClientLabels)
-		sc.Spec.NetworkPolicy.ClientServerLabels = sparkDefaultNetworkPolicyClientLabels
+	if spec.Driver.Port == 0 {
+		log.Info("Setting default driver port", "value", sparkDefaultDriverPort)
+		spec.Driver.Port = sparkDefaultDriverPort
 	}
-	if sc.Spec.NetworkPolicy.DashboardLabels == nil {
-		log.Info("setting default network policy dashboard labels", "value", sparkDefaultNetworkPolicyClientLabels)
-		sc.Spec.NetworkPolicy.DashboardLabels = sparkDefaultNetworkPolicyClientLabels
+	if spec.Driver.BlockManagerPort == 0 {
+		log.Info("Setting default driver block manager port", "value", sparkDefaultDriverBlockManagerPort)
+		spec.Driver.BlockManagerPort = sparkDefaultDriverBlockManagerPort
 	}
-	if sc.Spec.Worker.Replicas == nil {
-		log.Info("setting default worker replicas", "value", *sparkDefaultWorkerReplicas)
-		sc.Spec.Worker.Replicas = sparkDefaultWorkerReplicas
+	if spec.Driver.UIPort == 0 {
+		log.Info("Setting default driver ui port", "value", sparkDefaultDriverUIPort)
+		spec.Driver.UIPort = sparkDefaultDriverUIPort
 	}
-	if sc.Spec.Driver.DriverPort == 0 {
-		log.Info("setting default driver port", "value", sparkDefaultDriverPort)
-		sc.Spec.Driver.DriverPort = sparkDefaultDriverPort
-	}
-	if sc.Spec.Driver.DriverPortName == "" {
-		log.Info("setting default driver port name", "value", sparkDefaultDriverPortName)
-		sc.Spec.Driver.DriverPortName = sparkDefaultDriverPortName
-	}
-	if sc.Spec.Driver.DriverBlockManagerPortName == "" {
-		log.Info("setting default driver block manager port name", "value", sparkDefaultDriverBlockManagerPortName)
-		sc.Spec.Driver.DriverBlockManagerPortName = sparkDefaultDriverBlockManagerPortName
-	}
-	if sc.Spec.Driver.DriverBlockManagerPort == 0 {
-		log.Info("setting default driver block manager port", "value", sparkDefaultDriverBlockManagerPort)
-		sc.Spec.Driver.DriverBlockManagerPort = sparkDefaultDriverBlockManagerPort
-	}
-	if sc.Spec.Driver.DriverUIPortName == "" {
-		log.Info("setting default driver ui port name", "value", sparkDefaultDriverUIPortName)
-		sc.Spec.Driver.DriverUIPortName = sparkDefaultDriverUIPortName
-	}
-	if sc.Spec.Driver.DriverUIPort == 0 {
-		log.Info("setting default driver ui port", "value", sparkDefaultDriverUIPort)
-		sc.Spec.Driver.DriverUIPort = sparkDefaultDriverUIPort
-	}
-	if sc.Spec.Image == nil {
-		log.Info("setting default image", "value", *sparkDefaultImage)
-		sc.Spec.Image = sparkDefaultImage
+	if spec.Image == nil {
+		log.Info("Setting default image", "value", *sparkDefaultImage)
+		spec.Image = sparkDefaultImage
 	}
 
-	nodes := []*SparkClusterNode{&sc.Spec.Master.SparkClusterNode, &sc.Spec.Worker.SparkClusterNode}
+	nodes := []*SparkClusterNode{&sc.Spec.Master, &sc.Spec.Worker.SparkClusterNode}
 	for i := range nodes {
 		node := nodes[i]
 		if node.Annotations == nil {
@@ -150,178 +109,72 @@ var _ webhook.Validator = &SparkCluster{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
 func (sc *SparkCluster) ValidateCreate() error {
-	sparkLogger.WithValues("sparkcluster", client.ObjectKeyFromObject(sc)).Info("validating create")
-
+	sparkLogger.WithValues("sparkcluster", client.ObjectKeyFromObject(sc)).Info("Validating create")
 	return sc.validateSparkCluster()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
-func (sc *SparkCluster) ValidateUpdate(old runtime.Object) error {
-	sparkLogger.WithValues("sparkcluster", client.ObjectKeyFromObject(sc)).Info("validating update")
-
+func (sc *SparkCluster) ValidateUpdate(runtime.Object) error {
+	sparkLogger.WithValues("sparkcluster", client.ObjectKeyFromObject(sc)).Info("Validating update")
 	return sc.validateSparkCluster()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type.
-// Not used, just here for interface compliance.
 func (sc *SparkCluster) ValidateDelete() error {
+	// NOTE: not used, just here for interface compliance.
 	return nil
 }
 
 func (sc *SparkCluster) validateSparkCluster() error {
-	var allErrs field.ErrorList
+	var errList field.ErrorList
 
-	if err := sc.validateMutualTLSMode(); err != nil {
-		allErrs = append(allErrs, err)
+	if err := validateIstioMutualTLSMode(sc.Spec.MutualTLSMode); err != nil {
+		errList = append(errList, err)
 	}
-	if err := sc.validateWorkerReplicas(); err != nil {
-		allErrs = append(allErrs, err)
+	if err := validateWorkerReplicas(sc.Spec.Worker.Replicas); err != nil {
+		errList = append(errList, err)
 	}
+	if errs := validateImage(sc.Spec.Image); errs != nil {
+		errList = append(errList, errs...)
+	}
+	if errs := validateAutoscaler(sc.Spec.Autoscaling); errs != nil {
+		errList = append(errList, errs...)
+	}
+	if errs := validateWorkerResourceRequests(sc.Spec.Worker.Resources); errs != nil {
+		errList = append(errList, errs...)
+	}
+	if errs := validateKerberosKeytab(sc.Spec.KerberosKeytab); errs != nil {
+		errList = append(errList, errs...)
+	}
+
 	if err := sc.validateWorkerMemoryLimit(); err != nil {
-		allErrs = append(allErrs, err)
-	}
-	if err := sc.validateWorkerResourceRequestsCPU(); err != nil {
-		allErrs = append(allErrs, err)
-	}
-	if errs := sc.validatePorts(); errs != nil {
-		allErrs = append(allErrs, errs...)
+		errList = append(errList, err)
 	}
 	if errs := sc.validateDriverConfigs(); errs != nil {
-		allErrs = append(allErrs, errs...)
-	}
-	if errs := sc.validateAutoscaler(); errs != nil {
-		allErrs = append(allErrs, errs...)
-	}
-	if errs := sc.validateImage(); errs != nil {
-		allErrs = append(allErrs, errs...)
-	}
-	if errs := sc.validateFrameworkConfigs(); errs != nil {
-		allErrs = append(allErrs, errs...)
-	}
-	if errs := sc.validateKeyTabConfigs(); errs != nil {
-		allErrs = append(allErrs, errs...)
-	}
-	if err := sc.validateNetworkPolicies(); err != nil {
-		allErrs = append(allErrs, err)
+		errList = append(errList, errs...)
 	}
 
-	if len(allErrs) == 0 {
-		return nil
+	ports := map[string]int32{
+		"clusterPort":   sc.Spec.ClusterPort,
+		"masterWebPort": sc.Spec.MasterWebPort,
+		"workerWebPort": sc.Spec.WorkerWebPort,
+	}
+	if errs := validatePorts(ports); errs != nil {
+		errList = append(errList, errs...)
 	}
 
-	return apierrors.NewInvalid(
-		schema.GroupKind{Group: "distributed-compute.dominodatalab.com", Kind: "SparkCluster"},
-		sc.Name,
-		allErrs,
-	)
-}
-
-func (sc *SparkCluster) validateNetworkPolicies() *field.Error {
-	if sc.Spec.NetworkPolicy.ExternalPolicyEnabled != nil &&
-		*sc.Spec.NetworkPolicy.ExternalPolicyEnabled &&
-		len(sc.Spec.NetworkPolicy.ExternalPodLabels) == 0 {
-		return field.Invalid(
-			field.NewPath("spec", "networkPolicy", "externalPodLabels"),
-			sc.Spec.NetworkPolicy,
-			"should have at least one item if the policy is enabled",
-		)
-	}
-
-	return nil
-}
-
-func (sc *SparkCluster) validateFrameworkConfigs() field.ErrorList {
-	var errs field.ErrorList
-
-	if err := sc.validateFrameworkConfig(sc.Spec.Master.FrameworkConfig, "master"); err != nil {
-		errs = append(errs, err...)
-	}
-
-	if err := sc.validateFrameworkConfig(sc.Spec.Worker.FrameworkConfig, "worker"); err != nil {
-		errs = append(errs, err...)
-	}
-
-	return errs
-}
-
-func (sc *SparkCluster) validateKeyTabConfigs() field.ErrorList {
-	var errs field.ErrorList
-
-	if err := validateKerberosKeytab(sc.Spec.KerberosKeytab); err != nil {
-		errs = append(errs, err...)
-	}
-
-	return errs
-}
-
-func (sc *SparkCluster) validateFrameworkConfig(config *FrameworkConfig, comp string) field.ErrorList {
-	var errs field.ErrorList
-
-	if config == nil {
-		return nil
-	}
-
-	if len(config.Configs) == 0 {
-		errs = append(errs, field.Invalid(
-			field.NewPath("spec", comp, "frameworkConfig", "configs"),
-			config.Configs,
-			"should have at least one item",
-		))
-	}
-
-	return errs
-}
-
-func (sc *SparkCluster) validateMutualTLSMode() *field.Error {
-	if sc.Spec.MutualTLSMode == "" {
-		return nil
-	}
-	if _, ok := securityv1beta1.PeerAuthentication_MutualTLS_Mode_value[sc.Spec.MutualTLSMode]; ok {
-		return nil
-	}
-
-	var validModes []string
-	for s := range securityv1beta1.PeerAuthentication_MutualTLS_Mode_value {
-		validModes = append(validModes, s)
-	}
-
-	return field.Invalid(
-		field.NewPath("spec", "istioMutualTLSMode"),
-		sc.Spec.MutualTLSMode,
-		fmt.Sprintf("mode must be one of the following: %v", validModes),
-	)
-}
-
-func (sc *SparkCluster) validateWorkerReplicas() *field.Error {
-	replicas := sc.Spec.Worker.Replicas
-	if replicas == nil || *replicas >= 0 {
-		return nil
-	}
-
-	return field.Invalid(
-		field.NewPath("spec", "worker", "replicas"),
-		replicas,
-		"should be greater than or equal to 0",
-	)
+	return invalidIfNotEmpty("SparkCluster", sc.Name, errList)
 }
 
 func (sc *SparkCluster) validateWorkerMemoryLimit() *field.Error {
-	request := sc.Spec.Worker.WorkerMemoryLimit
+	request := sc.Spec.WorkerMemoryLimit
+	fp := field.NewPath("spec", "workerMemoryLimit")
 
 	if request == "" {
-		return field.Invalid(
-			field.NewPath("spec", "worker", "workerMemoryLimit"),
-			request,
-			"should be non-empty",
-		)
+		return field.Required(fp, "cannot be blank")
 	}
-
 	if _, err := resource.ParseQuantity(request); err != nil {
-		return field.Invalid(
-			field.NewPath("spec", "worker", "workerMemoryLimit"),
-			request,
-			"should be a valid parsable quantity",
-		)
+		return field.Invalid(fp, request, "must be a parsable quantity")
 	}
 
 	return nil
@@ -330,165 +183,21 @@ func (sc *SparkCluster) validateWorkerMemoryLimit() *field.Error {
 func (sc *SparkCluster) validateDriverConfigs() field.ErrorList {
 	var errs field.ErrorList
 
-	// validate driver ports
-	if err := sc.validatePort(sc.Spec.Driver.DriverPort, field.NewPath("spec", "sparkClusterDriver", "driverPort")); err != nil {
-		errs = append(errs, err)
+	driver := sc.Spec.Driver
+	ports := map[string]int32{
+		"driver.port":             driver.Port,
+		"driver.uiPort":           driver.UIPort,
+		"driver.blockManagerPort": driver.BlockManagerPort,
 	}
-	if err := sc.validatePort(sc.Spec.Driver.DriverBlockManagerPort,
-		field.NewPath("spec", "sparkClusterDriver", "driverBlockManagerPort")); err != nil {
-		errs = append(errs, err)
-	}
-	if err := sc.validatePort(sc.Spec.Driver.DriverUIPort,
-		field.NewPath("spec", "sparkClusterDriver", "driverUIPort")); err != nil {
-		errs = append(errs, err)
+	if pErrs := validatePorts(ports); pErrs != nil {
+		errs = append(errs, pErrs...)
 	}
 
-	if sc.Spec.Driver.DriverUIPortName == "" {
-		errs = append(errs, field.Invalid(
-			field.NewPath("spec", "sparkClusterDriver", "driverUIPortName"),
-			sc.Spec.Driver.DriverUIPortName,
-			"should be non-empty",
+	if driver.Selector == nil || len(driver.Selector) == 0 {
+		errs = append(errs, field.Required(
+			field.NewPath("spec", "driver", "selector"),
+			"must provide a label selector for driver pods",
 		))
-	}
-
-	if sc.Spec.Driver.DriverPortName == "" {
-		errs = append(errs, field.Invalid(
-			field.NewPath("spec", "sparkClusterDriver", "driverPortName"),
-			sc.Spec.Driver.DriverPortName,
-			"should be non-empty",
-		))
-	}
-
-	if sc.Spec.Driver.DriverBlockManagerPortName == "" {
-		errs = append(errs, field.Invalid(
-			field.NewPath("spec", "sparkClusterDriver", "driverBlockManagerPortName"),
-			sc.Spec.Driver.DriverBlockManagerPort,
-			"should be non-empty",
-		))
-	}
-
-	return errs
-}
-
-func (sc *SparkCluster) validatePorts() field.ErrorList {
-	var errs field.ErrorList
-
-	if err := sc.validatePort(sc.Spec.ClusterPort, field.NewPath("spec", "clusterPort")); err != nil {
-		errs = append(errs, err)
-	}
-	if err := sc.validatePort(sc.Spec.TCPMasterWebPort, field.NewPath("spec", "tcpMasterWebPort")); err != nil {
-		errs = append(errs, err)
-	}
-	if err := sc.validatePort(sc.Spec.TCPWorkerWebPort, field.NewPath("spec", "tcpWorkerWebPort")); err != nil {
-		errs = append(errs, err)
-	}
-	if err := sc.validatePort(sc.Spec.DashboardPort, field.NewPath("spec", "dashboardPort")); err != nil {
-		errs = append(errs, err)
-	}
-
-	// TODO: add validation to prevent port values overlap
-
-	return errs
-}
-
-func (sc *SparkCluster) validatePort(port int32, fldPath *field.Path) *field.Error {
-	if port < sparkMinValidPort {
-		return field.Invalid(fldPath, port, fmt.Sprintf("must be greater than or equal to %d", sparkMinValidPort))
-	}
-	if port > sparkMaxValidPort {
-		return field.Invalid(fldPath, port, fmt.Sprintf("must be less than or equal to %d", sparkMaxValidPort))
-	}
-
-	return nil
-}
-
-func (sc *SparkCluster) validateAutoscaler() field.ErrorList {
-	var errs field.ErrorList
-
-	as := sc.Spec.Autoscaling
-	if as == nil {
-		return nil
-	}
-
-	fldPath := field.NewPath("spec", "autoscaling")
-
-	if as.MinReplicas != nil {
-		if *as.MinReplicas < 1 {
-			errs = append(errs, field.Invalid(
-				fldPath.Child("minReplicas"),
-				as.MinReplicas,
-				"must be greater than or equal to 1",
-			))
-		}
-
-		if *as.MinReplicas > as.MaxReplicas {
-			errs = append(errs, field.Invalid(
-				fldPath.Child("maxReplicas"),
-				as.MaxReplicas,
-				"cannot be less than spec.autoscaling.minReplicas",
-			))
-		}
-	}
-
-	if as.MaxReplicas < 1 {
-		errs = append(errs, field.Invalid(
-			fldPath.Child("maxReplicas"),
-			as.MaxReplicas,
-			"must be greater than or equal to 1",
-		))
-	}
-
-	if as.AverageCPUUtilization != nil && *as.AverageCPUUtilization <= 0 {
-		errs = append(errs, field.Invalid(
-			fldPath.Child("averageCPUUtilization"),
-			as.AverageCPUUtilization,
-			"must be greater than 0",
-		))
-	}
-
-	if as.AverageMemoryUtilization != nil && *as.AverageMemoryUtilization <= 0 {
-		errs = append(errs, field.Invalid(
-			fldPath.Child("averageMemoryUtilization"),
-			as.AverageMemoryUtilization,
-			"must be greater than 0",
-		))
-	}
-
-	if as.ScaleDownStabilizationWindowSeconds != nil && *as.ScaleDownStabilizationWindowSeconds < 0 {
-		errs = append(errs, field.Invalid(
-			fldPath.Child("scaleDownStabilizationWindowSeconds"),
-			as.ScaleDownStabilizationWindowSeconds,
-			"must be greater than or equal to 0",
-		))
-	}
-
-	return errs
-}
-
-func (sc *SparkCluster) validateWorkerResourceRequestsCPU() *field.Error {
-	if sc.Spec.Autoscaling == nil {
-		return nil
-	}
-
-	if _, ok := sc.Spec.Worker.Resources.Requests[v1.ResourceCPU]; ok {
-		return nil
-	}
-
-	return field.Required(
-		field.NewPath("spec", "worker", "resources", "requests", "cpu"),
-		"is mandatory when autoscaling is enabled",
-	)
-}
-
-func (sc *SparkCluster) validateImage() field.ErrorList {
-	var errs field.ErrorList
-	fldPath := field.NewPath("spec", "image")
-
-	if sc.Spec.Image.Repository == "" {
-		errs = append(errs, field.Required(fldPath.Child("repository"), "cannot be blank"))
-	}
-	if sc.Spec.Image.Tag == "" {
-		errs = append(errs, field.Required(fldPath.Child("tag"), "cannot be blank"))
 	}
 
 	return errs

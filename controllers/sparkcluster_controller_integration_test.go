@@ -171,58 +171,50 @@ func createAndBasicTest(ctx context.Context, name string) {
 			Namespace: "default",
 		},
 		Spec: dcv1alpha1.SparkClusterSpec{
-			Image: &dcv1alpha1.OCIImageDefinition{
-				Repository: "foo",
-				Tag:        "bar",
+			ClusterConfig: dcv1alpha1.ClusterConfig{
+				Image: &dcv1alpha1.OCIImageDefinition{
+					Repository: "foo",
+					Tag:        "bar",
+				},
+				Autoscaling: &dcv1alpha1.Autoscaling{
+					MinReplicas:              pointer.Int32Ptr(1),
+					MaxReplicas:              1,
+					AverageCPUUtilization:    pointer.Int32Ptr(50),
+					AverageMemoryUtilization: pointer.Int32Ptr(50),
+				},
+				NetworkPolicy: dcv1alpha1.NetworkPolicyConfig{
+					Enabled:      pointer.BoolPtr(true),
+					ClientLabels: map[string]string{"app.kubernetes.io/instance": "spark-driver"},
+				},
+				KerberosKeytab: &dcv1alpha1.KerberosKeytabConfig{
+					MountPath: "/etc/security/keytabs/kerberos.conf",
+					Contents:  []byte{'t', 'e', 's', 't', 'e', 'r'},
+				},
+				PodSecurityPolicy: psp.Name,
 			},
-			Autoscaling: &dcv1alpha1.Autoscaling{
-				MinReplicas:              pointer.Int32Ptr(1),
-				MaxReplicas:              1,
-				AverageCPUUtilization:    pointer.Int32Ptr(50),
-				AverageMemoryUtilization: pointer.Int32Ptr(50),
-			},
-			NetworkPolicy: dcv1alpha1.SparkClusterNetworkPolicy{
-				Enabled:               pointer.BoolPtr(true),
-				ExternalPodLabels:     map[string]string{"app.kubernetes.io/instance": "spark-driver"},
-				ExternalPolicyEnabled: pointer.BoolPtr(true),
-			},
-			KerberosKeytab: &dcv1alpha1.KerberosKeytabConfig{
-				MountPath: "/etc/security/keytabs/kerberos.conf",
-				Contents:  []byte{'t', 'e', 's', 't', 'e', 'r'},
-			},
-			Master: dcv1alpha1.SparkClusterMaster{
-				SparkClusterNode: dcv1alpha1.SparkClusterNode{
-					FrameworkConfig: &dcv1alpha1.FrameworkConfig{
-						Configs: map[string]string{
-							"m1": "v1",
-						},
-					},
+			Master: dcv1alpha1.SparkClusterNode{
+				DefaultConfiguration: map[string]string{
+					"m1": "v1",
 				},
 			},
 			Worker: dcv1alpha1.SparkClusterWorker{
 				SparkClusterNode: dcv1alpha1.SparkClusterNode{
-					FrameworkConfig: &dcv1alpha1.FrameworkConfig{
-						Configs: map[string]string{
-							"w1": "v1",
-						},
+					DefaultConfiguration: map[string]string{
+						"w1": "v1",
 					},
 				},
 				Replicas: pointer.Int32Ptr(1),
 			},
-			ClusterPort:       7077,
-			TCPMasterWebPort:  80,
-			TCPWorkerWebPort:  8081,
-			DashboardPort:     8265,
-			PodSecurityPolicy: psp.Name,
+			ClusterPort:   7077,
+			MasterWebPort: 80,
+			WorkerWebPort: 8081,
 			Driver: dcv1alpha1.SparkClusterDriver{
-				SparkClusterName:           "functional",
-				ExecutionName:              "functional",
-				DriverPortName:             "spark-driver-port",
-				DriverPort:                 4040,
-				DriverUIPortName:           "spark-ui-port",
-				DriverUIPort:               4041,
-				DriverBlockManagerPortName: "spark-block-manager-port",
-				DriverBlockManagerPort:     4042,
+				Selector: map[string]string{
+					"app.kubernetes.io/instance": "functional",
+				},
+				Port:             4040,
+				UIPort:           4041,
+				BlockManagerPort: 4042,
 			},
 		},
 	}

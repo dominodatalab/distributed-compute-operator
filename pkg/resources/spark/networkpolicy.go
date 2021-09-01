@@ -16,7 +16,7 @@ func NewClusterWorkerNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 	}
 
 	driverSelector := metav1.LabelSelector{
-		MatchLabels: sc.Spec.NetworkPolicy.ExternalPodLabels,
+		MatchLabels: sc.Spec.NetworkPolicy.ClientLabels,
 	}
 
 	clusterSelector := metav1.LabelSelector{
@@ -55,7 +55,7 @@ func NewClusterWorkerNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 
 func NewClusterDriverNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.NetworkPolicy {
 	driverSelector := metav1.LabelSelector{
-		MatchLabels: sc.Spec.NetworkPolicy.ExternalPodLabels,
+		MatchLabels: sc.Spec.NetworkPolicy.ClientLabels,
 	}
 
 	masterSelector := metav1.LabelSelector{
@@ -67,7 +67,7 @@ func NewClusterDriverNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 	}
 
 	protocol := corev1.ProtocolTCP
-	driverUIPort := intstr.FromInt(int(sc.Spec.Driver.DriverUIPort))
+	driverUIPort := intstr.FromInt(int(sc.Spec.Driver.UIPort))
 
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
@@ -111,7 +111,7 @@ func NewClusterDriverNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 
 func NewClusterMasterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.NetworkPolicy {
 	driverSelector := metav1.LabelSelector{
-		MatchLabels: sc.Spec.NetworkPolicy.ExternalPodLabels,
+		MatchLabels: sc.Spec.NetworkPolicy.ClientLabels,
 	}
 
 	masterSelector := metav1.LabelSelector{
@@ -133,7 +133,7 @@ func NewClusterMasterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 	}
 
 	protocol := corev1.ProtocolTCP
-	masterDashboardPort := intstr.FromInt(int(sc.Spec.DashboardPort))
+	masterDashboardPort := intstr.FromInt(int(sc.Spec.MasterWebPort))
 	clusterPort := intstr.FromInt(int(sc.Spec.ClusterPort))
 
 	return &networkingv1.NetworkPolicy{

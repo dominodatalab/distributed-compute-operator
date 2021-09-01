@@ -20,14 +20,22 @@ spec:
   versions:
   - additionalPrinterColumns:
     - jsonPath: .spec.worker.replicas
-      name: Worker Replicas
+      name: Workers
       type: integer
-    - jsonPath: .spec.image
-      name: Image
-      type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
+    - jsonPath: .spec.image
+      name: Image
+      type: string
+    - jsonPath: .spec.networkPolicy.enabled
+      name: Network Policy
+      priority: 10
+      type: boolean
+    - jsonPath: .status.nodes
+      name: Pods
+      priority: 10
+      type: string
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -50,7 +58,7 @@ spec:
               resource.
             properties:
               autoscaling:
-                description: Autoscaling parameters used to scale up/down spark worker
+                description: Autoscaling parameters used to scale up/down cluster
                   nodes.
                 properties:
                   averageCPUUtilization:
@@ -91,18 +99,34 @@ spec:
                 - maxReplicas
                 type: object
               clusterPort:
-                description: ClusterPort is the port on which the spark protocol communicates
+                description: ClusterPort is the port used for master/worker/driver
+                  communication.
                 format: int32
                 type: integer
-              dashboardPort:
-                description: DashboardPort is the port used by the dashboard server.
-                format: int32
-                type: integer
-              enableDashboard:
-                description: EnableDashboard starts the dashboard web UI.
-                type: boolean
+              driver:
+                description: Driver configures the SparkCluster to communicate with
+                  the Spark Driver.
+                properties:
+                  blockManagerPort:
+                    description: BlockManagerPort used by the driver.
+                    format: int32
+                    type: integer
+                  port:
+                    description: Port used for communication by the driver.
+                    format: int32
+                    type: integer
+                  selector:
+                    additionalProperties:
+                      type: string
+                    description: Selector labels for driver pod(s).
+                    type: object
+                  uiPort:
+                    description: UIPort used by the driver.
+                    format: int32
+                    type: integer
+                type: object
               envVars:
-                description: EnvVars added to every spark pod container.
+                description: EnvVars added to all every cluster container.
                 items:
                   description: EnvVar represents an environment variable present in
                     a Container.
@@ -214,9 +238,11 @@ spec:
               globalLabels:
                 additionalProperties:
                   type: string
+                description: GlobalLabels applied to all resources in addition to
+                  stock labels.
                 type: object
               image:
-                description: Image used to launch master and worker nodes.
+                description: Image used to launch cluster nodes.
                 properties:
                   pullPolicy:
                     description: PullPolicy used to fetch container image.
@@ -232,8 +258,8 @@ spec:
                     type: string
                 type: object
               imagePullSecrets:
-                description: ImagePullSecrets are references to secrets with credentials
-                  to private registries used to pull images.
+                description: ImagePullSecrets are references to secrets with pull
+                  credentials to private registries where cluster image are stored.
                 items:
                   description: LocalObjectReference contains enough information to
                     let you locate the referenced object inside the same namespace.
@@ -250,7 +276,7 @@ spec:
                   namespace-wide policy.
                 type: string
               kerberosKeytab:
-                description: KerberosKeytab configures the Kerberos Keytab for Spark
+                description: KerberosKeytab parameters used to add kerberos authentication.
                 properties:
                   contents:
                     description: Contents are the binary data stored in the keytab
@@ -266,7 +292,7 @@ spec:
                 description: Master node configuration parameters.
                 properties:
                   affinity:
-                    description: Affinity applied to spark pods.
+                    description: Affinity applied to cluster pods.
                     properties:
                       nodeAffinity:
                         description: Describes node affinity scheduling rules for
@@ -1133,24 +1159,17 @@ spec:
                   annotations:
                     additionalProperties:
                       type: string
-                    description: Annotations applied to spark pods.
+                    description: Annotations applied to cluster pods.
                     type: object
-                  frameworkConfig:
-                    description: FrameworkConfig is the extra framework-specific configuration
-                      for this cluster For spark this means we'll generate a spark-defaults.conf
-                      configmap and mount it at the requested location
-                    properties:
-                      configs:
-                        additionalProperties:
-                          type: string
-                        description: Configs includes the configuration values to
-                          include in the configmap
-                        type: object
-                    required:
-                    - configs
+                  defaultConfiguration:
+                    additionalProperties:
+                      type: string
+                    description: DefaultConfiguration can be used to tune the execution
+                      environment for your Spark applications. The values provided
+                      will be used to construct the spark-defaults.conf file.
                     type: object
                   initContainers:
-                    description: InitContainers added to spark pods.
+                    description: InitContainers added to cluster pods.
                     items:
                       description: A single application container that you want to
                         run within a pod.
@@ -2311,17 +2330,17 @@ spec:
                   labels:
                     additionalProperties:
                       type: string
-                    description: Labels applied to spark pods in addition to stock
+                    description: Labels applied to cluster pods in addition to stock
                       labels.
                     type: object
                   nodeSelector:
                     additionalProperties:
                       type: string
-                    description: NodeSelector applied to spark pods.
+                    description: NodeSelector applied to cluster pods.
                     type: object
                   resources:
                     description: Resources are the requests and limits applied to
-                      spark containers.
+                      cluster containers.
                     properties:
                       limits:
                         additionalProperties:
@@ -2347,7 +2366,7 @@ spec:
                         type: object
                     type: object
                   tolerations:
-                    description: Tolerations applied to spark pods.
+                    description: Tolerations applied to cluster pods.
                     items:
                       description: The pod this Toleration is attached to tolerates
                         any taint that matches the triple <key,value,effect> using
@@ -2388,7 +2407,7 @@ spec:
                       type: object
                     type: array
                   volumeClaimTemplates:
-                    description: VolumeClaimTemplates is a list of claims that Spark
+                    description: VolumeClaimTemplates is a list of claims that cluster
                       pods are allowed to reference. You can enable dynamic provisioning
                       of additional storage on-demand by using a storage class provisioner.
                     items:
@@ -2535,7 +2554,7 @@ spec:
                       type: object
                     type: array
                   volumeMounts:
-                    description: VolumeMounts added to spark containers.
+                    description: VolumeMounts added to cluster containers.
                     items:
                       description: VolumeMount describes a mounting of a Volume within
                         a container.
@@ -2575,7 +2594,7 @@ spec:
                       type: object
                     type: array
                   volumes:
-                    description: Volumes added to spark pods.
+                    description: Volumes added to cluster pods.
                     items:
                       description: Volume represents a named volume in a pod that
                         may be accessed by any container in the pod.
@@ -4060,46 +4079,33 @@ spec:
                       - name
                       type: object
                     type: array
-                required:
-                - resources
                 type: object
+              masterWebPort:
+                description: MasterWebPort is the port for the master web UI.
+                format: int32
+                type: integer
               networkPolicy:
-                description: NetworkPolicy will create a pod selector clause for each
-                  set of labels. This is used to grant ingress access to one or more
-                  groups of external pods and is only applicable when EnableNetworkPolicy
-                  is true.
+                description: NetworkPolicy parameters used to IP traffic flow.
                 properties:
-                  clientServerLabels:
+                  clientLabels:
                     additionalProperties:
                       type: string
-                    description: ClientServerLabels defines the pod selector clause
-                      that grant ingress access to the master client server port.
-                    type: object
-                  clusterLabels:
-                    additionalProperties:
-                      type: string
-                    description: ExternalPodLabels defines the pod selector clause
-                      for used to granted unfettered access to cluster resources.
+                    description: ClientLabels defines the pod selector clause that
+                      grants ingress access to the cluster client port(s).
                     type: object
                   dashboardLabels:
                     additionalProperties:
                       type: string
-                    description: DashboardLabels defines the pod selector clause used
-                      to grant ingress access to the master dashboard port.
+                    description: DashboardLabels defines the pod selector clause that
+                      grants ingress access to the cluster dashboard port.
                     type: object
                   enabled:
                     description: Enabled controls the creation of network policies
                       that limit and provide ingress access to the cluster nodes.
                     type: boolean
-                  externalPolicyEnabled:
-                    description: ExternalPolicyEnabled controls creation of network
-                      policies which deal with two way traffic to pods that are external
-                      to the cluster entirely. The spark driver, for example, is generally
-                      going to live outside the cluster
-                    type: boolean
                 type: object
               podSecurityContext:
-                description: PodSecurityContext added to every spark pod.
+                description: PodSecurityContext added to every cluster pod.
                 properties:
                   fsGroup:
                     description: "A special supplemental group that applies to all
@@ -4242,50 +4248,29 @@ spec:
                     type: object
                 type: object
               podSecurityPolicy:
-                description: PodSecurityPolicy name can be provided to govern execution
-                  of the spark processes within pods.
+                description: PodSecurityPolicy name can be provided to restrict and/or
+                  provide execution permissions to processes running within cluster
+                  pods.
                 type: string
-              serviceAccountName:
-                description: ServiceAccountName will disable the creation of a dedicated
-                  cluster service account. The service account referenced by the provided
-                  name will be used instead.
-                type: string
-              sparkClusterDriver:
-                description: Driver configures the SparkCluster to communicate with
-                  the Spark Driver
+              serviceAccount:
+                description: ServiceAccount parameters used to override default behavior.
                 properties:
-                  driverBlockManagerPort:
-                    format: int32
-                    type: integer
-                  driverBlockManagerPortName:
-                    type: string
-                  driverPort:
-                    format: int32
-                    type: integer
-                  driverPortName:
-                    type: string
-                  driverUIPort:
-                    format: int32
-                    type: integer
-                  driverUIPortName:
-                    type: string
-                  executionName:
-                    type: string
-                  sparkClusterName:
+                  automountServiceAccountToken:
+                    description: AutomountServiceAccountToken into workload pods.
+                      This field is only used when creating a dedicted cluster service
+                      account.
+                    type: boolean
+                  name:
+                    description: Name of an existing service account used by cluster
+                      workloads. This field will disable the creation of a dedicated
+                      cluster service account.
                     type: string
                 type: object
-              tcpMasterWebPort:
-                description: These two are meant for istio compatibility on spark
-                format: int32
-                type: integer
-              tcpWorkerWebPort:
-                format: int32
-                type: integer
               worker:
                 description: Worker node configuration parameters.
                 properties:
                   affinity:
-                    description: Affinity applied to spark pods.
+                    description: Affinity applied to cluster pods.
                     properties:
                       nodeAffinity:
                         description: Describes node affinity scheduling rules for
@@ -5152,24 +5137,17 @@ spec:
                   annotations:
                     additionalProperties:
                       type: string
-                    description: Annotations applied to spark pods.
+                    description: Annotations applied to cluster pods.
                     type: object
-                  frameworkConfig:
-                    description: FrameworkConfig is the extra framework-specific configuration
-                      for this cluster For spark this means we'll generate a spark-defaults.conf
-                      configmap and mount it at the requested location
-                    properties:
-                      configs:
-                        additionalProperties:
-                          type: string
-                        description: Configs includes the configuration values to
-                          include in the configmap
-                        type: object
-                    required:
-                    - configs
+                  defaultConfiguration:
+                    additionalProperties:
+                      type: string
+                    description: DefaultConfiguration can be used to tune the execution
+                      environment for your Spark applications. The values provided
+                      will be used to construct the spark-defaults.conf file.
                     type: object
                   initContainers:
-                    description: InitContainers added to spark pods.
+                    description: InitContainers added to cluster pods.
                     items:
                       description: A single application container that you want to
                         run within a pod.
@@ -6330,13 +6308,13 @@ spec:
                   labels:
                     additionalProperties:
                       type: string
-                    description: Labels applied to spark pods in addition to stock
+                    description: Labels applied to cluster pods in addition to stock
                       labels.
                     type: object
                   nodeSelector:
                     additionalProperties:
                       type: string
-                    description: NodeSelector applied to spark pods.
+                    description: NodeSelector applied to cluster pods.
                     type: object
                   replicas:
                     description: Replicas configures the total number of workers in
@@ -6349,7 +6327,7 @@ spec:
                     type: integer
                   resources:
                     description: Resources are the requests and limits applied to
-                      spark containers.
+                      cluster containers.
                     properties:
                       limits:
                         additionalProperties:
@@ -6375,7 +6353,7 @@ spec:
                         type: object
                     type: object
                   tolerations:
-                    description: Tolerations applied to spark pods.
+                    description: Tolerations applied to cluster pods.
                     items:
                       description: The pod this Toleration is attached to tolerates
                         any taint that matches the triple <key,value,effect> using
@@ -6416,7 +6394,7 @@ spec:
                       type: object
                     type: array
                   volumeClaimTemplates:
-                    description: VolumeClaimTemplates is a list of claims that Spark
+                    description: VolumeClaimTemplates is a list of claims that cluster
                       pods are allowed to reference. You can enable dynamic provisioning
                       of additional storage on-demand by using a storage class provisioner.
                     items:
@@ -6563,7 +6541,7 @@ spec:
                       type: object
                     type: array
                   volumeMounts:
-                    description: VolumeMounts added to spark containers.
+                    description: VolumeMounts added to cluster containers.
                     items:
                       description: VolumeMount describes a mounting of a Volume within
                         a container.
@@ -6603,7 +6581,7 @@ spec:
                       type: object
                     type: array
                   volumes:
-                    description: Volumes added to spark pods.
+                    description: Volumes added to cluster pods.
                     items:
                       description: Volume represents a named volume in a pod that
                         may be accessed by any container in the pod.
@@ -8088,30 +8066,37 @@ spec:
                       - name
                       type: object
                     type: array
-                  workerMemoryLimit:
-                    description: WorkerMemoryLimit configures the SPARK_WORKER_MEMORY
-                      envVar
-                    type: string
-                required:
-                - resources
                 type: object
+              workerMemoryLimit:
+                description: WorkerMemoryLimit configures the SPARK_WORKER_MEMORY
+                  envVar.
+                type: string
+              workerWebPort:
+                description: WorkerWebPort is the port for the worker web UI.
+                format: int32
+                type: integer
             type: object
           status:
-            description: SparkClusterStatus defines the observed state of a SparkCluster
-              resource.
+            description: ClusterStatusConfig defines the observed state of a given
+              cluster. The controllers will generate and populate these fields during
+              reconciliation.
             properties:
+              image:
+                description: Image is the canonical reference url to the cluster container
+                  image.
+                type: string
               nodes:
-                description: Nodes that comprise the cluster.
+                description: Nodes are pods that comprise the cluster.
                 items:
                   type: string
                 type: array
               workerReplicas:
-                description: WorkerReplicas is the scale.status.replicas subresource
+                description: WorkerReplicas is the `scale.status.replicas` subresource
                   field.
                 format: int32
                 type: integer
               workerSelector:
-                description: WorkerSelector is the scale.status.selector subresource
+                description: WorkerSelector is the `scale.status.selector` subresource
                   field.
                 type: string
             type: object
