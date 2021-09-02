@@ -23,12 +23,18 @@ function dco::helm::login() {
 function dco::helm::push() {
   local ref=$1
   local version
+  local app_version
 
-  version="$(echo "$ref" | awk -F : '{ print $NF }')"
+  app_version="$(echo "$ref" | awk -F : '{ print $NF }')"
+  if [[ $app_version =~ ^pr-[[:digit:]]+$ ]]; then
+    version="0.0.0-$version"
+  else
+    version=$app_version
+  fi
 
   $HELM_BIN package deploy/helm/distributed-compute-operator \
     --destination chart-archives \
-    --app-version "$version" \
+    --app-version "$app_version" \
     --version "$version"
 
   $HELM_BIN chart save "chart-archives/distributed-compute-operator-$version.tgz" "$ref"
