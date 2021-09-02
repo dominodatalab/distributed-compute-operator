@@ -27,7 +27,7 @@ function dco::helm::push() {
 
   app_version="$(echo "$ref" | awk -F : '{ print $NF }')"
   if [[ $app_version =~ ^pr-[[:digit:]]+$ ]]; then
-    version="0.0.0-$version"
+    version="0.0.0-$app_version"
   else
     version=$app_version
   fi
