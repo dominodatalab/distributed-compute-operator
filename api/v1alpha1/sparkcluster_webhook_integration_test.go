@@ -5,7 +5,7 @@ import (
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
@@ -17,18 +17,34 @@ func sparkFixture(nsName string) *SparkCluster {
 			GenerateName: "test-",
 			Namespace:    nsName,
 		},
-		// need this value to be preset to pass webhook tests
 		Spec: SparkClusterSpec{
-			Worker: SparkClusterWorker{WorkerMemoryLimit: "4505m"},
+			WorkerMemoryLimit: "4505m",
+			Worker: SparkClusterWorker{
+				SparkClusterNode: SparkClusterNode{
+					WorkloadConfig: WorkloadConfig{
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("250m"),
+								corev1.ResourceMemory: resource.MustParse("250Mi"),
+							},
+						},
+					},
+				},
+			},
+			Driver: SparkClusterDriver{
+				Selector: map[string]string{
+					"app.kubernetes.io/instance": "my-driver",
+				},
+			},
 		},
 	}
 }
 
 var _ = Describe("SparkCluster", func() {
-	var testNS *v1.Namespace
+	var testNS *corev1.Namespace
 
 	BeforeEach(func() {
-		testNS = &v1.Namespace{
+		testNS = &corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
 				GenerateName: "test-",
 			},
@@ -43,57 +59,38 @@ var _ = Describe("SparkCluster", func() {
 	Describe("Defaulting", func() {
 		It("sets expected values on an empty object", func() {
 			sc := sparkFixture(testNS.Name)
-			Expect(k8sClient.Create(ctx, sc)).To(Succeed())
+			err := k8sClient.Create(ctx, sc)
+			Expect(err).To(Succeed(), err)
 
 			Expect(sc.Spec.ClusterPort).To(
 				BeNumerically("==", 7077),
 				"port should equal 7077",
 			)
-			Expect(sc.Spec.TCPWorkerWebPort).To(
+			Expect(sc.Spec.WorkerWebPort).To(
 				BeNumerically("==", 8081),
 				"worker web port should equal 8081",
 			)
-			Expect(sc.Spec.TCPMasterWebPort).To(
+			Expect(sc.Spec.MasterWebPort).To(
 				BeNumerically("==", 8080),
 				"master web port should equal 8080",
 			)
-			Expect(sc.Spec.DashboardPort).To(
-				BeNumerically("==", 8080),
-				"dashboard port should equal 8080",
-			)
-			Expect(sc.Spec.EnableDashboard).To(
-				PointTo(Equal(true)),
-				"enable dashboard should point to true",
-			)
-			Expect(sc.Spec.Driver.DriverUIPort).To(
+			Expect(sc.Spec.Driver.UIPort).To(
 				BeNumerically("==", 4040),
 				"driver ui port should equal 4040",
 			)
-			Expect(sc.Spec.Driver.DriverPort).To(
+			Expect(sc.Spec.Driver.Port).To(
 				BeNumerically("==", 4041),
 				"driver port should equal 4041",
 			)
-			Expect(sc.Spec.Driver.DriverBlockManagerPort).To(
+			Expect(sc.Spec.Driver.BlockManagerPort).To(
 				BeNumerically("==", 4042),
 				"driver block manager port should equal 4042",
-			)
-			Expect(sc.Spec.Driver.DriverPortName).To(
-				Equal("spark-driver-port"),
-				"driver port name should equal spark-driver-port",
-			)
-			Expect(sc.Spec.Driver.DriverUIPortName).To(
-				Equal("spark-ui-port"),
-				"driver port name should equal spark-ui-port",
-			)
-			Expect(sc.Spec.Driver.DriverBlockManagerPortName).To(
-				Equal("spark-block-manager-port"),
-				"driver block manager port name should equal spark-block-manager-port",
 			)
 			Expect(sc.Spec.NetworkPolicy.Enabled).To(
 				PointTo(Equal(true)),
 				"enable network policy should point to true",
 			)
-			Expect(sc.Spec.NetworkPolicy.ClientServerLabels).To(
+			Expect(sc.Spec.NetworkPolicy.ClientLabels).To(
 				Equal(map[string]string{"spark-client": "true"}),
 				`network policy client labels should equal [{"spark-client": "true"}]`,
 			)
@@ -121,34 +118,18 @@ var _ = Describe("SparkCluster", func() {
 
 		It("does not set the worker web port when present", func() {
 			sc := sparkFixture(testNS.Name)
-			sc.Spec.TCPWorkerWebPort = 3000
+			sc.Spec.WorkerWebPort = 3000
 
 			Expect(k8sClient.Create(ctx, sc)).To(Succeed())
-			Expect(sc.Spec.TCPWorkerWebPort).To(BeNumerically("==", 3000))
+			Expect(sc.Spec.WorkerWebPort).To(BeNumerically("==", 3000))
 		})
 
 		It("does not set the master web port when present", func() {
 			sc := sparkFixture(testNS.Name)
-			sc.Spec.TCPMasterWebPort = 3000
+			sc.Spec.MasterWebPort = 3000
 
 			Expect(k8sClient.Create(ctx, sc)).To(Succeed())
-			Expect(sc.Spec.TCPMasterWebPort).To(BeNumerically("==", 3000))
-		})
-
-		It("does not set the dashboard port when present", func() {
-			sc := sparkFixture(testNS.Name)
-			sc.Spec.DashboardPort = 5555
-
-			Expect(k8sClient.Create(ctx, sc)).To(Succeed())
-			Expect(sc.Spec.DashboardPort).To(BeNumerically("==", 5555))
-		})
-
-		It("does not enable the dashboard when false", func() {
-			sc := sparkFixture(testNS.Name)
-			sc.Spec.EnableDashboard = pointer.BoolPtr(false)
-
-			Expect(k8sClient.Create(ctx, sc)).To(Succeed())
-			Expect(sc.Spec.EnableDashboard).To(PointTo(Equal(false)))
+			Expect(sc.Spec.MasterWebPort).To(BeNumerically("==", 3000))
 		})
 
 		Context("Network policies", func() {
@@ -164,10 +145,10 @@ var _ = Describe("SparkCluster", func() {
 				sc := sparkFixture(testNS.Name)
 
 				expected := map[string]string{"server-client": "true"}
-				sc.Spec.NetworkPolicy.ClientServerLabels = expected
+				sc.Spec.NetworkPolicy.ClientLabels = expected
 
 				Expect(k8sClient.Create(ctx, sc)).To(Succeed())
-				Expect(sc.Spec.NetworkPolicy.ClientServerLabels).To(Equal(expected))
+				Expect(sc.Spec.NetworkPolicy.ClientLabels).To(Equal(expected))
 			})
 
 			It("use provided dashboard labels", func() {
@@ -178,16 +159,6 @@ var _ = Describe("SparkCluster", func() {
 
 				Expect(k8sClient.Create(ctx, sc)).To(Succeed())
 				Expect(sc.Spec.NetworkPolicy.DashboardLabels).To(Equal(expected))
-			})
-
-			It("use provided cluster labels", func() {
-				sc := sparkFixture(testNS.Name)
-
-				expected := map[string]string{"instance": "spark-driver"}
-				sc.Spec.NetworkPolicy.ExternalPodLabels = expected
-
-				Expect(k8sClient.Create(ctx, sc)).To(Succeed())
-				Expect(sc.Spec.NetworkPolicy.ExternalPodLabels).To(Equal(expected))
 			})
 		})
 	})
@@ -201,6 +172,20 @@ var _ = Describe("SparkCluster", func() {
 		It("requires a positive worker replica count", func() {
 			sc := sparkFixture(testNS.Name)
 			sc.Spec.Worker.Replicas = pointer.Int32Ptr(-10)
+
+			Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())
+		})
+
+		It("requires cpu resource requests for worker", func() {
+			sc := sparkFixture(testNS.Name)
+			delete(sc.Spec.Worker.Resources.Requests, corev1.ResourceCPU)
+
+			Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())
+		})
+
+		It("requires memory resource requests for worker", func() {
+			sc := rayFixture(testNS.Name)
+			delete(sc.Spec.Worker.Resources.Requests, corev1.ResourceMemory)
 
 			Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())
 		})
@@ -219,13 +204,10 @@ var _ = Describe("SparkCluster", func() {
 				func(sc *SparkCluster, val int32) { sc.Spec.ClusterPort = val },
 			),
 			Entry("rejects an invalid worker web port",
-				func(sc *SparkCluster, val int32) { sc.Spec.TCPWorkerWebPort = val },
+				func(sc *SparkCluster, val int32) { sc.Spec.WorkerWebPort = val },
 			),
 			Entry("rejects an invalid master web port",
-				func(sc *SparkCluster, val int32) { sc.Spec.TCPMasterWebPort = val },
-			),
-			Entry("rejects an invalid dashboard port",
-				func(sc *SparkCluster, val int32) { sc.Spec.DashboardPort = val },
+				func(sc *SparkCluster, val int32) { sc.Spec.MasterWebPort = val },
 			),
 		)
 
@@ -269,9 +251,6 @@ var _ = Describe("SparkCluster", func() {
 				sc := sparkFixture(testNS.Name)
 				sc.Spec.Autoscaling = &Autoscaling{
 					MaxReplicas: 1,
-				}
-				sc.Spec.Worker.Resources.Requests = v1.ResourceList{
-					v1.ResourceCPU: resource.MustParse("100m"),
 				}
 
 				return sc
@@ -340,36 +319,18 @@ var _ = Describe("SparkCluster", func() {
 				sc.Spec.Autoscaling.ScaleDownStabilizationWindowSeconds = pointer.Int32Ptr(0)
 				Expect(k8sClient.Create(ctx, sc)).To(Succeed())
 			})
-
-			It("requires cpu resource requests for worker", func() {
-				sc := clusterWithAutoscaling()
-				sc.Spec.Worker.Resources.Requests = nil
-
-				Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())
-			})
 		})
 
 		Context("worker memory limit", func() {
 			It("rejects an empty limit", func() {
 				sc := sparkFixture(testNS.Name)
-				sc.Spec.Worker.WorkerMemoryLimit = ""
+				sc.Spec.WorkerMemoryLimit = ""
 
 				Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())
 			})
 			It("rejects an invalid limit", func() {
 				sc := sparkFixture(testNS.Name)
-				sc.Spec.Worker.WorkerMemoryLimit = "blah"
-
-				Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())
-			})
-		})
-
-		Context("framework configs", func() {
-			It("rejects a config with no data set", func() {
-				sc := sparkFixture(testNS.Name)
-				sc.Spec.Worker.FrameworkConfig = &FrameworkConfig{
-					Configs: nil,
-				}
+				sc.Spec.WorkerMemoryLimit = "blah"
 
 				Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())
 			})
@@ -392,16 +353,6 @@ var _ = Describe("SparkCluster", func() {
 					MountPath: "",
 					Contents:  []byte{'c', 'o', 'n', 'f', 'i', 'g'},
 				}
-
-				Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())
-			})
-		})
-
-		Context("external network policies", func() {
-			It("rejects when policy is enabled but no values are set", func() {
-				sc := sparkFixture(testNS.Name)
-				sc.Spec.NetworkPolicy.ExternalPolicyEnabled = pointer.BoolPtr(true)
-				sc.Spec.NetworkPolicy.ExternalPodLabels = map[string]string{}
 
 				Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())
 			})

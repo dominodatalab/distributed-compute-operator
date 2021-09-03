@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
 )
 
 const SparkBlockManagerPortName = "spark-block-manager-port"
@@ -36,6 +35,12 @@ func TestNewMasterService(t *testing.T) {
 					Port:       7077,
 					TargetPort: intstr.FromString("cluster"),
 				},
+				{
+					Name:       "tcp",
+					Protocol:   corev1.ProtocolTCP,
+					Port:       8080,
+					TargetPort: intstr.FromString("http"),
+				},
 			},
 			Type: "ClusterIP",
 			Selector: map[string]string{
@@ -46,27 +51,13 @@ func TestNewMasterService(t *testing.T) {
 		},
 	}
 	assert.Equal(t, expected, svc)
-
-	t.Run("with_dashboard_enabled", func(t *testing.T) {
-		rc.Spec.EnableDashboard = pointer.BoolPtr(true)
-		svc := NewMasterService(rc)
-
-		expected.Spec.Ports = append(expected.Spec.Ports, corev1.ServicePort{
-			Name:       "tcp",
-			Protocol:   corev1.ProtocolTCP,
-			Port:       8080,
-			TargetPort: intstr.FromString("http"),
-		})
-
-		assert.Equal(t, expected, svc)
-	})
 }
 
 func TestNewHeadlessService(t *testing.T) {
 	rc := sparkClusterFixture()
-	rc.Spec.TCPMasterWebPort = 8080
-	rc.Spec.Driver.DriverBlockManagerPortName = SparkBlockManagerPortName
-	rc.Spec.Driver.DriverBlockManagerPort = 4042
+	rc.Spec.MasterWebPort = 8080
+	rc.Spec.Driver.BlockManagerPort = 4042
+
 	svc := NewHeadlessService(rc)
 
 	expected := &corev1.Service{
@@ -106,7 +97,7 @@ func TestNewHeadlessService(t *testing.T) {
 					Protocol:   corev1.ProtocolTCP,
 				},
 				{
-					Name:     "tcp-spark-block-manager-port",
+					Name:     "tcp-driver-block-manager",
 					Port:     4042,
 					Protocol: corev1.ProtocolTCP,
 				},
@@ -117,17 +108,13 @@ func TestNewHeadlessService(t *testing.T) {
 }
 
 func TestNewSparkDriverService(t *testing.T) {
-	const clusterName = "test-id"
-
 	rc := sparkClusterFixture()
-	rc.Spec.Driver.SparkClusterName = clusterName
-	rc.Spec.Driver.ExecutionName = clusterName
-	rc.Spec.Driver.DriverUIPort = 4040
-	rc.Spec.Driver.DriverUIPortName = "spark-ui-port"
-	rc.Spec.Driver.DriverPort = 4041
-	rc.Spec.Driver.DriverPortName = "spark-driver-port"
-	rc.Spec.Driver.DriverBlockManagerPort = 4042
-	rc.Spec.Driver.DriverBlockManagerPortName = SparkBlockManagerPortName
+	rc.Spec.Driver.Selector = map[string]string{
+		"app.kubernetes.io/instance": "test-id",
+	}
+	rc.Spec.Driver.UIPort = 4040
+	rc.Spec.Driver.Port = 4041
+	rc.Spec.Driver.BlockManagerPort = 4042
 
 	svc := NewSparkDriverService(rc)
 
@@ -150,18 +137,18 @@ func TestNewSparkDriverService(t *testing.T) {
 			},
 			Ports: []corev1.ServicePort{
 				{
-					Name:       "tcp-spark-ui-port",
+					Name:       "tcp-ui",
 					Port:       4040,
 					TargetPort: intstr.FromInt(4040),
 					Protocol:   corev1.ProtocolTCP,
 				},
 				{
-					Name:     "tcp-spark-driver-port",
+					Name:     "tcp-driver",
 					Port:     4041,
 					Protocol: corev1.ProtocolTCP,
 				},
 				{
-					Name:     "tcp-spark-block-manager-port",
+					Name:     "tcp-block-manager",
 					Port:     4042,
 					Protocol: corev1.ProtocolTCP,
 				},

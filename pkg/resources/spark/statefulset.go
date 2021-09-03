@@ -28,12 +28,12 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	switch comp {
 	case ComponentMaster:
 		replicas = 1
-		nodeAttrs = sc.Spec.Master.SparkClusterNode
+		nodeAttrs = sc.Spec.Master
 		ports = []corev1.ContainerPort{
 			{
 				Name:          "http",
 				Protocol:      corev1.ProtocolTCP,
-				ContainerPort: sc.Spec.DashboardPort,
+				ContainerPort: sc.Spec.MasterWebPort,
 			},
 			{
 				Name:          "cluster",
@@ -47,7 +47,7 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 			{
 				Name:          "http",
 				Protocol:      corev1.ProtocolTCP,
-				ContainerPort: sc.Spec.TCPWorkerWebPort,
+				ContainerPort: sc.Spec.WorkerWebPort,
 			},
 		}
 	default:
@@ -65,7 +65,7 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	volumeMounts = nodeAttrs.VolumeMounts
 	volumeClaimTemplates := processPVCTemplates(sc, nodeAttrs.VolumeClaimTemplates)
 
-	if nodeAttrs.FrameworkConfig != nil {
+	if nodeAttrs.DefaultConfiguration != nil {
 		cmVolume := getConfigMapVolume("spark-config", FrameworkConfigMapName(sc.Name, ComponentNone))
 		cmVolumeMount := getConfigMapVolumeMount("spark-config", frameworkConfigMountPath, string(comp))
 
@@ -81,8 +81,8 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	}
 
 	serviceAccountName := InstanceObjectName(sc.Name, ComponentNone)
-	if sc.Spec.ServiceAccountName != "" {
-		serviceAccountName = sc.Spec.ServiceAccountName
+	if sc.Spec.ServiceAccount.Name != "" {
+		serviceAccountName = sc.Spec.ServiceAccount.Name
 	}
 
 	annotations := make(map[string]string)
@@ -176,11 +176,11 @@ func getPodSpec(sc *dcv1alpha1.SparkCluster,
 
 	switch comp {
 	case ComponentMaster:
-		port = intstr.FromInt(int(sc.Spec.DashboardPort))
+		port = intstr.FromInt(int(sc.Spec.MasterWebPort))
 	case ComponentWorker:
-		port = intstr.FromInt(int(sc.Spec.TCPWorkerWebPort))
+		port = intstr.FromInt(int(sc.Spec.WorkerWebPort))
 	case ComponentNone:
-		port = intstr.FromInt(int(sc.Spec.DashboardPort))
+		port = intstr.FromInt(int(sc.Spec.MasterWebPort))
 	}
 
 	return corev1.PodSpec{
@@ -254,7 +254,7 @@ func componentEnvVars(sc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 			},
 			{
 				Name:  "SPARK_MASTER_WEBUI_PORT",
-				Value: strconv.Itoa(int(sc.Spec.TCPMasterWebPort)),
+				Value: strconv.Itoa(int(sc.Spec.MasterWebPort)),
 			},
 			{
 				Name:  "SPARK_MODE",
@@ -269,7 +269,7 @@ func componentEnvVars(sc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 			},
 			{
 				Name:  "SPARK_WORKER_WEBUI_PORT",
-				Value: strconv.Itoa(int(sc.Spec.TCPWorkerWebPort)),
+				Value: strconv.Itoa(int(sc.Spec.WorkerWebPort)),
 			},
 			{
 				Name:  "SPARK_WORKER_PORT",
@@ -281,7 +281,7 @@ func componentEnvVars(sc *dcv1alpha1.SparkCluster, comp Component) []corev1.EnvV
 			},
 			{
 				Name:  "SPARK_WORKER_MEMORY",
-				Value: sc.Spec.Worker.WorkerMemoryLimit,
+				Value: sc.Spec.WorkerMemoryLimit,
 			},
 			{
 				Name:  "SPARK_WORKER_CORES",

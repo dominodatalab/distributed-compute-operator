@@ -1,8 +1,9 @@
 package dask
 
 import (
-	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 )
 
 func testDaskCluster() *dcv1alpha1.DaskCluster {

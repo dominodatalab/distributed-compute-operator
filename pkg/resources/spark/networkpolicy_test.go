@@ -3,8 +3,6 @@ package spark
 import (
 	"testing"
 
-	"k8s.io/utils/pointer"
-
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -14,9 +12,9 @@ import (
 
 func TestNewClusterDriverNetworkPolicy(t *testing.T) {
 	rc := sparkClusterFixture()
-	rc.Spec.NetworkPolicy.ExternalPolicyEnabled = pointer.BoolPtr(true)
-	rc.Spec.Driver.DriverUIPort = 4040
-	rc.Spec.NetworkPolicy.ExternalPodLabels = map[string]string{"app.kubernetes.io/instance": "spark-driver"}
+	rc.Spec.Driver.UIPort = 4040
+	rc.Spec.NetworkPolicy.ClientLabels = map[string]string{"app.kubernetes.io/instance": "spark-driver"}
+
 	netpol := NewClusterDriverNetworkPolicy(rc)
 
 	protocol := corev1.ProtocolTCP
@@ -86,9 +84,9 @@ func TestNewClusterDriverNetworkPolicy(t *testing.T) {
 
 func TestNewClusterWorkerNetworkPolicy(t *testing.T) {
 	rc := sparkClusterFixture()
-	rc.Spec.NetworkPolicy.ExternalPolicyEnabled = pointer.BoolPtr(true)
-	rc.Spec.Driver.DriverUIPort = 4040
-	rc.Spec.NetworkPolicy.ExternalPodLabels = map[string]string{"app.kubernetes.io/instance": "spark-driver"}
+	rc.Spec.Driver.UIPort = 4040
+	rc.Spec.NetworkPolicy.ClientLabels = map[string]string{"app.kubernetes.io/instance": "spark-driver"}
+
 	netpol := NewClusterWorkerNetworkPolicy(rc)
 
 	expected := &networkingv1.NetworkPolicy{
@@ -146,9 +144,9 @@ func TestNewClusterWorkerNetworkPolicy(t *testing.T) {
 
 func TestNewClusterMasterNetworkPolicy(t *testing.T) {
 	rc := sparkClusterFixture()
-	rc.Spec.NetworkPolicy.ExternalPolicyEnabled = pointer.BoolPtr(true)
-	rc.Spec.NetworkPolicy.ExternalPodLabels = map[string]string{"app.kubernetes.io/instance": "spark-driver"}
+	rc.Spec.NetworkPolicy.ClientLabels = map[string]string{"app.kubernetes.io/instance": "spark-driver"}
 	rc.Spec.NetworkPolicy.DashboardLabels = map[string]string{"spark-client": "true"}
+
 	netpol := NewClusterMasterNetworkPolicy(rc)
 
 	protocol := corev1.ProtocolTCP

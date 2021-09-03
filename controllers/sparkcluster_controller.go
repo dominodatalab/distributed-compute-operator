@@ -288,7 +288,7 @@ func (r *SparkClusterReconciler) reconcileConfigMap(ctx context.Context, sc *dcv
 // reconcileServiceAccount creates a new dedicated service account for a Spark
 // cluster unless a different service account name is provided in the spec.
 func (r *SparkClusterReconciler) reconcileServiceAccount(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
-	if sc.Spec.ServiceAccountName != "" {
+	if sc.Spec.ServiceAccount.Name != "" {
 		return nil
 	}
 
