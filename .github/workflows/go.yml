@@ -119,7 +119,7 @@ jobs:
         run: |
           REGISTRY=ghcr.io
           IMAGE="$(echo ${{ github.repository }} | awk -F / '{ print $(NF-1)  "/helm/" $NF }')"
-          REF="oci://$REGISTRY/$IMAGE:${{ needs.build.outputs.version }}"
+          REF="$REGISTRY/$IMAGE:${{ needs.build.outputs.version }}"
 
           ./scripts/release/helm.sh login -h "$REGISTRY" -u "${{ github.repository_owner }}" -p "${{ secrets.BOT_CR_PAT }}"
           ./scripts/release/helm.sh push -r "$REF"
