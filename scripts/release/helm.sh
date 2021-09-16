@@ -37,8 +37,7 @@ function dco::helm::push() {
     --app-version "$app_version" \
     --version "$version"
 
-  $HELM_BIN chart save "chart-archives/distributed-compute-operator-$version.tgz" "$ref"
-  $HELM_BIN chart push "$ref"
+  $HELM_BIN push "chart-archives/distributed-compute-operator-$version.tgz" "$ref"
 
   rm -rf chart-archives/
 }
