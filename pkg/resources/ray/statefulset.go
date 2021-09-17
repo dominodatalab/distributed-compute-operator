@@ -52,10 +52,13 @@ var (
 	}
 )
 
-const sharedMemoryVolumeName = "dshm"
+const (
+	sharedMemoryVolumeName                    = "dshm"
+	istioSidecarIncludeInboundPortsAnnotation = "traffic.sidecar.istio.io/includeInboundPorts"
+)
 
-func NewStatefulSet(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.StatefulSet, error) {
-	p, err := newConfigProcessor(rc, comp)
+func NewStatefulSet(rc *dcv1alpha1.RayCluster, comp Component, istioEnabled bool) (*appsv1.StatefulSet, error) {
+	p, err := newConfigProcessor(rc, comp, istioEnabled)
 	if err != nil {
 		return nil, err
 	}
@@ -75,6 +78,7 @@ func NewStatefulSet(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Stateful
 	args := p.processArgs()
 	ports := p.processPorts()
 	labels := p.processLabels()
+	annotations := p.processAnnotations()
 	serviceName := p.processServiceName()
 	envVars := append(defaultEnv, rc.Spec.EnvVars...)
 	volumes := append(defaultVolumes, nodeAttrs.Volumes...)
@@ -96,7 +100,7 @@ func NewStatefulSet(rc *dcv1alpha1.RayCluster, comp Component) (*appsv1.Stateful
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      labels,
-					Annotations: nodeAttrs.Annotations,
+					Annotations: annotations,
 				},
 
 				Spec: corev1.PodSpec{
@@ -154,22 +158,24 @@ type configProcessor interface {
 	processArgs() []string
 	processPorts() []corev1.ContainerPort
 	processLabels() map[string]string
+	processAnnotations() map[string]string
 	processServiceName() string
 }
 
-func newConfigProcessor(rc *dcv1alpha1.RayCluster, comp Component) (configProcessor, error) {
+func newConfigProcessor(rc *dcv1alpha1.RayCluster, comp Component, istio bool) (configProcessor, error) {
 	switch comp {
 	case ComponentHead:
-		return &headProcessor{rc: rc}, nil
+		return &headProcessor{rc: rc, istio: istio}, nil
 	case ComponentWorker:
-		return &workerProcessor{rc: rc}, nil
+		return &workerProcessor{rc: rc, istio: istio}, nil
 	default:
 		return nil, fmt.Errorf("invalid ray component: %q", comp)
 	}
 }
 
 type headProcessor struct {
-	rc *dcv1alpha1.RayCluster
+	rc    *dcv1alpha1.RayCluster
+	istio bool
 }
 
 func (p *headProcessor) replicas() int32 {
@@ -254,12 +260,35 @@ func (p *headProcessor) processLabels() map[string]string {
 	return processLabels(p.rc, ComponentHead, AddGlobalLabels(p.rc.Spec.Head.Labels, p.rc.Spec.GlobalLabels))
 }
 
+func (p *headProcessor) processAnnotations() map[string]string {
+	spec := p.rc.Spec
+	if !p.istio {
+		return spec.Head.Annotations
+	}
+
+	listeners := []int32{
+		spec.ClientServerPort,
+		spec.DashboardPort,
+		spec.ObjectManagerPort,
+		spec.NodeManagerPort,
+		spec.GCSServerPort,
+		spec.Port,
+	}
+	listeners = append(listeners, spec.RedisShardPorts...)
+	listeners = append(listeners, spec.WorkerPorts...)
+
+	return util.MergeStringMaps(spec.Head.Annotations, map[string]string{
+		istioSidecarIncludeInboundPortsAnnotation: strings.Join(util.IntsToStrings(listeners), ","),
+	})
+}
+
 func (p *headProcessor) processServiceName() string {
 	return HeadlessHeadServiceName(p.rc.Name)
 }
 
 type workerProcessor struct {
-	rc *dcv1alpha1.RayCluster
+	rc    *dcv1alpha1.RayCluster
+	istio bool
 }
 
 func (p *workerProcessor) replicas() int32 {
@@ -303,6 +332,23 @@ func (p *workerProcessor) processPorts() []corev1.ContainerPort {
 
 func (p *workerProcessor) processLabels() map[string]string {
 	return processLabels(p.rc, ComponentWorker, AddGlobalLabels(p.rc.Spec.Worker.Labels, p.rc.Spec.GlobalLabels))
+}
+
+func (p *workerProcessor) processAnnotations() map[string]string {
+	spec := p.rc.Spec
+	if !p.istio {
+		return spec.Worker.Annotations
+	}
+
+	listeners := []int32{
+		spec.ObjectManagerPort,
+		spec.NodeManagerPort,
+	}
+	listeners = append(listeners, spec.WorkerPorts...)
+
+	return util.MergeStringMaps(spec.Worker.Annotations, map[string]string{
+		istioSidecarIncludeInboundPortsAnnotation: strings.Join(util.IntsToStrings(listeners), ","),
+	})
 }
 
 func (p *workerProcessor) processServiceName() string {
