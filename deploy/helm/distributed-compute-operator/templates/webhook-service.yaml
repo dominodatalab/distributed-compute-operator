@@ -6,7 +6,8 @@ metadata:
     {{- include "common.labels.standard" . | nindent 4 }}
 spec:
   ports:
-    - port: 443
+    - name: tcp-webhook
+      port: 443
       targetPort: webhooks
   selector:
     {{- include "common.labels.matchLabels" . | nindent 4 }}
