@@ -18,7 +18,7 @@ import (
 func TestNewStatefulSet(t *testing.T) {
 	t.Run("invalid_component", func(t *testing.T) {
 		rc := rayClusterFixture()
-		_, err := NewStatefulSet(rc, Component("garbage"))
+		_, err := NewStatefulSet(rc, Component("garbage"), false)
 		assert.Error(t, err)
 	})
 
@@ -27,7 +27,7 @@ func TestNewStatefulSet(t *testing.T) {
 
 		t.Run("default_values", func(t *testing.T) {
 			rc := rayClusterFixture()
-			actual, err := NewStatefulSet(rc, ComponentHead)
+			actual, err := NewStatefulSet(rc, ComponentHead, false)
 			require.NoError(t, err)
 
 			expected := &appsv1.StatefulSet{
@@ -188,7 +188,7 @@ func TestNewStatefulSet(t *testing.T) {
 			rc.Spec.EnableDashboard = pointer.BoolPtr(true)
 			rc.Spec.DashboardPort = 8265
 
-			actual, err := NewStatefulSet(rc, ComponentHead)
+			actual, err := NewStatefulSet(rc, ComponentHead, false)
 			require.NoError(t, err)
 
 			expected := []string{
@@ -205,7 +205,7 @@ func TestNewStatefulSet(t *testing.T) {
 
 		t.Run("default_values", func(t *testing.T) {
 			rc := rayClusterFixture()
-			actual, err := NewStatefulSet(rc, ComponentWorker)
+			actual, err := NewStatefulSet(rc, ComponentWorker, false)
 			require.NoError(t, err)
 
 			expected := &appsv1.StatefulSet{
@@ -346,7 +346,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		rc := rayClusterFixture()
 		rc.Spec.Image = &dcv1alpha1.OCIImageDefinition{}
 
-		_, err := NewStatefulSet(rc, comp)
+		_, err := NewStatefulSet(rc, comp, false)
 		assert.Error(t, err)
 	})
 
@@ -354,7 +354,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		rc := rayClusterFixture()
 		rc.Spec.ObjectStoreMemoryBytes = pointer.Int64Ptr(100 * 1 << 20)
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		assert.Contains(t, actual.Spec.Template.Spec.Containers[0].Args, "--object-store-memory=104857600")
@@ -373,7 +373,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.Labels = expected
 		}
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		for _, labels := range []map[string]string{actual.Labels, actual.Spec.Template.Labels} {
@@ -397,7 +397,28 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.Annotations = expected
 		}
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
+		require.NoError(t, err)
+
+		assert.Equal(t, expected, actual.Spec.Template.Annotations)
+	})
+
+	t.Run("annotations_with_istio", func(t *testing.T) {
+		rc := rayClusterFixture()
+
+		expected := map[string]string{
+			"dominodatalab.com/inject-tooling": "true",
+		}
+		switch comp {
+		case ComponentHead:
+			rc.Spec.Head.Annotations = expected
+			expected["traffic.sidecar.istio.io/includeInboundPorts"] = "10001,8265,2384,2385,2386,6379,6380,6381,11000,11001"
+		case ComponentWorker:
+			rc.Spec.Worker.Annotations = expected
+			expected["traffic.sidecar.istio.io/includeInboundPorts"] = "2384,2385,11000,11001"
+		}
+
+		actual, err := NewStatefulSet(rc, comp, true)
 		require.NoError(t, err)
 
 		assert.Equal(t, expected, actual.Spec.Template.Annotations)
@@ -425,7 +446,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.VolumeMounts = expectedVolMounts
 		}
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		assert.Subset(t, actual.Spec.Template.Spec.Volumes, expectedVols)
@@ -450,7 +471,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.VolumeClaimTemplates = input
 		}
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		expected := []corev1.PersistentVolumeClaim{
@@ -484,7 +505,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.Resources = expected
 		}
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		assert.Equal(t, expected, actual.Spec.Template.Spec.Containers[0].Resources)
@@ -503,7 +524,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.NodeSelector = expected
 		}
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		assert.Equal(t, expected, actual.Spec.Template.Spec.NodeSelector)
@@ -542,7 +563,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.Affinity = expected
 		}
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		assert.Equal(t, expected, actual.Spec.Template.Spec.Affinity)
@@ -566,7 +587,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.Tolerations = expected
 		}
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		assert.Equal(t, expected, actual.Spec.Template.Spec.Tolerations)
@@ -587,7 +608,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			rc.Spec.Worker.InitContainers = expected
 		}
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		assert.Equal(t, expected, actual.Spec.Template.Spec.InitContainers)
@@ -602,7 +623,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			},
 		}
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		assert.Subset(t, actual.Spec.Template.Spec.Containers[0].Env, rc.Spec.EnvVars)
@@ -614,7 +635,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			RunAsUser: pointer.Int64Ptr(0),
 		}
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		assert.Equal(t, rc.Spec.PodSecurityContext, actual.Spec.Template.Spec.SecurityContext)
@@ -624,7 +645,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		rc := rayClusterFixture()
 		rc.Spec.ServiceAccount.Name = "user-managed-sa"
 
-		actual, err := NewStatefulSet(rc, comp)
+		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
 
 		assert.Equal(t, rc.Spec.ServiceAccount.Name, actual.Spec.Template.Spec.ServiceAccountName)

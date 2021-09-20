@@ -307,7 +307,7 @@ func (r *RayClusterReconciler) reconcileAutoscaler(ctx context.Context, rc *dcv1
 // reconcileStatefulSets creates separate Ray head and worker stateful sets
 // that will collectively comprise the execution agents of the cluster.
 func (r *RayClusterReconciler) reconcileStatefulSets(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
-	head, err := ray.NewStatefulSet(rc, ray.ComponentHead)
+	head, err := ray.NewStatefulSet(rc, ray.ComponentHead, r.IstioEnabled)
 	if err != nil {
 		return err
 	}
@@ -315,7 +315,7 @@ func (r *RayClusterReconciler) reconcileStatefulSets(ctx context.Context, rc *dc
 		return fmt.Errorf("failed to create head stateful set: %w", err)
 	}
 
-	worker, err := ray.NewStatefulSet(rc, ray.ComponentWorker)
+	worker, err := ray.NewStatefulSet(rc, ray.ComponentWorker, r.IstioEnabled)
 	if err != nil {
 		return err
 	}
@@ -459,7 +459,7 @@ func (r *RayClusterReconciler) modifyStatusNodes(ctx context.Context, rc *dcv1al
 
 // modifyStatusWorkerFields syncs certain worker stateful set fields into the status.
 func (r *RayClusterReconciler) modifyStatusWorkerFields(ctx context.Context, rc *dcv1alpha1.RayCluster) (bool, error) {
-	worker, err := ray.NewStatefulSet(rc, ray.ComponentWorker)
+	worker, err := ray.NewStatefulSet(rc, ray.ComponentWorker, r.IstioEnabled)
 	if err != nil {
 		return false, err
 	}

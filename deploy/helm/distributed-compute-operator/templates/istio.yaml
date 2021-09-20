@@ -13,5 +13,5 @@ spec:
     mode: UNSET
   portLevelMtls:
     {{ .Values.config.webhookPort }}:
-      mode: PERMISSIVE
+      mode: DISABLE
 {{- end }}
