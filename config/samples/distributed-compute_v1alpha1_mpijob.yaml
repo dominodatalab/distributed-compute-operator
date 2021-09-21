@@ -1,0 +1,7 @@
+apiVersion: distributed-compute.dominodatalab.com/v1alpha1
+kind: MPIJob
+metadata:
+  name: mpijob-sample
+spec:
+  # Add fields here
+  foo: bar

@@ -16,7 +16,6 @@ import (
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/logging"
-	"github.com/dominodatalab/distributed-compute-operator/test"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -38,14 +37,13 @@ var _ = BeforeSuite(func() {
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		//BinaryAssetsDirectory: test.KubebuilderBinaryAssetsDir(),
 		CRDDirectoryPaths:     []string{filepath.Join("..", "config", "crd", "bases")},
 		ErrorIfCRDPathMissing: true,
 	}
 
 	var err error
 	cfg, err = testEnv.Start()
-	Expect(err).NotTo(HaveOccurred(), test.MissingAssetsWarning)
+	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
 	err = dcv1alpha1.AddToScheme(scheme.Scheme)
@@ -53,13 +51,19 @@ var _ = BeforeSuite(func() {
 
 	//+kubebuilder:scaffold:scheme
 
-	k8sManager, err := ctrl.NewManager(cfg, ctrl.Options{
-		Scheme: scheme.Scheme,
-	})
+	k8sManager, err := ctrl.NewManager(cfg, ctrl.Options{Scheme: scheme.Scheme})
 	Expect(err).NotTo(HaveOccurred())
 
+	k8sClient = k8sManager.GetClient()
+	Expect(k8sClient).NotTo(BeNil())
+
+	for _, controller := range BuilderFuncs {
+		err = controller(k8sManager, false, false)
+		Expect(err).ToNot(HaveOccurred())
+	}
+
 	err = (&RayClusterReconciler{
-		Client:       k8sManager.GetClient(),
+		Client:       k8sClient,
 		Scheme:       k8sManager.GetScheme(),
 		Log:          logging.New(ctrl.Log.WithName("controllers").WithName("RayCluster")),
 		IstioEnabled: false,
@@ -67,7 +71,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 
 	err = (&SparkClusterReconciler{
-		Client:       k8sManager.GetClient(),
+		Client:       k8sClient,
 		Scheme:       k8sManager.GetScheme(),
 		Log:          logging.New(ctrl.Log.WithName("controllers").WithName("SparkCluster")),
 		IstioEnabled: false,
@@ -76,11 +80,8 @@ var _ = BeforeSuite(func() {
 
 	go func() {
 		err = k8sManager.Start(ctrl.SetupSignalHandler())
-		Expect(err).ToNot(HaveOccurred())
+		Expect(err).ToNot(HaveOccurred(), err.Error())
 	}()
-
-	k8sClient = k8sManager.GetClient()
-	Expect(k8sClient).NotTo(BeNil())
 }, 60)
 
 var _ = AfterSuite(func() {
