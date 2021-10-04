@@ -8,7 +8,7 @@ SHELL := /bin/bash
 IMG ?= ghcr.io/dominodatalab/distributed-compute-operator:latest
 # Produce CRDs that work with Kubernetes 1.16+ and supports defaulting, api
 # version conversion, and field pruning.
-CRD_OPTIONS ?= "crd:crdVersions=v1,preserveUnknownFields=false"
+CRD_OPTIONS ?= "crd:crdVersions=v1,maxDescLen=0"
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -70,6 +70,9 @@ docker-push: ## Push docker image with the manager.
 	docker push ${IMG}
 
 ##@ Deployment
+
+render: manifests kustomize ## Maybe keep this; rendering is preferable but we need to figure out how to separate CRDs
+	$(KUSTOMIZE) build config/crd
 
 install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/crd | kubectl apply -f -
