@@ -36,7 +36,7 @@ func (s *networkPolicyDS) NetworkPolicy() *networkingv1.NetworkPolicy {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      meta.InstanceName(s.dc, s.comp),
 			Namespace: s.dc.Namespace,
-			Labels:    meta.StandardLabelsWithComponent(s.dc, s.comp),
+			Labels:    meta.StandardLabelsWithComponent(s.dc, s.comp, nil),
 		},
 		Spec: networkingv1.NetworkPolicySpec{
 			PodSelector: metav1.LabelSelector{

@@ -11,32 +11,15 @@ import (
 	"github.com/dominodatalab/distributed-compute-operator/pkg/controller/core"
 )
 
-func CreateOrUpdateOwnedResource(ctx *core.Context, owner metav1.Object, controlled client.Object) error {
-	if err := ctrl.SetControllerReference(owner, controlled, ctx.Scheme); err != nil {
-		return err
-	}
+func CreateOwnedResource(ctx *core.Context, owner metav1.Object, controlled client.Object) error {
+	_, _, err := createOwnedResource(ctx, owner, controlled)
+	return err
+}
 
-	var gvks []schema.GroupVersionKind
-	gvks, _, err := ctx.Scheme.ObjectKinds(controlled)
+func CreateOrUpdateOwnedResource(ctx *core.Context, owner metav1.Object, controlled client.Object) error {
+	found, gvk, err := createOwnedResource(ctx, owner, controlled)
 	if err != nil {
 		return err
-	}
-	gvk := gvks[0]
-
-	log := ctx.Log
-
-	found := controlled.DeepCopyObject().(client.Object)
-	if err = ctx.Client.Get(ctx, client.ObjectKeyFromObject(controlled), found); err != nil {
-		if !apierrors.IsNotFound(err) {
-			return err
-		}
-
-		if err = ctx.Patch.Annotator.SetLastAppliedAnnotation(controlled); err != nil {
-			return err
-		}
-
-		log.V(1).Info("Creating controlled object", "gvk", gvk, "object", controlled)
-		return ctx.Client.Create(ctx, controlled)
 	}
 
 	patchResult, err := ctx.Patch.Maker.Calculate(found, controlled, ctx.Patch.CalculateOpts...)
@@ -47,7 +30,7 @@ func CreateOrUpdateOwnedResource(ctx *core.Context, owner metav1.Object, control
 		return nil
 	}
 
-	log.V(1).Info("Applying patch to object", "gvk", gvk, "object", controlled, "patch", string(patchResult.Patch))
+	ctx.Log.V(1).Info("Applying patch to object", "gvk", gvk, "object", controlled, "patch", string(patchResult.Patch))
 	if err = ctx.Patch.Annotator.SetLastAppliedAnnotation(controlled); err != nil {
 		return err
 	}
@@ -58,7 +41,7 @@ func CreateOrUpdateOwnedResource(ctx *core.Context, owner metav1.Object, control
 		modified.Spec.ClusterIP = current.Spec.ClusterIP
 	}
 
-	log.V(1).Info("Updating controlled object", "gvk", gvk, "object", controlled)
+	ctx.Log.V(1).Info("Updating controlled object", "gvk", gvk, "object", controlled)
 	return ctx.Client.Update(ctx, controlled)
 }
 
@@ -103,4 +86,36 @@ func DeleteStorage(ctx *core.Context, opts []client.ListOption) error {
 	}
 
 	return nil
+}
+
+func createOwnedResource(
+	ctx *core.Context,
+	owner metav1.Object,
+	controlled client.Object,
+) (found client.Object, gvk schema.GroupVersionKind, err error) {
+	if err = ctrl.SetControllerReference(owner, controlled, ctx.Scheme); err != nil {
+		return
+	}
+
+	var gvks []schema.GroupVersionKind
+	if gvks, _, err = ctx.Scheme.ObjectKinds(controlled); err != nil {
+		return
+	}
+	gvk = gvks[0]
+
+	found = controlled.DeepCopyObject().(client.Object)
+	if err = ctx.Client.Get(ctx, client.ObjectKeyFromObject(controlled), found); err != nil {
+		if !apierrors.IsNotFound(err) {
+			return
+		}
+
+		if err = ctx.Patch.Annotator.SetLastAppliedAnnotation(controlled); err != nil {
+			return
+		}
+
+		ctx.Log.V(1).Info("Creating controlled object", "gvk", gvk, "object", controlled)
+		err = ctx.Client.Create(ctx, controlled)
+	}
+
+	return
 }

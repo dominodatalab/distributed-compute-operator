@@ -8,7 +8,7 @@ SHELL := /bin/bash
 IMG ?= ghcr.io/dominodatalab/distributed-compute-operator:latest
 # Produce CRDs that work with Kubernetes 1.16+ and supports defaulting, api
 # version conversion, and field pruning.
-CRD_OPTIONS ?= "crd:crdVersions=v1"
+CRD_OPTIONS ?= "crd:crdVersions=v1,maxDescLen=0"
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))

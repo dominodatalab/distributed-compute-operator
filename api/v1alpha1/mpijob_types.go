@@ -4,25 +4,39 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// MPIJobSpec defines the desired state of MPIJob
-type MPIJobSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of MPIJob. Edit mpijob_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+// MPIJobLauncher defines launcher-specific workload settings.
+type MPIJobLauncher struct {
+	WorkloadConfig `json:",inline"`
+	Command        []string `json:"command"`
 }
 
-// MPIJobStatus defines the observed state of MPIJob
+// MPIJobWorker defines worker-specific workload settings.
+type MPIJobWorker struct {
+	WorkloadConfig `json:",inline"`
+	Replicas       *int32 `json:"replicas,omitempty"`
+}
+
+// MPIJobSpec defines the desired state of MPIJob.
+type MPIJobSpec struct {
+	ClusterConfig `json:",inline"`
+
+	Launcher MPIJobLauncher `json:"launcher,omitempty"`
+	Worker   MPIJobWorker   `json:"worker,omitempty"`
+
+	SlotsPerWorker int32 `json:"slotsPerWorker,omitempty"`
+}
+
+// MPIJobStatus defines the observed state of MPIJob.
 type MPIJobStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 }
 
 //+kubebuilder:object:root=true
+//+kubebuilder:resource:shortName=mpi
 //+kubebuilder:subresource:status
 
-// MPIJob is the Schema for the mpijobs API
+// MPIJob is the Schema for the mpijobs API.
 type MPIJob struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -33,7 +47,7 @@ type MPIJob struct {
 
 //+kubebuilder:object:root=true
 
-// MPIJobList contains a list of MPIJob
+// MPIJobList contains a list of MPIJob.
 type MPIJobList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

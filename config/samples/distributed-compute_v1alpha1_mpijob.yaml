@@ -1,7 +1,66 @@
 apiVersion: distributed-compute.dominodatalab.com/v1alpha1
 kind: MPIJob
 metadata:
-  name: mpijob-sample
+  name: example
 spec:
-  # Add fields here
-  foo: bar
+  # slotsPerWorker: 1
+
+  # image:
+  #   registry: ""
+  #   repository: horovod/horovod
+  #   tag: 0.22.1
+  #   pullPolicy: IfNotPresent
+
+  # networkPolicy:
+  #   enabled: true
+  #   clientLabels: {}
+  #   dashboardLabels: {}
+
+  # serviceAccount:
+  #   name: ""
+  #   automountServiceAccountToken: false
+
+  # podSecurityContext:
+  #   runAsUser:
+  #   runAsGroup:
+  #   fsGroup:
+
+  # kerberosKeytab:
+  #   contents:
+  #   mountPath:
+
+  # globalLabels: {}
+  # envVars: []
+  # imagePullSecrets: []
+  # podSecurityPolicy: ""
+  # istioMutualTLSMode: ""
+
+  launcher:
+    command:
+    - mpirun
+    - --allow-run-as-root
+    - python
+    - adasum/adasum_small_model.py
+  # labels: {}
+  # annotations: {}
+  # nodeSelector: {}
+  # affinity: {}
+  # tolerations: []
+  # initContainers: []
+  # volumes: []
+  # volumeMounts: []
+  # volumeClaimTemplates: []
+  # resources: {}
+
+  worker:
+    # replicas: 1
+    # labels: {}
+    # annotations: {}
+    # nodeSelector: {}
+    # affinity: {}
+    # tolerations: []
+    # initContainers: []
+    # volumes: []
+    # volumeMounts: []
+    # volumeClaimTemplates: []
+    # resources: {}

@@ -64,9 +64,9 @@ func Start(cfg *Config) error {
 		return err
 	}
 
-	for _, c := range controllers.BuilderFuncs {
-		if err = c(mgr, true, cfg.IstioEnabled); err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", c)
+	for _, builder := range controllers.BuilderFuncs {
+		if err = builder(mgr, true, cfg.IstioEnabled); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", builder)
 			return err
 		}
 	}
