@@ -30,26 +30,6 @@ spec:
             type: object
           spec:
             properties:
-              autoscaling:
-                properties:
-                  averageCPUUtilization:
-                    format: int32
-                    type: integer
-                  averageMemoryUtilization:
-                    format: int32
-                    type: integer
-                  maxReplicas:
-                    format: int32
-                    type: integer
-                  minReplicas:
-                    format: int32
-                    type: integer
-                  scaleDownStabilizationWindowSeconds:
-                    format: int32
-                    type: integer
-                required:
-                - maxReplicas
-                type: object
               envVars:
                 items:
                   properties:

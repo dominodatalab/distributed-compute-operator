@@ -17,21 +17,23 @@ func testDaskCluster() *dcv1alpha1.DaskCluster {
 			Namespace: "ns",
 		},
 		Spec: dcv1alpha1.DaskClusterSpec{
-			ClusterConfig: dcv1alpha1.ClusterConfig{
-				Image: &dcv1alpha1.OCIImageDefinition{
-					Registry:   "",
-					Repository: "daskdev/dask",
-					Tag:        "test-tag",
-				},
-				NetworkPolicy: dcv1alpha1.NetworkPolicyConfig{
-					ClientLabels: map[string]string{
-						"test-client": "true",
+			ScalableClusterConfig: dcv1alpha1.ScalableClusterConfig{
+				ClusterConfig: dcv1alpha1.ClusterConfig{
+					Image: &dcv1alpha1.OCIImageDefinition{
+						Registry:   "",
+						Repository: "daskdev/dask",
+						Tag:        "test-tag",
 					},
-					DashboardLabels: map[string]string{
-						"test-ui-client": "true",
+					NetworkPolicy: dcv1alpha1.NetworkPolicyConfig{
+						ClientLabels: map[string]string{
+							"test-client": "true",
+						},
+						DashboardLabels: map[string]string{
+							"test-ui-client": "true",
+						},
 					},
+					PodSecurityPolicy: "privileged",
 				},
-				PodSecurityPolicy: "privileged",
 			},
 			Scheduler:     dcv1alpha1.WorkloadConfig{},
 			Worker:        dcv1alpha1.DaskClusterWorker{},

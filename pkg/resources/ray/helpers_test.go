@@ -20,12 +20,14 @@ func rayClusterFixture() *dcv1alpha1.RayCluster {
 			Namespace: "fake-ns",
 		},
 		Spec: dcv1alpha1.RayClusterSpec{
-			ClusterConfig: dcv1alpha1.ClusterConfig{
-				Image: &dcv1alpha1.OCIImageDefinition{
-					Registry:   "fake-reg",
-					Repository: "fake-repo",
-					Tag:        "fake-tag",
-					PullPolicy: corev1.PullIfNotPresent,
+			ScalableClusterConfig: dcv1alpha1.ScalableClusterConfig{
+				ClusterConfig: dcv1alpha1.ClusterConfig{
+					Image: &dcv1alpha1.OCIImageDefinition{
+						Registry:   "fake-reg",
+						Repository: "fake-repo",
+						Tag:        "fake-tag",
+						PullPolicy: corev1.PullIfNotPresent,
+					},
 				},
 			},
 			Port: 6379,

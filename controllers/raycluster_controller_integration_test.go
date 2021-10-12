@@ -199,10 +199,16 @@ func createCluster(ctx context.Context, name string) (client.ObjectKey, *dcv1alp
 			Namespace: "default",
 		},
 		Spec: dcv1alpha1.RayClusterSpec{
-			ClusterConfig: dcv1alpha1.ClusterConfig{
-				Image: &dcv1alpha1.OCIImageDefinition{
-					Repository: "foo",
-					Tag:        "bar",
+			ScalableClusterConfig: dcv1alpha1.ScalableClusterConfig{
+				ClusterConfig: dcv1alpha1.ClusterConfig{
+					Image: &dcv1alpha1.OCIImageDefinition{
+						Repository: "foo",
+						Tag:        "bar",
+					},
+					NetworkPolicy: dcv1alpha1.NetworkPolicyConfig{
+						Enabled: pointer.BoolPtr(true),
+					},
+					PodSecurityPolicy: psp.Name,
 				},
 				Autoscaling: &dcv1alpha1.Autoscaling{
 					MinReplicas:              pointer.Int32Ptr(1),
@@ -210,10 +216,6 @@ func createCluster(ctx context.Context, name string) (client.ObjectKey, *dcv1alp
 					AverageCPUUtilization:    pointer.Int32Ptr(50),
 					AverageMemoryUtilization: pointer.Int32Ptr(50),
 				},
-				NetworkPolicy: dcv1alpha1.NetworkPolicyConfig{
-					Enabled: pointer.BoolPtr(true),
-				},
-				PodSecurityPolicy: psp.Name,
 			},
 			Worker: dcv1alpha1.RayClusterWorker{
 				Replicas: pointer.Int32Ptr(1),

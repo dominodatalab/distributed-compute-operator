@@ -17,7 +17,7 @@ type RayClusterWorker struct {
 
 // RayClusterSpec defines the desired state of a RayCluster resource.
 type RayClusterSpec struct {
-	ClusterConfig `json:",inline"`
+	ScalableClusterConfig `json:",inline"`
 
 	// Head node configuration parameters.
 	Head WorkloadConfig `json:"head,omitempty"`
