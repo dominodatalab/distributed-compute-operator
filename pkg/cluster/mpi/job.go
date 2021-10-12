@@ -46,13 +46,31 @@ func (c jobComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
 		return ctrl.Result{}, err
 	}
 	if !ready {
-		ctx.Log.Info("Delaying job creation")
+		ctx.Log.Info("Delaying job creation until all workers ready")
 		return ctrl.Result{RequeueAfter: 500 * time.Millisecond}, nil
 	}
 
+	job, err := buildJob(cr)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	err = actions.CreateOrUpdateOwnedResource(ctx, cr, job)
+	if err != nil {
+		err = fmt.Errorf("cannot reconcile job: %w", err)
+	}
+
+	return ctrl.Result{}, err
+}
+
+func (c jobComponent) Kind() client.Object {
+	return &batchv1.Job{}
+}
+
+func buildJob(cr *dcv1alpha1.MPIJob) (*batchv1.Job, error) {
 	image, err := util.ParseImageDefinition(cr.Spec.Image)
 	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("cannot parse image: %w", err)
+		return nil, fmt.Errorf("cannot parse image: %w", err)
 	}
 
 	launcher := cr.Spec.Launcher
@@ -61,9 +79,9 @@ func (c jobComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
 	serviceAccount := selectServiceAccount(cr)
 	volumes, volumeMounts := buildLauncherVolumesAndMounts(cr)
 
-	job := &batchv1.Job{
+	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      meta.InstanceName(cr, ComponentLauncher),
+			Name:      jobName(cr),
 			Namespace: cr.Namespace,
 			Labels:    labels,
 		},
@@ -97,18 +115,7 @@ func (c jobComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
 				},
 			},
 		},
-	}
-
-	err = actions.CreateOrUpdateOwnedResource(ctx, cr, job)
-	if err != nil {
-		err = fmt.Errorf("cannot reconcile job: %w", err)
-	}
-
-	return ctrl.Result{}, err
-}
-
-func (c jobComponent) Kind() client.Object {
-	return &batchv1.Job{}
+	}, nil
 }
 
 func buildEnv(cr *dcv1alpha1.MPIJob) []corev1.EnvVar {

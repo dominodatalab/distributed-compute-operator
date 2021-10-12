@@ -3742,6 +3742,17 @@ spec:
                 type: object
             type: object
           status:
+            properties:
+              completionTime:
+                format: date-time
+                type: string
+              launcherStatus:
+                type: string
+              startTime:
+                format: date-time
+                type: string
+            required:
+            - launcherStatus
             type: object
         type: object
     served: true

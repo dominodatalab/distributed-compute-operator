@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -23,13 +24,14 @@ type MPIJobSpec struct {
 	Launcher MPIJobLauncher `json:"launcher,omitempty"`
 	Worker   MPIJobWorker   `json:"worker,omitempty"`
 
-	SlotsPerWorker int32 `json:"slotsPerWorker,omitempty"`
+	SlotsPerWorker *int32 `json:"slotsPerWorker,omitempty"`
 }
 
 // MPIJobStatus defines the observed state of MPIJob.
 type MPIJobStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	LauncherStatus batchv1.JobConditionType `json:"launcherStatus"`
+	StartTime      *metav1.Time             `json:"startTime,omitempty"`
+	CompletionTime *metav1.Time             `json:"completionTime,omitempty"`
 }
 
 //+kubebuilder:object:root=true

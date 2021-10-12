@@ -1,6 +1,7 @@
 package actions
 
 import (
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,9 +37,15 @@ func CreateOrUpdateOwnedResource(ctx *core.Context, owner metav1.Object, control
 	}
 
 	controlled.SetResourceVersion(found.GetResourceVersion())
-	if modified, ok := controlled.(*corev1.Service); ok {
+
+	// ensure we do not modify "generated" values for certain resources
+	switch modified := controlled.(type) {
+	case *corev1.Service:
 		current := found.(*corev1.Service)
 		modified.Spec.ClusterIP = current.Spec.ClusterIP
+	case *batchv1.Job:
+		current := found.(*batchv1.Job)
+		modified.Spec.Selector = current.Spec.Selector
 	}
 
 	ctx.Log.V(1).Info("Updating controlled object", "gvk", gvk, "object", controlled)

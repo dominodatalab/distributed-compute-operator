@@ -35,6 +35,18 @@ func configMapName(cr client.Object) string {
 	return meta.InstanceName(cr, "config")
 }
 
+func jobName(cr client.Object) string {
+	return meta.InstanceName(cr, ComponentLauncher)
+}
+
+func selectServiceAccount(cr *dcv1alpha1.MPIJob) string {
+	if cr.Spec.ServiceAccount.Name != "" {
+		return cr.Spec.ServiceAccount.Name
+	}
+
+	return serviceAccountName(cr)
+}
+
 func serviceAccountName(cr client.Object) string {
 	return meta.InstanceName(cr, metadata.ComponentNone)
 }
@@ -49,12 +61,4 @@ func sshSecretName(cr client.Object) string {
 
 func workerStatefulSetName(cr client.Object) string {
 	return meta.InstanceName(cr, ComponentWorker)
-}
-
-func selectServiceAccount(cr *dcv1alpha1.MPIJob) string {
-	if cr.Spec.ServiceAccount.Name != "" {
-		return cr.Spec.ServiceAccount.Name
-	}
-
-	return serviceAccountName(cr)
 }

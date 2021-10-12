@@ -17,11 +17,14 @@ func MPIJob(mgr ctrl.Manager, webhooksEnabled, istioEnabled bool) error {
 	reconciler := core.NewReconciler(mgr).
 		For(&dcv1alpha1.MPIJob{}).
 		Component("serviceaccount", mpi.ServiceAccount()).
+		Component("role", mpi.RolePodSecurityPolicy()).
+		Component("rolebinding", mpi.RoleBindingPodSecurityPolicy()).
 		Component("secret", mpi.Secret()).
 		Component("configmap", mpi.ConfigMap()).
 		Component("service", mpi.ServiceWorker()).
 		Component("workers", mpi.StatefulSet()).
-		Component("launcher", mpi.Job())
+		Component("launcher", mpi.Job()).
+		Component("statusupdate", mpi.StatusUpdate())
 
 	if webhooksEnabled {
 		reconciler.WithWebhooks()

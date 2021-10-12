@@ -3,6 +3,7 @@ package v1alpha1
 import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -10,8 +11,8 @@ import (
 )
 
 var (
-	mpiDefaultSlotsPerWorker int32 = 1
-	mpiDefaultWorkerReplicas       = pointer.Int32(1)
+	mpiDefaultSlotsPerWorker = pointer.Int32(1)
+	mpiDefaultWorkerReplicas = pointer.Int32(1)
 
 	mpiDefaultImage = &OCIImageDefinition{
 		Repository: "horovod/horovod",
@@ -32,7 +33,7 @@ func (j *MPIJob) Default() {
 	log.Info("Applying defaults")
 
 	spec := &j.Spec
-	if spec.SlotsPerWorker == 0 {
+	if spec.SlotsPerWorker == nil {
 		log.Info("Setting default slots per worker", "value", mpiDefaultSlotsPerWorker)
 		spec.SlotsPerWorker = mpiDefaultSlotsPerWorker
 	}
@@ -54,26 +55,56 @@ var _ webhook.Validator = &MPIJob{}
 func (j *MPIJob) ValidateCreate() error {
 	mpijobLogger.WithValues("mpijob", client.ObjectKeyFromObject(j)).Info("Validating create")
 
-	// TODO: validate input
+	var errList field.ErrorList
 
-	return j.validateMPIJob()
+	if err := validateIstioMutualTLSMode(j.Spec.MutualTLSMode); err != nil {
+		errList = append(errList, err)
+	}
+	if err := validateWorkerReplicas(j.Spec.Worker.Replicas); err != nil {
+		errList = append(errList, err)
+	}
+	if errs := validateImage(j.Spec.Image); errs != nil {
+		errList = append(errList, errs...)
+	}
+	if errs := validateKerberosKeytab(j.Spec.KerberosKeytab); errs != nil {
+		errList = append(errList, errs...)
+	}
+
+	slots := j.Spec.SlotsPerWorker
+	if slots == nil || *slots < 1 {
+		errList = append(errList, field.Invalid(
+			field.NewPath("spec", "slotsPerWorker"),
+			slots,
+			"should be greate than or equal to 1",
+		))
+	}
+
+	if j.Spec.Launcher.Command == nil {
+		errList = append(errList, field.Required(
+			field.NewPath("spec", "launcher", "command"),
+			"must be provided",
+		))
+	}
+
+	return invalidIfNotEmpty("MPIJob", j.Name, errList)
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
 func (j *MPIJob) ValidateUpdate(old runtime.Object) error {
 	mpijobLogger.WithValues("mpijob", client.ObjectKeyFromObject(j)).Info("Validating update")
 
-	// TODO: reject all updates to spec
+	// TODO: reject all updates to spec, or certain fields?
+	// if equality.Semantic.DeepDerivative(j.Spec, old.(*MPIJob).Spec) {
+	// 	return nil
+	// }
+	//
+	// return apierrors.NewForbidden(schema.GroupResource{}, j.Name, errors.New(""))
 
-	return j.validateMPIJob()
+	return nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type.
 func (j *MPIJob) ValidateDelete() error {
 	// NOTE: not used, just here for interface compliance.
-	return nil
-}
-
-func (j *MPIJob) validateMPIJob() error {
 	return nil
 }
