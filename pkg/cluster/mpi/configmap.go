@@ -64,7 +64,7 @@ func (c configMapComponent) Kind() client.Object {
 }
 
 func buildHostfile(cr *dcv1alpha1.MPIJob) string {
-	slots := *cr.Spec.SlotsPerWorker
+	slots := *cr.Spec.Worker.Slots
 	svcName := serviceName(cr)
 	workerName := workerStatefulSetName(cr)
 	workerReplicas := *cr.Spec.Worker.Replicas

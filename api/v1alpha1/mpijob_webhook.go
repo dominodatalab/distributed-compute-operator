@@ -11,8 +11,9 @@ import (
 )
 
 var (
-	mpiDefaultSlotsPerWorker = pointer.Int32(1)
-	mpiDefaultWorkerReplicas = pointer.Int32(1)
+	mpiDefaultSlotsPerWorker      = pointer.Int32(1)
+	mpiDefaultWorkerReplicas      = pointer.Int32(1)
+	mpiDefaultEnableNetworkPolicy = pointer.Bool(true)
 
 	mpiDefaultImage = &OCIImageDefinition{
 		Repository: "horovod/horovod",
@@ -33,9 +34,9 @@ func (j *MPIJob) Default() {
 	log.Info("Applying defaults")
 
 	spec := &j.Spec
-	if spec.SlotsPerWorker == nil {
-		log.Info("Setting default slots per worker", "value", mpiDefaultSlotsPerWorker)
-		spec.SlotsPerWorker = mpiDefaultSlotsPerWorker
+	if spec.Worker.Slots == nil {
+		log.Info("Setting default worker slots", "value", mpiDefaultSlotsPerWorker)
+		spec.Worker.Slots = mpiDefaultSlotsPerWorker
 	}
 	if spec.Worker.Replicas == nil {
 		log.Info("Setting default worker replicas", "value", *mpiDefaultWorkerReplicas)
@@ -44,6 +45,10 @@ func (j *MPIJob) Default() {
 	if spec.Image == nil {
 		log.Info("Setting default image", "value", mpiDefaultImage)
 		spec.Image = mpiDefaultImage
+	}
+	if spec.NetworkPolicy.Enabled == nil {
+		log.Info("Setting enable network policy flag", "value", *mpiDefaultEnableNetworkPolicy)
+		spec.NetworkPolicy.Enabled = mpiDefaultEnableNetworkPolicy
 	}
 }
 
@@ -70,19 +75,19 @@ func (j *MPIJob) ValidateCreate() error {
 		errList = append(errList, errs...)
 	}
 
-	slots := j.Spec.SlotsPerWorker
-	if slots == nil || *slots < 1 {
-		errList = append(errList, field.Invalid(
-			field.NewPath("spec", "slotsPerWorker"),
-			slots,
-			"should be greate than or equal to 1",
-		))
-	}
-
 	if j.Spec.Launcher.Command == nil {
 		errList = append(errList, field.Required(
 			field.NewPath("spec", "launcher", "command"),
 			"must be provided",
+		))
+	}
+
+	slots := j.Spec.Worker.Slots
+	if slots == nil || *slots < 1 {
+		errList = append(errList, field.Invalid(
+			field.NewPath("spec", "worker", "slots"),
+			slots,
+			"should be greater than or equal to 1",
 		))
 	}
 

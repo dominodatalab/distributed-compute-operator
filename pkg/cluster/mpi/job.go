@@ -21,6 +21,7 @@ import (
 
 const fileModeUserRO = 0400
 
+// NOTE: this can probably live in a configfile
 var launcherEnv = []corev1.EnvVar{
 	{
 		Name:  "OMPI_MCA_orte_keep_fqdn_hostnames",

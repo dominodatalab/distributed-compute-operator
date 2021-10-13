@@ -18,7 +18,33 @@ spec:
     singular: mpijob
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.worker.replicas
+      name: Workers
+      type: integer
+    - jsonPath: .status.launcherStatus
+      name: Status
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - jsonPath: .status.image
+      name: Image
+      priority: 10
+      type: string
+    - jsonPath: .spec.podSecurityPolicy
+      name: Bound PSP
+      priority: 10
+      type: string
+    - jsonPath: .spec.networkPolicy.enabled
+      name: Network Policy
+      priority: 10
+      type: boolean
+    - jsonPath: .status.nodes
+      name: Pods
+      priority: 10
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         properties:
@@ -1964,9 +1990,6 @@ spec:
                   name:
                     type: string
                 type: object
-              slotsPerWorker:
-                format: int32
-                type: integer
               worker:
                 properties:
                   affinity:
@@ -2914,6 +2937,9 @@ spec:
                           x-kubernetes-int-or-string: true
                         type: object
                     type: object
+                  slots:
+                    format: int32
+                    type: integer
                   tolerations:
                     items:
                       properties:
@@ -3726,8 +3752,14 @@ spec:
               completionTime:
                 format: date-time
                 type: string
+              image:
+                type: string
               launcherStatus:
                 type: string
+              nodes:
+                items:
+                  type: string
+                type: array
               startTime:
                 format: date-time
                 type: string

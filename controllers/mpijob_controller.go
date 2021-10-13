@@ -22,6 +22,7 @@ func MPIJob(mgr ctrl.Manager, webhooksEnabled, istioEnabled bool) error {
 		Component("secret", mpi.Secret()).
 		Component("configmap", mpi.ConfigMap()).
 		Component("service", mpi.ServiceWorker()).
+		Component("networkpolicy", mpi.NetworkPolicy()).
 		Component("workers", mpi.StatefulSet()).
 		Component("launcher", mpi.Job()).
 		Component("statusupdate", mpi.StatusUpdate())

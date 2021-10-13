@@ -3,8 +3,6 @@ kind: MPIJob
 metadata:
   name: example
 spec:
-  # slotsPerWorker: 1
-
   # image:
   #   registry: ""
   #   repository: horovod/horovod
@@ -37,23 +35,29 @@ spec:
 
   launcher:
     command:
-    - mpirun
-    - --allow-run-as-root
-    - python
-    - adasum/adasum_small_model.py
-  # labels: {}
-  # annotations: {}
-  # nodeSelector: {}
-  # affinity: {}
-  # tolerations: []
-  # initContainers: []
-  # volumes: []
-  # volumeMounts: []
-  # volumeClaimTemplates: []
-  # resources: {}
+      - mpirun
+      - --allow-run-as-root
+      - python
+      - tensorflow2/tensorflow2_synthetic_benchmark.py
+      - --no-cuda
+      - --batch-size=1
+      - --num-warmup-batches=1
+      - --num-iters=2
+      - --num-batches-per-iter=1
+    # labels: {}
+    # annotations: {}
+    # nodeSelector: {}
+    # affinity: {}
+    # tolerations: []
+    # initContainers: []
+    # volumes: []
+    # volumeMounts: []
+    # volumeClaimTemplates: []
+    # resources: {}
 
   worker:
-    # replicas: 1
+    # slots: 1
+    # replicas: 2
     # labels: {}
     # annotations: {}
     # nodeSelector: {}
