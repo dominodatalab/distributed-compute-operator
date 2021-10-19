@@ -88,6 +88,11 @@ func (s *networkPolicyDS) ingressRules() []networkingv1.NetworkPolicyIngressRule
 						PodSelector: &metav1.LabelSelector{
 							MatchLabels: s.dc.Spec.NetworkPolicy.DashboardLabels,
 						},
+						NamespaceSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"domino-platform": "true",
+							},
+						},
 					},
 				},
 				Ports: []networkingv1.NetworkPolicyPort{
