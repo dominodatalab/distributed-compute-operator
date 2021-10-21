@@ -57,6 +57,11 @@ func (s *networkPolicyDS) Delete() bool {
 func (s *networkPolicyDS) ingressRules() []networkingv1.NetworkPolicyIngressRule {
 	tcpProto := corev1.ProtocolTCP
 	dashboardPort := intstr.FromInt(int(s.dc.Spec.DashboardPort))
+	namespaceSelector := metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"domino-platform": "true",
+		},
+	}
 
 	if s.comp == ComponentScheduler {
 		sPort := intstr.FromInt(int(s.dc.Spec.SchedulerPort))
@@ -88,6 +93,7 @@ func (s *networkPolicyDS) ingressRules() []networkingv1.NetworkPolicyIngressRule
 						PodSelector: &metav1.LabelSelector{
 							MatchLabels: s.dc.Spec.NetworkPolicy.DashboardLabels,
 						},
+						NamespaceSelector: &namespaceSelector,
 					},
 				},
 				Ports: []networkingv1.NetworkPolicyPort{
