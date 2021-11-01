@@ -57,14 +57,22 @@ jobs:
       uses: docker/login-action@v1
       with:
         registry: ghcr.io
-        username: ${{ github.repository_owner }}
-        password: ${{ secrets.BOT_CR_PAT }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Login to Quay
+      uses: docker/login-action@v1
+      with:
+        registry: quay.io
+        username: ${{ secrets.QUAY_USERNAME }}
+        password: ${{ secrets.QUAY_PASSWORD }}
 
     - name: Prepare Docker image
       id: docker_prep
       run: |
         DESCRIPTION="$(echo "${{ github.event.repository.description }}" | sed -r 's/:.+:[[:blank:]]*//')"
         DOCKER_IMAGE=ghcr.io/${{ github.repository }}
+        VENDOR_IMAGE=quay.io/domino/distributed-compute-operator
 
         VERSION=edge
         if [[ $GITHUB_REF == refs/tags/* ]]; then
@@ -75,9 +83,9 @@ jobs:
           VERSION=pr-${{ github.event.number }}
         fi
 
-        TAGS="${DOCKER_IMAGE}:${VERSION}"
+        TAGS="${DOCKER_IMAGE}:${VERSION},${VENDOR_IMAGE}:${VERSION}"
         if [[ "${{ github.event_name }}" == "push" ]]; then
-          TAGS="$TAGS,${DOCKER_IMAGE}:sha-${GITHUB_SHA::8}"
+          TAGS="$TAGS,${DOCKER_IMAGE}:sha-${GITHUB_SHA::8},${VENDOR_IMAGE}:sha-${GITHUB_SHA::8}"
         fi
 
         echo ::set-output name=description::${DESCRIPTION}
