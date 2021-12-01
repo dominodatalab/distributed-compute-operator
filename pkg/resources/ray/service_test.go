@@ -48,7 +48,7 @@ func TestNewClientService(t *testing.T) {
 		svc := NewClientService(rc)
 
 		expected.Spec.Ports = append(expected.Spec.Ports, corev1.ServicePort{
-			Name:       "http-dashboard",
+			Name:       "tcp-dashboard",
 			Port:       8265,
 			TargetPort: intstr.FromInt(8265),
 		})
