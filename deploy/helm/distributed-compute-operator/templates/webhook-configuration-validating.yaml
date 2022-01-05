@@ -14,9 +14,9 @@ webhooks:
       service:
         name: {{ include "dco.webhook.service" . }}
         namespace: {{ .Release.Namespace }}
-        path: /validate-distributed-compute-dominodatalab-com-v1alpha1-mpijob
+        path: /validate-distributed-compute-dominodatalab-com-v1alpha1-mpicluster
     failurePolicy: Fail
-    name: vmpijob.kb.io
+    name: vmpicluster.kb.io
     rules:
       - apiGroups:
           - distributed-compute.dominodatalab.com
@@ -26,7 +26,7 @@ webhooks:
           - CREATE
           - UPDATE
         resources:
-          - mpijobs
+          - mpiclusters
     sideEffects: None
   - admissionReviewVersions:
       - v1

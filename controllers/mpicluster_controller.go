@@ -8,14 +8,14 @@ import (
 	"github.com/dominodatalab/distributed-compute-operator/pkg/controller/core"
 )
 
-//+kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=mpijobs,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=mpijobs/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=mpijobs/finalizers,verbs=update
+//+kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=mpiclusters,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=mpiclusters/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=mpiclusters/finalizers,verbs=update
 
-// MPIJob builds a controller that reconciles MPIJob objects and registers it with the manager.
-func MPIJob(mgr ctrl.Manager, webhooksEnabled, istioEnabled bool) error {
+// MPICluster builds a controller that reconciles MPICluster objects and registers it with the manager.
+func MPICluster(mgr ctrl.Manager, webhooksEnabled, istioEnabled bool) error {
 	reconciler := core.NewReconciler(mgr).
-		For(&dcv1alpha1.MPIJob{}).
+		For(&dcv1alpha1.MPICluster{}).
 		Component("serviceaccount", mpi.ServiceAccount()).
 		Component("role", mpi.RolePodSecurityPolicy()).
 		Component("rolebinding", mpi.RoleBindingPodSecurityPolicy()).
@@ -24,7 +24,6 @@ func MPIJob(mgr ctrl.Manager, webhooksEnabled, istioEnabled bool) error {
 		Component("service", mpi.ServiceWorker()).
 		Component("networkpolicy", mpi.NetworkPolicy()).
 		Component("workers", mpi.StatefulSet()).
-		Component("launcher", mpi.Job()).
 		Component("statusupdate", mpi.StatusUpdate())
 
 	if webhooksEnabled {

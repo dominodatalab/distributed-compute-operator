@@ -21,16 +21,16 @@ var (
 		PullPolicy: corev1.PullIfNotPresent,
 	}
 
-	mpijobLogger = logf.Log.WithName("webhooks").WithName("MPIJob")
+	mpiClusterLogger = logf.Log.WithName("webhooks").WithName("MPICluster")
 )
 
-//+kubebuilder:webhook:path=/mutate-distributed-compute-dominodatalab-com-v1alpha1-mpijob,mutating=true,failurePolicy=fail,sideEffects=None,groups=distributed-compute.dominodatalab.com,resources=mpijobs,verbs=create;update,versions=v1alpha1,name=mmpijob.kb.io,admissionReviewVersions={v1,v1beta1}
+//+kubebuilder:webhook:path=/mutate-distributed-compute-dominodatalab-com-v1alpha1-mpicluster,mutating=true,failurePolicy=fail,sideEffects=None,groups=distributed-compute.dominodatalab.com,resources=mpiclusters,verbs=create;update,versions=v1alpha1,name=mmpicluster.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Defaulter = &MPIJob{}
+var _ webhook.Defaulter = &MPICluster{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type.
-func (j *MPIJob) Default() {
-	log := mpijobLogger.WithValues("mpijob", client.ObjectKeyFromObject(j))
+func (j *MPICluster) Default() {
+	log := mpiClusterLogger.WithValues("mpicluster", client.ObjectKeyFromObject(j))
 	log.Info("Applying defaults")
 
 	spec := &j.Spec
@@ -52,13 +52,13 @@ func (j *MPIJob) Default() {
 	}
 }
 
-//+kubebuilder:webhook:path=/validate-distributed-compute-dominodatalab-com-v1alpha1-mpijob,mutating=false,failurePolicy=fail,sideEffects=None,groups=distributed-compute.dominodatalab.com,resources=mpijobs,verbs=create;update,versions=v1alpha1,name=vmpijob.kb.io,admissionReviewVersions={v1,v1beta1}
+//+kubebuilder:webhook:path=/validate-distributed-compute-dominodatalab-com-v1alpha1-mpicluster,mutating=false,failurePolicy=fail,sideEffects=None,groups=distributed-compute.dominodatalab.com,resources=mpiclusters,verbs=create;update,versions=v1alpha1,name=vmpicluster.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Validator = &MPIJob{}
+var _ webhook.Validator = &MPICluster{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
-func (j *MPIJob) ValidateCreate() error {
-	mpijobLogger.WithValues("mpijob", client.ObjectKeyFromObject(j)).Info("Validating create")
+func (j *MPICluster) ValidateCreate() error {
+	mpiClusterLogger.WithValues("mpicluster", client.ObjectKeyFromObject(j)).Info("Validating create")
 
 	var errList field.ErrorList
 
@@ -75,13 +75,6 @@ func (j *MPIJob) ValidateCreate() error {
 		errList = append(errList, errs...)
 	}
 
-	if j.Spec.Launcher.Command == nil {
-		errList = append(errList, field.Required(
-			field.NewPath("spec", "launcher", "command"),
-			"must be provided",
-		))
-	}
-
 	slots := j.Spec.Worker.Slots
 	if slots == nil || *slots < 1 {
 		errList = append(errList, field.Invalid(
@@ -91,15 +84,15 @@ func (j *MPIJob) ValidateCreate() error {
 		))
 	}
 
-	return invalidIfNotEmpty("MPIJob", j.Name, errList)
+	return invalidIfNotEmpty("MPICluster", j.Name, errList)
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
-func (j *MPIJob) ValidateUpdate(old runtime.Object) error {
-	mpijobLogger.WithValues("mpijob", client.ObjectKeyFromObject(j)).Info("Validating update")
+func (j *MPICluster) ValidateUpdate(old runtime.Object) error {
+	mpiClusterLogger.WithValues("mpicluster", client.ObjectKeyFromObject(j)).Info("Validating update")
 
 	// TODO: reject all updates to spec, or certain fields?
-	// if equality.Semantic.DeepDerivative(j.Spec, old.(*MPIJob).Spec) {
+	// if equality.Semantic.DeepDerivative(j.Spec, old.(*MPICluster).Spec) {
 	// 	return nil
 	// }
 	//
@@ -109,7 +102,7 @@ func (j *MPIJob) ValidateUpdate(old runtime.Object) error {
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type.
-func (j *MPIJob) ValidateDelete() error {
+func (j *MPICluster) ValidateDelete() error {
 	// NOTE: not used, just here for interface compliance.
 	return nil
 }

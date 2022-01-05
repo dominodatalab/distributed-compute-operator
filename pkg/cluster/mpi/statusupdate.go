@@ -5,14 +5,21 @@ import (
 	"reflect"
 	"sort"
 
-	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
+
 	"github.com/dominodatalab/distributed-compute-operator/pkg/controller/core"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
+)
+
+const (
+	ReadyStatus   = "Ready"
+	PendingStatus = "Pending"
 )
 
 func StatusUpdate() core.Component {
@@ -22,7 +29,7 @@ func StatusUpdate() core.Component {
 type statusUpdateComponent struct{}
 
 func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
-	cr := objToMPIJob(ctx.Object)
+	cr := objToMPICluster(ctx.Object)
 
 	var modified bool
 
@@ -57,42 +64,28 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 		modified = true
 	}
 
-	// update job details
-	var job batchv1.Job
-	objKey := client.ObjectKey{
-		Name:      jobName(cr),
-		Namespace: cr.Namespace,
+	actualPodCnt, err := getActivePodCnt(ctx, cr)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("cannot obtain active pod count: %w", err)
+	}
+	expectedPodCnt := int(*cr.Spec.Worker.Replicas)
+
+	status := cr.Status.ClusterStatus
+	if actualPodCnt >= expectedPodCnt {
+		status = ReadyStatus
+	} else {
+		status = PendingStatus
 	}
 
-	if gErr := ctx.Client.Get(ctx, objKey, &job); gErr != nil {
-		if apierrors.IsNotFound(gErr) {
-			return ctrl.Result{}, nil
+	if cr.Status.ClusterStatus != status {
+		modified = true
+		cr.Status.ClusterStatus = status
+		if status == ReadyStatus {
+			tt := metav1.Now()
+			cr.Status.StartTime = &tt
+		} else {
+			cr.Status.StartTime = nil
 		}
-
-		return ctrl.Result{}, gErr
-	}
-
-	if cr.Status.StartTime != job.Status.StartTime {
-		cr.Status.StartTime = job.Status.StartTime
-		modified = true
-	}
-	if cr.Status.CompletionTime != job.Status.CompletionTime {
-		cr.Status.CompletionTime = job.Status.CompletionTime
-		modified = true
-	}
-
-	oldStatus := cr.Status.LauncherStatus
-	switch {
-	case job.Status.Conditions != nil:
-		cr.Status.LauncherStatus = job.Status.Conditions[0].Type
-	case job.Status.Active == 1:
-		cr.Status.LauncherStatus = "Active"
-	default:
-		cr.Status.LauncherStatus = "Pending"
-	}
-
-	if cr.Status.LauncherStatus != oldStatus {
-		modified = true
 	}
 
 	if modified {
@@ -104,4 +97,21 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 	// 	logic probably belongs elsewhere
 
 	return ctrl.Result{}, err
+}
+
+func getActivePodCnt(ctx *core.Context, cr *dcv1alpha1.MPICluster) (int, error) {
+	var ep corev1.Endpoints
+	objKey := client.ObjectKey{
+		Name:      serviceName(cr),
+		Namespace: cr.Namespace,
+	}
+
+	if err := ctx.Client.Get(ctx, objKey, &ep); err != nil && !apierrors.IsNotFound(err) {
+		return 0, fmt.Errorf("cannot fetch endpoints: %w", err)
+	}
+
+	if len(ep.Subsets) == 1 {
+		return len(ep.Subsets[0].Addresses), nil
+	}
+	return 0, nil
 }

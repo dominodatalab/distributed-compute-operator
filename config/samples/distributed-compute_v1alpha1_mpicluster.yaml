@@ -1,5 +1,5 @@
 apiVersion: distributed-compute.dominodatalab.com/v1alpha1
-kind: MPIJob
+kind: MPICluster
 metadata:
   name: example
 spec:
@@ -33,31 +33,9 @@ spec:
   # podSecurityPolicy: ""
   # istioMutualTLSMode: ""
 
-  launcher:
-    command:
-      - mpirun
-      - --allow-run-as-root
-      - python
-      - tensorflow2/tensorflow2_synthetic_benchmark.py
-      - --no-cuda
-      - --batch-size=1
-      - --num-warmup-batches=1
-      - --num-iters=2
-      - --num-batches-per-iter=1
-    # labels: {}
-    # annotations: {}
-    # nodeSelector: {}
-    # affinity: {}
-    # tolerations: []
-    # initContainers: []
-    # volumes: []
-    # volumeMounts: []
-    # volumeClaimTemplates: []
-    # resources: {}
-
   worker:
     # slots: 1
-    # replicas: 2
+    # replicas: 1
     # labels: {}
     # annotations: {}
     # nodeSelector: {}

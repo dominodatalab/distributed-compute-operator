@@ -33,7 +33,7 @@ type podSecurityPolicyComponent struct {
 }
 
 func (c podSecurityPolicyComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
-	cr := objToMPIJob(ctx.Object)
+	cr := objToMPICluster(ctx.Object)
 
 	desc, resource := c.buildResource(cr)
 
@@ -53,7 +53,7 @@ func (c podSecurityPolicyComponent) Kind() client.Object {
 	return c.kind
 }
 
-func (c podSecurityPolicyComponent) buildResource(cr *dcv1alpha1.MPIJob) (string, client.Object) {
+func (c podSecurityPolicyComponent) buildResource(cr *dcv1alpha1.MPICluster) (string, client.Object) {
 	om := metav1.ObjectMeta{
 		Name:      meta.InstanceName(cr, metadata.ComponentNone),
 		Namespace: cr.Namespace,

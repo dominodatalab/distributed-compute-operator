@@ -20,7 +20,7 @@ func NetworkPolicy() core.OwnedComponent {
 type networkPolicyComponent struct{}
 
 func (c networkPolicyComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
-	cr := objToMPIJob(ctx.Object)
+	cr := objToMPICluster(ctx.Object)
 
 	matchLabels := meta.MatchLabels(cr)
 	netpol := &networkingv1.NetworkPolicy{

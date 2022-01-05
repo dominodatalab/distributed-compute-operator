@@ -64,8 +64,10 @@ func Start(cfg *Config) error {
 		return err
 	}
 
+	enableWebHooks := os.Getenv("ENABLE_WEBHOOKS") != "false"
+
 	for _, builder := range controllers.BuilderFuncs {
-		if err = builder(mgr, true, cfg.IstioEnabled); err != nil {
+		if err = builder(mgr, enableWebHooks, cfg.IstioEnabled); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", builder)
 			return err
 		}
@@ -93,7 +95,7 @@ func Start(cfg *Config) error {
 		return err
 	}
 
-	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
+	if enableWebHooks {
 		if err = (&dcv1alpha1.RayCluster{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "RayCluster")
 			return err

@@ -20,7 +20,7 @@ func ServiceAccount() core.OwnedComponent {
 type serviceAccountComponent struct{}
 
 func (c serviceAccountComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
-	cr := objToMPIJob(ctx.Object)
+	cr := objToMPICluster(ctx.Object)
 	conf := cr.Spec.ServiceAccount
 
 	sa := &corev1.ServiceAccount{
