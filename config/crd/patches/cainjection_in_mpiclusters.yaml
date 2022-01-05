@@ -4,4 +4,4 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     cert-manager.io/inject-ca-from: $(CERTIFICATE_NAMESPACE)/$(CERTIFICATE_NAME)
-  name: mpijobs.distributed-compute.dominodatalab.com
+  name: mpiclusters.distributed-compute.dominodatalab.com

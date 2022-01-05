@@ -34,9 +34,9 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-distributed-compute-dominodatalab-com-v1alpha1-mpijob
+      path: /mutate-distributed-compute-dominodatalab-com-v1alpha1-mpicluster
   failurePolicy: Fail
-  name: mmpijob.kb.io
+  name: mmpicluster.kb.io
   rules:
   - apiGroups:
     - distributed-compute.dominodatalab.com
@@ -46,7 +46,7 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - mpijobs
+    - mpiclusters
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -126,9 +126,9 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-distributed-compute-dominodatalab-com-v1alpha1-mpijob
+      path: /validate-distributed-compute-dominodatalab-com-v1alpha1-mpicluster
   failurePolicy: Fail
-  name: vmpijob.kb.io
+  name: vmpicluster.kb.io
   rules:
   - apiGroups:
     - distributed-compute.dominodatalab.com
@@ -138,7 +138,7 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - mpijobs
+    - mpiclusters
   sideEffects: None
 - admissionReviewVersions:
   - v1

@@ -44,7 +44,7 @@ func StatefulSet() core.OwnedComponent {
 type statefulSetComponent struct{}
 
 func (c statefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
-	cr := objToMPIJob(ctx.Object)
+	cr := objToMPICluster(ctx.Object)
 
 	image, err := util.ParseImageDefinition(cr.Spec.Image)
 	if err != nil {
@@ -112,7 +112,7 @@ func (c statefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) 
 }
 
 func (c statefulSetComponent) Finalize(ctx *core.Context) (ctrl.Result, bool, error) {
-	cr := objToMPIJob(ctx.Object)
+	cr := objToMPICluster(ctx.Object)
 	pvcListOpts := []client.ListOption{
 		client.InNamespace(cr.Namespace),
 		client.MatchingLabels(meta.MatchLabels(cr)),
@@ -127,7 +127,7 @@ func (c statefulSetComponent) Kind() client.Object {
 	return &appsv1.StatefulSet{}
 }
 
-func buildWorkerVolumesAndMounts(cr *dcv1alpha1.MPIJob) ([]corev1.Volume, []corev1.VolumeMount) {
+func buildWorkerVolumesAndMounts(cr *dcv1alpha1.MPICluster) ([]corev1.Volume, []corev1.VolumeMount) {
 	volumes := []corev1.Volume{
 		{
 			Name: sshVolumeName,

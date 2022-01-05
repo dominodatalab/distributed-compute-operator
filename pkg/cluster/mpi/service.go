@@ -20,7 +20,7 @@ func ServiceWorker() core.OwnedComponent {
 type serviceComponent struct{}
 
 func (c serviceComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
-	cr := objToMPIJob(ctx.Object)
+	cr := objToMPICluster(ctx.Object)
 
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{

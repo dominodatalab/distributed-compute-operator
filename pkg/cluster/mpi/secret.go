@@ -24,7 +24,7 @@ func Secret() core.OwnedComponent {
 type secretComponent struct{}
 
 func (c secretComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
-	cr := objToMPIJob(ctx.Object)
+	cr := objToMPICluster(ctx.Object)
 
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{

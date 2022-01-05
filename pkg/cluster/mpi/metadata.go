@@ -8,17 +8,16 @@ import (
 )
 
 const (
-	ApplicationName                      = "mpi"
-	ComponentLauncher metadata.Component = "launcher"
-	ComponentWorker   metadata.Component = "worker"
+	ApplicationName                    = "mpi"
+	ComponentWorker metadata.Component = "worker"
 )
 
 var meta = metadata.NewProvider(
 	ApplicationName,
-	func(obj client.Object) string { return objToMPIJob(obj).Spec.Image.Tag },
-	func(obj client.Object) map[string]string { return objToMPIJob(obj).Spec.GlobalLabels },
+	func(obj client.Object) string { return objToMPICluster(obj).Spec.Image.Tag },
+	func(obj client.Object) map[string]string { return objToMPICluster(obj).Spec.GlobalLabels },
 )
 
-func objToMPIJob(obj client.Object) *dcv1alpha1.MPIJob {
-	return obj.(*dcv1alpha1.MPIJob)
+func objToMPICluster(obj client.Object) *dcv1alpha1.MPICluster {
+	return obj.(*dcv1alpha1.MPICluster)
 }

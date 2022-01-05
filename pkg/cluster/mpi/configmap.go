@@ -15,14 +15,6 @@ import (
 )
 
 var (
-	sshConfigTmpl = `
-Host *
-    Port %d
-    IdentityFile %s
-    UserKnownHostsFile /dev/null
-    ConnectionAttempts 10
-    StrictHostKeyChecking no
-`
 	sshdConfigTmpl = `
 Port %d
 AuthorizedKeysFile %s
@@ -36,7 +28,7 @@ func ConfigMap() core.OwnedComponent {
 type configMapComponent struct{}
 
 func (c configMapComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
-	cr := objToMPIJob(ctx.Object)
+	cr := objToMPICluster(ctx.Object)
 
 	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -45,8 +37,7 @@ func (c configMapComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
 			Labels:    meta.StandardLabels(cr),
 		},
 		Data: map[string]string{
-			hostfileFilename:   buildHostfile(cr),
-			sshConfigFilename:  buildSSHConfig(),
+			hostFileFilename:   buildHostFile(cr),
 			sshdConfigFilename: buildSSHDConfig(),
 		},
 	}
@@ -63,7 +54,7 @@ func (c configMapComponent) Kind() client.Object {
 	return &corev1.ConfigMap{}
 }
 
-func buildHostfile(cr *dcv1alpha1.MPIJob) string {
+func buildHostFile(cr *dcv1alpha1.MPICluster) string {
 	slots := *cr.Spec.Worker.Slots
 	svcName := serviceName(cr)
 	workerName := workerStatefulSetName(cr)
@@ -76,10 +67,6 @@ func buildHostfile(cr *dcv1alpha1.MPIJob) string {
 	}
 
 	return builder.String()
-}
-
-func buildSSHConfig() string {
-	return fmt.Sprintf(sshConfigTmpl, sshdPort, sshPrivateKeyPath)
 }
 
 func buildSSHDConfig() string {

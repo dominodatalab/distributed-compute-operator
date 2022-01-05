@@ -6,5 +6,5 @@ type Builder func(manager ctrl.Manager, webhooksEnabled, istioEnabled bool) erro
 
 var BuilderFuncs = []Builder{
 	DaskCluster,
-	MPIJob,
+	MPICluster,
 }
