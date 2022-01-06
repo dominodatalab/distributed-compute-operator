@@ -370,11 +370,6 @@ func (in *MPIClusterStatus) DeepCopy() *MPIClusterStatus {
 func (in *MPIClusterWorker) DeepCopyInto(out *MPIClusterWorker) {
 	*out = *in
 	in.WorkloadConfig.DeepCopyInto(&out.WorkloadConfig)
-	if in.Slots != nil {
-		in, out := &in.Slots, &out.Slots
-		*out = new(int32)
-		**out = **in
-	}
 	if in.Replicas != nil {
 		in, out := &in.Replicas, &out.Replicas
 		*out = new(int32)
