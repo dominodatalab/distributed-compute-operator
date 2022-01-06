@@ -136,7 +136,7 @@ func buildWorkerVolumesAndMounts(cr *dcv1alpha1.MPICluster) ([]corev1.Volume, []
 					SecretName: sshSecretName(cr),
 					Items: []corev1.KeyToPath{
 						{
-							Key:  SSHAuthPublicKey,
+							Key:  sshAuthPublicKey,
 							Path: sshAuthorizedKeysFilename,
 						},
 					},
