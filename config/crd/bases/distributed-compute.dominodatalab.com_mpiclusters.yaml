@@ -1181,6 +1181,8 @@ spec:
                           x-kubernetes-int-or-string: true
                         type: object
                     type: object
+                  sharedSSHSecret:
+                    type: string
                   slots:
                     format: int32
                     type: integer
@@ -1989,6 +1991,8 @@ spec:
                       - name
                       type: object
                     type: array
+                required:
+                - sharedSSHSecret
                 type: object
             type: object
           status:

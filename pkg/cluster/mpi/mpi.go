@@ -15,6 +15,7 @@ const (
 	sshVolumeName                   = "ssh-auth"
 	sshRootMountPath                = "/etc/ssh"
 	sshAuthorizedKeysFilename       = "authorized_keys"
+	sshAuthPublicKey                = "ssh-publickey"
 
 	configVolumeName    = "config"
 	configRootMountPath = "/etc/mpi"
@@ -47,8 +48,9 @@ func serviceName(cr client.Object) string {
 	return meta.InstanceName(cr, ComponentWorker)
 }
 
-func sshSecretName(cr client.Object) string {
-	return meta.InstanceName(cr, "ssh")
+func sshSecretName(cr *dcv1alpha1.MPICluster) string {
+	worker := cr.Spec.Worker
+	return worker.SharedSSHSecret
 }
 
 func workerStatefulSetName(cr client.Object) string {

@@ -176,6 +176,16 @@ func validateKerberosKeytab(keytab *KerberosKeytabConfig) field.ErrorList {
 	return errs
 }
 
+func validateSharedSSHSecret(secret string) field.ErrorList {
+	var errs field.ErrorList
+	fp := field.NewPath("spec", "workers", "sharedSSHSecret")
+	if secret == "" {
+		errs = append(errs, field.Required(fp, "must contain a shared secret name"))
+	}
+
+	return errs
+}
+
 func invalidIfNotEmpty(kind, name string, errList field.ErrorList) error {
 	if len(errList) == 0 {
 		return nil

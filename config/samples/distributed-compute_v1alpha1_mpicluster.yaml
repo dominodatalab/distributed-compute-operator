@@ -36,6 +36,7 @@ spec:
   worker:
     # slots: 1
     # replicas: 1
+    sharedSSHSecret: ""
     # labels: {}
     # annotations: {}
     # nodeSelector: {}

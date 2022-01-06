@@ -74,6 +74,9 @@ func (j *MPICluster) ValidateCreate() error {
 	if errs := validateKerberosKeytab(j.Spec.KerberosKeytab); errs != nil {
 		errList = append(errList, errs...)
 	}
+	if errs := validateSharedSSHSecret(j.Spec.Worker.SharedSSHSecret); errs != nil {
+		errList = append(errList, errs...)
+	}
 
 	slots := j.Spec.Worker.Slots
 	if slots == nil || *slots < 1 {
