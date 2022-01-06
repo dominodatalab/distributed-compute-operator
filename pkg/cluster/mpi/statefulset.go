@@ -51,6 +51,11 @@ func (c statefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) 
 		return ctrl.Result{}, fmt.Errorf("cannot parse image: %w", err)
 	}
 
+	err = assureSharedKey(ctx, cr)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("invalid shared key: %w", err)
+	}
+
 	worker := cr.Spec.Worker
 	labels := meta.StandardLabelsWithComponent(cr, ComponentWorker, worker.Labels)
 	serviceAccount := selectServiceAccount(cr)
@@ -195,4 +200,22 @@ func persistentVolumeClaims(vcts []dcv1alpha1.PersistentVolumeClaimTemplate) (pv
 	}
 
 	return
+}
+
+func assureSharedKey(ctx *core.Context, cr *dcv1alpha1.MPICluster) error {
+	secretName := sshSecretName(cr)
+	objKey := client.ObjectKey{
+		Name:      secretName,
+		Namespace: cr.Namespace,
+	}
+	var sec corev1.Secret
+	err := ctx.Client.Get(ctx, objKey, &sec)
+	if err != nil {
+		return fmt.Errorf("shared secret '%s' not found", secretName)
+	}
+	_, hasKey := sec.Data[sshAuthPublicKey]
+	if !hasKey {
+		return fmt.Errorf("shared secret '%s' doesn't contain a key", secretName)
+	}
+	return nil
 }
