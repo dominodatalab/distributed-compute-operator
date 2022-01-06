@@ -55,14 +55,13 @@ func (c configMapComponent) Kind() client.Object {
 }
 
 func buildHostFile(cr *dcv1alpha1.MPICluster) string {
-	slots := *cr.Spec.Worker.Slots
 	svcName := serviceName(cr)
 	workerName := workerStatefulSetName(cr)
 	workerReplicas := *cr.Spec.Worker.Replicas
 
 	var builder strings.Builder
 	for idx := 0; idx < int(workerReplicas); idx++ {
-		entry := fmt.Sprintf("%s-%d.%s slots=%d\n", workerName, idx, svcName, slots)
+		entry := fmt.Sprintf("%s-%d.%s\n", workerName, idx, svcName)
 		builder.WriteString(entry)
 	}
 

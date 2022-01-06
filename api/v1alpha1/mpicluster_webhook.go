@@ -11,7 +11,6 @@ import (
 )
 
 var (
-	mpiDefaultSlotsPerWorker      = pointer.Int32(1)
 	mpiDefaultWorkerReplicas      = pointer.Int32(1)
 	mpiDefaultEnableNetworkPolicy = pointer.Bool(true)
 
@@ -34,10 +33,6 @@ func (j *MPICluster) Default() {
 	log.Info("Applying defaults")
 
 	spec := &j.Spec
-	if spec.Worker.Slots == nil {
-		log.Info("Setting default worker slots", "value", mpiDefaultSlotsPerWorker)
-		spec.Worker.Slots = mpiDefaultSlotsPerWorker
-	}
 	if spec.Worker.Replicas == nil {
 		log.Info("Setting default worker replicas", "value", *mpiDefaultWorkerReplicas)
 		spec.Worker.Replicas = mpiDefaultWorkerReplicas
@@ -77,16 +72,6 @@ func (j *MPICluster) ValidateCreate() error {
 	if errs := validateSharedSSHSecret(j.Spec.Worker.SharedSSHSecret); errs != nil {
 		errList = append(errList, errs...)
 	}
-
-	slots := j.Spec.Worker.Slots
-	if slots == nil || *slots < 1 {
-		errList = append(errList, field.Invalid(
-			field.NewPath("spec", "worker", "slots"),
-			slots,
-			"should be greater than or equal to 1",
-		))
-	}
-
 	return invalidIfNotEmpty("MPICluster", j.Name, errList)
 }
 

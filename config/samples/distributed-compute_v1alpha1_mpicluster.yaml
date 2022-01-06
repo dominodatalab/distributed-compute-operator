@@ -34,7 +34,6 @@ spec:
   # istioMutualTLSMode: ""
 
   worker:
-    # slots: 1
     # replicas: 1
     sharedSSHSecret: ""
     # labels: {}

@@ -8,7 +8,6 @@ import (
 // MPIClusterWorker defines worker-specific workload settings.
 type MPIClusterWorker struct {
 	WorkloadConfig  `json:",inline"`
-	Slots           *int32 `json:"slots,omitempty"`
 	Replicas        *int32 `json:"replicas,omitempty"`
 	SharedSSHSecret string `json:"sharedSSHSecret"`
 }
