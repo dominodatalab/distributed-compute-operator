@@ -1,25 +1,38 @@
 package actions
 
 import (
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/dominodatalab/distributed-compute-operator/pkg/controller/core"
 )
 
-func CreateOwnedResource(ctx *core.Context, owner metav1.Object, controlled client.Object) error {
-	_, _, err := createOwnedResource(ctx, owner, controlled)
-	return err
-}
-
 func CreateOrUpdateOwnedResource(ctx *core.Context, owner metav1.Object, controlled client.Object) error {
-	found, gvk, err := createOwnedResource(ctx, owner, controlled)
+
+	err := ctrl.SetControllerReference(owner, controlled, ctx.Scheme)
 	if err != nil {
+		return err
+	}
+
+	gvk, err := getObjectKind(ctx, controlled)
+	if err != nil {
+		return err
+	}
+
+	found := controlled.DeepCopyObject().(client.Object)
+
+	err = ctx.Client.Get(ctx, client.ObjectKeyFromObject(controlled), found)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			ctx.Log.V(1).Info("Creating controlled object", "gvk", gvk, "object", controlled)
+			return createOwnedResource(ctx, controlled)
+		}
 		return err
 	}
 
@@ -31,8 +44,10 @@ func CreateOrUpdateOwnedResource(ctx *core.Context, owner metav1.Object, control
 		return nil
 	}
 
-	ctx.Log.V(1).Info("Applying patch to object", "gvk", gvk, "object", controlled, "patch", string(patchResult.Patch))
-	if err = ctx.Patch.Annotator.SetLastAppliedAnnotation(controlled); err != nil {
+	ctx.Log.V(1).Info("Applying patch to object", "gvk", gvk, "object", controlled, "patch",
+		string(patchResult.Patch))
+	err = ctx.Patch.Annotator.SetLastAppliedAnnotation(controlled)
+	if err != nil {
 		return err
 	}
 
@@ -75,7 +90,8 @@ func DeleteStorage(ctx *core.Context, opts []client.ListOption) error {
 	pvcList := &corev1.PersistentVolumeClaimList{}
 	listOpts := (&client.ListOptions{}).ApplyOptions(opts)
 
-	ctx.Log.Info("Querying for persistent volume claims", "namespace", listOpts.Namespace, "labels", listOpts.LabelSelector.String())
+	ctx.Log.Info("Querying for persistent volume claims", "namespace", listOpts.Namespace, "labels",
+		listOpts.LabelSelector.String())
 	if err := ctx.Client.List(ctx, pvcList, opts...); err != nil {
 		ctx.Log.Error(err, "Cannot list persistent volume claims")
 		return err
@@ -95,34 +111,18 @@ func DeleteStorage(ctx *core.Context, opts []client.ListOption) error {
 	return nil
 }
 
-func createOwnedResource(
-	ctx *core.Context,
-	owner metav1.Object,
-	controlled client.Object,
-) (found client.Object, gvk schema.GroupVersionKind, err error) {
-	if err = ctrl.SetControllerReference(owner, controlled, ctx.Scheme); err != nil {
-		return
+func getObjectKind(ctx *core.Context, controlled client.Object) (schema.GroupVersionKind, error) {
+	gvks, _, err := ctx.Scheme.ObjectKinds(controlled)
+	if err != nil {
+		return schema.GroupVersionKind{}, err
 	}
+	return gvks[0], nil
+}
 
-	var gvks []schema.GroupVersionKind
-	if gvks, _, err = ctx.Scheme.ObjectKinds(controlled); err != nil {
-		return
+func createOwnedResource(ctx *core.Context, controlled client.Object) error {
+	err := ctx.Patch.Annotator.SetLastAppliedAnnotation(controlled)
+	if err != nil {
+		return err
 	}
-	gvk = gvks[0]
-
-	found = controlled.DeepCopyObject().(client.Object)
-	if err = ctx.Client.Get(ctx, client.ObjectKeyFromObject(controlled), found); err != nil {
-		if !apierrors.IsNotFound(err) {
-			return
-		}
-
-		if err = ctx.Patch.Annotator.SetLastAppliedAnnotation(controlled); err != nil {
-			return
-		}
-
-		ctx.Log.V(1).Info("Creating controlled object", "gvk", gvk, "object", controlled)
-		err = ctx.Client.Create(ctx, controlled)
-	}
-
-	return
+	return ctx.Client.Create(ctx, controlled)
 }
