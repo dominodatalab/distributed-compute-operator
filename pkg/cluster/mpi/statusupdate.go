@@ -2,6 +2,7 @@ package mpi
 
 import (
 	"fmt"
+	v1 "k8s.io/api/batch/v1"
 	"reflect"
 	"sort"
 
@@ -70,7 +71,7 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 	}
 	expectedPodCnt := int(*cr.Spec.Worker.Replicas)
 
-	status := cr.Status.ClusterStatus
+	var status v1.JobConditionType
 	if actualPodCnt >= expectedPodCnt {
 		status = ReadyStatus
 	} else {
