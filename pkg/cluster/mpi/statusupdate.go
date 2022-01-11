@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"time"
+
+	v1 "k8s.io/api/batch/v1"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -18,8 +21,10 @@ import (
 )
 
 const (
-	ReadyStatus   = "Ready"
-	PendingStatus = "Pending"
+	PendingStatus  v1.JobConditionType = "Pending"
+	StartingStatus v1.JobConditionType = "Starting"
+	RunningStatus  v1.JobConditionType = "Running"
+	StoppingStatus v1.JobConditionType = "Stopping"
 )
 
 func StatusUpdate() core.Component {
@@ -33,7 +38,6 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 
 	var modified bool
 
-	// update image reference
 	image, err := util.ParseImageDefinition(cr.Spec.Image)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("cannot build cluster image: %w", err)
@@ -43,44 +47,39 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 		modified = true
 	}
 
-	// update node list
-	podList := &corev1.PodList{}
-	listOpts := []client.ListOption{
-		client.InNamespace(cr.Namespace),
-		client.MatchingLabels(meta.StandardLabels(cr)),
+	pods, err := getPods(ctx, cr)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return ctrl.Result{}, fmt.Errorf("cannot list cluster pods: %w", err)
 	}
-	if lErr := ctx.Client.List(ctx, podList, listOpts...); lErr != nil {
-		return ctrl.Result{}, fmt.Errorf("cannot list cluster pods: %w", lErr)
-	}
-
 	var podNames []string
-	for _, pod := range podList.Items {
+	var runningPodCnt = 0
+	for _, pod := range pods {
 		podNames = append(podNames, pod.Name)
+		if pod.Status.Phase == corev1.PodRunning {
+			runningPodCnt++
+		}
 	}
 	sort.Strings(podNames)
-
 	if !reflect.DeepEqual(podNames, cr.Status.Nodes) {
 		cr.Status.Nodes = podNames
 		modified = true
 	}
 
-	actualPodCnt, err := getActivePodCnt(ctx, cr)
-	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("cannot obtain active pod count: %w", err)
-	}
 	expectedPodCnt := int(*cr.Spec.Worker.Replicas)
 
-	status := cr.Status.ClusterStatus
-	if actualPodCnt >= expectedPodCnt {
-		status = ReadyStatus
-	} else {
+	var status v1.JobConditionType
+	if runningPodCnt >= expectedPodCnt {
+		status = RunningStatus
+	} else if runningPodCnt == 0 {
 		status = PendingStatus
+	} else {
+		status = StartingStatus
 	}
 
 	if cr.Status.ClusterStatus != status {
 		modified = true
 		cr.Status.ClusterStatus = status
-		if status == ReadyStatus {
+		if status == RunningStatus {
 			tt := metav1.Now()
 			cr.Status.StartTime = &tt
 		} else {
@@ -90,28 +89,43 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 
 	if modified {
 		err = ctx.Client.Status().Update(ctx, cr)
+		if err != nil {
+			return ctrl.Result{}, fmt.Errorf("cannot update cluster status: %w", err)
+		}
 	}
 
-	// TODO: scale down workers after job is "Complete" or "Failed"
-	// 	this component focuses on updating the "status" so the downscaling
-	// 	logic probably belongs elsewhere
-
-	return ctrl.Result{}, err
+	return ctrl.Result{}, nil
 }
 
-func getActivePodCnt(ctx *core.Context, cr *dcv1alpha1.MPICluster) (int, error) {
-	var ep corev1.Endpoints
-	objKey := client.ObjectKey{
-		Name:      serviceName(cr),
-		Namespace: cr.Namespace,
+func (c statusUpdateComponent) Finalize(ctx *core.Context) (ctrl.Result, bool, error) {
+	cr := objToMPICluster(ctx.Object)
+
+	if cr.Status.ClusterStatus != StoppingStatus {
+		cr.Status.ClusterStatus = StoppingStatus
+		err := ctx.Client.Status().Update(ctx, cr)
+		if err != nil {
+			return ctrl.Result{}, false, fmt.Errorf("cannot update cluster status: %w", err)
+		}
 	}
 
-	if err := ctx.Client.Get(ctx, objKey, &ep); err != nil && !apierrors.IsNotFound(err) {
-		return 0, fmt.Errorf("cannot fetch endpoints: %w", err)
+	pods, err := getPods(ctx, cr)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return ctrl.Result{}, false, fmt.Errorf("cannot list cluster pods: %w", err)
 	}
+	podCnt := len(pods)
+	if podCnt == 0 {
+		return ctrl.Result{}, true, nil
+	} else {
+		return ctrl.Result{RequeueAfter: time.Second}, false, nil
+	}
+}
 
-	if len(ep.Subsets) == 1 {
-		return len(ep.Subsets[0].Addresses), nil
+func getPods(ctx *core.Context, cr *dcv1alpha1.MPICluster) ([]corev1.Pod, error) {
+	podList := &corev1.PodList{}
+	listOpts := []client.ListOption{
+		client.InNamespace(cr.Namespace),
+		client.MatchingLabels(meta.StandardLabels(cr)),
 	}
-	return 0, nil
+	err := ctx.Client.List(ctx, podList, listOpts...)
+	return podList.Items, err // first item is an empty array when err == nil
 }

@@ -118,14 +118,29 @@ func (c statefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) 
 
 func (c statefulSetComponent) Finalize(ctx *core.Context) (ctrl.Result, bool, error) {
 	cr := objToMPICluster(ctx.Object)
+
 	pvcListOpts := []client.ListOption{
 		client.InNamespace(cr.Namespace),
 		client.MatchingLabels(meta.MatchLabels(cr)),
 	}
-
 	err := actions.DeleteStorage(ctx, pvcListOpts)
+	if err != nil {
+		return ctrl.Result{}, false, fmt.Errorf("cannot delete storage: %w", err)
+	}
 
-	return ctrl.Result{}, err == nil, err
+	sts := &appsv1.StatefulSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      workerStatefulSetName(cr),
+			Namespace: cr.Namespace,
+			Labels:    meta.StandardLabelsWithComponent(cr, ComponentWorker, cr.Spec.Worker.Labels),
+		},
+	}
+	err = actions.DeleteIfExists(ctx, sts)
+	if err != nil {
+		return ctrl.Result{}, false, fmt.Errorf("cannot delete workers: %w", err)
+	}
+
+	return ctrl.Result{}, true, nil
 }
 
 func (c statefulSetComponent) Kind() client.Object {
