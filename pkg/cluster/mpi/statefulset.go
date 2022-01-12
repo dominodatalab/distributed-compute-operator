@@ -2,12 +2,11 @@ package mpi
 
 import (
 	"fmt"
-	"path/filepath"
-
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"path/filepath"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -125,7 +124,8 @@ func (c statefulSetComponent) Finalize(ctx *core.Context) (ctrl.Result, bool, er
 	}
 	err := actions.DeleteStorage(ctx, pvcListOpts)
 	if err != nil {
-		return ctrl.Result{}, false, fmt.Errorf("cannot delete storage: %w", err)
+		return ctrl.Result{RequeueAfter: finalizerRetryPeriod}, false,
+			fmt.Errorf("cannot delete storage: %w", err)
 	}
 
 	sts := &appsv1.StatefulSet{
@@ -137,7 +137,8 @@ func (c statefulSetComponent) Finalize(ctx *core.Context) (ctrl.Result, bool, er
 	}
 	err = actions.DeleteIfExists(ctx, sts)
 	if err != nil {
-		return ctrl.Result{}, false, fmt.Errorf("cannot delete workers: %w", err)
+		return ctrl.Result{RequeueAfter: finalizerRetryPeriod}, false,
+			fmt.Errorf("cannot delete workers: %w", err)
 	}
 
 	return ctrl.Result{}, true, nil

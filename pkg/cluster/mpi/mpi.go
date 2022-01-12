@@ -2,8 +2,8 @@ package mpi
 
 import (
 	"path/filepath"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"time"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/cluster/metadata"
@@ -22,6 +22,8 @@ const (
 
 	hostFileFilename   = "hostfile"
 	sshdConfigFilename = "sshd_config"
+
+	finalizerRetryPeriod = 1 * time.Second
 )
 
 var (

@@ -2,17 +2,14 @@ package mpi
 
 import (
 	"fmt"
-	"reflect"
-	"sort"
-	"time"
-
 	v1 "k8s.io/api/batch/v1"
-
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sort"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 
@@ -55,7 +52,7 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 	var runningPodCnt = 0
 	for _, pod := range pods {
 		podNames = append(podNames, pod.Name)
-		if pod.Status.Phase == corev1.PodRunning {
+		if isPodReady(pod) {
 			runningPodCnt++
 		}
 	}
@@ -104,19 +101,21 @@ func (c statusUpdateComponent) Finalize(ctx *core.Context) (ctrl.Result, bool, e
 		cr.Status.ClusterStatus = StoppingStatus
 		err := ctx.Client.Status().Update(ctx, cr)
 		if err != nil {
-			return ctrl.Result{}, false, fmt.Errorf("cannot update cluster status: %w", err)
+			return ctrl.Result{RequeueAfter: finalizerRetryPeriod}, false,
+				fmt.Errorf("cannot update cluster status: %w", err)
 		}
 	}
 
 	pods, err := getPods(ctx, cr)
 	if err != nil && !apierrors.IsNotFound(err) {
-		return ctrl.Result{}, false, fmt.Errorf("cannot list cluster pods: %w", err)
+		return ctrl.Result{RequeueAfter: finalizerRetryPeriod}, false,
+			fmt.Errorf("cannot list cluster pods: %w", err)
 	}
 	podCnt := len(pods)
 	if podCnt == 0 {
 		return ctrl.Result{}, true, nil
 	} else {
-		return ctrl.Result{RequeueAfter: time.Second}, false, nil
+		return ctrl.Result{RequeueAfter: finalizerRetryPeriod}, false, nil
 	}
 }
 
@@ -128,4 +127,13 @@ func getPods(ctx *core.Context, cr *dcv1alpha1.MPICluster) ([]corev1.Pod, error)
 	}
 	err := ctx.Client.List(ctx, podList, listOpts...)
 	return podList.Items, err // first item is an empty array when err == nil
+}
+
+func isPodReady(pod corev1.Pod) bool {
+	for _, cond := range pod.Status.Conditions {
+		if cond.Type == corev1.PodReady {
+			return cond.Status == corev1.ConditionTrue
+		}
+	}
+	return false
 }
