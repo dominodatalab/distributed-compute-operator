@@ -14,7 +14,6 @@ import (
 )
 
 func CreateOrUpdateOwnedResource(ctx *core.Context, owner metav1.Object, controlled client.Object) error {
-
 	err := ctrl.SetControllerReference(owner, controlled, ctx.Scheme)
 	if err != nil {
 		return err
