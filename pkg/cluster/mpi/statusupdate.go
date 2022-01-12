@@ -65,11 +65,12 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 	expectedPodCnt := int(*cr.Spec.Worker.Replicas)
 
 	var status v1.JobConditionType
-	if runningPodCnt >= expectedPodCnt {
+	switch {
+	case runningPodCnt >= expectedPodCnt:
 		status = RunningStatus
-	} else if runningPodCnt == 0 {
+	case runningPodCnt == 0:
 		status = PendingStatus
-	} else {
+	default:
 		status = StartingStatus
 	}
 
@@ -112,11 +113,10 @@ func (c statusUpdateComponent) Finalize(ctx *core.Context) (ctrl.Result, bool, e
 			fmt.Errorf("cannot list cluster pods: %w", err)
 	}
 	podCnt := len(pods)
-	if podCnt == 0 {
-		return ctrl.Result{}, true, nil
-	} else {
+	if podCnt != 0 {
 		return ctrl.Result{RequeueAfter: finalizerRetryPeriod}, false, nil
 	}
+	return ctrl.Result{}, true, nil
 }
 
 func getPods(ctx *core.Context, cr *dcv1alpha1.MPICluster) ([]corev1.Pod, error) {
