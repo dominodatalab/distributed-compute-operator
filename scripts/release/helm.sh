@@ -22,23 +22,37 @@ function dco::helm::login() {
 
 function dco::helm::push() {
   local ref=$1
-  local version
+  local ref_without_version
+  local ref_with_semantic_version
+  local semantic_version
   local app_version
+  local chart_path
 
   app_version="$(echo "$ref" | awk -F : '{ print $NF }')"
+  ref_without_version="$(echo "$ref" | awk -F : '{ print $1 }')"
+  
   if [[ $app_version =~ ^(pr-[[:digit:]]+|main)$ ]]; then
-    version="0.0.0-$app_version"
+    semantic_version="0.0.0-$app_version"
   else
-    version=$app_version
+    semantic_version=$app_version
   fi
+
+  ref_with_semantic_version="$ref_without_version:$semantic_version"
 
   $HELM_BIN package deploy/helm/distributed-compute-operator \
     --destination chart-archives \
     --app-version "$app_version" \
-    --version "$version"
-
-  $HELM_BIN chart save "chart-archives/distributed-compute-operator-$version.tgz" "$ref"
+    --version "$semantic_version"
+  
+  chart_path="chart-archives/distributed-compute-operator-$semantic_version.tgz"
+  
+  $HELM_BIN chart save "$chart_path" "$ref"
   $HELM_BIN chart push "$ref"
+  
+  if [ "$ref_with_semantic_version" != "$ref" ]; then
+    $HELM_BIN chart save "$chart_path" "$ref_with_semantic_version"
+    $HELM_BIN chart push "$ref_with_semantic_version"
+  fi
 
   rm -rf chart-archives/
 }
