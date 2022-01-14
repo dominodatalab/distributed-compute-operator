@@ -41,6 +41,11 @@ func (c networkPolicyComponent) Reconcile(ctx *core.Context) (ctrl.Result, error
 								MatchLabels: matchLabels,
 							},
 						},
+						{
+							PodSelector: &metav1.LabelSelector{
+								MatchLabels: cr.Spec.NetworkPolicy.ClientLabels,
+							},
+						},
 					},
 				},
 			},
