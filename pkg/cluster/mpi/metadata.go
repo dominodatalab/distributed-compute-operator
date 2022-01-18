@@ -10,6 +10,7 @@ import (
 const (
 	ApplicationName                    = "mpi"
 	ComponentWorker metadata.Component = "worker"
+	ComponentDriver metadata.Component = "driver"
 )
 
 var meta = metadata.NewProvider(
