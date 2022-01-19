@@ -20,9 +20,10 @@ func MPICluster(mgr ctrl.Manager, webhooksEnabled, istioEnabled bool) error {
 		Component("role", mpi.RolePodSecurityPolicy()).
 		Component("rolebinding", mpi.RoleBindingPodSecurityPolicy()).
 		Component("configmap", mpi.ConfigMap()).
-		Component("service", mpi.ServiceWorker()).
-		Component("networkpolicy-worker", mpi.WorkerNetworkPolicy()).
-		Component("networkpolicy-driver", mpi.DriverNetworkPolicy()).
+		Component("service-worker", mpi.ServiceWorker()).
+		Component("service-client", mpi.ServiceClient()).
+		Component("networkpolicy-worker", mpi.NetworkPolicyWorker()).
+		Component("networkpolicy-client", mpi.NetworkPolicyClient()).
 		Component("workers", mpi.StatefulSet()).
 		Component("statusupdate", mpi.StatusUpdate())
 

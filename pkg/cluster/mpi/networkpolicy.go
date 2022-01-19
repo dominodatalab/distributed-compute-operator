@@ -14,15 +14,15 @@ import (
 	"github.com/dominodatalab/distributed-compute-operator/pkg/controller/core"
 )
 
-func WorkerNetworkPolicy() core.OwnedComponent {
+func NetworkPolicyWorker() core.OwnedComponent {
 	return &networkPolicyComponent{
 		comp: ComponentWorker,
 	}
 }
 
-func DriverNetworkPolicy() core.OwnedComponent {
+func NetworkPolicyClient() core.OwnedComponent {
 	return &networkPolicyComponent{
-		comp: ComponentDriver,
+		comp: ComponentClient,
 	}
 }
 
@@ -53,7 +53,7 @@ func (c networkPolicyComponent) Reconcile(ctx *core.Context) (ctrl.Result, error
 				},
 			},
 		}
-	case ComponentDriver:
+	case ComponentClient:
 		podSelectorMatchLabels = cr.Spec.NetworkPolicy.ClientLabels
 		ingressRules = []networkingv1.NetworkPolicyPeer{
 			{

@@ -20,6 +20,9 @@ type MPIClusterWorker struct {
 type MPIClusterSpec struct {
 	ClusterConfig `json:",inline"`
 	Worker        MPIClusterWorker `json:"worker,omitempty"`
+
+	// WorkerPorts specifies the range of ports used by worker processes for communication.
+	WorkerPorts []int32 `json:"workerPorts,omitempty"`
 }
 
 // MPIClusterStatus defines the observed state of MPICluster.
