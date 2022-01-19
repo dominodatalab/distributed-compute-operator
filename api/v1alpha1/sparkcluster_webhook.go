@@ -128,6 +128,12 @@ func (sc *SparkCluster) ValidateDelete() error {
 func (sc *SparkCluster) validateSparkCluster() error {
 	var errList field.ErrorList
 
+	oldVersion := sc.Spec.Driver.Selector == nil
+	if oldVersion {
+		sparkLogger.Info("Detected an incompatible version of Spark Cluster; validation is inhibited.")
+		return nil
+	}
+
 	if err := validateIstioMutualTLSMode(sc.Spec.MutualTLSMode); err != nil {
 		errList = append(errList, err)
 	}
