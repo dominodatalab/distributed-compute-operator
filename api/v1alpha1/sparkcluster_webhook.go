@@ -171,7 +171,8 @@ func (sc *SparkCluster) validateWorkerMemoryLimit() *field.Error {
 	fp := field.NewPath("spec", "workerMemoryLimit")
 
 	if request == "" {
-		return field.Required(fp, "cannot be blank")
+		//return field.Required(fp, "cannot be blank")
+		return nil
 	}
 	if _, err := resource.ParseQuantity(request); err != nil {
 		return field.Invalid(fp, request, "must be a parsable quantity")
@@ -194,10 +195,11 @@ func (sc *SparkCluster) validateDriverConfigs() field.ErrorList {
 	}
 
 	if driver.Selector == nil || len(driver.Selector) == 0 {
-		errs = append(errs, field.Required(
-			field.NewPath("spec", "driver", "selector"),
-			"must provide a label selector for driver pods",
-		))
+		//errs = append(errs, field.Required(
+		//	field.NewPath("spec", "driver", "selector"),
+		//	"must provide a label selector for driver pods",
+		//))
+		return nil
 	}
 
 	return errs
