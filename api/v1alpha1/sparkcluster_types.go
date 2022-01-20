@@ -1,6 +1,10 @@
 package v1alpha1
 
-import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	"fmt"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 // SparkClusterNode defines attributes common to all spark node types.
 type SparkClusterNode struct {
@@ -102,5 +106,6 @@ func (sc *SparkCluster) IsIncompatibleVersion() bool {
 	// past breaking changes for which the meta information hasn't been updated.
 	// We're checking on a field that has been mandatory in the old version,
 	// but is currently removed.
+	fmt.Printf(">>> >>> >>> %v\n", sc.Spec.Worker.ObsoleteWorkerMemoryLimit)
 	return sc.Spec.Worker.ObsoleteWorkerMemoryLimit != ""
 }
