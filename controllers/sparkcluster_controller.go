@@ -205,7 +205,7 @@ func hasDeletionTimestamp(sc *dcv1alpha1.SparkCluster) bool {
 // SparkCluster object so that full cleanup occurs during a delete operation.
 func (r *SparkClusterReconciler) reconcileResources(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
 	if sc.IsIncompatibleVersion() {
-		r.Log.Info("Reconciler is inhibited due to an incompatible CRD.")
+		r.Log.Info("Reconciler is inhibited due to an incompatible CRD")
 		return nil
 	}
 	if err := r.reconcileIstio(ctx, sc); err != nil {

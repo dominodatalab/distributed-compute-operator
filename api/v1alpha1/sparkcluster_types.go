@@ -94,6 +94,10 @@ func init() {
 	SchemeBuilder.Register(&SparkCluster{}, &SparkClusterList{})
 }
 
+// IsIncompatibleVersion checks if the provided instance of SparkCluster struct
+// has a version compatible with the current one.
 func (sc *SparkCluster) IsIncompatibleVersion() bool {
+	// Unfortunately we can't rely on e.g. Spec.TypeMeta.APIVersion, because of
+	// past breaking changes for which the meta information hasn't been updated.
 	return sc.Spec.Driver.Selector == nil
 }

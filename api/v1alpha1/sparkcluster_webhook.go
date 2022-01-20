@@ -129,7 +129,7 @@ func (sc *SparkCluster) validateSparkCluster() error {
 	var errList field.ErrorList
 
 	if sc.IsIncompatibleVersion() {
-		sparkLogger.Info("Validation is inhibited due to an incompatible CRD.")
+		sparkLogger.Info("Validation is inhibited due to an incompatible CRD")
 		return nil
 	}
 
