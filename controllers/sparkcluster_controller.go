@@ -204,6 +204,10 @@ func hasDeletionTimestamp(sc *dcv1alpha1.SparkCluster) bool {
 // collectively comprise a Spark cluster. Each resource is controlled by a parent
 // SparkCluster object so that full cleanup occurs during a delete operation.
 func (r *SparkClusterReconciler) reconcileResources(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+	if sc.IsIncompatibleVersion() {
+		r.Log.Info("Reconciler is inhibited due to an incompatible CRD.")
+		return nil
+	}
 	if err := r.reconcileIstio(ctx, sc); err != nil {
 		return err
 	}
@@ -303,10 +307,6 @@ func (r *SparkClusterReconciler) reconcileServiceAccount(ctx context.Context, sc
 // reconcileHeadService creates a service that points to the head Spark pod and
 // applies updates when the parent CR changes.
 func (r *SparkClusterReconciler) reconcileHeadService(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
-	if sc.IsIncompatibleVersion() {
-		r.Log.Info("Head service reconciler is inhibited due to an incompatible CRD.")
-		return nil
-	}
 	svc := spark.NewMasterService(sc)
 	if err := r.createOrUpdateOwnedResource(ctx, sc, svc); err != nil {
 		return fmt.Errorf("failed to reconcile head service: %w", err)
