@@ -26,7 +26,10 @@ type SparkClusterWorker struct {
 	// replicas will be set to this value. Additionally, you can specify an
 	// "initial cluster size" by setting this field to some value above the
 	// minimum number of replicas.
-	Replicas                  *int32 `json:"replicas,omitempty"`
+	Replicas *int32 `json:"replicas,omitempty"`
+
+	// Obsolete value of WorkerMemoryLimit used in previous
+	// versions; used here only to check compatibility of CRDs.
 	ObsoleteWorkerMemoryLimit string `json:"workerMemoryLimit,omitempty"`
 }
 
