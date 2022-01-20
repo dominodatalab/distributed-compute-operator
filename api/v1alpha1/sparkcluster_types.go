@@ -22,7 +22,8 @@ type SparkClusterWorker struct {
 	// replicas will be set to this value. Additionally, you can specify an
 	// "initial cluster size" by setting this field to some value above the
 	// minimum number of replicas.
-	Replicas *int32 `json:"replicas,omitempty"`
+	Replicas                  *int32 `json:"replicas,omitempty"`
+	ObsoleteWorkerMemoryLimit string `json:"workerMemoryLimit,omitempty"`
 }
 
 // SparkClusterDriver defines the configuration for the external driver.
@@ -99,5 +100,7 @@ func init() {
 func (sc *SparkCluster) IsIncompatibleVersion() bool {
 	// Unfortunately we can't rely on e.g. Spec.TypeMeta.APIVersion, because of
 	// past breaking changes for which the meta information hasn't been updated.
-	return sc.Spec.Driver.Selector == nil
+	// We're checking on a field that has been mandatory in the old version,
+	// but is currently removed.
+	return sc.Spec.Worker.ObsoleteWorkerMemoryLimit != ""
 }
