@@ -128,9 +128,8 @@ func (sc *SparkCluster) ValidateDelete() error {
 func (sc *SparkCluster) validateSparkCluster() error {
 	var errList field.ErrorList
 
-	oldVersion := sc.Spec.Driver.Selector == nil
-	if oldVersion {
-		sparkLogger.Info("Detected an incompatible version of Spark Cluster; validation is inhibited.")
+	if sc.IsIncompatibleVersion() {
+		sparkLogger.Info("Validation is inhibited due to an incompatible CRD.")
 		return nil
 	}
 

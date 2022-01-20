@@ -93,3 +93,7 @@ type SparkClusterList struct {
 func init() {
 	SchemeBuilder.Register(&SparkCluster{}, &SparkClusterList{})
 }
+
+func (sc *SparkCluster) IsIncompatibleVersion() bool {
+	return sc.Spec.Driver.Selector == nil
+}

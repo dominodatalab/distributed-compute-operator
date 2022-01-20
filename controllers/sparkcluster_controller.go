@@ -303,6 +303,10 @@ func (r *SparkClusterReconciler) reconcileServiceAccount(ctx context.Context, sc
 // reconcileHeadService creates a service that points to the head Spark pod and
 // applies updates when the parent CR changes.
 func (r *SparkClusterReconciler) reconcileHeadService(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+	if sc.IsIncompatibleVersion() {
+		r.Log.Info("Head service reconciler is inhibited due to an incompatible CRD.")
+		return nil
+	}
 	svc := spark.NewMasterService(sc)
 	if err := r.createOrUpdateOwnedResource(ctx, sc, svc); err != nil {
 		return fmt.Errorf("failed to reconcile head service: %w", err)
