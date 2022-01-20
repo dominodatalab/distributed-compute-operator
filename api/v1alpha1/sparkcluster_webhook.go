@@ -128,6 +128,11 @@ func (sc *SparkCluster) ValidateDelete() error {
 func (sc *SparkCluster) validateSparkCluster() error {
 	var errList field.ErrorList
 
+	if sc.IsIncompatibleVersion() {
+		sparkLogger.Info("Validation is inhibited due to an incompatible CRD")
+		return nil
+	}
+
 	if err := validateIstioMutualTLSMode(sc.Spec.MutualTLSMode); err != nil {
 		errList = append(errList, err)
 	}

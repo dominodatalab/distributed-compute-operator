@@ -1,6 +1,8 @@
 package v1alpha1
 
-import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 // SparkClusterNode defines attributes common to all spark node types.
 type SparkClusterNode struct {
@@ -23,6 +25,10 @@ type SparkClusterWorker struct {
 	// "initial cluster size" by setting this field to some value above the
 	// minimum number of replicas.
 	Replicas *int32 `json:"replicas,omitempty"`
+
+	// Obsolete value of WorkerMemoryLimit used in previous
+	// versions; used here only to check compatibility of CRDs.
+	ObsoleteWorkerMemoryLimit string `json:"workerMemoryLimit,omitempty"`
 }
 
 // SparkClusterDriver defines the configuration for the external driver.
@@ -92,4 +98,14 @@ type SparkClusterList struct {
 
 func init() {
 	SchemeBuilder.Register(&SparkCluster{}, &SparkClusterList{})
+}
+
+// IsIncompatibleVersion checks if the provided instance of SparkCluster struct
+// has a version compatible with the current one.
+func (sc *SparkCluster) IsIncompatibleVersion() bool {
+	// Unfortunately we can't rely on e.g. Spec.TypeMeta.APIVersion, because of
+	// past breaking changes for which the meta information hasn't been updated.
+	// We're checking on a field that has been mandatory in the old version,
+	// but is currently removed.
+	return sc.Spec.Worker.ObsoleteWorkerMemoryLimit != ""
 }

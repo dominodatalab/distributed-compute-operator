@@ -8066,6 +8066,10 @@ spec:
                       - name
                       type: object
                     type: array
+                  workerMemoryLimit:
+                    description: Obsolete value of WorkerMemoryLimit used in previous
+                      versions; used here only to check compatibility of CRDs.
+                    type: string
                 type: object
               workerMemoryLimit:
                 description: WorkerMemoryLimit configures the SPARK_WORKER_MEMORY
