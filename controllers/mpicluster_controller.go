@@ -29,9 +29,5 @@ func MPICluster(mgr ctrl.Manager, webhooksEnabled, istioEnabled bool) error {
 	if webhooksEnabled {
 		reconciler.WithWebhooks()
 	}
-	if istioEnabled {
-		panic("implement istio support")
-	}
-
 	return reconciler.Complete()
 }
