@@ -2,11 +2,12 @@ package mpi
 
 import (
 	"fmt"
+	"path/filepath"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"path/filepath"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -26,15 +27,17 @@ var (
 	workerProbe = &corev1.Probe{
 		Handler: corev1.Handler{
 			TCPSocket: &corev1.TCPSocketAction{
-				Port: intstr.FromInt(int(sshdPort)),
+				Port: intstr.FromInt(sshdPort),
 			},
 		},
 	}
 	workerCommand = []string{
-		"/usr/sbin/sshd",
-		"-De",
+		launchScriptPath,
 	}
 )
+
+// Key of the shared Secret object that contains client-side SSH public key
+const publicKeyField = "ssh-publickey"
 
 func StatefulSet() core.OwnedComponent {
 	return &statefulSetComponent{}
@@ -149,23 +152,37 @@ func (c statefulSetComponent) Kind() client.Object {
 }
 
 func buildWorkerVolumesAndMounts(cr *dcv1alpha1.MPICluster) ([]corev1.Volume, []corev1.VolumeMount) {
+
+	// Names of these volumes are unimportant
+	const (
+		authorizedKeysVolume = "authorized-keys-volume"
+		launchScriptVolume   = "launch-script-volume"
+	)
+
+	launchScriptModeCopy := int32(launchScriptMode)
+	launchScriptName := filepath.Base(launchScriptPath)
+
+	authorizedKeysModeCopy := int32(authorizedKeysMode)
+	authorizedKeysName := filepath.Base(authorizedKeysPath)
+
 	volumes := []corev1.Volume{
 		{
-			Name: sshVolumeName,
+			Name: authorizedKeysVolume,
 			VolumeSource: corev1.VolumeSource{
 				Secret: &corev1.SecretVolumeSource{
 					SecretName: sshSecretName(cr),
 					Items: []corev1.KeyToPath{
 						{
-							Key:  sshAuthPublicKey,
-							Path: sshAuthorizedKeysFilename,
+							Key:  publicKeyField,
+							Path: authorizedKeysName,
 						},
 					},
+					DefaultMode: &authorizedKeysModeCopy,
 				},
 			},
 		},
 		{
-			Name: configVolumeName,
+			Name: launchScriptVolume,
 			VolumeSource: corev1.VolumeSource{
 				ConfigMap: &corev1.ConfigMapVolumeSource{
 					LocalObjectReference: corev1.LocalObjectReference{
@@ -173,10 +190,11 @@ func buildWorkerVolumesAndMounts(cr *dcv1alpha1.MPICluster) ([]corev1.Volume, []
 					},
 					Items: []corev1.KeyToPath{
 						{
-							Key:  sshdConfigFilename,
-							Path: sshdConfigFilename,
+							Key:  launchScriptName,
+							Path: launchScriptName,
 						},
 					},
+					DefaultMode: &launchScriptModeCopy,
 				},
 			},
 		},
@@ -185,14 +203,14 @@ func buildWorkerVolumesAndMounts(cr *dcv1alpha1.MPICluster) ([]corev1.Volume, []
 
 	mounts := []corev1.VolumeMount{
 		{
-			Name:      sshVolumeName,
-			MountPath: sshAuthorizedKeysPath,
-			SubPath:   sshAuthorizedKeysFilename,
+			Name:      authorizedKeysVolume,
+			MountPath: authorizedKeysPath,
+			SubPath:   authorizedKeysName,
 		},
 		{
-			Name:      configVolumeName,
-			MountPath: filepath.Join(sshRootMountPath, sshdConfigFilename),
-			SubPath:   sshdConfigFilename,
+			Name:      launchScriptVolume,
+			MountPath: launchScriptPath,
+			SubPath:   launchScriptName,
 		},
 	}
 	mounts = append(mounts, cr.Spec.Worker.VolumeMounts...)
@@ -229,7 +247,7 @@ func assureSharedKey(ctx *core.Context, cr *dcv1alpha1.MPICluster) error {
 	if err != nil {
 		return fmt.Errorf("shared secret '%s' not found", secretName)
 	}
-	_, hasKey := sec.Data[sshAuthPublicKey]
+	_, hasKey := sec.Data[publicKeyField]
 	if !hasKey {
 		return fmt.Errorf("shared secret '%s' doesn't contain a key", secretName)
 	}

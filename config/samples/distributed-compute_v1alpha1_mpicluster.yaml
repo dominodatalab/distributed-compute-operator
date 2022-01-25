@@ -36,6 +36,10 @@ spec:
   worker:
     # replicas: 1
     sharedSSHSecret: ""
+	# userName:
+	# userID:
+	# groupName:
+	# groupID:
     # labels: {}
     # annotations: {}
     # nodeSelector: {}
