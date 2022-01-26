@@ -108,16 +108,16 @@ func buildHostFile(cr *dcv1alpha1.MPICluster) string {
 
 func buildLaunchScript(cr *dcv1alpha1.MPICluster) string {
 	userId := int64(defaultUserID)
-	if cr.Spec.Worker.UserID != nil {
-		userId = *cr.Spec.Worker.UserID
+	if cr.Spec.Worker.UserId != nil {
+		userId = *cr.Spec.Worker.UserId
 	}
 	userName := defaultUserName
 	if cr.Spec.Worker.UserName != "" {
 		userName = cr.Spec.Worker.UserName
 	}
 	groupId := int64(defaultGroupID)
-	if cr.Spec.Worker.GroupID != nil {
-		groupId = *cr.Spec.Worker.GroupID
+	if cr.Spec.Worker.GroupId != nil {
+		groupId = *cr.Spec.Worker.GroupId
 	}
 	groupName := defaultGroupName
 	if cr.Spec.Worker.GroupName != "" {
