@@ -594,6 +594,11 @@ spec:
                     additionalProperties:
                       type: string
                     type: object
+                  groupID:
+                    format: int64
+                    type: integer
+                  groupName:
+                    type: string
                   initContainers:
                     items:
                       properties:
@@ -1199,6 +1204,11 @@ spec:
                           type: string
                       type: object
                     type: array
+                  userID:
+                    format: int64
+                    type: integer
+                  userName:
+                    type: string
                   volumeClaimTemplates:
                     items:
                       properties:

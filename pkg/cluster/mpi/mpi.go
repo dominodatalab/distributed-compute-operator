@@ -1,33 +1,37 @@
 package mpi
 
 import (
-	"path/filepath"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/cluster/metadata"
 )
 
 const (
-	sshdPort                  int32 = 2222
-	sshdPortName                    = "sshd"
-	sshVolumeName                   = "ssh-auth"
-	sshRootMountPath                = "/etc/ssh"
-	sshAuthorizedKeysFilename       = "authorized_keys"
-	sshAuthPublicKey                = "ssh-publickey"
 
-	configVolumeName    = "config"
-	configRootMountPath = "/etc/mpi"
+	// SSH port used by MPI and a name of this port within the service
+	sshdPort     = 2222
+	sshdPortName = "sshd"
 
-	hostFileFilename   = "hostfile"
-	sshdConfigFilename = "sshd_config"
+	// Locations of the mounted files and their modes
+	authorizedKeysPath = "/etc/mpi/authorized_keys"
+	authorizedKeysMode = 0444 // octal!
+	launchScriptPath   = "/opt/domino/bin/mpi-worker-start.sh"
+	launchScriptMode   = 0544 // octal!
 
+	// Default parameters of a user account for executing MPI workload.
+	defaultUserID    = 12574
+	defaultUserName  = "domino"
+	defaultGroupID   = 12574
+	defaultGroupName = "domino"
+
+	// Configmap key containing the host file
+	hostFileName = "hostfile"
+
+	// Period of rerunning resource finalizers
 	finalizerRetryPeriod = 1 * time.Second
-)
-
-var (
-	sshAuthorizedKeysPath = filepath.Join(configRootMountPath, sshAuthorizedKeysFilename)
 )
 
 func configMapName(cr client.Object) string {

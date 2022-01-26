@@ -2,14 +2,15 @@ package mpi
 
 import (
 	"fmt"
+	"reflect"
+	"sort"
+
 	v1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sort"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 
