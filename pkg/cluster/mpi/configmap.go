@@ -27,13 +27,16 @@ DOMINO_USER=%[4]s
 DOMINO_GROUP=%[5]s
 AUTHORIZED_KEYS_PATH=%[6]s
 
-if ! id $DOMINO_UID >/dev/null 2>&1; then
+if ! cut -d: -f3 < /etc/group | grep "^${DOMINO_GID}$" >/dev/null 2>&1; then
     groupadd -g $DOMINO_GID $DOMINO_GROUP
-    useradd -u $DOMINO_UID -g $DOMINO_GID -mN -s /bin/bash $DOMINO_USER
 fi
-if [ "$(id -nu $DOMINO_UID)" != "$DOMINO_USER" ]; then
-    echo >&2 "User name mismatch"
-    exit 1
+if ! id $DOMINO_UID >/dev/null 2>&1; then
+    useradd -u $DOMINO_UID -g $DOMINO_GID -mN -s /bin/bash $DOMINO_USER
+else
+    EXISTING_USER=$(id -nu $DOMINO_UID)
+    if [ "$EXISTING_USER" != "$DOMINO_USER" ]; then
+        usermod -l $DOMINO_USER $EXISTING_USER
+    fi
 fi
 
 DOMINO_HOME=$(eval echo "~$DOMINO_USER")
