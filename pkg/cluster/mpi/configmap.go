@@ -40,7 +40,7 @@ DOMINO_HOME=$(eval echo "~$DOMINO_USER")
 SSH_DIR="$DOMINO_HOME/.ssh"
 mkdir -p "$SSH_DIR"
 
-ssh-keygen -f "$SSH_DIR/ssh_host_key" -N '' -t rsa
+ssh-keygen -f "$SSH_DIR/ssh_host_key" -N '' -t ecdsa
 chmod 400 "$SSH_DIR/ssh_host_key"
 
 cat << EOF > "$SSH_DIR/sshd_config"
