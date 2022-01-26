@@ -375,13 +375,13 @@ func (in *MPIClusterWorker) DeepCopyInto(out *MPIClusterWorker) {
 		*out = new(int32)
 		**out = **in
 	}
-	if in.UserID != nil {
-		in, out := &in.UserID, &out.UserID
+	if in.UserId != nil {
+		in, out := &in.UserId, &out.UserId
 		*out = new(int64)
 		**out = **in
 	}
-	if in.GroupID != nil {
-		in, out := &in.GroupID, &out.GroupID
+	if in.GroupId != nil {
+		in, out := &in.GroupId, &out.GroupId
 		*out = new(int64)
 		**out = **in
 	}
