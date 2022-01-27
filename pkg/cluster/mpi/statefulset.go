@@ -152,7 +152,6 @@ func (c statefulSetComponent) Kind() client.Object {
 }
 
 func buildWorkerVolumesAndMounts(cr *dcv1alpha1.MPICluster) ([]corev1.Volume, []corev1.VolumeMount) {
-
 	// Names of these volumes are unimportant
 	const (
 		authorizedKeysVolume = "authorized-keys-volume"
