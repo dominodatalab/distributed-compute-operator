@@ -37,12 +37,10 @@ func (c serviceComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
 
 	ports := []corev1.ServicePort{}
 	var selector map[string]string
-	var clusterIP string
 	var extraLabels map[string]string
 	switch c.comp {
 	case ComponentClient:
 		selector = cr.Spec.NetworkPolicy.ClientLabels
-		clusterIP = ""
 		extraLabels = map[string]string{}
 	case ComponentWorker:
 		ports = append(ports, corev1.ServicePort{
@@ -53,7 +51,6 @@ func (c serviceComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
 		})
 
 		selector = meta.MatchLabelsWithComponent(cr, c.comp)
-		clusterIP = corev1.ClusterIPNone
 		extraLabels = cr.Spec.Worker.Labels
 	case metadata.ComponentNone:
 		err := errors.New("unknown component for NetworkPolicy")
@@ -69,7 +66,7 @@ func (c serviceComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
 			Labels:    meta.StandardLabelsWithComponent(cr, c.comp, extraLabels),
 		},
 		Spec: corev1.ServiceSpec{
-			ClusterIP: clusterIP,
+			ClusterIP: corev1.ClusterIPNone,
 			Selector:  selector,
 			Ports:     ports,
 		},
