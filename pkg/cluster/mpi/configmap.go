@@ -110,17 +110,17 @@ func buildHostFile(cr *dcv1alpha1.MPICluster) string {
 }
 
 func buildLaunchScript(cr *dcv1alpha1.MPICluster) string {
-	userId := int64(defaultUserID)
-	if cr.Spec.Worker.UserId != nil {
-		userId = *cr.Spec.Worker.UserId
+	userID := int64(defaultUserID)
+	if cr.Spec.Worker.UserID != nil {
+		userID = *cr.Spec.Worker.UserID
 	}
 	userName := defaultUserName
 	if cr.Spec.Worker.UserName != "" {
 		userName = cr.Spec.Worker.UserName
 	}
-	groupId := int64(defaultGroupID)
-	if cr.Spec.Worker.GroupId != nil {
-		groupId = *cr.Spec.Worker.GroupId
+	groupID := int64(defaultGroupID)
+	if cr.Spec.Worker.GroupID != nil {
+		groupID = *cr.Spec.Worker.GroupID
 	}
 	groupName := defaultGroupName
 	if cr.Spec.Worker.GroupName != "" {
@@ -129,8 +129,8 @@ func buildLaunchScript(cr *dcv1alpha1.MPICluster) string {
 
 	return fmt.Sprintf(launchScriptTemplate,
 		sshdPort,           // 1 int
-		userId,             // 2 int
-		groupId,            // 3 int
+		userID,             // 2 int
+		groupID,            // 3 int
 		userName,           // 4 string
 		groupName,          // 5 string
 		authorizedKeysPath, // 6 string

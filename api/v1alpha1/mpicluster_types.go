@@ -11,9 +11,9 @@ type MPIClusterWorker struct {
 	Replicas        *int32 `json:"replicas,omitempty"`
 	SharedSSHSecret string `json:"sharedSSHSecret"`
 	UserName        string `json:"userName,omitempty"`
-	UserId          *int64 `json:"userID,omitempty"`
+	UserID          *int64 `json:"userID,omitempty"`
 	GroupName       string `json:"groupName,omitempty"`
-	GroupId         *int64 `json:"groupID,omitempty"`
+	GroupID         *int64 `json:"groupID,omitempty"`
 }
 
 // MPIClusterSpec defines the desired state of MPICluster.
