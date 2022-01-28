@@ -11,9 +11,9 @@ import (
 
 const (
 
-	// SSH port used by MPI and a name of this port within the service
+	// SSH port used by MPI worker
 	sshdPort     = 2222
-	sshdPortName = "sshd"
+	sshdPortName = "sshd" // service port name
 
 	// Locations of the mounted files and their modes
 	authorizedKeysPath = "/etc/mpi/authorized_keys"
@@ -26,6 +26,15 @@ const (
 	defaultUserName  = "domino"
 	defaultGroupID   = 12574
 	defaultGroupName = "domino"
+
+	// SSH ports used by rsync sidecar
+	rsyncPort     = 2223
+	rsyncPortName = "rsync" // service port name
+
+	// User and group for running the sidecar container;
+	// they should match a user provisioned in the sidecar image.
+	rsyncUserID  = 12574
+	rsyncGroupID = 12574
 
 	// Configmap key containing the host file
 	hostFileName = "hostfile"
