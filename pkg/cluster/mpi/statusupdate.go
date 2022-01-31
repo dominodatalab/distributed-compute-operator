@@ -23,7 +23,14 @@ const (
 	StartingStatus v1.JobConditionType = "Starting"
 	RunningStatus  v1.JobConditionType = "Running"
 	StoppingStatus v1.JobConditionType = "Stopping"
+	FailedStatus   v1.JobConditionType = "Failed"
 )
+
+// failureReasons lists generic Pod failure reasons that cause FailedStatus of MPI Cluster,
+// and map them to more specific strings that are reported in MPI CRD.
+var failureReasons = map[string]string{
+	"CrashLoopBackOff": "EntryPointFailed",
+}
 
 func StatusUpdate() core.Component {
 	return &statusUpdateComponent{}
@@ -33,6 +40,8 @@ type statusUpdateComponent struct{}
 
 func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
 	cr := objToMPICluster(ctx.Object)
+
+	fmt.Println("*")
 
 	var modified bool
 
@@ -51,10 +60,17 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 	}
 	var podNames []string
 	var runningPodCnt = 0
+	var failureReason = ""
 	for _, pod := range pods {
 		podNames = append(podNames, pod.Name)
-		if isPodReady(pod) {
+		running, podReason := isPodReady(pod)
+		if running {
 			runningPodCnt++
+		} else if failureReason == "" {
+			mpiReason, failure := failureReasons[podReason]
+			if failure {
+				failureReason = mpiReason
+			}
 		}
 	}
 	sort.Strings(podNames)
@@ -67,6 +83,8 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 
 	var status v1.JobConditionType
 	switch {
+	case failureReason != "":
+		status = FailedStatus
 	case runningPodCnt >= expectedPodCnt:
 		status = RunningStatus
 	case runningPodCnt == 0:
@@ -78,6 +96,7 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 	if cr.Status.ClusterStatus != status {
 		modified = true
 		cr.Status.ClusterStatus = status
+		cr.Status.Reason = failureReason
 		if status == RunningStatus {
 			tt := metav1.Now()
 			cr.Status.StartTime = &tt
@@ -91,9 +110,11 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("cannot update cluster status: %w", err)
 		}
+
 	}
 
-	return ctrl.Result{}, nil
+	requeue := status != RunningStatus && status != FailedStatus
+	return ctrl.Result{Requeue: requeue}, nil
 }
 
 func (c statusUpdateComponent) Finalize(ctx *core.Context) (ctrl.Result, bool, error) {
@@ -130,11 +151,27 @@ func getPods(ctx *core.Context, cr *dcv1alpha1.MPICluster) ([]corev1.Pod, error)
 	return podList.Items, err // first item is an empty array when err == nil
 }
 
-func isPodReady(pod corev1.Pod) bool {
+// isPodReady determines is the given Pod is in a "ready" state with an optional
+// string describing why it's not ready.
+func isPodReady(pod corev1.Pod) (ready bool, reason string) {
 	for _, cond := range pod.Status.Conditions {
 		if cond.Type == corev1.PodReady {
-			return cond.Status == corev1.ConditionTrue
+			if cond.Status == corev1.ConditionTrue {
+				return true, ""
+			}
+			break
 		}
 	}
-	return false
+	for _, containerStatus := range pod.Status.ContainerStatuses {
+		if containerStatus.Ready {
+			continue
+		}
+		if waitState := containerStatus.State.Waiting; waitState != nil {
+			return false, waitState.Reason
+		}
+		if termState := containerStatus.State.Terminated; termState != nil {
+			return false, termState.Reason
+		}
+	}
+	return false, ""
 }

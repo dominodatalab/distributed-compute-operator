@@ -28,7 +28,9 @@ type MPIClusterSpec struct {
 // MPIClusterStatus defines the observed state of MPICluster.
 type MPIClusterStatus struct {
 	ClusterStatus batchv1.JobConditionType `json:"clusterStatus"`
-	StartTime     *metav1.Time             `json:"startTime,omitempty"`
+	// Reason may contain additional information when status is "Failed"
+	Reason    string       `json:"reason,omitempty"`
+	StartTime *metav1.Time `json:"startTime,omitempty"`
 	// Image is the canonical reference url to the cluster container image.
 	Image string `json:"image,omitempty"`
 	// Nodes are pods that comprise the cluster.
