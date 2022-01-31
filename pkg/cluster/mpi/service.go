@@ -49,8 +49,8 @@ func (c serviceComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
 			TargetPort: intstr.FromString(sshdPortName),
 			Protocol:   corev1.ProtocolTCP,
 		},
-    {
-		  Name:       rsyncPortName,
+    		{
+		  	Name:       rsyncPortName,
 			Port:       rsyncPort,
 			TargetPort: intstr.FromString(rsyncPortName),
 			Protocol:   corev1.ProtocolTCP,
