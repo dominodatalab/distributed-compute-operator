@@ -10,10 +10,9 @@ import (
 )
 
 const (
-
 	// SSH port used by MPI and a name of this port within the service
 	sshdPort     = 2222
-	sshdPortName = "sshd"
+	sshdPortName = "tcp-ssh"
 
 	// Locations of the mounted files and their modes
 	authorizedKeysPath = "/etc/mpi/authorized_keys"
@@ -50,8 +49,8 @@ func serviceAccountName(cr client.Object) string {
 	return meta.InstanceName(cr, metadata.ComponentNone)
 }
 
-func serviceName(cr client.Object) string {
-	return meta.InstanceName(cr, ComponentWorker)
+func serviceName(cr client.Object, comp metadata.Component) string {
+	return meta.InstanceName(cr, comp)
 }
 
 func sshSecretName(cr *dcv1alpha1.MPICluster) string {

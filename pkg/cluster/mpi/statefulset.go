@@ -71,7 +71,7 @@ func (c statefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) 
 		},
 		Spec: appsv1.StatefulSetSpec{
 			Replicas:    worker.Replicas,
-			ServiceName: serviceName(cr),
+			ServiceName: serviceName(cr, ComponentWorker),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: meta.MatchLabelsWithComponent(cr, ComponentWorker),
 			},

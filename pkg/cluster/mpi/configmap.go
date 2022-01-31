@@ -96,7 +96,7 @@ func (c configMapComponent) Kind() client.Object {
 }
 
 func buildHostFile(cr *dcv1alpha1.MPICluster) string {
-	svcName := serviceName(cr)
+	svcName := serviceName(cr, ComponentWorker)
 	workerName := workerStatefulSetName(cr)
 	workerReplicas := *cr.Spec.Worker.Replicas
 
