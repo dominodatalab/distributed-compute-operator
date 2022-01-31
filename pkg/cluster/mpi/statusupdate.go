@@ -41,8 +41,6 @@ type statusUpdateComponent struct{}
 func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
 	cr := objToMPICluster(ctx.Object)
 
-	fmt.Println("*")
-
 	var modified bool
 
 	image, err := util.ParseImageDefinition(cr.Spec.Image)
