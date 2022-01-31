@@ -2012,6 +2012,8 @@ spec:
                 items:
                   type: string
                 type: array
+              reason:
+                type: string
               startTime:
                 format: date-time
                 type: string
