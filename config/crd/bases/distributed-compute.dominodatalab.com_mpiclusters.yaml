@@ -2001,6 +2001,11 @@ spec:
                 required:
                 - sharedSSHSecret
                 type: object
+              workerPorts:
+                items:
+                  format: int32
+                  type: integer
+                type: array
             type: object
           status:
             properties:
