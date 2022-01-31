@@ -50,10 +50,14 @@ var (
 	sidecarCommand = []string{
 		"/bin/bash",
 		"-c",
-		"/usr/bin/ssh-keygen -f /opt/domino/etc/ssh/ssh_host_key -N '' -t ecdsa && " +
-			"/usr/sbin/sshd -f /opt/domino/etc/ssh/sshd_config -o \"Port 2223\" -De",
+		fmt.Sprintf("/usr/bin/ssh-keygen -f /opt/domino/etc/ssh/ssh_host_key -N '' -t ecdsa && "+
+			"/usr/sbin/sshd -f /opt/domino/etc/ssh/sshd_config -o 'Port %d' -De 2>&1 | "+
+			"grep -v 'kex_exchange_identification'", rsyncPort),
+		// This suppresses messages produced by health check probes:
+		// ... 2>&1 | grep -v 'kex_exchange_identification'
 	}
-	sidecarImage = "quay.io/ddl_apetrov/rsync-sidecar:latest"
+	sidecarUser  = int64(rsyncUserID)
+	sidecarGroup = int64(rsyncGroupID)
 )
 
 // Key of the shared Secret object that contains client-side SSH public key
@@ -82,9 +86,6 @@ func (c statefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) 
 	labels := meta.StandardLabelsWithComponent(cr, ComponentWorker, worker.Labels)
 	serviceAccount := selectServiceAccount(cr)
 	volumes, volumeMounts := buildWorkerVolumesAndMounts(cr)
-
-	sidecarUser := int64(rsyncUserID)
-	sidecarGroup := int64(rsyncGroupID)
 
 	sts := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{

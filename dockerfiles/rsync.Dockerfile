@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM debian:11-slim
 
 ARG DOMINO_UID=12574
 ARG DOMINO_USER=domino
@@ -17,7 +17,9 @@ RUN \
 	apt-get update && \
 	apt-get -y install \
 		openssh-server \
-		rsync
+		rsync && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /etc/ssh/ssh_host*
 
 RUN \
     groupadd -g ${DOMINO_GID} ${DOMINO_GROUP} && \

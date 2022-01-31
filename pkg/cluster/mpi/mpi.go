@@ -13,7 +13,7 @@ const (
 
 	// SSH port used by MPI worker
 	sshdPort     = 2222
-	sshdPortName = "sshd" // service port name
+	sshdPortName = "sshd"
 
 	// Locations of the mounted files and their modes
 	authorizedKeysPath = "/etc/mpi/authorized_keys"
@@ -29,7 +29,7 @@ const (
 
 	// SSH ports used by rsync sidecar
 	rsyncPort     = 2223
-	rsyncPortName = "rsync" // service port name
+	rsyncPortName = "tcp-rsync"
 
 	// User and group for running the sidecar container;
 	// they should match a user provisioned in the sidecar image.
@@ -41,6 +41,9 @@ const (
 
 	// Period of rerunning resource finalizers
 	finalizerRetryPeriod = 1 * time.Second
+
+	// TODO move to production repo
+	sidecarImage = "quay.io/ddl_apetrov/rsync-sidecar:latest"
 )
 
 func configMapName(cr client.Object) string {
