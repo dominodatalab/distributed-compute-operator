@@ -2,6 +2,7 @@ package mpi
 
 import (
 	"fmt"
+	"k8s.io/apimachinery/pkg/types"
 	"reflect"
 	"sort"
 
@@ -26,11 +27,13 @@ const (
 	FailedStatus   v1.JobConditionType = "Failed"
 )
 
-// failureReasons lists generic Pod failure reasons that cause FailedStatus of MPI Cluster,
-// and map them to more specific strings that are reported in MPI CRD.
-var failureReasons = map[string]string{
-	"CrashLoopBackOff": "EntryPointFailed",
-}
+const (
+	EntryPointFailedReason string = "EntryPointFailed"
+)
+
+// runningPods collects ID of pods that has been able to start at least once.
+// This map is used as a set: value are irrelevant.
+var runningPods = map[types.UID]interface{}{}
 
 func StatusUpdate() core.Component {
 	return &statusUpdateComponent{}
@@ -61,13 +64,17 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 	var failureReason = ""
 	for _, pod := range pods {
 		podNames = append(podNames, pod.Name)
-		running, podReason := isPodReady(pod)
+		running := isPodReady(pod)
 		if running {
+			runningPods[pod.UID] = nil
 			runningPodCnt++
-		} else if failureReason == "" {
-			mpiReason, failure := failureReasons[podReason]
-			if failure {
-				failureReason = mpiReason
+		} else {
+			termState := getWorkerLastTerminatedState(pod)
+			if termState != nil && termState.ExitCode != 0 {
+				_, wasRunning := runningPods[pod.UID]
+				if failureReason == "" && !wasRunning {
+					failureReason = EntryPointFailedReason
+				}
 			}
 		}
 	}
@@ -136,6 +143,9 @@ func (c statusUpdateComponent) Finalize(ctx *core.Context) (ctrl.Result, bool, e
 	if podCnt != 0 {
 		return ctrl.Result{RequeueAfter: finalizerRetryPeriod}, false, nil
 	}
+	for uid := range runningPods {
+		delete(runningPods, uid)
+	}
 	return ctrl.Result{}, true, nil
 }
 
@@ -149,27 +159,21 @@ func getPods(ctx *core.Context, cr *dcv1alpha1.MPICluster) ([]corev1.Pod, error)
 	return podList.Items, err // first item is an empty array when err == nil
 }
 
-// isPodReady determines is the given Pod is in a "ready" state with an optional
-// string describing why it's not ready.
-func isPodReady(pod corev1.Pod) (ready bool, reason string) {
+// isPodReady determines is the given Pod is in a "ready" state.
+func isPodReady(pod corev1.Pod) bool {
 	for _, cond := range pod.Status.Conditions {
 		if cond.Type == corev1.PodReady {
-			if cond.Status == corev1.ConditionTrue {
-				return true, ""
-			}
-			break
+			return cond.Status == corev1.ConditionTrue
 		}
 	}
-	for _, containerStatus := range pod.Status.ContainerStatuses {
-		if containerStatus.Ready {
-			continue
-		}
-		if waitState := containerStatus.State.Waiting; waitState != nil {
-			return false, waitState.Reason
-		}
-		if termState := containerStatus.State.Terminated; termState != nil {
-			return false, termState.Reason
+	return false
+}
+
+func getWorkerLastTerminatedState(pod corev1.Pod) *corev1.ContainerStateTerminated {
+	for _, contStatus := range pod.Status.ContainerStatuses {
+		if contStatus.Name == ApplicationName {
+			return contStatus.LastTerminationState.Terminated
 		}
 	}
-	return false, ""
+	return nil
 }
