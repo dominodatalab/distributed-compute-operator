@@ -43,18 +43,19 @@ func (c serviceComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
 		selector = cr.Spec.NetworkPolicy.ClientLabels
 		extraLabels = map[string]string{}
 	case ComponentWorker:
-		ports = append(ports, corev1.ServicePort{
-			Name:       sshdPortName,
-			Port:       sshdPort,
-			TargetPort: intstr.FromString(sshdPortName),
-			Protocol:   corev1.ProtocolTCP,
-		},
-    		{
-		  	Name:       rsyncPortName,
-			Port:       rsyncPort,
-			TargetPort: intstr.FromString(rsyncPortName),
-			Protocol:   corev1.ProtocolTCP,
-		})
+		ports = append(ports,
+			corev1.ServicePort{
+				Name:       sshdPortName,
+				Port:       sshdPort,
+				TargetPort: intstr.FromString(sshdPortName),
+				Protocol:   corev1.ProtocolTCP,
+			},
+			corev1.ServicePort{
+				Name:       rsyncPortName,
+				Port:       rsyncPort,
+				TargetPort: intstr.FromString(rsyncPortName),
+				Protocol:   corev1.ProtocolTCP,
+			})
 
 		selector = meta.MatchLabelsWithComponent(cr, c.comp)
 		extraLabels = cr.Spec.Worker.Labels
