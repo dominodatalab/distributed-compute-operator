@@ -48,6 +48,12 @@ func (c serviceComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
 			Port:       sshdPort,
 			TargetPort: intstr.FromString(sshdPortName),
 			Protocol:   corev1.ProtocolTCP,
+		},
+    		{
+		  	Name:       rsyncPortName,
+			Port:       rsyncPort,
+			TargetPort: intstr.FromString(rsyncPortName),
+			Protocol:   corev1.ProtocolTCP,
 		})
 
 		selector = meta.MatchLabelsWithComponent(cr, c.comp)

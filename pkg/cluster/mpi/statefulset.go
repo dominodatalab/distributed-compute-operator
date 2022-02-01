@@ -34,6 +34,30 @@ var (
 	workerCommand = []string{
 		launchScriptPath,
 	}
+	sidecarPorts = []corev1.ContainerPort{
+		{
+			Name:          rsyncPortName,
+			ContainerPort: rsyncPort,
+		},
+	}
+	sidecarProbe = &corev1.Probe{
+		Handler: corev1.Handler{
+			TCPSocket: &corev1.TCPSocketAction{
+				Port: intstr.FromInt(rsyncPort),
+			},
+		},
+	}
+	sidecarCommand = []string{
+		"/bin/bash",
+		"-c",
+		fmt.Sprintf("/usr/bin/ssh-keygen -f /opt/domino/etc/ssh/ssh_host_key -N '' -t ecdsa && "+
+			"/usr/sbin/sshd -f /opt/domino/etc/ssh/sshd_config -o 'Port %d' -De 2>&1 | "+
+			"grep -v 'kex_exchange_identification'", rsyncPort),
+		// This suppresses messages produced by health check probes:
+		// ... 2>&1 | grep -v 'kex_exchange_identification'
+	}
+	sidecarUser  = int64(rsyncUserID)
+	sidecarGroup = int64(rsyncGroupID)
 )
 
 // Key of the shared Secret object that contains client-side SSH public key
@@ -48,9 +72,9 @@ type statefulSetComponent struct{}
 func (c statefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
 	cr := objToMPICluster(ctx.Object)
 
-	image, err := util.ParseImageDefinition(cr.Spec.Image)
+	workerImage, err := util.ParseImageDefinition(cr.Spec.Image)
 	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("cannot parse image: %w", err)
+		return ctrl.Result{}, fmt.Errorf("cannot parse workerImage: %w", err)
 	}
 
 	err = assureSharedKey(ctx, cr)
@@ -93,7 +117,7 @@ func (c statefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) 
 						{
 							Name:            ApplicationName,
 							Command:         workerCommand,
-							Image:           image,
+							Image:           workerImage,
 							ImagePullPolicy: cr.Spec.Image.PullPolicy,
 							Ports:           workerPorts,
 							Env:             cr.Spec.EnvVars,
@@ -101,6 +125,20 @@ func (c statefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) 
 							Resources:       worker.Resources,
 							LivenessProbe:   workerProbe,
 							ReadinessProbe:  workerProbe,
+						},
+						{
+							Name:            RsyncSidecarName,
+							Command:         sidecarCommand,
+							Image:           sidecarImage,
+							ImagePullPolicy: cr.Spec.Image.PullPolicy,
+							Ports:           sidecarPorts,
+							VolumeMounts:    volumeMounts,
+							SecurityContext: &corev1.SecurityContext{
+								RunAsUser:  &sidecarUser,
+								RunAsGroup: &sidecarGroup,
+							},
+							LivenessProbe:  sidecarProbe,
+							ReadinessProbe: sidecarProbe,
 						},
 					},
 				},

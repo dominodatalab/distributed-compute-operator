@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	// SSH port used by MPI and a name of this port within the service
+	// SSH port used by MPI worker
 	sshdPort     = 2222
 	sshdPortName = "tcp-ssh"
 
@@ -26,11 +26,23 @@ const (
 	defaultGroupID   = 12574
 	defaultGroupName = "domino"
 
+	// SSH ports used by rsync sidecar
+	rsyncPort     = 2223
+	rsyncPortName = "tcp-rsync"
+
+	// User and group for running the sidecar container;
+	// they should match a user provisioned in the sidecar image.
+	rsyncUserID  = 12574
+	rsyncGroupID = 12574
+
 	// Configmap key containing the host file
 	hostFileName = "hostfile"
 
 	// Period of rerunning resource finalizers
 	finalizerRetryPeriod = 1 * time.Second
+
+	// TODO move to production repo
+	sidecarImage = "quay.io/ddl_apetrov/rsync-sidecar:latest"
 )
 
 func configMapName(cr client.Object) string {
