@@ -12,7 +12,7 @@ type DaskClusterWorker struct {
 
 // DaskClusterSpec defines the desired state of DaskCluster.
 type DaskClusterSpec struct {
-	ClusterConfig `json:",inline"`
+	ScalableClusterConfig `json:",inline"`
 
 	Scheduler WorkloadConfig    `json:"scheduler,omitempty"`
 	Worker    DaskClusterWorker `json:"worker,omitempty"`

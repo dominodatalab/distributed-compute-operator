@@ -20,12 +20,14 @@ func sparkClusterFixture() *dcv1alpha1.SparkCluster {
 			Namespace: "fake-ns",
 		},
 		Spec: dcv1alpha1.SparkClusterSpec{
-			ClusterConfig: dcv1alpha1.ClusterConfig{
-				Image: &dcv1alpha1.OCIImageDefinition{
-					Registry:   "fake-reg",
-					Repository: "fake-repo",
-					Tag:        "fake-tag",
-					PullPolicy: corev1.PullIfNotPresent,
+			ScalableClusterConfig: dcv1alpha1.ScalableClusterConfig{
+				ClusterConfig: dcv1alpha1.ClusterConfig{
+					Image: &dcv1alpha1.OCIImageDefinition{
+						Registry:   "fake-reg",
+						Repository: "fake-repo",
+						Tag:        "fake-tag",
+						PullPolicy: corev1.PullIfNotPresent,
+					},
 				},
 			},
 			ClusterPort:       7077,

@@ -45,7 +45,7 @@ type SparkClusterDriver struct {
 
 // SparkClusterSpec defines the desired state of a SparkCluster resource.
 type SparkClusterSpec struct {
-	ClusterConfig `json:",inline"`
+	ScalableClusterConfig `json:",inline"`
 
 	// Master node configuration parameters.
 	Master SparkClusterNode `json:"master,omitempty"`

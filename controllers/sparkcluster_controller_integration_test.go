@@ -171,10 +171,21 @@ func createAndBasicTest(ctx context.Context, name string) {
 			Namespace: "default",
 		},
 		Spec: dcv1alpha1.SparkClusterSpec{
-			ClusterConfig: dcv1alpha1.ClusterConfig{
-				Image: &dcv1alpha1.OCIImageDefinition{
-					Repository: "foo",
-					Tag:        "bar",
+			ScalableClusterConfig: dcv1alpha1.ScalableClusterConfig{
+				ClusterConfig: dcv1alpha1.ClusterConfig{
+					Image: &dcv1alpha1.OCIImageDefinition{
+						Repository: "foo",
+						Tag:        "bar",
+					},
+					NetworkPolicy: dcv1alpha1.NetworkPolicyConfig{
+						Enabled:      pointer.BoolPtr(true),
+						ClientLabels: map[string]string{"app.kubernetes.io/instance": "spark-driver"},
+					},
+					KerberosKeytab: &dcv1alpha1.KerberosKeytabConfig{
+						MountPath: "/etc/security/keytabs/kerberos.conf",
+						Contents:  []byte{'t', 'e', 's', 't', 'e', 'r'},
+					},
+					PodSecurityPolicy: psp.Name,
 				},
 				Autoscaling: &dcv1alpha1.Autoscaling{
 					MinReplicas:              pointer.Int32Ptr(1),
@@ -182,15 +193,6 @@ func createAndBasicTest(ctx context.Context, name string) {
 					AverageCPUUtilization:    pointer.Int32Ptr(50),
 					AverageMemoryUtilization: pointer.Int32Ptr(50),
 				},
-				NetworkPolicy: dcv1alpha1.NetworkPolicyConfig{
-					Enabled:      pointer.BoolPtr(true),
-					ClientLabels: map[string]string{"app.kubernetes.io/instance": "spark-driver"},
-				},
-				KerberosKeytab: &dcv1alpha1.KerberosKeytabConfig{
-					MountPath: "/etc/security/keytabs/kerberos.conf",
-					Contents:  []byte{'t', 'e', 's', 't', 'e', 'r'},
-				},
-				PodSecurityPolicy: psp.Name,
 			},
 			Master: dcv1alpha1.SparkClusterNode{
 				DefaultConfiguration: map[string]string{

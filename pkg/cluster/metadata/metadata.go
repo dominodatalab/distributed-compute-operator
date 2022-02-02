@@ -25,24 +25,26 @@ const (
 	DescriptionAnnotationKey = "distributed-compute.dominodatalab.com/description"
 )
 
+// Component is used to drive Kubernetes object generation for different types.
 type Component string
 
+// ComponentNone indicates a generic resource.
 const ComponentNone Component = "none"
 
 type versionExtractor func(client.Object) string
-type extraLabelsFn func(client.Object) map[string]string
+type globalLabelsFn func(client.Object) map[string]string
 
 type Provider struct {
-	application string
-	version     versionExtractor
-	extraLabels extraLabelsFn
+	application  string
+	version      versionExtractor
+	globalLabels globalLabelsFn
 }
 
-func NewProvider(name string, version versionExtractor, extraLabels extraLabelsFn) *Provider {
+func NewProvider(name string, version versionExtractor, globalLabels globalLabelsFn) *Provider {
 	return &Provider{
-		application: name,
-		version:     version,
-		extraLabels: extraLabels,
+		application:  name,
+		version:      version,
+		globalLabels: globalLabels,
 	}
 }
 
@@ -62,12 +64,16 @@ func (p *Provider) StandardLabels(obj client.Object) map[string]string {
 		ApplicationManagedByLabelKey: ApplicationManagedByLabelValue,
 	}
 
-	return util.MergeStringMaps(p.extraLabels(obj), labels)
+	return util.MergeStringMaps(p.globalLabels(obj), labels)
 }
 
-func (p *Provider) StandardLabelsWithComponent(obj client.Object, comp Component) map[string]string {
+func (p *Provider) StandardLabelsWithComponent(obj client.Object, comp Component, extraLabels map[string]string) map[string]string {
 	labels := p.StandardLabels(obj)
 	labels[ApplicationComponentLabelKey] = string(comp)
+
+	if extraLabels != nil {
+		labels = util.MergeStringMaps(extraLabels, labels)
+	}
 
 	return labels
 }

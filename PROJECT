@@ -30,4 +30,30 @@ resources:
     defaulting: true
     validation: true
     webhookVersion: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: dominodatalab.com
+  group: distributed-compute
+  kind: SparkCluster
+  path: github.com/dominodatalab/distributed-compute-operator/api/v1alpha1
+  version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: dominodatalab.com
+  group: distributed-compute
+  kind: MPICluster
+  path: github.com/dominodatalab/distributed-compute-operator/api/v1alpha1
+  version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 version: "3"

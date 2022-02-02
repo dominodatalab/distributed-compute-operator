@@ -120,8 +120,7 @@ func (s *statefulSetDS) namespace() string {
 }
 
 func (s *statefulSetDS) labels() map[string]string {
-	labels := meta.StandardLabelsWithComponent(s.dc, s.comp)
-	return util.MergeStringMaps(s.tc.podConfig().Labels, labels)
+	return meta.StandardLabelsWithComponent(s.dc, s.comp, s.tc.podConfig().Labels)
 }
 
 func (s *statefulSetDS) matchLabels() map[string]string {

@@ -1,0 +1,52 @@
+apiVersion: distributed-compute.dominodatalab.com/v1alpha1
+kind: MPICluster
+metadata:
+  name: example
+spec:
+  # image:
+  #   registry: ""
+  #   repository: horovod/horovod
+  #   tag: 0.22.1
+  #   pullPolicy: IfNotPresent
+
+  # networkPolicy:
+  #   enabled: true
+  #   clientLabels: {}
+  #   dashboardLabels: {}
+
+  # serviceAccount:
+  #   name: ""
+  #   automountServiceAccountToken: false
+
+  # podSecurityContext:
+  #   runAsUser:
+  #   runAsGroup:
+  #   fsGroup:
+
+  # kerberosKeytab:
+  #   contents:
+  #   mountPath:
+
+  # globalLabels: {}
+  # envVars: []
+  # imagePullSecrets: []
+  # podSecurityPolicy: ""
+  # istioMutualTLSMode: ""
+
+  worker:
+    # replicas: 1
+    sharedSSHSecret: ""
+    # userName:
+    # userID:
+    # groupName:
+    # groupID:
+    # labels: {}
+    # annotations: {}
+    # nodeSelector: {}
+    # affinity: {}
+    # tolerations: []
+    # initContainers: []
+    # volumes: []
+    # volumeMounts: []
+    # volumeClaimTemplates: []
+    # resources: {}

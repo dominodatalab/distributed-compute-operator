@@ -29,8 +29,6 @@ var (
 	setupLog = ctrl.Log.WithName("setup")
 )
 
-type Controllers []func(ctrl.Manager, bool) error
-
 // Start creates a new controller manager, configures and registers all
 // reconcilers/webhooks with the manager, and starts their control loops.
 func Start(cfg *Config) error {
@@ -66,12 +64,11 @@ func Start(cfg *Config) error {
 		return err
 	}
 
-	ctrls := Controllers{
-		controllers.DaskCluster,
-	}
-	for _, c := range ctrls {
-		if err = c(mgr, cfg.IstioEnabled); err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", c)
+	enableWebHooks := os.Getenv("ENABLE_WEBHOOKS") != "false"
+
+	for _, builder := range controllers.BuilderFuncs {
+		if err = builder(mgr, enableWebHooks, cfg.IstioEnabled); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", builder)
 			return err
 		}
 	}
@@ -98,7 +95,7 @@ func Start(cfg *Config) error {
 		return err
 	}
 
-	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
+	if enableWebHooks {
 		if err = (&dcv1alpha1.RayCluster{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "RayCluster")
 			return err

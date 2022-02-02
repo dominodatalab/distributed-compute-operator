@@ -80,6 +80,32 @@ rules:
 - apiGroups:
   - distributed-compute.dominodatalab.com
   resources:
+  - mpiclusters
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - distributed-compute.dominodatalab.com
+  resources:
+  - mpiclusters/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - distributed-compute.dominodatalab.com
+  resources:
+  - mpiclusters/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - distributed-compute.dominodatalab.com
+  resources:
   - rayclusters
   verbs:
   - create

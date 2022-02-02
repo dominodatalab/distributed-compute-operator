@@ -12,8 +12,8 @@ import (
 //+kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=daskclusters/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=daskclusters/finalizers,verbs=update
 
-func DaskCluster(mgr ctrl.Manager, istioEnabled bool) error {
-	return core.NewReconciler(mgr).
+func DaskCluster(mgr ctrl.Manager, webhooksEnabled, istioEnabled bool) error {
+	reconciler := core.NewReconciler(mgr).
 		For(&dcv1alpha1.DaskCluster{}).
 		Component("istio-peerauthentication", dask.IstioPeerAuthentication(istioEnabled)).
 		Component("serviceaccount", dask.ServiceAccount()).
@@ -27,7 +27,10 @@ func DaskCluster(mgr ctrl.Manager, istioEnabled bool) error {
 		Component("statefulset-scheduler", dask.StatefulSetScheduler()).
 		Component("statefulset-worker", dask.StatefulSetWorker()).
 		Component("horizontalpodautoscaler", dask.HorizontalPodAutoscaler()).
-		Component("statusupdate", dask.ClusterStatusUpdate()).
-		WithWebhooks().
-		Complete()
+		Component("statusupdate", dask.ClusterStatusUpdate())
+
+	if webhooksEnabled {
+		reconciler.WithWebhooks()
+	}
+	return reconciler.Complete()
 }

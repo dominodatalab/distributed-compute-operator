@@ -11,6 +11,7 @@ rules:
   - daskclusters
   - rayclusters
   - sparkclusters
+  - mpiclusters
   verbs:
   - patch
   - update
@@ -22,6 +23,7 @@ rules:
   - daskclusters/status
   - rayclusters/status
   - sparkclusters/status
+  - mpiclusters/status
   verbs:
   - update
 - apiGroups:
@@ -30,11 +32,13 @@ rules:
   - daskclusters/finalizers
   - rayclusters/finalizers
   - sparkclusters/finalizers
+  - mpiclusters/finalizers
   verbs:
   - update
 - apiGroups:
   - ""
   resources:
+  - endpoints
   - pods
   verbs:
   - list
@@ -43,6 +47,7 @@ rules:
   - ""
   resources:
   - configmaps
+  - secrets
   - serviceaccounts
   verbs:
   - create
@@ -76,10 +81,21 @@ rules:
   - update
   - list
   - watch
+  - delete
 - apiGroups:
   - autoscaling
   resources:
   - horizontalpodautoscalers
+  verbs:
+  - create
+  - update
+  - delete
+  - list
+  - watch
+- apiGroups:
+  - batch
+  resources:
+  - jobs
   verbs:
   - create
   - update

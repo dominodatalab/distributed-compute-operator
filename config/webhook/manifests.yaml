@@ -34,6 +34,27 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /mutate-distributed-compute-dominodatalab-com-v1alpha1-mpicluster
+  failurePolicy: Fail
+  name: mmpicluster.kb.io
+  rules:
+  - apiGroups:
+    - distributed-compute.dominodatalab.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - mpiclusters
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /mutate-distributed-compute-dominodatalab-com-v1alpha1-raycluster
   failurePolicy: Fail
   name: mraycluster.kb.io
@@ -97,6 +118,27 @@ webhooks:
     - UPDATE
     resources:
     - daskclusters
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-distributed-compute-dominodatalab-com-v1alpha1-mpicluster
+  failurePolicy: Fail
+  name: vmpicluster.kb.io
+  rules:
+  - apiGroups:
+    - distributed-compute.dominodatalab.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - mpiclusters
   sideEffects: None
 - admissionReviewVersions:
   - v1

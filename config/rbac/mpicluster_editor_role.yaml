@@ -1,0 +1,24 @@
+# permissions for end users to edit mpiclusters.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: mpicluster-editor-role
+rules:
+- apiGroups:
+  - distributed-compute.dominodatalab.com
+  resources:
+  - mpiclusters
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - distributed-compute.dominodatalab.com
+  resources:
+  - mpiclusters/status
+  verbs:
+  - get

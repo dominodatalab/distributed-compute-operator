@@ -96,8 +96,6 @@ type ClusterConfig struct {
 	GlobalLabels map[string]string `json:"globalLabels,omitempty"`
 	// Image used to launch cluster nodes.
 	Image *OCIImageDefinition `json:"image,omitempty"`
-	// Autoscaling parameters used to scale up/down cluster nodes.
-	Autoscaling *Autoscaling `json:"autoscaling,omitempty"`
 	// NetworkPolicy parameters used to IP traffic flow.
 	NetworkPolicy NetworkPolicyConfig `json:"networkPolicy,omitempty"`
 	// ServiceAccount parameters used to override default behavior.
@@ -114,6 +112,14 @@ type ClusterConfig struct {
 	// PodSecurityPolicy name can be provided to restrict and/or provide
 	// execution permissions to processes running within cluster pods.
 	PodSecurityPolicy string `json:"podSecurityPolicy,omitempty"`
+}
+
+// ScalableClusterConfig defines high-level cluster options with autoscaling.
+type ScalableClusterConfig struct {
+	// ClusterConfig base options.
+	ClusterConfig `json:",inline"`
+	// Autoscaling parameters used to scale up/down cluster nodes.
+	Autoscaling *Autoscaling `json:"autoscaling,omitempty"`
 }
 
 // WorkloadConfig defines options common to all cluster nodes.
