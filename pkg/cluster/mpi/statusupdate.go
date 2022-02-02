@@ -2,6 +2,7 @@ package mpi
 
 import (
 	"fmt"
+	"k8s.io/apimachinery/pkg/types"
 	"reflect"
 	"sort"
 
@@ -23,7 +24,16 @@ const (
 	StartingStatus v1.JobConditionType = "Starting"
 	RunningStatus  v1.JobConditionType = "Running"
 	StoppingStatus v1.JobConditionType = "Stopping"
+	FailedStatus   v1.JobConditionType = "Failed"
 )
+
+const (
+	EntryPointFailedReason string = "EntryPointFailed"
+)
+
+// runningPods collects ID of pods that has been able to start at least once.
+// This map is used as a set: value are irrelevant.
+var runningPods = map[types.UID]interface{}{}
 
 func StatusUpdate() core.Component {
 	return &statusUpdateComponent{}
@@ -51,10 +61,21 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 	}
 	var podNames []string
 	var runningPodCnt = 0
+	var failureReason = ""
 	for _, pod := range pods {
 		podNames = append(podNames, pod.Name)
-		if isPodReady(pod) {
+		running := isPodReady(pod)
+		if running {
+			runningPods[pod.UID] = nil
 			runningPodCnt++
+		} else {
+			termState := getWorkerLastTerminatedState(pod)
+			if termState != nil && termState.ExitCode != 0 {
+				_, wasRunning := runningPods[pod.UID]
+				if failureReason == "" && !wasRunning {
+					failureReason = EntryPointFailedReason
+				}
+			}
 		}
 	}
 	sort.Strings(podNames)
@@ -67,6 +88,8 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 
 	var status v1.JobConditionType
 	switch {
+	case failureReason != "":
+		status = FailedStatus
 	case runningPodCnt >= expectedPodCnt:
 		status = RunningStatus
 	case runningPodCnt == 0:
@@ -78,6 +101,7 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 	if cr.Status.ClusterStatus != status {
 		modified = true
 		cr.Status.ClusterStatus = status
+		cr.Status.Reason = failureReason
 		if status == RunningStatus {
 			tt := metav1.Now()
 			cr.Status.StartTime = &tt
@@ -91,9 +115,11 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("cannot update cluster status: %w", err)
 		}
+
 	}
 
-	return ctrl.Result{}, nil
+	requeue := status != RunningStatus && status != FailedStatus
+	return ctrl.Result{Requeue: requeue}, nil
 }
 
 func (c statusUpdateComponent) Finalize(ctx *core.Context) (ctrl.Result, bool, error) {
@@ -117,6 +143,9 @@ func (c statusUpdateComponent) Finalize(ctx *core.Context) (ctrl.Result, bool, e
 	if podCnt != 0 {
 		return ctrl.Result{RequeueAfter: finalizerRetryPeriod}, false, nil
 	}
+	for uid := range runningPods {
+		delete(runningPods, uid)
+	}
 	return ctrl.Result{}, true, nil
 }
 
@@ -130,6 +159,7 @@ func getPods(ctx *core.Context, cr *dcv1alpha1.MPICluster) ([]corev1.Pod, error)
 	return podList.Items, err // first item is an empty array when err == nil
 }
 
+// isPodReady determines is the given Pod is in a "ready" state.
 func isPodReady(pod corev1.Pod) bool {
 	for _, cond := range pod.Status.Conditions {
 		if cond.Type == corev1.PodReady {
@@ -137,4 +167,13 @@ func isPodReady(pod corev1.Pod) bool {
 		}
 	}
 	return false
+}
+
+func getWorkerLastTerminatedState(pod corev1.Pod) *corev1.ContainerStateTerminated {
+	for _, contStatus := range pod.Status.ContainerStatuses {
+		if contStatus.Name == ApplicationName {
+			return contStatus.LastTerminationState.Terminated
+		}
+	}
+	return nil
 }
