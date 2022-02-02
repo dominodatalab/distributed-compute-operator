@@ -16,6 +16,7 @@ import (
 func MPICluster(mgr ctrl.Manager, webhooksEnabled, istioEnabled bool) error {
 	reconciler := core.NewReconciler(mgr).
 		For(&dcv1alpha1.MPICluster{}).
+		Component("istio-peerauthentication", mpi.IstioPeerAuthentication(istioEnabled)).
 		Component("serviceaccount", mpi.ServiceAccount()).
 		Component("role", mpi.RolePodSecurityPolicy()).
 		Component("rolebinding", mpi.RoleBindingPodSecurityPolicy()).
