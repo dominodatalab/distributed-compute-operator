@@ -68,14 +68,15 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 		if running {
 			runningPods[pod.UID] = nil
 			runningPodCnt++
-		} else {
-			termState := getWorkerLastTerminatedState(pod)
-			if termState != nil && termState.ExitCode != 0 {
-				_, wasRunning := runningPods[pod.UID]
-				if failureReason == "" && !wasRunning {
-					failureReason = EntryPointFailedReason
-				}
-			}
+			continue
+		}
+		termState := getWorkerLastTerminatedState(pod)
+		if termState == nil || termState.ExitCode == 0 {
+			continue
+		}
+		_, wasRunning := runningPods[pod.UID]
+		if failureReason == "" && !wasRunning {
+			failureReason = EntryPointFailedReason
 		}
 	}
 	sort.Strings(podNames)
@@ -115,7 +116,6 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("cannot update cluster status: %w", err)
 		}
-
 	}
 
 	requeue := status != RunningStatus && status != FailedStatus
