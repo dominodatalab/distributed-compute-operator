@@ -78,7 +78,6 @@ RUN \
 
 # The final image only contains built artifacts.
 FROM debian:11-slim
-ENV DEPLOY_DIR=/mnt/build/extracted
 WORKDIR /root
 COPY --from=0 /root/worker-utils.tgz ./
-CMD mkdir -p ${DEPLOY_DIR}; cp worker-utils.tgz ${DEPLOY_DIR}
+CMD mkdir -p ${INSTALL_DIR}; tar -xf /root/worker-utils.tgz
