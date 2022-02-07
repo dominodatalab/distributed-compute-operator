@@ -1,7 +1,6 @@
 # A specific version of the Linux OS here is very important, because 
 # it defines versions of core libraries (libc etc) the compiled binaries
 # will be linked against.
-#FROM debian:9.13
 FROM ubuntu:18.04
 
 ARG RSYNC_VERSION=3.2.3
@@ -54,7 +53,7 @@ RUN \
 RUN \
 	# Newer versions of openssh include a mandatory privilege separation mechanism
 	# that requires a special user to be available in the system. Although this
-	# image does not execute sshd, such a user must exist for peroper deployment.
+	# image does not execute sshd, such a user must exist for proper deployment.
 	useradd -g 65534 -d /var/empty -s /bin/false sshd && \
 	curl -o openssh-src.tgz -LSsf ${OPENSSH_URL} && \
 	curl -o openssh-src.sig -LSsf ${OPENSSH_SIG_URL} && \
@@ -69,4 +68,17 @@ RUN \
 	make install && \
 	cd -
 
-CMD /bin/bash
+# Create a tarball containing all the necessary stuff
+RUN \
+	tar -czf worker-utils.tgz \
+		${INSTALL_DIR}/bin \
+		${INSTALL_DIR}/etc \
+		${INSTALL_DIR}/libexec \
+		${INSTALL_DIR}/sbin
+
+# The final image only contains built artifacts.
+FROM debian:11-slim
+ENV DEPLOY_DIR=/mnt/build/extracted
+WORKDIR /root
+COPY --from=0 /root/worker-utils.tgz ./
+CMD mkdir -p ${DEPLOY_DIR}; cp worker-utils.tgz ${DEPLOY_DIR}
