@@ -71,8 +71,13 @@ jobs:
       id: docker_prep
       run: |
         DESCRIPTION="$(echo "${{ github.event.repository.description }}" | sed -r 's/:.+:[[:blank:]]*//')"
+        
         DOCKER_IMAGE=ghcr.io/${{ github.repository }}
+        DOCKER_IMAGE_MPI_INIT=ghcr.io/${{ github.repository }}-mpi-init
+        DOCKER_IMAGE_MPI_SYNC=ghcr.io/${{ github.repository }}-mpi-sync
+        
         VENDOR_IMAGE=quay.io/domino/distributed-compute-operator
+#        TODO: add "vendor" versions for supplemental MPI images
 
         VERSION=edge
         if [[ $GITHUB_REF == refs/tags/* ]]; then
@@ -87,11 +92,17 @@ jobs:
         if [[ "${{ github.event_name }}" == "push" ]]; then
           TAGS="$TAGS,${DOCKER_IMAGE}:sha-${GITHUB_SHA::8},${VENDOR_IMAGE}:sha-${GITHUB_SHA::8}"
         fi
+        TAGS_MPI_INIT="${DOCKER_IMAGE_MPI_INIT}:${VERSION}"
+        TAGS_MPI_SYNC="${DOCKER_IMAGE_MPI_SYNC}:${VERSION}"
 
         echo ::set-output name=description::${DESCRIPTION}
         echo ::set-output name=image::${DOCKER_IMAGE}
+        echo ::set-output name=image_mpi_init::${DOCKER_IMAGE_MPI_INIT}
+        echo ::set-output name=image_mpi_sync::${DOCKER_IMAGE_MPI_SYNC}
         echo ::set-output name=version::${VERSION}
         echo ::set-output name=tags::${TAGS}
+        echo ::set-output name=tags_mpi_init::${TAGS_MPI_INIT}
+        echo ::set-output name=tags_mpi_sync::${TAGS_MPI_SYNC}
         echo ::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
 
     - name: Build and push Docker image
@@ -111,6 +122,42 @@ jobs:
           org.opencontainers.image.created=${{ steps.docker_prep.outputs.created }}
           org.opencontainers.image.revision=${{ github.sha }}
           org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
+
+    - name: Build and push Docker image for MPI init container
+      id: docker_build_mpi_init
+      uses: docker/build-push-action@v2
+      with:
+        context: "{{defaultContext}}:dockerfiles"
+        file: mpi-init.Dockerfile
+        push: true
+        tags: ${{ steps.docker_prep.outputs.tags_mpi_init }}
+        cache-to: type=registry,ref=${{ steps.docker_prep.outputs.image_mpi_init }}:buildcache,mode=max
+        cache-from: type=registry,ref=${{ steps.docker_prep.outputs.image_mpi_init }}:buildcache
+        labels: |
+          org.opencontainers.image.title=${{ github.event.repository.name }}-mpi-init
+          org.opencontainers.image.description="Supplemental init container for DCO MPI worker"
+          org.opencontainers.image.url=${{ github.event.repository.html_url }}
+          org.opencontainers.image.version=${{ steps.docker_prep.outputs.version }}
+          org.opencontainers.image.created=${{ steps.docker_prep.outputs.created }}
+          org.opencontainers.image.revision=${{ github.sha }}
+
+    - name: Build and push Docker image for MPI file sync container
+      id: docker_build_mpi_sync
+      uses: docker/build-push-action@v2
+      with:
+        context: "{{defaultContext}}:dockerfiles"
+        file: mpi-sync.Dockerfile
+        push: true
+        tags: ${{ steps.docker_prep.outputs.tags_mpi_sync }}
+        cache-to: type=registry,ref=${{ steps.docker_prep.outputs.image_mpi_sync }}:buildcache,mode=max
+        cache-from: type=registry,ref=${{ steps.docker_prep.outputs.image_mpi_sync }}:buildcache
+        labels: |
+          org.opencontainers.image.title=${{ github.event.repository.name }}-mpi-sync
+          org.opencontainers.image.description="Supplemental file sync container for DCO MPI worker"
+          org.opencontainers.image.url=${{ github.event.repository.html_url }}
+          org.opencontainers.image.version=${{ steps.docker_prep.outputs.version }}
+          org.opencontainers.image.created=${{ steps.docker_prep.outputs.created }}
+          org.opencontainers.image.revision=${{ github.sha }}
 
   helm:
     runs-on: ubuntu-latest
