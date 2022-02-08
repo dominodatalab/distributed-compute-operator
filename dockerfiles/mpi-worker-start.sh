@@ -10,8 +10,8 @@ SSH_RUN_DIR="/run/sshd-${DOMINO_USER}"
 mkdir -p "$SSH_RUN_DIR"
 chmod 777 "$SSH_RUN_DIR"
 
-if ! id $SSH_UID >/dev/null 2>&1; then
-    useradd -u $SSH_UID -g 65534 -mN -s "/usr/sbin/nologin" -d "$SSH_RUN_DIR" $DOMINO_USER
+if ! id $SSH_USER >/dev/null 2>&1; then
+    useradd -u $SSH_USER -g 65534 -mN -s "/usr/sbin/nologin" -d "$SSH_RUN_DIR" $DOMINO_USER
 fi
 
 if ! cut -d: -f3 < /etc/group | grep "^${DOMINO_GID}$" >/dev/null 2>&1; then
@@ -29,8 +29,9 @@ fi
 CONFIG_DIR="$INSTALL_DIR/etc"
 mkdir -p "$CONFIG_DIR"
 
-ssh-keygen -f "$CONFIG_DIR/ssh_host_key" -N '' -t ecdsa
+ssh-keygen -f "$CONFIG_DIR/ssh_host_key" -N '' -t ed25519
 chmod 400 "$CONFIG_DIR/ssh_host_key"
+chown $DOMINO_USER:$DOMINO_GROUP "$CONFIG_DIR/ssh_host_key"
 
 cat << EOF > "$CONFIG_DIR/sshd_config"
 Port $DOMINO_SSH_PORT
@@ -41,4 +42,4 @@ AllowUsers $DOMINO_USER
 EOF
 chmod 444 "$CONFIG_DIR/sshd_config"
 
-su -c "/usr/sbin/sshd -f \"$CONFIG_DIR/sshd_config\" -De" - $DOMINO_USER`
+su -c "/usr/sbin/sshd -f \"$CONFIG_DIR/sshd_config\" -De" - $DOMINO_USER
