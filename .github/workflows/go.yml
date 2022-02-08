@@ -77,7 +77,6 @@ jobs:
         DOCKER_IMAGE_MPI_SYNC=ghcr.io/${{ github.repository }}-mpi-sync
         
         VENDOR_IMAGE=quay.io/domino/distributed-compute-operator
-#        TODO: add "vendor" versions for supplemental MPI images
 
         VERSION=edge
         if [[ $GITHUB_REF == refs/tags/* ]]; then
