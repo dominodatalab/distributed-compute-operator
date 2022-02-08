@@ -2,9 +2,10 @@ package mpi
 
 import (
 	"fmt"
-	"k8s.io/apimachinery/pkg/types"
 	"reflect"
 	"sort"
+
+	"k8s.io/apimachinery/pkg/types"
 
 	v1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"

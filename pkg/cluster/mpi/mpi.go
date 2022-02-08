@@ -18,7 +18,6 @@ const (
 	authorizedKeysPath = "/etc/mpi/authorized_keys"
 	authorizedKeysMode = 0444 // octal!
 	launchScriptPath   = "/opt/domino/bin/mpi-worker-start.sh"
-	launchScriptMode   = 0544 // octal!
 	customUtilPath     = "/opt/domino"
 
 	// Default parameters of a user account for executing MPI workload.
