@@ -68,11 +68,11 @@ RUN \
 	make install && \
 	cd -
 
-ADD mpi-worker-start.sh ${INSTALL_DIR}/bin
+ADD mpi-worker-start.sh ${INSTALL_BIN}
 
 # Create a tarball containing all the necessary stuff
 RUN \
-	chmod 755 ${INSTALL_DIR}/bin/mpi-worker-start.sh && \
+	chmod 755 ${INSTALL_BIN}/mpi-worker-start.sh && \
 	tar -czf worker-utils.tgz \
 		${INSTALL_DIR}/bin \
 		${INSTALL_DIR}/etc \
