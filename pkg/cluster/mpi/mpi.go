@@ -44,7 +44,7 @@ const (
 
 	// TODO move to production repo
 	sidecarImage    = "quay.io/ddl_apetrov/rsync-sidecar:latest"
-	customizerImage = "quay.io/ddl_apetrov/rsync-sidecar:0.1.4"
+	customizerImage = "quay.io/ddl_apetrov/rsync-sidecar:0.1.5"
 )
 
 func configMapName(cr client.Object) string {

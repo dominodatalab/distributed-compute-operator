@@ -20,9 +20,7 @@ import (
 
 var (
 	workerCommand = []string{
-		//launchScriptPath,
-		"sleep",
-		"infinity",
+		launchScriptPath,
 	}
 	sidecarCommand = []string{
 		"/bin/bash",
@@ -89,13 +87,13 @@ func (c statefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) 
 	workerEnvironment = append(workerEnvironment, cr.Spec.EnvVars...)
 	workerEnvironment = append(workerEnvironment, additionalEnvironment(cr)...)
 
-	//workerProbe := &corev1.Probe{
-	//	Handler: corev1.Handler{
-	//		TCPSocket: &corev1.TCPSocketAction{
-	//			Port: intstr.FromInt(sshdPort),
-	//		},
-	//	},
-	//}
+	workerProbe := &corev1.Probe{
+		Handler: corev1.Handler{
+			TCPSocket: &corev1.TCPSocketAction{
+				Port: intstr.FromInt(sshdPort),
+			},
+		},
+	}
 
 	workerContainer := corev1.Container{
 		Name:            ApplicationName,
@@ -108,11 +106,11 @@ func (c statefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) 
 				ContainerPort: sshdPort,
 			},
 		},
-		Env:          workerEnvironment,
-		VolumeMounts: workerMounts,
-		Resources:    worker.Resources,
-		//LivenessProbe:  workerProbe,
-		//ReadinessProbe: workerProbe,
+		Env:            workerEnvironment,
+		VolumeMounts:   workerMounts,
+		Resources:      worker.Resources,
+		LivenessProbe:  workerProbe,
+		ReadinessProbe: workerProbe,
 	}
 
 	sidecarMounts := make([]corev1.VolumeMount, 0)
