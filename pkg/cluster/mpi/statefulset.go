@@ -20,16 +20,10 @@ import (
 
 var (
 	workerCommand = []string{
-		launchScriptPath,
+		"/opt/domino/bin/mpi-worker-start.sh",
 	}
 	sidecarCommand = []string{
-		"/bin/bash",
-		"-c",
-		fmt.Sprintf("/usr/bin/ssh-keygen -f /opt/domino/etc/ssh/ssh_host_key -N '' -t ecdsa && "+
-			"/usr/sbin/sshd -f /opt/domino/etc/ssh/sshd_config -o 'Port %d' -De 2>&1 | "+
-			"grep -v 'kex_exchange_identification'", rsyncPort),
-		// This suppresses messages produced by health check probes:
-		// ... 2>&1 | grep -v 'kex_exchange_identification'
+		"/opt/domino/bin/rsync-start.sh",
 	}
 	customizerCommand = []string{
 		"tar", "-C", "/", "-xf", "/root/worker-utils.tgz",
@@ -70,87 +64,18 @@ func (c statefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) 
 	allVolumes = append(allVolumes, secretVolumes...)
 	allVolumes = append(allVolumes, initVolumes...)
 
-	initContainer := corev1.Container{
-		Name:            ApplicationName + "-init",
-		Command:         customizerCommand,
-		Image:           customizerImage,
-		ImagePullPolicy: cr.Spec.Image.PullPolicy,
-		VolumeMounts:    initMounts,
-	}
-
 	workerMounts := make([]corev1.VolumeMount, 0)
 	workerMounts = append(workerMounts, worker.VolumeMounts...)
 	workerMounts = append(workerMounts, secretMounts...)
 	workerMounts = append(workerMounts, initMounts...)
 
-	workerEnvironment := make([]corev1.EnvVar, 0)
-	workerEnvironment = append(workerEnvironment, cr.Spec.EnvVars...)
-	workerEnvironment = append(workerEnvironment, additionalEnvironment(cr)...)
-
-	workerProbe := &corev1.Probe{
-		Handler: corev1.Handler{
-			TCPSocket: &corev1.TCPSocketAction{
-				Port: intstr.FromInt(sshdPort),
-			},
-		},
-	}
-
-	workerContainer := corev1.Container{
-		Name:            ApplicationName,
-		Command:         workerCommand,
-		Image:           workerImage,
-		ImagePullPolicy: cr.Spec.Image.PullPolicy,
-		Ports: []corev1.ContainerPort{
-			{
-				Name:          sshdPortName,
-				ContainerPort: sshdPort,
-			},
-		},
-		Env:            workerEnvironment,
-		VolumeMounts:   workerMounts,
-		Resources:      worker.Resources,
-		LivenessProbe:  workerProbe,
-		ReadinessProbe: workerProbe,
-	}
-
 	sidecarMounts := make([]corev1.VolumeMount, 0)
 	sidecarMounts = append(sidecarMounts, worker.VolumeMounts...)
 	sidecarMounts = append(sidecarMounts, secretMounts...) // TODO: to be removed
 
-	sidecarProbe := &corev1.Probe{
-		Handler: corev1.Handler{
-			TCPSocket: &corev1.TCPSocketAction{
-				Port: intstr.FromInt(rsyncPort),
-			},
-		},
-	}
-
-	sidecarUser := int64(rsyncUserID)
-	sidecarGroup := int64(rsyncGroupID)
-
-	sidecarContainer := corev1.Container{
-		Name:            RsyncSidecarName,
-		Command:         sidecarCommand,
-		Image:           sidecarImage,
-		ImagePullPolicy: cr.Spec.Image.PullPolicy,
-		Ports: []corev1.ContainerPort{
-			{
-				Name:          rsyncPortName,
-				ContainerPort: rsyncPort,
-			},
-		},
-		VolumeMounts: sidecarMounts,
-		SecurityContext: &corev1.SecurityContext{
-			RunAsUser:  &sidecarUser,
-			RunAsGroup: &sidecarGroup,
-		},
-		LivenessProbe:  sidecarProbe,
-		ReadinessProbe: sidecarProbe,
-	}
-
-	allInitContainers := make([]corev1.Container, 0)
-	allInitContainers = append(allInitContainers, worker.InitContainers...)
-	allInitContainers = append(allInitContainers, initContainer)
+	initContainers := make([]corev1.Container, 0)
+	initContainers = append(initContainers, worker.InitContainers...)
+	initContainers = append(initContainers, createInitContainer(cr, initMounts))
 
 	sts := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -174,13 +99,13 @@ func (c statefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) 
 					NodeSelector:       worker.NodeSelector,
 					Affinity:           worker.Affinity,
 					Tolerations:        worker.Tolerations,
-					InitContainers:     allInitContainers,
+					InitContainers:     initContainers,
 					ImagePullSecrets:   cr.Spec.ImagePullSecrets,
 					SecurityContext:    cr.Spec.PodSecurityContext,
 					Volumes:            allVolumes,
 					Containers: []corev1.Container{
-						workerContainer,
-						sidecarContainer,
+						createWorkerContainer(cr, workerImage, workerMounts),
+						createSidecarContainer(cr, sidecarMounts),
 					},
 				},
 			},
@@ -317,7 +242,7 @@ func assureSharedKey(ctx *core.Context, cr *dcv1alpha1.MPICluster) error {
 	return nil
 }
 
-func additionalEnvironment(cr *dcv1alpha1.MPICluster) []corev1.EnvVar {
+func workerEnvironmentExtras(cr *dcv1alpha1.MPICluster) []corev1.EnvVar {
 	userID := int64(defaultUserID)
 	if cr.Spec.Worker.UserID != nil {
 		userID = *cr.Spec.Worker.UserID
@@ -359,5 +284,86 @@ func additionalEnvironment(cr *dcv1alpha1.MPICluster) []corev1.EnvVar {
 			Name:  "DOMINO_KEYS_PATH",
 			Value: authorizedKeysPath,
 		},
+	}
+}
+
+func createWorkerContainer(cr *dcv1alpha1.MPICluster, image string, mounts []corev1.VolumeMount) corev1.Container {
+	environment := make([]corev1.EnvVar, 0)
+	environment = append(environment, cr.Spec.EnvVars...)
+	environment = append(environment, workerEnvironmentExtras(cr)...)
+
+	probe := &corev1.Probe{
+		Handler: corev1.Handler{
+			TCPSocket: &corev1.TCPSocketAction{
+				Port: intstr.FromInt(sshdPort),
+			},
+		},
+	}
+
+	return corev1.Container{
+		Name:            ApplicationName,
+		Command:         workerCommand,
+		Image:           image,
+		ImagePullPolicy: cr.Spec.Image.PullPolicy,
+		Ports: []corev1.ContainerPort{
+			{
+				Name:          sshdPortName,
+				ContainerPort: sshdPort,
+			},
+		},
+		Env:            environment,
+		VolumeMounts:   mounts,
+		Resources:      cr.Spec.Worker.Resources,
+		LivenessProbe:  probe,
+		ReadinessProbe: probe,
+	}
+}
+
+func createSidecarContainer(cr *dcv1alpha1.MPICluster, mounts []corev1.VolumeMount) corev1.Container {
+	probe := &corev1.Probe{
+		Handler: corev1.Handler{
+			TCPSocket: &corev1.TCPSocketAction{
+				Port: intstr.FromInt(rsyncPort),
+			},
+		},
+	}
+
+	user := int64(rsyncUserID)
+	group := int64(rsyncGroupID)
+
+	return corev1.Container{
+		Name:            RsyncSidecarName,
+		Command:         sidecarCommand,
+		Image:           sidecarImage,
+		ImagePullPolicy: cr.Spec.Image.PullPolicy,
+		Ports: []corev1.ContainerPort{
+			{
+				Name:          rsyncPortName,
+				ContainerPort: rsyncPort,
+			},
+		},
+		Env: []corev1.EnvVar{
+			{
+				Name:  "RSYNC_PORT",
+				Value: strconv.FormatInt(rsyncPort, 10),
+			},
+		},
+		VolumeMounts: mounts,
+		SecurityContext: &corev1.SecurityContext{
+			RunAsUser:  &user,
+			RunAsGroup: &group,
+		},
+		LivenessProbe:  probe,
+		ReadinessProbe: probe,
+	}
+}
+
+func createInitContainer(cr *dcv1alpha1.MPICluster, mounts []corev1.VolumeMount) corev1.Container {
+	return corev1.Container{
+		Name:            ApplicationName + "-init",
+		Command:         customizerCommand,
+		Image:           customizerImage,
+		ImagePullPolicy: cr.Spec.Image.PullPolicy,
+		VolumeMounts:    mounts,
 	}
 }

@@ -17,8 +17,9 @@ const (
 	// Locations of the mounted files and their modes
 	authorizedKeysPath = "/etc/mpi/authorized_keys"
 	authorizedKeysMode = 0444 // octal!
-	launchScriptPath   = "/opt/domino/bin/mpi-worker-start.sh"
-	customUtilPath     = "/opt/domino"
+
+	// Location of common Domino utilities
+	customUtilPath = "/opt/domino"
 
 	// Default parameters of a user account for executing MPI workload.
 	defaultUserID    = 12574
@@ -41,9 +42,8 @@ const (
 	// Period of rerunning resource finalizers
 	finalizerRetryPeriod = 1 * time.Second
 
-	// TODO move to production repo
-	sidecarImage    = "quay.io/ddl_apetrov/rsync-sidecar:latest"
-	customizerImage = "quay.io/ddl_apetrov/rsync-sidecar:0.1.5"
+	sidecarImage    = "quay.io/ddl_apetrov/rsync-sidecar:0.0.5" // TODO
+	customizerImage = "quay.io/ddl_apetrov/rsync-sidecar:0.1.7" // TODO
 )
 
 func configMapName(cr client.Object) string {
