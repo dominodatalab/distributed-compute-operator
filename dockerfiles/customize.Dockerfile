@@ -68,8 +68,11 @@ RUN \
 	make install && \
 	cd -
 
+ADD mpi-worker-start.sh ${INSTALL_DIR}/bin
+
 # Create a tarball containing all the necessary stuff
 RUN \
+	chmod 755 ${INSTALL_DIR}/bin/mpi-worker-start.sh && \
 	tar -czf worker-utils.tgz \
 		${INSTALL_DIR}/bin \
 		${INSTALL_DIR}/etc \
@@ -80,4 +83,4 @@ RUN \
 FROM debian:11-slim
 WORKDIR /root
 COPY --from=0 /root/worker-utils.tgz ./
-CMD mkdir -p ${INSTALL_DIR}; tar -xf /root/worker-utils.tgz
+CMD tar -C / -xf /root/worker-utils.tgz
