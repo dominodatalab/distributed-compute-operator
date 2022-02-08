@@ -12,10 +12,10 @@ import (
 //+kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=daskclusters/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=daskclusters/finalizers,verbs=update
 
-func DaskCluster(mgr ctrl.Manager, webhooksEnabled, istioEnabled bool) error {
+func DaskCluster(mgr ctrl.Manager, webhooksEnabled bool, cfg *Config) error {
 	reconciler := core.NewReconciler(mgr).
 		For(&dcv1alpha1.DaskCluster{}).
-		Component("istio-peerauthentication", dask.IstioPeerAuthentication(istioEnabled)).
+		Component("istio-peerauthentication", dask.IstioPeerAuthentication(cfg.IstioEnabled)).
 		Component("serviceaccount", dask.ServiceAccount()).
 		Component("configmap-keytab", dask.ConfigMapKeyTab()).
 		Component("role-podsecuritypolicy", dask.RolePodSecurityPolicy()).
