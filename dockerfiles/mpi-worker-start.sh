@@ -11,19 +11,19 @@ mkdir -p "$SSH_RUN_DIR"
 chmod 777 "$SSH_RUN_DIR"
 
 if ! id $SSH_USER >/dev/null 2>&1; then
-    useradd -u $SSH_USER -g 65534 -mN -s "/usr/sbin/nologin" -d "$SSH_RUN_DIR" $DOMINO_USER
+	useradd -g 65534 -mN -s "/usr/sbin/nologin" -d "$SSH_RUN_DIR" $SSH_USER
 fi
 
 if ! cut -d: -f3 < /etc/group | grep "^${DOMINO_GID}$" >/dev/null 2>&1; then
-    groupadd -g $DOMINO_GID $DOMINO_GROUP
+	groupadd -g $DOMINO_GID $DOMINO_GROUP
 fi
 if ! id $DOMINO_UID >/dev/null 2>&1; then
-    useradd -u $DOMINO_UID -g $DOMINO_GID -mN -s /bin/bash $DOMINO_USER
+	useradd -u $DOMINO_UID -g $DOMINO_GID -mN -s /bin/bash $DOMINO_USER
 else
-    EXISTING_USER=$(id -nu $DOMINO_UID)
-    if [ "$EXISTING_USER" != "$DOMINO_USER" ]; then
-        usermod -l $DOMINO_USER $EXISTING_USER
-    fi
+	EXISTING_USER=$(id -nu $DOMINO_UID)
+	if [ "$EXISTING_USER" != "$DOMINO_USER" ]; then
+		usermod -l $DOMINO_USER $EXISTING_USER
+	fi
 fi
 
 CONFIG_DIR="$INSTALL_DIR/etc"
