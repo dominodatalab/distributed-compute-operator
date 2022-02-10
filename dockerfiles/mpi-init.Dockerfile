@@ -1,7 +1,7 @@
-# A specific version of the Linux OS here is very important, because 
-# it defines versions of core libraries (libc etc) the compiled binaries
-# will be linked against.
-FROM ubuntu:18.04
+# A specific version of the Linux OS here is very important, because it defines versions
+# of core libraries (libc etc) the compiled binaries will be linked against.
+# FYI, debian-9.13 -> libc-2.24
+FROM quay.io/domino/debian:9.13-20210202-2325
 
 ARG RSYNC_VERSION=3.2.3
 ARG RSYNC_URL=https://download.samba.org/pub/rsync/src/rsync-${RSYNC_VERSION}.tar.gz
@@ -80,7 +80,8 @@ RUN \
 		${INSTALL_DIR}/sbin
 
 # The final image only contains built artifacts.
-FROM debian:11-slim
+# The base image should be up-to-date, but a specific version is not important.
+FROM quay.io/domino/debian:10.11-20220210-1721
 WORKDIR /root
 COPY --from=0 /root/worker-utils.tgz ./
 CMD tar -C / -xf /root/worker-utils.tgz

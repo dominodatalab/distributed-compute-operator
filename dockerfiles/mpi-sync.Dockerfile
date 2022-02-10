@@ -1,4 +1,4 @@
-FROM debian:11-slim
+FROM quay.io/domino/debian:10.11-20220210-1721
 
 ARG DOMINO_UID=12574
 ARG DOMINO_USER=domino
