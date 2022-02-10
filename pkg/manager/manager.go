@@ -31,7 +31,7 @@ var (
 
 // Start creates a new controller manager, configures and registers all
 // reconcilers/webhooks with the manager, and starts their control loops.
-func Start(cfg *Config) error {
+func Start(cfg *controllers.Config) error {
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&cfg.ZapOptions)))
 
 	mgrOpts := ctrl.Options{
@@ -64,10 +64,10 @@ func Start(cfg *Config) error {
 		return err
 	}
 
-	enableWebHooks := os.Getenv("ENABLE_WEBHOOKS") != "false"
+	enableWebHooks := os.Getenv("ENABLE_WEBHOOKS") != "false" // TODO: add to config
 
 	for _, builder := range controllers.BuilderFuncs {
-		if err = builder(mgr, enableWebHooks, cfg.IstioEnabled); err != nil {
+		if err = builder(mgr, enableWebHooks, cfg); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", builder)
 			return err
 		}

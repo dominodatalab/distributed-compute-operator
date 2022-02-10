@@ -33,11 +33,17 @@ var (
 // Key of the shared Secret object that contains client-side SSH public key
 const publicKeyField = "ssh-publickey"
 
-func StatefulSet() core.OwnedComponent {
-	return &statefulSetComponent{}
+func StatefulSet(initImage, syncImage string) core.OwnedComponent {
+	return &statefulSetComponent{
+		InitImage: initImage,
+		SyncImage: syncImage,
+	}
 }
 
-type statefulSetComponent struct{}
+type statefulSetComponent struct {
+	InitImage string
+	SyncImage string
+}
 
 func (c statefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
 	cr := objToMPICluster(ctx.Object)
@@ -75,7 +81,7 @@ func (c statefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) 
 
 	initContainers := make([]corev1.Container, 0)
 	initContainers = append(initContainers, worker.InitContainers...)
-	initContainers = append(initContainers, createInitContainer(cr, initMounts))
+	initContainers = append(initContainers, createInitContainer(cr, c.InitImage, initMounts))
 
 	sts := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -105,7 +111,7 @@ func (c statefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) 
 					Volumes:            allVolumes,
 					Containers: []corev1.Container{
 						createWorkerContainer(cr, workerImage, workerMounts),
-						createSidecarContainer(cr, sidecarMounts),
+						createSidecarContainer(cr, c.SyncImage, sidecarMounts),
 					},
 				},
 			},
@@ -319,7 +325,11 @@ func createWorkerContainer(cr *dcv1alpha1.MPICluster, image string, mounts []cor
 	}
 }
 
-func createSidecarContainer(cr *dcv1alpha1.MPICluster, mounts []corev1.VolumeMount) corev1.Container {
+func createSidecarContainer(cr *dcv1alpha1.MPICluster, image string, mounts []corev1.VolumeMount) corev1.Container {
+	if image == "" {
+		image = defaultSyncImage
+	}
+
 	probe := &corev1.Probe{
 		Handler: corev1.Handler{
 			TCPSocket: &corev1.TCPSocketAction{
@@ -334,7 +344,7 @@ func createSidecarContainer(cr *dcv1alpha1.MPICluster, mounts []corev1.VolumeMou
 	return corev1.Container{
 		Name:            RsyncSidecarName,
 		Command:         sidecarCommand,
-		Image:           sidecarImage,
+		Image:           image,
 		ImagePullPolicy: cr.Spec.Image.PullPolicy,
 		Ports: []corev1.ContainerPort{
 			{
@@ -358,11 +368,15 @@ func createSidecarContainer(cr *dcv1alpha1.MPICluster, mounts []corev1.VolumeMou
 	}
 }
 
-func createInitContainer(cr *dcv1alpha1.MPICluster, mounts []corev1.VolumeMount) corev1.Container {
+func createInitContainer(cr *dcv1alpha1.MPICluster, image string, mounts []corev1.VolumeMount) corev1.Container {
+	if image == "" {
+		image = defaultInitImage
+	}
+
 	return corev1.Container{
 		Name:            ApplicationName + "-init",
 		Command:         customizerCommand,
-		Image:           customizerImage,
+		Image:           image,
 		ImagePullPolicy: cr.Spec.Image.PullPolicy,
 		VolumeMounts:    mounts,
 	}

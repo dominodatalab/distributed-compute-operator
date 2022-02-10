@@ -3,6 +3,8 @@ package cmd
 import (
 	"flag"
 
+	"github.com/dominodatalab/distributed-compute-operator/controllers"
+
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
@@ -15,15 +17,16 @@ var (
 	metricsAddr          string
 	webhookPort          int
 	enableLeaderElection bool
-
-	zapOpts = zap.Options{}
+	zapOpts              = zap.Options{}
+	mpiInitImage         string
+	mpiSyncImage         string
 )
 
 var startCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start the controller manager",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg := &manager.Config{
+		cfg := &controllers.Config{
 			Namespaces:           namespaces,
 			MetricsAddr:          metricsAddr,
 			HealthProbeAddr:      probeAddr,
@@ -31,6 +34,8 @@ var startCmd = &cobra.Command{
 			EnableLeaderElection: enableLeaderElection,
 			IstioEnabled:         istioEnabled,
 			ZapOptions:           zapOpts,
+			MPIInitImage:         mpiInitImage,
+			MPISyncImage:         mpiSyncImage,
 		}
 
 		return manager.Start(cfg)
@@ -52,6 +57,10 @@ func init() {
 		"Health probe endpoint will bind to this address")
 	startCmd.Flags().BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election to ensure there is only one active controller manager")
+	startCmd.Flags().StringVar(&mpiInitImage, "mpi-init-image", "",
+		"Image for MPI worker init container")
+	startCmd.Flags().StringVar(&mpiSyncImage, "mpi-sync-image", "",
+		"Image for MPI worker sync container")
 
 	rootCmd.AddCommand(startCmd)
 }

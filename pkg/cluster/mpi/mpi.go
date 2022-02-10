@@ -42,8 +42,8 @@ const (
 	// Period of rerunning resource finalizers
 	finalizerRetryPeriod = 1 * time.Second
 
-	sidecarImage    = "quay.io/ddl_apetrov/rsync-sidecar:0.0.5" // TODO
-	customizerImage = "quay.io/ddl_apetrov/rsync-sidecar:0.1.7" // TODO
+	defaultInitImage = "quay.io/domino/distributed-compute-operator-mpi-init:0.0.0"
+	defaultSyncImage = "quay.io/domino/distributed-compute-operator-mpi-sync:0.0.0"
 )
 
 func configMapName(cr client.Object) string {

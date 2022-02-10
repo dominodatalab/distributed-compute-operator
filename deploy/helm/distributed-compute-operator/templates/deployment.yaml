@@ -68,6 +68,12 @@ spec:
             {{- if .Values.istio.enabled }}
             - --istio-enabled
             {{- end }}
+            {{- with .Values.mpi.initImage }}
+            - --mpi-init-image={{ . }}
+            {{- end }}
+            {{- with .Values.mpi.syncImage }}
+            - --mpi-sync-image={{ . }}
+            {{- end }}
           ports:
             - name: webhooks
               containerPort: {{ .Values.config.webhookPort }}

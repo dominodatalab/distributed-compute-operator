@@ -13,7 +13,7 @@ import (
 //+kubebuilder:rbac:groups=distributed-compute.dominodatalab.com,resources=mpiclusters/finalizers,verbs=update
 
 // MPICluster builds a controller that reconciles MPICluster objects and registers it with the manager.
-func MPICluster(mgr ctrl.Manager, webhooksEnabled, istioEnabled bool) error {
+func MPICluster(mgr ctrl.Manager, webhooksEnabled bool, cfg *Config) error {
 	reconciler := core.NewReconciler(mgr).
 		For(&dcv1alpha1.MPICluster{}).
 		Component("serviceaccount", mpi.ServiceAccount()).
@@ -24,7 +24,7 @@ func MPICluster(mgr ctrl.Manager, webhooksEnabled, istioEnabled bool) error {
 		Component("service-client", mpi.ServiceClient()).
 		Component("networkpolicy-worker", mpi.NetworkPolicyWorker()).
 		Component("networkpolicy-client", mpi.NetworkPolicyClient()).
-		Component("workers", mpi.StatefulSet()).
+		Component("workers", mpi.StatefulSet(cfg.MPIInitImage, cfg.MPISyncImage)).
 		Component("statusupdate", mpi.StatusUpdate())
 
 	if webhooksEnabled {
