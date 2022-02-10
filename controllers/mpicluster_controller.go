@@ -1,4 +1,3 @@
-//nolint:dupl
 package controllers
 
 import (
@@ -17,7 +16,7 @@ import (
 func MPICluster(mgr ctrl.Manager, webhooksEnabled bool, cfg *Config) error {
 	reconciler := core.NewReconciler(mgr).
 		For(&dcv1alpha1.MPICluster{}).
-		Component("istio-peerauthentication", mpi.IstioPeerAuthentication(istioEnabled)).
+		Component("istio-peerauthentication", mpi.IstioPeerAuthentication(cfg.IstioEnabled)).
 		Component("serviceaccount", mpi.ServiceAccount()).
 		Component("role", mpi.RolePodSecurityPolicy()).
 		Component("rolebinding", mpi.RoleBindingPodSecurityPolicy()).

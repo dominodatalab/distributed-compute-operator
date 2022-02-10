@@ -73,6 +73,8 @@ jobs:
         DESCRIPTION="$(echo "${{ github.event.repository.description }}" | sed -r 's/:.+:[[:blank:]]*//')"
         
         DOCKER_IMAGE=ghcr.io/${{ github.repository }}
+        DOCKER_IMAGE_MPI_INIT=ghcr.io/${{ github.repository }}-mpi-init
+        DOCKER_IMAGE_MPI_SYNC=ghcr.io/${{ github.repository }}-mpi-sync
         
         VENDOR_IMAGE=quay.io/domino/distributed-compute-operator
         VENDOR_IMAGE_MPI_INIT=quay.io/domino/distributed-compute-operator-mpi-init
@@ -96,8 +98,8 @@ jobs:
 
         echo ::set-output name=description::${DESCRIPTION}
         echo ::set-output name=image::${DOCKER_IMAGE}
-        echo ::set-output name=image_mpi_init::${VENDOR_IMAGE_MPI_INIT}
-        echo ::set-output name=image_mpi_sync::${VENDOR_IMAGE_MPI_SYNC}
+        echo ::set-output name=image_mpi_init::${DOCKER_IMAGE_MPI_INIT}
+        echo ::set-output name=image_mpi_sync::${DOCKER_IMAGE_MPI_SYNC}
         echo ::set-output name=version::${VERSION}
         echo ::set-output name=tags::${TAGS}
         echo ::set-output name=tags_mpi_init::${TAGS_MPI_INIT}
