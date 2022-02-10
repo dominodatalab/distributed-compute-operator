@@ -53,6 +53,14 @@ func (c statefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) 
 		return ctrl.Result{}, fmt.Errorf("cannot parse workerImage: %w", err)
 	}
 
+	if c.InitImage == "" {
+		return ctrl.Result{}, fmt.Errorf("init container image for MPI worker is not provided")
+	}
+
+	if c.SyncImage == "" {
+		return ctrl.Result{}, fmt.Errorf("sidecar container image for MPI worker is not provided")
+	}
+
 	err = assureSharedKey(ctx, cr)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("invalid shared key: %w", err)
@@ -326,10 +334,6 @@ func createWorkerContainer(cr *dcv1alpha1.MPICluster, image string, mounts []cor
 }
 
 func createSidecarContainer(cr *dcv1alpha1.MPICluster, image string, mounts []corev1.VolumeMount) corev1.Container {
-	if image == "" {
-		image = defaultSyncImage
-	}
-
 	probe := &corev1.Probe{
 		Handler: corev1.Handler{
 			TCPSocket: &corev1.TCPSocketAction{
@@ -369,10 +373,6 @@ func createSidecarContainer(cr *dcv1alpha1.MPICluster, image string, mounts []co
 }
 
 func createInitContainer(cr *dcv1alpha1.MPICluster, image string, mounts []corev1.VolumeMount) corev1.Container {
-	if image == "" {
-		image = defaultInitImage
-	}
-
 	return corev1.Container{
 		Name:            ApplicationName + "-init",
 		Command:         customizerCommand,

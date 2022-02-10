@@ -57,11 +57,11 @@ prometheus:
   namespaceLabels: {}
 
 image:
-  registry: ghcr.io
+  registry: quay.io
   repository: dominodatalab/distributed-compute-operator
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: main
 
 imagePullSecrets: []
 
@@ -111,5 +111,5 @@ nameOverride: ""
 fullnameOverride: ""
 
 mpi:
-  initImage: "quay.io/domino/distributed-compute-operator-mpi-init:0.0.0"
-  syncImage: "quay.io/domino/distributed-compute-operator-mpi-sync:0.0.0"
+  initImage: quay.io/domino/distributed-compute-operator-mpi-init:main
+  syncImage: quay.io/domino/distributed-compute-operator-mpi-sync:main

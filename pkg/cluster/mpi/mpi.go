@@ -41,9 +41,6 @@ const (
 
 	// Period of rerunning resource finalizers
 	finalizerRetryPeriod = 1 * time.Second
-
-	defaultInitImage = "quay.io/domino/distributed-compute-operator-mpi-init:0.0.0"
-	defaultSyncImage = "quay.io/domino/distributed-compute-operator-mpi-sync:0.0.0"
 )
 
 func configMapName(cr client.Object) string {
