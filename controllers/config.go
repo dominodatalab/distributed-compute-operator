@@ -1,4 +1,4 @@
-package manager
+package controllers
 
 import "sigs.k8s.io/controller-runtime/pkg/log/zap"
 
@@ -11,4 +11,6 @@ type Config struct {
 	EnableLeaderElection bool
 	IstioEnabled         bool
 	ZapOptions           zap.Options
+	MPIInitImage         string
+	MPISyncImage         string
 }

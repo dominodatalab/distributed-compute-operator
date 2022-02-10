@@ -109,3 +109,7 @@ priorityClassName: ""
 
 nameOverride: ""
 fullnameOverride: ""
+
+mpi:
+  initImage: "quay.io/domino/distributed-compute-operator-mpi-init:0.0.0"
+  syncImage: "quay.io/domino/distributed-compute-operator-mpi-sync:0.0.0"

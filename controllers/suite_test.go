@@ -57,8 +57,10 @@ var _ = BeforeSuite(func() {
 	k8sClient = k8sManager.GetClient()
 	Expect(k8sClient).NotTo(BeNil())
 
+	config := Config{}
+
 	for _, controller := range BuilderFuncs {
-		err = controller(k8sManager, false, false)
+		err = controller(k8sManager, false, &config)
 		Expect(err).ToNot(HaveOccurred())
 	}
 
