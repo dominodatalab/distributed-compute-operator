@@ -8,10 +8,9 @@ import (
 )
 
 const (
-	ApplicationName                     = "mpi"
-	RsyncSidecarName                    = "rsync"
-	ComponentWorker  metadata.Component = "worker"
-	ComponentClient  metadata.Component = "client"
+	ApplicationName                    = "mpi"
+	ComponentWorker metadata.Component = "worker"
+	ComponentClient metadata.Component = "client"
 )
 
 var meta = metadata.NewProvider(
