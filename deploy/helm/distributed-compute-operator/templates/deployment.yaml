@@ -69,10 +69,10 @@ spec:
             - --istio-enabled
             {{- end }}
             {{- with .Values.mpi.initImage }}
-            - --mpi-init-image={{ . }}
+            - --mpi-init-image="{{ .registry }}/{{ .repository }}:{{ .tag }}"
             {{- end }}
             {{- with .Values.mpi.syncImage }}
-            - --mpi-sync-image={{ . }}
+            - --mpi-sync-image="{{ .registry }}/{{ .repository }}:{{ .tag }}"
             {{- end }}
           ports:
             - name: webhooks

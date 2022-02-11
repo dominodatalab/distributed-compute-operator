@@ -346,10 +346,10 @@ func createSidecarContainer(cr *dcv1alpha1.MPICluster, image string, mounts []co
 	group := int64(rsyncGroupID)
 
 	return corev1.Container{
-		Name:            RsyncSidecarName,
+		Name:            ApplicationName + "-sync",
 		Command:         sidecarCommand,
 		Image:           image,
-		ImagePullPolicy: cr.Spec.Image.PullPolicy,
+		ImagePullPolicy: cr.Spec.Image.PullPolicy, // Same as in the main image!
 		Ports: []corev1.ContainerPort{
 			{
 				Name:          rsyncPortName,
@@ -377,7 +377,7 @@ func createInitContainer(cr *dcv1alpha1.MPICluster, image string, mounts []corev
 		Name:            ApplicationName + "-init",
 		Command:         customizerCommand,
 		Image:           image,
-		ImagePullPolicy: cr.Spec.Image.PullPolicy,
+		ImagePullPolicy: cr.Spec.Image.PullPolicy, // Same as in the main image!
 		VolumeMounts:    mounts,
 	}
 }

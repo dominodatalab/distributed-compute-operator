@@ -111,5 +111,14 @@ nameOverride: ""
 fullnameOverride: ""
 
 mpi:
-  initImage: quay.io/domino/distributed-compute-operator-mpi-init:main
-  syncImage: quay.io/domino/distributed-compute-operator-mpi-sync:main
+  # For both images:
+  # - A pull policy is the same as for the main MPI Worker image.
+  # - All three fields must be provided.
+  initImage:
+    registry: quay.io
+    repository: dominodatalab/distributed-compute-operator-mpi-init
+    tag: main
+  syncImage:
+    registry: quay.io
+    repository: dominodatalab/distributed-compute-operator-mpi-sync
+    tag: main
