@@ -5,39 +5,42 @@ ARG DOMINO_USER=domino
 ARG DOMINO_GID=12574
 ARG DOMINO_GROUP=domino
 
-ARG RSYNC_SSH_PORT=2223
-
 ARG DOMINO_DIR=/opt/domino
-ARG DOMINO_BIN=${DOMINO_DIR}/bin
-ARG DOMINO_ETC=${DOMINO_DIR}/etc
+ARG DOMINO_BIN=$DOMINO_DIR/bin
+ARG DOMINO_ETC=$DOMINO_DIR/etc
 
-ARG SSHD_CONFIG=${DOMINO_ETC}/sshd_config
-ARG AUTHORIZED_KEYS_PATH=/etc/mpi/authorized_keys
+ARG RSYNC_RUN_DIR=/run/rsyncd-${DOMINO_USER}
+ARG RSYNC_CONFIG_FILE=rsyncd.conf
+ARG RSYNC_START_SCRIPT=rsync-start.sh
+
+ARG ALLENV="\$RSYNC_RUN_DIR,\$DOMINO_ETC,\$RSYNC_CONFIG_FILE"
+
+WORKDIR /root
 
 RUN \
 	apt-get update && \
 	apt-get -y install \
-		openssh-server \
-		rsync && \
+		rsync \
+		gettext-base && \
 	rm -rf /var/lib/apt/lists/* && \
-	rm -rf /etc/ssh/ssh_host* && \
 	mkdir -p \
-		${DOMINO_DIR} \
-		${DOMINO_BIN} \
-		${DOMINO_ETC}
+		"$DOMINO_DIR" \
+		"$DOMINO_BIN" \
+		"$DOMINO_ETC" \
+		"$RSYNC_RUN_DIR"
+
+ADD $RSYNC_START_SCRIPT $RSYNC_CONFIG_FILE ./
 
 RUN \
-	groupadd -g ${DOMINO_GID} ${DOMINO_GROUP} && \
-	useradd -u ${DOMINO_UID} -g ${DOMINO_GID} -mN -s /bin/bash ${DOMINO_USER}
+	groupadd -g $DOMINO_GID $DOMINO_GROUP && \
+	useradd -u $DOMINO_UID -g $DOMINO_GID -mN -s /bin/bash $DOMINO_USER && \
+	envsubst "$ALLENV" < "$RSYNC_START_SCRIPT" > "$DOMINO_BIN/$RSYNC_START_SCRIPT" && \
+	envsubst "$ALLENV" < "$RSYNC_CONFIG_FILE" > "$DOMINO_ETC/$RSYNC_CONFIG_FILE" && \
+	chown -R $DOMINO_USER:$DOMINO_GROUP "$RSYNC_RUN_DIR" && \
+	chown -R $DOMINO_USER:$DOMINO_GROUP "$DOMINO_DIR" && \
+	chmod 755 "$DOMINO_BIN/$RSYNC_START_SCRIPT" && \
+	chmod 644 "$DOMINO_ETC/$RSYNC_CONFIG_FILE"
 
-ADD rsync-start.sh ${DOMINO_DIR}/bin
-
+# For testing -- to be removed
 RUN \
-	chmod 755 ${DOMINO_BIN}/rsync-start.sh && \
-	rm -f ${SSHD_CONFIG} && \
-	echo "HostKey \"${DOMINO_ETC}/ssh_host_key\"" >> ${SSHD_CONFIG} && \
-	echo "AuthorizedKeysFile \"${AUTHORIZED_KEYS_PATH}\"" >> ${SSHD_CONFIG} && \
-	echo "PidFile \"/tmp/domino-sshd.pid\"" >> ${SSHD_CONFIG} && \
-	echo "AllowUsers ${DOMINO_USER}" >> ${SSHD_CONFIG} && \
-	chmod 444 ${SSHD_CONFIG} && \
-	chown -R ${DOMINO_USER}:${DOMINO_GROUP} ${DOMINO_DIR}
+	chown -R $DOMINO_USER:$DOMINO_GROUP /mnt
