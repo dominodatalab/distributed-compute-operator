@@ -58,7 +58,7 @@ prometheus:
 
 image:
   registry: quay.io
-  repository: dominodatalab/distributed-compute-operator
+  repository: domino/distributed-compute-operator
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: main
@@ -116,9 +116,9 @@ mpi:
   # - All three fields must be provided.
   initImage:
     registry: quay.io
-    repository: dominodatalab/distributed-compute-operator-mpi-init
+    repository: domino/distributed-compute-operator-mpi-init
     tag: main
   syncImage:
     registry: quay.io
-    repository: dominodatalab/distributed-compute-operator-mpi-sync
+    repository: domino/distributed-compute-operator-mpi-sync
     tag: main
