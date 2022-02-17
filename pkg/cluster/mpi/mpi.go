@@ -36,8 +36,11 @@ const (
 	rsyncUserID  = 12574
 	rsyncGroupID = 12574
 
-	// Configmap key containing the host file
+	// Name of an MPI hostfile; also a key in the config map and its prefix
 	hostFileName = "hostfile"
+
+	// Name of a Kerberos keytab file; also a key in the config map and its prefix
+	keytabName = "keytab"
 
 	// Period of rerunning resource finalizers
 	finalizerRetryPeriod = 1 * time.Second

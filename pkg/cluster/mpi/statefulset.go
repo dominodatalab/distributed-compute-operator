@@ -2,7 +2,6 @@ package mpi
 
 import (
 	"fmt"
-	"github.com/dominodatalab/distributed-compute-operator/pkg/cluster/metadata"
 	"path/filepath"
 	"strconv"
 
@@ -212,18 +211,7 @@ func secretVolumes(cr *dcv1alpha1.MPICluster) ([]corev1.Volume, []corev1.VolumeM
 				},
 			},
 		},
-		{
-			Name: kerberosKeytabVolume,
-			VolumeSource: corev1.VolumeSource{
-				ConfigMap: &corev1.ConfigMapVolumeSource{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: meta.InstanceName(cr, metadata.ComponentNone),
-					},
-				},
-			},
-		},
 	}
-
 	mounts := []corev1.VolumeMount{
 		{
 			Name:      authorizedKeysVolume,
@@ -231,11 +219,24 @@ func secretVolumes(cr *dcv1alpha1.MPICluster) ([]corev1.Volume, []corev1.VolumeM
 			MountPath: authorizedKeysPath,
 			SubPath:   authorizedKeysName,
 		},
-		{
+	}
+
+	if cr.Spec.KerberosKeytab != nil {
+		volumes = append(volumes, corev1.Volume{
+			Name: kerberosKeytabVolume,
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: configMapName(cr) + "-" + keytabName,
+					},
+				},
+			},
+		})
+		mounts = append(mounts, corev1.VolumeMount{
 			Name:      kerberosKeytabVolume,
 			ReadOnly:  true,
 			MountPath: cr.Spec.KerberosKeytab.MountPath,
-		},
+		})
 	}
 
 	return volumes, mounts
