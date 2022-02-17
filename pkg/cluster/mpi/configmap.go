@@ -33,6 +33,11 @@ func (c configMapComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
 			hostFileName: buildHostFile(cr),
 		},
 	}
+	if cr.Spec.KerberosKeytab != nil {
+		cm.BinaryData = map[string][]byte{
+			"keytab": cr.Spec.KerberosKeytab.Contents,
+		}
+	}
 
 	err := actions.CreateOrUpdateOwnedResource(ctx, cr, cm)
 	if err != nil {
