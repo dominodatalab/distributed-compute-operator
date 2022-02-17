@@ -21,7 +21,8 @@ RUN \
 	apt-get update && \
 	apt-get -y install \
 		rsync \
-		gettext-base && \
+		gettext-base \
+		procps && \
 	rm -rf /var/lib/apt/lists/* && \
 	mkdir -p \
 		"$DOMINO_DIR" \
