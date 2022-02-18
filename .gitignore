@@ -27,3 +27,6 @@ testbin/*
 # goreleaser directories
 dist/
 custom-resource-definitions/
+
+# miscellaneous local files
+exclude/

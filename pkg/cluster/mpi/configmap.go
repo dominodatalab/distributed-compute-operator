@@ -23,39 +23,62 @@ type configMapComponent struct{}
 func (c configMapComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
 	cr := objToMPICluster(ctx.Object)
 
-	cm := &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      configMapName(cr),
-			Namespace: cr.Namespace,
-			Labels:    meta.StandardLabels(cr),
-		},
-		Data: map[string]string{
-			hostFileName: buildHostFile(cr),
-		},
-	}
-
-	err := actions.CreateOrUpdateOwnedResource(ctx, cr, cm)
+	hostFileConfig := createHostFileConfig(cr)
+	err := actions.CreateOrUpdateOwnedResource(ctx, cr, hostFileConfig)
 	if err != nil {
-		err = fmt.Errorf("cannot reconcile configmap: %w", err)
+		return ctrl.Result{}, fmt.Errorf("cannot reconcile hostfile configmap: %w", err)
 	}
 
-	return ctrl.Result{}, err
+	keytabConfig := createKeytabConfig(cr)
+	if keytabConfig != nil {
+		err := actions.CreateOrUpdateOwnedResource(ctx, cr, keytabConfig)
+		if err != nil {
+			return ctrl.Result{}, fmt.Errorf("cannot reconcile keytab configmap: %w", err)
+		}
+	}
+
+	return ctrl.Result{}, nil
 }
 
 func (c configMapComponent) Kind() client.Object {
 	return &corev1.ConfigMap{}
 }
 
-func buildHostFile(cr *dcv1alpha1.MPICluster) string {
+func createHostFileConfig(cr *dcv1alpha1.MPICluster) *corev1.ConfigMap {
 	svcName := serviceName(cr, ComponentWorker)
 	workerName := workerStatefulSetName(cr)
 	workerReplicas := *cr.Spec.Worker.Replicas
 
-	var builder strings.Builder
+	var hostFileBuilder strings.Builder
 	for idx := 0; idx < int(workerReplicas); idx++ {
 		entry := fmt.Sprintf("%s-%d.%s\n", workerName, idx, svcName)
-		builder.WriteString(entry)
+		hostFileBuilder.WriteString(entry)
 	}
 
-	return builder.String()
+	return &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      configMapName(cr) + "-" + hostFileName,
+			Namespace: cr.Namespace,
+			Labels:    meta.StandardLabels(cr),
+		},
+		Data: map[string]string{
+			hostFileName: hostFileBuilder.String(),
+		},
+	}
+}
+
+func createKeytabConfig(cr *dcv1alpha1.MPICluster) *corev1.ConfigMap {
+	if cr.Spec.KerberosKeytab == nil {
+		return nil
+	}
+	return &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      configMapName(cr) + "-" + keytabName,
+			Namespace: cr.Namespace,
+			Labels:    meta.StandardLabels(cr),
+		},
+		BinaryData: map[string][]byte{
+			keytabName: cr.Spec.KerberosKeytab.Contents,
+		},
+	}
 }

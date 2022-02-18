@@ -85,7 +85,6 @@ func (c statefulSetComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) 
 
 	sidecarMounts := make([]corev1.VolumeMount, 0)
 	sidecarMounts = append(sidecarMounts, worker.VolumeMounts...)
-	sidecarMounts = append(sidecarMounts, secretMounts...) // TODO: to be removed
 
 	initContainers := make([]corev1.Container, 0)
 	initContainers = append(initContainers, worker.InitContainers...)
@@ -191,8 +190,11 @@ func initVolumes() ([]corev1.Volume, []corev1.VolumeMount) {
 
 func secretVolumes(cr *dcv1alpha1.MPICluster) ([]corev1.Volume, []corev1.VolumeMount) {
 	const authorizedKeysVolume = "authorized-keys-volume"
+	const kerberosKeytabVolume = "kerberos-keytab-volume"
+
 	authorizedKeysModeCopy := int32(authorizedKeysMode)
 	authorizedKeysName := filepath.Base(authorizedKeysPath)
+
 	volumes := []corev1.Volume{
 		{
 			Name: authorizedKeysVolume,
@@ -213,10 +215,30 @@ func secretVolumes(cr *dcv1alpha1.MPICluster) ([]corev1.Volume, []corev1.VolumeM
 	mounts := []corev1.VolumeMount{
 		{
 			Name:      authorizedKeysVolume,
+			ReadOnly:  true,
 			MountPath: authorizedKeysPath,
 			SubPath:   authorizedKeysName,
 		},
 	}
+
+	if cr.Spec.KerberosKeytab != nil {
+		volumes = append(volumes, corev1.Volume{
+			Name: kerberosKeytabVolume,
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: configMapName(cr) + "-" + keytabName,
+					},
+				},
+			},
+		})
+		mounts = append(mounts, corev1.VolumeMount{
+			Name:      kerberosKeytabVolume,
+			ReadOnly:  true,
+			MountPath: cr.Spec.KerberosKeytab.MountPath,
+		})
+	}
+
 	return volumes, mounts
 }
 
