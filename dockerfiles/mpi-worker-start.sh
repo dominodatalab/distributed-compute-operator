@@ -29,7 +29,8 @@ fi
 CONFIG_DIR="$INSTALL_DIR/etc"
 mkdir -p "$CONFIG_DIR"
 
-"$INSTALL_DIR/bin/ssh-keygen" -f "$CONFIG_DIR/ssh_host_key" -N '' -t ed25519
+# TMP - UNCOMMENT ME
+# "$INSTALL_DIR/bin/ssh-keygen" -f "$CONFIG_DIR/ssh_host_key" -N '' -t ed25519
 chmod 400 "$CONFIG_DIR/ssh_host_key"
 chown $DOMINO_USER:$DOMINO_GROUP "$CONFIG_DIR/ssh_host_key"
 
@@ -42,5 +43,5 @@ AllowUsers $DOMINO_USER
 EOF
 chmod 444 "$CONFIG_DIR/sshd_config"
 
-# REAL COMMAND: su -c "$INSTALL_DIR/sbin/sshd -f \"$CONFIG_DIR/sshd_config\" -De" - $DOMINO_USER 
+# TMP - USE THIS COMMAND: su -c "$INSTALL_DIR/sbin/sshd -f \"$CONFIG_DIR/sshd_config\" -De" - $DOMINO_USER 
 su -c "sshd -f \"$CONFIG_DIR/sshd_config\" -De" - $DOMINO_USER
