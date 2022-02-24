@@ -42,4 +42,5 @@ AllowUsers $DOMINO_USER
 EOF
 chmod 444 "$CONFIG_DIR/sshd_config"
 
-su -c "$INSTALL_DIR/sbin/sshd -f \"$CONFIG_DIR/sshd_config\" -De" - $DOMINO_USER
+# REAL COMMAND: su -c "$INSTALL_DIR/sbin/sshd -f \"$CONFIG_DIR/sshd_config\" -De" - $DOMINO_USER 
+su -c "sshd -f \"$CONFIG_DIR/sshd_config\" -De" - $DOMINO_USER
