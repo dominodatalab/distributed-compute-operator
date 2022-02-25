@@ -44,4 +44,4 @@ EOF
 chmod 444 "$CONFIG_DIR/sshd_config"
 
 # TMP - USE THIS COMMAND: su -c "$INSTALL_DIR/sbin/sshd -f \"$CONFIG_DIR/sshd_config\" -De" - $DOMINO_USER 
-su -c "sshd -f \"$CONFIG_DIR/sshd_config\" -De" - $DOMINO_USER
+su -c "/usr/sbin/sshd -f \"$CONFIG_DIR/sshd_config\" -De" - $DOMINO_USER
