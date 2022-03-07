@@ -599,6 +599,8 @@ spec:
                     type: integer
                   groupName:
                     type: string
+                  homeDir:
+                    type: string
                   initContainers:
                     items:
                       properties:
