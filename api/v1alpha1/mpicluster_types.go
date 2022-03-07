@@ -14,6 +14,7 @@ type MPIClusterWorker struct {
 	UserID          *int64 `json:"userID,omitempty"`
 	GroupName       string `json:"groupName,omitempty"`
 	GroupID         *int64 `json:"groupID,omitempty"`
+	HomeDir         string `json:"homeDir,omitempty"`
 }
 
 // MPIClusterSpec defines the desired state of MPICluster.
