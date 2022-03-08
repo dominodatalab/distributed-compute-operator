@@ -295,6 +295,10 @@ func workerEnvironmentExtras(cr *dcv1alpha1.MPICluster) []corev1.EnvVar {
 	if cr.Spec.Worker.GroupName != "" {
 		groupName = cr.Spec.Worker.GroupName
 	}
+	homeDir := defaultHomeDir
+	if cr.Spec.Worker.HomeDir != "" {
+		homeDir = cr.Spec.Worker.HomeDir
+	}
 	return []corev1.EnvVar{
 		{
 			Name:  "DOMINO_SSH_PORT",
@@ -319,6 +323,10 @@ func workerEnvironmentExtras(cr *dcv1alpha1.MPICluster) []corev1.EnvVar {
 		{
 			Name:  "DOMINO_KEYS_PATH",
 			Value: authorizedKeysPath,
+		},
+		{
+			Name:  "DOMINO_HOME_DIR",
+			Value: homeDir,
 		},
 	}
 }
