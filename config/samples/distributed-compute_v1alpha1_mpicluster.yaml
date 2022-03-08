@@ -40,7 +40,6 @@ spec:
     # userID:
     # groupName:
     # groupID:
-    # homeDir: /mnt
     # labels: {}
     # annotations: {}
     # nodeSelector: {}

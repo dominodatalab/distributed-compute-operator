@@ -26,7 +26,6 @@ const (
 	defaultUserName  = "domino"
 	defaultGroupID   = 12574
 	defaultGroupName = "domino"
-	defaultHomeDir   = "/mnt"
 
 	// SSH ports used by rsync sidecar
 	rsyncPort     = 2223
