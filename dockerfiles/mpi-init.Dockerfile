@@ -3,10 +3,6 @@
 # FYI, debian-9.13 -> libc-2.24
 FROM quay.io/domino/debian:9.13-20210202-2325
 
-ARG RSYNC_VERSION=3.2.3
-ARG RSYNC_URL=https://download.samba.org/pub/rsync/src/rsync-${RSYNC_VERSION}.tar.gz
-ARG RSYNC_SIG_URL=https://download.samba.org/pub/rsync/src/rsync-${RSYNC_VERSION}.tar.gz.asc
-
 ARG OPENSSH_VERSION=8.8p1
 ARG OPENSSH_URL=https://mirrors.mit.edu/pub/OpenBSD/OpenSSH/portable/openssh-${OPENSSH_VERSION}.tar.gz
 ARG OPENSSH_SIG_URL=https://mirrors.mit.edu/pub/OpenBSD/OpenSSH/portable/openssh-${OPENSSH_VERSION}.tar.gz.asc
@@ -28,26 +24,8 @@ RUN \
 	mkdir -p \
 		${INSTALL_DIR} \
 		${INSTALL_BIN} && \
-	gpg --import -q rsync.gpgkey > /dev/null && \
 	gpg --import -q openssh.gpgkey > /dev/null && \
 	rm -f *.gpgkey
-
-# Download and compile rsync 
-RUN \
-	curl -o rsync-src.tgz -LSsf ${RSYNC_URL} && \
-	curl -o rsync-src.sig -LSsf ${RSYNC_SIG_URL} && \
-	gpg --trust-model always -q --verify rsync-src.sig rsync-src.tgz && \
-	tar -xf rsync-src.tgz --no-same-permissions && \
-	cd rsync-${RSYNC_VERSION} && \
-	./configure \
-		--prefix=${INSTALL_DIR} \
-		--disable-openssl \
-		--disable-xxhash \
-		--disable-zstd \
-		--disable-lz4 && \
-	make && \
-	make install && \
-	cd - 
 
 # Download an compile openssh
 RUN \
