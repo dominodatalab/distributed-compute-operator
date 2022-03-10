@@ -3,7 +3,7 @@
 set -o nounset
 set -o errexit
 
-INSTALL_DIR="/opt/domino"
+INSTALL_DIR="/opt/domino-mpi"
 SSH_USER="sshd"
 SSH_RUN_DIR="/run/sshd-${DOMINO_USER}"
 
