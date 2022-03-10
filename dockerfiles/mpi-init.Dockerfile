@@ -11,7 +11,7 @@ ARG OPENSSH_VERSION=8.8p1
 ARG OPENSSH_URL=https://mirrors.mit.edu/pub/OpenBSD/OpenSSH/portable/openssh-${OPENSSH_VERSION}.tar.gz
 ARG OPENSSH_SIG_URL=https://mirrors.mit.edu/pub/OpenBSD/OpenSSH/portable/openssh-${OPENSSH_VERSION}.tar.gz.asc
 
-ARG INSTALL_DIR=/opt/domino-mpi
+ARG INSTALL_DIR=/opt/domino
 ARG INSTALL_BIN=${INSTALL_DIR}/bin
 
 WORKDIR /root
@@ -72,6 +72,7 @@ ADD mpi-worker-start.sh ${INSTALL_BIN}
 
 # Create a tarball containing all the necessary stuff
 RUN \
+	rm -f ${INSTALL_DIR}/etc/ssh_host_* && \
 	chmod 755 ${INSTALL_BIN}/mpi-worker-start.sh && \
 	tar -czf worker-utils.tgz \
 		${INSTALL_DIR}/bin \
