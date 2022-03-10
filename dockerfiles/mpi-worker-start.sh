@@ -31,9 +31,10 @@ fi
 CONFIG_DIR="$INSTALL_DIR/etc"
 mkdir -p "$CONFIG_DIR"
 
+rm -f "$CONFIG_DIR/ssh_host_*"
 "$INSTALL_DIR/bin/ssh-keygen" -f "$CONFIG_DIR/ssh_host_key" -N '' -t ed25519
 chmod 400 "$CONFIG_DIR/ssh_host_key"
-chown $DOMINO_USER:$DOMINO_GROUP "$CONFIG_DIR/ssh_host_key"
+chown $DOMINO_UID:$DOMINO_GID "$CONFIG_DIR/ssh_host_key"
 
 cat << EOF > "$CONFIG_DIR/sshd_config"
 Port $DOMINO_SSH_PORT

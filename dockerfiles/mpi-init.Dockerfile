@@ -50,6 +50,7 @@ ADD mpi-worker-start.sh ${INSTALL_BIN}
 
 # Create a tarball containing all the necessary stuff
 RUN \
+	rm -f ${INSTALL_DIR}/etc/ssh_host_* && \
 	chmod 755 ${INSTALL_BIN}/mpi-worker-start.sh && \
 	tar -czf worker-utils.tgz \
 		${INSTALL_DIR}/bin \
