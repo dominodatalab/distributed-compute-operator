@@ -55,6 +55,10 @@ ENVTEST_ASSETS_DIR = $(shell pwd)/testbin
 test: setup-envtest manifests generate fmt ## Run full test suite.
 	$(shell eval "$(SETUP_ENVTEST) --bin-dir $(ENVTEST_ASSETS_DIR) use --print env $(ENVTEST_VERSION)"); go test ./... -race -covermode atomic -coverprofile cover.out
 
+# Temporary
+test-controller: setup-envtest manifests generate fmt
+	$(shell eval "$(SETUP_ENVTEST) --bin-dir $(ENVTEST_ASSETS_DIR) use --print env $(ENVTEST_VERSION)"); go test github.com/dominodatalab/distributed-compute-operator/pkg/controller/core -race -covermode atomic -coverprofile cover.out
+
 ##@ Build
 
 build: generate fmt ## Build manager binary.

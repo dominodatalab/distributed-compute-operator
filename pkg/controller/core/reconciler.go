@@ -101,6 +101,10 @@ func (r *Reconciler) Build() (controller.Controller, error) {
 		r.patcher = NewPatch(gvk)
 	}
 
+	if len(r.components) == 0 {
+		return nil, fmt.Errorf("empty list of components")
+	}
+
 	components := map[string]Component{}
 	for _, rc := range r.components {
 		orig, ok := components[rc.name]
