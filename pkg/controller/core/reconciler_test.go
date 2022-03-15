@@ -48,22 +48,31 @@ func TestMain(m *testing.M) {
 
 	cfg, err := env.Start()
 	if err != nil {
-		fmt.Printf("Environment initialization failed: %v", err)
+		fmt.Printf("Cannot start the environment: %v", err)
 		os.Exit(1)
 	}
 
-	dcv1alpha1.AddToScheme(scheme.Scheme)
+	err = dcv1alpha1.AddToScheme(scheme.Scheme)
+	if err != nil {
+		// Probably OK here, but some tests will fail later
+		fmt.Printf("Schema failed: %v", err)
+	}
+
+	code := 0
 
 	mgr, err = ctrl.NewManager(cfg, ctrl.Options{Scheme: scheme.Scheme})
 	if err != nil {
 		fmt.Printf("Manager initialization failed: %v", err)
-		env.Stop()
-		os.Exit(1)
+		code = 1
+	} else {
+		code = m.Run()
 	}
 
-	code := m.Run()
-
-	env.Stop()
+	err = env.Stop()
+	if err != nil {
+		// This is OK
+		fmt.Printf("Cannot stop the environment: %v", err)
+	}
 
 	os.Exit(code)
 }
