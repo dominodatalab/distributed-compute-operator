@@ -20,10 +20,10 @@ import (
 
 var (
 	workerCommand = []string{
-		"/opt/domino/bin/mpi-worker-start.sh",
+		"/opt/domino/mpi-cluster/bin/mpi-worker-start.sh",
 	}
 	sidecarCommand = []string{
-		"/opt/domino/bin/rsync-start.sh",
+		"/opt/domino/rsync/bin/rsync-start.sh",
 	}
 	customizerCommand = []string{
 		"tar", "-C", "/", "-xf", "/root/worker-utils.tgz",

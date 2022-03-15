@@ -7,7 +7,7 @@ ARG OPENSSH_VERSION=8.8p1
 ARG OPENSSH_URL=https://mirrors.mit.edu/pub/OpenBSD/OpenSSH/portable/openssh-${OPENSSH_VERSION}.tar.gz
 ARG OPENSSH_SIG_URL=https://mirrors.mit.edu/pub/OpenBSD/OpenSSH/portable/openssh-${OPENSSH_VERSION}.tar.gz.asc
 
-ARG INSTALL_DIR=/opt/domino
+ARG INSTALL_DIR=/opt/domino/mpi-cluster
 ARG INSTALL_BIN=${INSTALL_DIR}/bin
 
 WORKDIR /root
