@@ -19,7 +19,7 @@ const (
 	authorizedKeysMode = 0444 // octal!
 
 	// Location of common Domino utilities
-	customUtilPath = "/opt/domino"
+	customUtilPath = "/opt/domino/mpi-cluster"
 
 	// Default parameters of a user account for executing MPI workload.
 	defaultUserID    = 12574
