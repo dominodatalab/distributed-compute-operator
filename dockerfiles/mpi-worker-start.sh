@@ -28,6 +28,19 @@ else
 	usermod -d "$DOMINO_HOME_DIR" $DOMINO_USER
 fi
 
+cat << EOF > "$DOMINO_HOME_DIR/.profile"
+if [ "\$BASH" ] && [ -f ~/.bashrc ]; then
+  . ~/.bashrc
+fi
+EOF
+chmod 644 "$DOMINO_HOME_DIR/.profile"
+
+rm -f "$DOMINO_HOME_DIR/.bashrc"
+touch "$DOMINO_HOME_DIR/.bashrc"
+printenv | grep PATH | sed 's;^;export ;' >> "$DOMINO_HOME_DIR/.bashrc"
+printenv | grep MPI | sed 's;^;export ;' >> "$DOMINO_HOME_DIR/.bashrc"
+chmod 644 "$DOMINO_HOME_DIR/.bashrc"
+
 CONFIG_DIR="$INSTALL_DIR/etc"
 mkdir -p "$CONFIG_DIR"
 
