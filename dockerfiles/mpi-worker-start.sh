@@ -33,6 +33,7 @@ else
     usermod -a -G $DOMINO_GROUP $DOMINO_USER
 fi
 
+
 # Add the new domino user to the non-root groups of the current container user
 for gid in `id -G`; do
   if [ $gid != 0 ]; then
@@ -46,6 +47,22 @@ for gid in `id -G`; do
     usermod -a -G $group_name $DOMINO_USER
   fi
 done
+
+cat << EOF > "$DOMINO_HOME_DIR/.profile"
+if [ "\$BASH" ] && [ -f ~/.bashrc ]; then
+  . ~/.bashrc
+fi
+EOF
+chmod 644 "$DOMINO_HOME_DIR/.profile"
+chown $DOMINO_UID:$DOMINO_GID "$DOMINO_HOME_DIR/.profile"
+
+rm -f "$DOMINO_HOME_DIR/.bashrc"
+touch "$DOMINO_HOME_DIR/.bashrc"
+printenv | grep PATH | sed 's;^;export ;' >> "$DOMINO_HOME_DIR/.bashrc"
+printenv | grep MPI | sed 's;^;export ;' >> "$DOMINO_HOME_DIR/.bashrc"
+printenv | grep DOMINO | sed 's;^;export ;' >> "$DOMINO_HOME_DIR/.bashrc"
+chmod 644 "$DOMINO_HOME_DIR/.bashrc"
+chown $DOMINO_UID:$DOMINO_GID "$DOMINO_HOME_DIR/.bashrc"
 
 CONFIG_DIR="$INSTALL_DIR/etc"
 mkdir -p "$CONFIG_DIR"

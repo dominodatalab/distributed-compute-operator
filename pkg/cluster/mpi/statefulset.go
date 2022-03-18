@@ -20,7 +20,7 @@ import (
 
 var (
 	workerCommand = []string{
-		"/opt/domino/mpi-cluster/bin/mpi-worker-start.sh",
+		"/bin/bash", "-l", "-c", "/opt/domino/mpi-cluster/bin/mpi-worker-start.sh",
 	}
 	sidecarCommand = []string{
 		"/opt/domino/rsync/bin/rsync-start.sh",
