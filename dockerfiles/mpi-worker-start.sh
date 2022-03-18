@@ -37,8 +37,9 @@ fi
 for gid in `id -G`; do
   if [ $gid != 0 ]; then
     # Add user to a new/existing group with desired id.
+    # https://askubuntu.com/a/639998
     group_name=$(cut -d: -f1 < <(getent group $gid))
-    if [ -z $group_name ]; then
+    if [ -z "$group_name" ]; then
         group_name="group-$gid"
 	    groupadd -g $gid $group_name
     fi
