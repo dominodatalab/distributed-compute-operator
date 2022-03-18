@@ -20,13 +20,32 @@ fi
 if ! id $DOMINO_UID >/dev/null 2>&1; then
 	useradd -u $DOMINO_UID -g $DOMINO_GID -mN -s /bin/bash -d "$DOMINO_HOME_DIR" $DOMINO_USER
 else
+    # Change username of user with matching userid if needed
 	EXISTING_USER=$(id -nu $DOMINO_UID)
 	if [ "$EXISTING_USER" != "$DOMINO_USER" ]; then
 		usermod -l $DOMINO_USER $EXISTING_USER
 	fi
-	# Home directory change is idempotent
+
+	# Change home directory (idempotent)
 	usermod -d "$DOMINO_HOME_DIR" $DOMINO_USER
+
+    # Add to domino group (idempotent)
+    usermod -a -G $DOMINO_GROUP $DOMINO_USER
 fi
+
+# Add the new domino user to the non-root groups of the current container user
+for gid in `id -G`; do
+  if [ $gid != 0 ]; then
+    # Add user to a new/existing group with desired id.
+    # https://askubuntu.com/a/639998
+    group_name=$(cut -d: -f1 < <(getent group $gid))
+    if [ -z "$group_name" ]; then
+        group_name="group-$gid"
+	    groupadd -g $gid $group_name
+    fi
+    usermod -a -G $group_name $DOMINO_USER
+  fi
+done
 
 CONFIG_DIR="$INSTALL_DIR/etc"
 mkdir -p "$CONFIG_DIR"
