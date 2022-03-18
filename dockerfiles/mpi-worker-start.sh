@@ -36,11 +36,13 @@ fi
 # Add the new domino user to the non-root groups of the current container user
 for gid in `id -G`; do
   if [ $gid != 0 ]; then
-    gname="group-$gid"
-    if ! cut -d: -f3 < /etc/group | grep "^${gid}$" >/dev/null 2>&1; then
-	    groupadd -g $gid $gname
+    # Add user to a new/existing group with desired id.
+    group_name=$(cut -d: -f1 < <(getent group $gid))
+    if [ -z $group_name ]; then
+        group_name="group-$gid"
+	    groupadd -g $gid $group_name
     fi
-    usermod -a -G $gname $DOMINO_USER
+    usermod -a -G $group_name $DOMINO_USER
   fi
 done
 
