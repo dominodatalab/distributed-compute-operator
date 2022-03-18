@@ -39,6 +39,7 @@ rm -f "$DOMINO_HOME_DIR/.bashrc"
 touch "$DOMINO_HOME_DIR/.bashrc"
 printenv | grep PATH | sed 's;^;export ;' >> "$DOMINO_HOME_DIR/.bashrc"
 printenv | grep MPI | sed 's;^;export ;' >> "$DOMINO_HOME_DIR/.bashrc"
+printenv | grep DOMINO | sed 's;^;export ;' >> "$DOMINO_HOME_DIR/.bashrc"
 chmod 644 "$DOMINO_HOME_DIR/.bashrc"
 
 CONFIG_DIR="$INSTALL_DIR/etc"
