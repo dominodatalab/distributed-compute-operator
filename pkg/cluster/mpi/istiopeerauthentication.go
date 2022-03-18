@@ -8,6 +8,7 @@ import (
 	"github.com/dominodatalab/distributed-compute-operator/pkg/controller/components"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/controller/core"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/istio"
+	authenticationv1alpha1 "istio.io/api/authentication/v1alpha1"
 )
 
 func IstioPeerAuthentication(enabled bool) core.Component {
@@ -37,4 +38,33 @@ func (s *istioPeerAuthenticationDS) Enabled() bool {
 
 func (s *istioPeerAuthenticationDS) Delete() bool {
 	return s.mpi.Spec.MutualTLSMode == ""
+}
+
+func IstioClientPeerAuthentication(enabled bool) core.Component {
+	return components.IstioPeerAuthentication(func(obj client.Object) components.IstioPeerAuthenticationDataSource {
+		return &istioClientPeerAuthenticationDS{mpi: objToMPICluster(obj), enabled: enabled}
+	})
+}
+
+type istioClientPeerAuthenticationDS struct {
+	mpi     *dcv1alpha1.MPICluster
+	enabled bool
+}
+
+func (s *istioClientPeerAuthenticationDS) PeerAuthInfo() *istio.PeerAuthInfo {
+	return &istio.PeerAuthInfo{
+		Name:      meta.InstanceName(s.mpi, ComponentClient),
+		Namespace: s.mpi.Namespace,
+		Labels:    meta.StandardLabels(s.mpi),
+		Selector:  s.mpi.Spec.NetworkPolicy.ClientLabels,
+		Mode:      authenticationv1alpha1.MutualTls_PERMISSIVE.String(),
+	}
+}
+
+func (s *istioClientPeerAuthenticationDS) Enabled() bool {
+	return s.enabled && s.mpi.Spec.Worker.Annotations["sidecar.istio.io/inject"] == "false"
+}
+
+func (s *istioClientPeerAuthenticationDS) Delete() bool {
+	return false
 }
