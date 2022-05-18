@@ -3,12 +3,13 @@ package mpi
 import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	authenticationv1alpha1 "istio.io/api/authentication/v1alpha1"
+
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/cluster/metadata"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/controller/components"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/controller/core"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/istio"
-	authenticationv1alpha1 "istio.io/api/authentication/v1alpha1"
 )
 
 func IstioPeerAuthentication(enabled bool) core.Component {

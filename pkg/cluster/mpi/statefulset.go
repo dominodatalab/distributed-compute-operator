@@ -355,11 +355,12 @@ func createWorkerContainer(cr *dcv1alpha1.MPICluster, image string, mounts []cor
 				ContainerPort: sshdPort,
 			},
 		},
-		Env:            environment,
-		VolumeMounts:   mounts,
-		Resources:      cr.Spec.Worker.Resources,
-		LivenessProbe:  probe,
-		ReadinessProbe: probe,
+		Env:             environment,
+		VolumeMounts:    mounts,
+		Resources:       cr.Spec.Worker.Resources,
+		LivenessProbe:   probe,
+		ReadinessProbe:  probe,
+		SecurityContext: cr.Spec.Worker.SecurityContext,
 	}
 }
 
