@@ -136,6 +136,7 @@ func NewStatefulSet(rc *dcv1alpha1.RayCluster, comp Component, istioEnabled bool
 									},
 								},
 							},
+							SecurityContext: securityContext(rc, comp),
 						},
 					},
 					Volumes: volumes,
@@ -160,6 +161,17 @@ type configProcessor interface {
 	processLabels() map[string]string
 	processAnnotations() map[string]string
 	processServiceName() string
+}
+
+func securityContext(rc *dcv1alpha1.RayCluster, comp Component) *corev1.SecurityContext {
+	switch comp {
+	case ComponentHead:
+		return rc.Spec.Head.SecurityContext
+	case ComponentWorker:
+		return rc.Spec.Worker.SecurityContext
+	default:
+		return nil
+	}
 }
 
 func newConfigProcessor(rc *dcv1alpha1.RayCluster, comp Component, istio bool) (configProcessor, error) {

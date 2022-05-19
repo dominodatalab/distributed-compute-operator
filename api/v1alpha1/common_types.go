@@ -146,6 +146,8 @@ type WorkloadConfig struct {
 	// to reference. You can enable dynamic provisioning of additional storage
 	// on-demand by using a storage class provisioner.
 	VolumeClaimTemplates []PersistentVolumeClaimTemplate `json:"volumeClaimTemplates,omitempty"`
+	// Customize container security context
+	SecurityContext *corev1.SecurityContext `json:"securityContext,omitempty"`
 }
 
 // ClusterStatusConfig defines the observed state of a given cluster. The

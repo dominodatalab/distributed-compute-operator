@@ -24,6 +24,7 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	var volumes []corev1.Volume
 	var volumeMounts []corev1.VolumeMount
 	var ports []corev1.ContainerPort
+	var securityContext *corev1.SecurityContext
 
 	switch comp {
 	case ComponentMaster:
@@ -40,6 +41,7 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 				ContainerPort: sc.Spec.ClusterPort,
 			},
 		}
+		securityContext = sc.Spec.Master.SecurityContext
 	case ComponentWorker:
 		replicas = *sc.Spec.Worker.Replicas
 		nodeAttrs = sc.Spec.Worker.SparkClusterNode
@@ -50,6 +52,7 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 				ContainerPort: sc.Spec.WorkerWebPort,
 			},
 		}
+		securityContext = sc.Spec.Worker.SecurityContext
 	default:
 		return nil, fmt.Errorf("invalid spark component: %q", comp)
 	}
@@ -110,7 +113,8 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 		ports,
 		envVars,
 		volumeMounts,
-		volumes)
+		volumes,
+		securityContext)
 
 	statefulSet := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -171,7 +175,8 @@ func getPodSpec(sc *dcv1alpha1.SparkCluster,
 	ports []corev1.ContainerPort,
 	envVars []corev1.EnvVar,
 	volumeMounts []corev1.VolumeMount,
-	volumes []corev1.Volume) corev1.PodSpec {
+	volumes []corev1.Volume,
+	securityContext *corev1.SecurityContext) corev1.PodSpec {
 	var port intstr.IntOrString
 
 	switch comp {
@@ -216,6 +221,7 @@ func getPodSpec(sc *dcv1alpha1.SparkCluster,
 						},
 					},
 				},
+				SecurityContext: securityContext,
 			},
 		},
 		Volumes: volumes,

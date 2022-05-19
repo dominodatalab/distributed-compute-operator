@@ -71,7 +71,7 @@ func (s *statefulSetDS) StatefulSet() (*appsv1.StatefulSet, error) {
 					Tolerations:        s.tolerations(),
 					InitContainers:     s.initContainers(),
 					ImagePullSecrets:   s.imagePullSecrets(),
-					SecurityContext:    s.securityContext(),
+					SecurityContext:    s.podSecurityContext(),
 					Volumes:            s.volumes(),
 					Containers: []corev1.Container{
 						{
@@ -85,6 +85,7 @@ func (s *statefulSetDS) StatefulSet() (*appsv1.StatefulSet, error) {
 							Resources:       s.resources(),
 							LivenessProbe:   s.probe(),
 							ReadinessProbe:  s.probe(),
+							SecurityContext: s.securityContext(),
 						},
 					},
 				},
@@ -123,6 +124,17 @@ func (s *statefulSetDS) labels() map[string]string {
 	return meta.StandardLabelsWithComponent(s.dc, s.comp, s.tc.podConfig().Labels)
 }
 
+func (s *statefulSetDS) securityContext() *corev1.SecurityContext {
+	switch s.comp {
+	case ComponentScheduler:
+		return s.dc.Spec.Scheduler.SecurityContext
+	case ComponentWorker:
+		return s.dc.Spec.Worker.SecurityContext
+	default:
+		return nil
+	}
+}
+
 func (s *statefulSetDS) matchLabels() map[string]string {
 	return meta.MatchLabelsWithComponent(s.dc, s.comp)
 }
@@ -147,7 +159,7 @@ func (s *statefulSetDS) imagePullSecrets() []corev1.LocalObjectReference {
 	return s.dc.Spec.ImagePullSecrets
 }
 
-func (s *statefulSetDS) securityContext() *corev1.PodSecurityContext {
+func (s *statefulSetDS) podSecurityContext() *corev1.PodSecurityContext {
 	return s.dc.Spec.PodSecurityContext
 }
 
