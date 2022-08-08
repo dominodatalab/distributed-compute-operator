@@ -3,11 +3,10 @@
 {{- $defaultNamespaces := .Values.config.watchNamespaces | default $justRootConfigNamespace }}
 {{- $namespaces := .Values.istio.httpIdleTimeout.namespaces | default $defaultNamespaces }}
 {{- range $namespace := $namespaces }}
----
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
-  name: distributed-compute-cluster-envoyfilter
+  name: {{ include "common.names.fullname" . }}-envoyfilter
   namespace: {{ $namespace }}
 spec:
   workloadSelector:
@@ -41,6 +40,5 @@ spec:
         typed_config:
           '@type': type.googleapis.com/envoy.config.filter.network.tcp_proxy.v2.TcpProxy
           idle_timeout: {{ $.Values.istio.httpIdleTimeout.timeout }}
----
 {{- end }}
 {{- end }}
