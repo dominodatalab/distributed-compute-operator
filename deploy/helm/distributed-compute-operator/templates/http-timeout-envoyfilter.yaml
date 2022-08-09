@@ -1,4 +1,5 @@
 {{- if and (.Values.istio.enabled) (.Values.istio.httpIdleTimeout.timeout)  }}
+{{- $commonFullname := include "common.names.fullname" . }}
 {{- $justRootConfigNamespace := list .Values.istio.rootConfigNamespace }}
 {{- $defaultNamespaces := .Values.config.watchNamespaces | default $justRootConfigNamespace }}
 {{- $namespaces := .Values.istio.httpIdleTimeout.namespaces | default $defaultNamespaces }}
@@ -6,7 +7,7 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
-  name: {{ include "common.names.fullname" . }}-envoyfilter
+  name: {{ $commonFullname }}-envoyfilter
   namespace: {{ $namespace }}
 spec:
   workloadSelector:
