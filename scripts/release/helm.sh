@@ -4,8 +4,6 @@
 
 set -euo pipefail
 
-export HELM_EXPERIMENTAL_OCI=1
-
 HELM_BIN=${HELM_BIN:-helm}
 
 function dco::helm::login() {
@@ -21,38 +19,25 @@ function dco::helm::login() {
 }
 
 function dco::helm::push() {
-  local ref=$1
-  local ref_without_version
-  local ref_with_semantic_version
+  local registry=$1
+  local version=$2
   local semantic_version
-  local app_version
   local chart_path
 
-  app_version="$(echo "$ref" | awk -F : '{ print $NF }')"
-  ref_without_version="$(echo "$ref" | awk -F : '{ print $1 }')"
-  
-  if [[ $app_version =~ ^(pr-[[:digit:]]+|main)$ ]]; then
-    semantic_version="0.0.0-$app_version"
+  if [[ $version =~ ^(pr-[[:digit:]]+|main)$ ]]; then
+    semantic_version="0.0.0-$version"
   else
-    semantic_version=$app_version
+    semantic_version=$version
   fi
-
-  ref_with_semantic_version="$ref_without_version:$semantic_version"
 
   $HELM_BIN package deploy/helm/distributed-compute-operator \
     --destination chart-archives \
-    --app-version "$app_version" \
+    --app-version "$version" \
     --version "$semantic_version"
-  
+
   chart_path="chart-archives/distributed-compute-operator-$semantic_version.tgz"
-  
-  $HELM_BIN chart save "$chart_path" "$ref"
-  $HELM_BIN chart push "$ref"
-  
-  if [ "$ref_with_semantic_version" != "$ref" ]; then
-    $HELM_BIN chart save "$chart_path" "$ref_with_semantic_version"
-    $HELM_BIN chart push "$ref_with_semantic_version"
-  fi
+
+  $HELM_BIN push "$chart_path" oci://"$registry"
 
   rm -rf chart-archives/
 }
@@ -99,14 +84,18 @@ function dco::helm::main() {
       dco::helm::login "$host" "$username" "$password" "$namespace"
       ;;
     push)
-      local ref=""
+      local registry=""
+      local version=""
       local usage
 
-      usage="usage: $(basename "$0") push -r REF"
-      while getopts r: opt; do
+      usage="usage: $(basename "$0") push -r REGISTRY -v VERSION"
+      while getopts r:v: opt; do
         case $opt in
           r)
-            ref=$OPTARG
+            registry=$OPTARG
+            ;;
+          v)
+            version=$OPTARG
             ;;
           *)
             echo "$usage"
@@ -115,12 +104,12 @@ function dco::helm::main() {
       done
       shift $((OPTIND -1))
 
-      if [[ -z $ref ]]; then
+      if [[ -z $registry ]] || [[ -z $version ]]; then
         echo "$usage"
         exit 1
       fi
 
-      dco::helm::push "$ref"
+      dco::helm::push "$registry" "$version"
       ;;
     ""|help)
       echo

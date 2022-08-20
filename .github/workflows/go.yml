@@ -71,11 +71,11 @@ jobs:
       id: docker_prep
       run: |
         DESCRIPTION="$(echo "${{ github.event.repository.description }}" | sed -r 's/:.+:[[:blank:]]*//')"
-        
+
         DOCKER_IMAGE=ghcr.io/${{ github.repository }}
         DOCKER_IMAGE_MPI_INIT=ghcr.io/${{ github.repository }}-mpi-init
         DOCKER_IMAGE_MPI_SYNC=ghcr.io/${{ github.repository }}-mpi-sync
-        
+
         VENDOR_IMAGE=quay.io/domino/distributed-compute-operator
         VENDOR_IMAGE_MPI_INIT=quay.io/domino/distributed-compute-operator-mpi-init
         VENDOR_IMAGE_MPI_SYNC=quay.io/domino/distributed-compute-operator-mpi-sync
@@ -174,21 +174,17 @@ jobs:
       - name: Package and push chart to ghcr.io
         run: |
           REGISTRY=ghcr.io
-          IMAGE="$(echo ${{ github.repository }} | awk -F / '{ print $(NF-1)  "/helm/" $NF }')"
-          REF="$REGISTRY/$IMAGE:${{ needs.build.outputs.version }}"
 
           ./scripts/release/helm.sh login -h "$REGISTRY" -u "${{ github.repository_owner }}" -p "${{ secrets.BOT_CR_PAT }}"
-          ./scripts/release/helm.sh push -r "$REF"
+          ./scripts/release/helm.sh push -r "$REGISTRY/${{ github.repository_owner }}/helm" -v "${{ needs.build.outputs.version }}"
 
       - name: Package and push chart to gcr.io
         run: |
           REGISTRY=gcr.io
-          IMAGE="$(echo ${{ github.repository }} | awk -F / '{ print "${{ secrets.GCR_NAMESPACE }}/" $2 }')"
-          REF="$REGISTRY/$IMAGE:${{ needs.build.outputs.version }}"
           PASSWORD="$(echo ${{ secrets.GCR_PASSWORD }} | base64 --decode)"
 
           ./scripts/release/helm.sh login -h "$REGISTRY" -n "${{ secrets.GCR_NAMESPACE }}" -u "${{ secrets.GCR_USERNAME }}" -p "$PASSWORD"
-          ./scripts/release/helm.sh push -r "$REF"
+          ./scripts/release/helm.sh push -r "$REGISTRY/${{ secrets.GCR_NAMESPACE }}" -v "${{ needs.build.outputs.version }}"
 
   release:
     runs-on: ubuntu-latest
