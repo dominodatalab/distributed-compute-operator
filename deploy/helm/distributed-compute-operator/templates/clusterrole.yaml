@@ -116,6 +116,8 @@ rules:
   - policy
   resources:
   - podsecuritypolicies
+  resourceNames:
+  - domino-restricted
   verbs:
   - use
   - list
