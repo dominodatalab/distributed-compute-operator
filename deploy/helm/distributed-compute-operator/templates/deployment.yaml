@@ -74,6 +74,10 @@ spec:
             {{- with .Values.mpi.syncImage }}
             - --mpi-sync-image={{- include "common.images.image" (dict "imageRoot" . $) -}}
             {{- end }}
+          {{- with .Values.podEnv }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           ports:
             - name: webhooks
               containerPort: {{ .Values.config.webhookPort }}
