@@ -1,6 +1,10 @@
 package v1alpha1
 
-import corev1 "k8s.io/api/core/v1"
+import (
+	batchv1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 // Autoscaling configuration for scalable workloads.
 type Autoscaling struct {
@@ -153,6 +157,10 @@ type WorkloadConfig struct {
 // ClusterStatusConfig defines the observed state of a given cluster. The
 // controllers will generate and populate these fields during reconciliation.
 type ClusterStatusConfig struct {
+	ClusterStatus batchv1.JobConditionType `json:"clusterStatus"`
+	// Reason may contain additional information when status is "Failed"
+	Reason    string       `json:"reason,omitempty"`
+	StartTime *metav1.Time `json:"startTime,omitempty"`
 	// Image is the canonical reference url to the cluster container image.
 	Image string `json:"image,omitempty"`
 	// Nodes are pods that comprise the cluster.
