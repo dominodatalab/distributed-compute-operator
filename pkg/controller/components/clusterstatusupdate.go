@@ -8,6 +8,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -72,8 +73,9 @@ func (c *clusterStatusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result
 		csc.WorkerSelector = selector.String()
 		modified = true
 	}
-	if csc.WorkerReplicas != *sts.Spec.Replicas { // NOTE: panic: runtime error: invalid memory address or nil pointer dereference
-		csc.WorkerReplicas = *sts.Spec.Replicas
+	replicas := pointer.Int32Deref(sts.Spec.Replicas, 0)
+	if csc.WorkerReplicas != replicas { // NOTE: panic: runtime error: invalid memory address or nil pointer dereference (see DOM-40865)
+		csc.WorkerReplicas = replicas
 		modified = true
 	}
 
