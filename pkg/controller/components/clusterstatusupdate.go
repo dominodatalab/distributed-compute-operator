@@ -73,8 +73,7 @@ func (c *clusterStatusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result
 		csc.WorkerSelector = selector.String()
 		modified = true
 	}
-	replicas := pointer.Int32Deref(sts.Spec.Replicas, 0)
-	if csc.WorkerReplicas != replicas { // NOTE: panic: runtime error: invalid memory address or nil pointer dereference (see DOM-40865)
+	if replicas := pointer.Int32Deref(sts.Spec.Replicas, 0); csc.WorkerReplicas != replicas {
 		csc.WorkerReplicas = replicas
 		modified = true
 	}
