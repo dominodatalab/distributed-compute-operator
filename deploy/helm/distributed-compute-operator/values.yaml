@@ -88,6 +88,7 @@ serviceAccount:
 
 podLabels: {}
 podAnnotations: {}
+podEnv: {}
 podSecurityContext:
   runAsNonRoot: true
   runAsUser: 1000
