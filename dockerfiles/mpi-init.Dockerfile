@@ -60,7 +60,7 @@ RUN \
 
 # The final image only contains built artifacts.
 # The base image should be up-to-date, but a specific version is not important.
-FROM quay.io/domino/debian:10.11-20220824-0934
+FROM quay.io/domino/debian:10.11-20220914-0744
 WORKDIR /root
 COPY --from=0 /root/worker-utils.tgz ./
 CMD tar -C / -xf /root/worker-utils.tgz
