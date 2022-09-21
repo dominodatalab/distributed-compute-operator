@@ -53,8 +53,8 @@ type MPIClusterStatus struct {
 type MPICluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              MPIClusterSpec   `json:"spec,omitempty"`
-	Status            MPIClusterStatus `json:"status,omitempty"`
+	Spec              MPIClusterSpec      `json:"spec,omitempty"`
+	Status            ClusterStatusConfig `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
