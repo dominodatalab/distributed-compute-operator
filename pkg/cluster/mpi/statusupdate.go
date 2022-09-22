@@ -21,14 +21,6 @@ import (
 )
 
 const (
-	PendingStatus  v1.JobConditionType = "Pending"
-	StartingStatus v1.JobConditionType = "Starting"
-	RunningStatus  v1.JobConditionType = "Running"
-	StoppingStatus v1.JobConditionType = "Stopping"
-	FailedStatus   v1.JobConditionType = "Failed"
-)
-
-const (
 	EntryPointFailedReason string = "EntryPointFailed"
 )
 
@@ -91,20 +83,20 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 	var status v1.JobConditionType
 	switch {
 	case failureReason != "":
-		status = FailedStatus
+		status = dcv1alpha1.FailedStatus
 	case runningPodCnt >= expectedPodCnt:
-		status = RunningStatus
+		status = dcv1alpha1.RunningStatus
 	case runningPodCnt == 0:
-		status = PendingStatus
+		status = dcv1alpha1.PendingStatus
 	default:
-		status = StartingStatus
+		status = dcv1alpha1.StartingStatus
 	}
 
 	if cr.Status.ClusterStatus != status {
 		modified = true
 		cr.Status.ClusterStatus = status
 		cr.Status.Reason = failureReason
-		if status == RunningStatus {
+		if status == dcv1alpha1.RunningStatus {
 			tt := metav1.Now()
 			cr.Status.StartTime = &tt
 		} else {
@@ -119,15 +111,15 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 		}
 	}
 
-	requeue := status != RunningStatus && status != FailedStatus
+	requeue := status != dcv1alpha1.RunningStatus && status != dcv1alpha1.FailedStatus
 	return ctrl.Result{Requeue: requeue}, nil
 }
 
 func (c statusUpdateComponent) Finalize(ctx *core.Context) (ctrl.Result, bool, error) {
 	cr := objToMPICluster(ctx.Object)
 
-	if cr.Status.ClusterStatus != StoppingStatus {
-		cr.Status.ClusterStatus = StoppingStatus
+	if cr.Status.ClusterStatus != dcv1alpha1.StoppingStatus {
+		cr.Status.ClusterStatus = dcv1alpha1.StoppingStatus
 		err := ctx.Client.Status().Update(ctx, cr)
 		if err != nil {
 			return ctrl.Result{RequeueAfter: finalizerRetryPeriod}, false,

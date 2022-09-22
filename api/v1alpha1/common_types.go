@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	batchv1 "k8s.io/api/batch/v1"
+	v1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -170,3 +171,11 @@ type ClusterStatusConfig struct {
 	// WorkerSelector is the `scale.status.selector` subresource field.
 	WorkerSelector string `json:"workerSelector,omitempty"`
 }
+
+const (
+	PendingStatus  v1.JobConditionType = "Pending"
+	StartingStatus v1.JobConditionType = "Starting"
+	RunningStatus  v1.JobConditionType = "Running"
+	StoppingStatus v1.JobConditionType = "Stopping"
+	FailedStatus   v1.JobConditionType = "Failed"
+)
