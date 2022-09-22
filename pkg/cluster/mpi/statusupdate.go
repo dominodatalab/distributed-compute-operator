@@ -120,6 +120,7 @@ func (c statusUpdateComponent) Finalize(ctx *core.Context) (ctrl.Result, bool, e
 
 	if cr.Status.ClusterStatus != dcv1alpha1.StoppingStatus {
 		cr.Status.ClusterStatus = dcv1alpha1.StoppingStatus
+		cr.Status.StartTime = nil
 		err := ctx.Client.Status().Update(ctx, cr)
 		if err != nil {
 			return ctrl.Result{RequeueAfter: finalizerRetryPeriod}, false,

@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	v1 "k8s.io/api/batch/v1"
 	"reflect"
 	"sort"
 	"strings"
@@ -139,6 +140,15 @@ func (r *SparkClusterReconciler) processFinalizers(ctx context.Context, sc *dcv1
 		// if it has finalizer and has a deletion timestamp then we want to delete some stuff
 	}
 	if containsFinalizer && hasDeletionTimestamp {
+		if sc.Status.ClusterStatus != dcv1alpha1.StoppingStatus {
+			sc.Status.ClusterStatus = dcv1alpha1.StoppingStatus
+			sc.Status.StartTime = nil
+			err := r.Status().Update(ctx, sc)
+			if err != nil {
+				return false, err
+			}
+		}
+
 		log.Info(fmt.Sprintf("%s has finalizer and deletion timestamp. looking for pvcs to delete", sc.Name))
 		pvcs, err := r.getPvcsForDeletion(ctx, sc)
 		if err != nil {
@@ -207,6 +217,9 @@ func (r *SparkClusterReconciler) reconcileResources(ctx context.Context, sc *dcv
 	if sc.IsIncompatibleVersion() {
 		r.Log.Info("Reconciler is inhibited due to an incompatible CRD")
 		return nil
+	}
+	if err := r.initializeStatus(ctx, sc); err != nil {
+		return err
 	}
 	if err := r.reconcileIstio(ctx, sc); err != nil {
 		return err
@@ -406,6 +419,15 @@ func (r *SparkClusterReconciler) reconcileAutoscaler(ctx context.Context, sc *dc
 	return nil
 }
 
+func (r *SparkClusterReconciler) initializeStatus(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+	if sc.Status.ClusterStatus == "" {
+		sc.Status.ClusterStatus = dcv1alpha1.PendingStatus
+		return r.Status().Update(ctx, sc)
+	}
+
+	return nil
+}
+
 // reconcileStatefulSets creates separate Spark head and worker statefulsets that
 // will collectively comprise the execution agents of the cluster.
 func (r *SparkClusterReconciler) reconcileStatefulSets(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
@@ -447,11 +469,61 @@ func (r *SparkClusterReconciler) reconcileStatefulSets(ctx context.Context, sc *
 		log.V(1).Info("updating status", "path", ".status.workerSelector", "value", sc.Status.WorkerSelector)
 	}
 
+	if !hasDeletionTimestamp(sc) {
+		var status v1.JobConditionType
+		masterPod, masterPodFound := r.getMasterPod(ctx, sc)
+		if masterPodFound {
+			if r.isPodReady(&masterPod) {
+				status = dcv1alpha1.RunningStatus
+			} else {
+				status = dcv1alpha1.StartingStatus
+			}
+		} else {
+			status = dcv1alpha1.PendingStatus
+		}
+		if sc.Status.ClusterStatus != status {
+			updateStatus = true
+			sc.Status.ClusterStatus = status
+			if status == dcv1alpha1.RunningStatus {
+				tt := metav1.Now()
+				sc.Status.StartTime = &tt
+			} else {
+				sc.Status.StartTime = nil
+			}
+		}
+	}
+
 	if updateStatus {
 		err = r.Status().Update(ctx, sc)
 	}
 
 	return err
+}
+
+func (r *SparkClusterReconciler) getMasterPod(ctx context.Context, sc *dcv1alpha1.SparkCluster) (corev1.Pod, bool) {
+	opts := []client.ListOption{
+		client.InNamespace(sc.Namespace),
+		client.MatchingLabels(spark.MetadataLabelsWithComponent(sc, "master")),
+	}
+	pods := &corev1.PodList{}
+	err := r.List(ctx, pods, opts...)
+	if err != nil && !apierrors.IsNotFound(err) {
+		r.getLogger(ctx).V(1).Error(err, "reading master status")
+	}
+	if len(pods.Items) == 0 {
+		return corev1.Pod{}, false
+	} else {
+		return pods.Items[0], true
+	}
+}
+
+func (r *SparkClusterReconciler) isPodReady(pod *corev1.Pod) bool { // TODO: Externalize
+	for _, cond := range pod.Status.Conditions {
+		if cond.Type == corev1.PodReady {
+			return cond.Status == corev1.ConditionTrue
+		}
+	}
+	return false
 }
 
 // createOrUpdateOwnedResource should be used to manage the lifecycle of namespace-scoped objects.
