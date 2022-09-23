@@ -2,7 +2,6 @@ package v1alpha1
 
 import (
 	batchv1 "k8s.io/api/batch/v1"
-	v1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -173,9 +172,9 @@ type ClusterStatusConfig struct {
 }
 
 const (
-	PendingStatus  v1.JobConditionType = "Pending"
-	StartingStatus v1.JobConditionType = "Starting"
-	RunningStatus  v1.JobConditionType = "Running"
-	StoppingStatus v1.JobConditionType = "Stopping"
-	FailedStatus   v1.JobConditionType = "Failed"
+	PendingStatus  batchv1.JobConditionType = "Pending"
+	StartingStatus batchv1.JobConditionType = "Starting"
+	RunningStatus  batchv1.JobConditionType = "Running"
+	StoppingStatus batchv1.JobConditionType = "Stopping"
+	FailedStatus   batchv1.JobConditionType = "Failed"
 )

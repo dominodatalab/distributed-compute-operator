@@ -3,11 +3,12 @@ package controllers
 import (
 	"context"
 	"fmt"
-	v1 "k8s.io/api/batch/v1"
 	"reflect"
 	"sort"
 	"strings"
 	"time"
+
+	v1 "k8s.io/api/batch/v1"
 
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
@@ -140,13 +141,11 @@ func (r *SparkClusterReconciler) processFinalizers(ctx context.Context, sc *dcv1
 		// if it has finalizer and has a deletion timestamp then we want to delete some stuff
 	}
 	if containsFinalizer && hasDeletionTimestamp {
-		if sc.Status.ClusterStatus != dcv1alpha1.StoppingStatus {
-			sc.Status.ClusterStatus = dcv1alpha1.StoppingStatus
-			sc.Status.StartTime = nil
-			err := r.Status().Update(ctx, sc)
-			if err != nil {
-				return false, err
-			}
+		sc.Status.ClusterStatus = dcv1alpha1.StoppingStatus
+		sc.Status.StartTime = nil
+		err := r.Status().Update(ctx, sc)
+		if err != nil {
+			return false, err
 		}
 
 		log.Info(fmt.Sprintf("%s has finalizer and deletion timestamp. looking for pvcs to delete", sc.Name))
@@ -469,27 +468,25 @@ func (r *SparkClusterReconciler) reconcileStatefulSets(ctx context.Context, sc *
 		log.V(1).Info("updating status", "path", ".status.workerSelector", "value", sc.Status.WorkerSelector)
 	}
 
-	if !hasDeletionTimestamp(sc) {
-		var status v1.JobConditionType
-		masterPod, masterPodFound := r.getMasterPod(ctx, sc)
-		if masterPodFound {
-			if r.isPodReady(&masterPod) {
-				status = dcv1alpha1.RunningStatus
-			} else {
-				status = dcv1alpha1.StartingStatus
-			}
+	var status v1.JobConditionType
+	masterPod, masterPodFound := r.getMasterPod(ctx, sc)
+	if masterPodFound {
+		if r.isPodReady(&masterPod) {
+			status = dcv1alpha1.RunningStatus
 		} else {
-			status = dcv1alpha1.PendingStatus
+			status = dcv1alpha1.StartingStatus
 		}
-		if sc.Status.ClusterStatus != status {
-			updateStatus = true
-			sc.Status.ClusterStatus = status
-			if status == dcv1alpha1.RunningStatus {
-				tt := metav1.Now()
-				sc.Status.StartTime = &tt
-			} else {
-				sc.Status.StartTime = nil
-			}
+	} else {
+		status = dcv1alpha1.PendingStatus
+	}
+	if sc.Status.ClusterStatus != status && !hasDeletionTimestamp(sc) {
+		updateStatus = true
+		sc.Status.ClusterStatus = status
+		if status == dcv1alpha1.RunningStatus {
+			tt := metav1.Now()
+			sc.Status.StartTime = &tt
+		} else {
+			sc.Status.StartTime = nil
 		}
 	}
 
@@ -512,9 +509,8 @@ func (r *SparkClusterReconciler) getMasterPod(ctx context.Context, sc *dcv1alpha
 	}
 	if len(pods.Items) == 0 {
 		return corev1.Pod{}, false
-	} else {
-		return pods.Items[0], true
 	}
+	return pods.Items[0], true
 }
 
 func (r *SparkClusterReconciler) isPodReady(pod *corev1.Pod) bool { // TODO: Externalize
