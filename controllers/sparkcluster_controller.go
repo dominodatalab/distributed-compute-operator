@@ -471,7 +471,7 @@ func (r *SparkClusterReconciler) reconcileStatefulSets(ctx context.Context, sc *
 	var status v1.JobConditionType
 	masterPod, masterPodFound := r.getMasterPod(ctx, sc)
 	if masterPodFound {
-		if r.isPodReady(&masterPod) {
+		if dcv1alpha1.IsPodReady(masterPod) {
 			status = dcv1alpha1.RunningStatus
 		} else {
 			status = dcv1alpha1.StartingStatus
@@ -500,7 +500,7 @@ func (r *SparkClusterReconciler) reconcileStatefulSets(ctx context.Context, sc *
 func (r *SparkClusterReconciler) getMasterPod(ctx context.Context, sc *dcv1alpha1.SparkCluster) (corev1.Pod, bool) {
 	opts := []client.ListOption{
 		client.InNamespace(sc.Namespace),
-		client.MatchingLabels(spark.MetadataLabelsWithComponent(sc, "master")),
+		client.MatchingLabels(spark.MetadataLabelsWithComponent(sc, spark.ComponentMaster)),
 	}
 	pods := &corev1.PodList{}
 	err := r.List(ctx, pods, opts...)
@@ -511,15 +511,6 @@ func (r *SparkClusterReconciler) getMasterPod(ctx context.Context, sc *dcv1alpha
 		return corev1.Pod{}, false
 	}
 	return pods.Items[0], true
-}
-
-func (r *SparkClusterReconciler) isPodReady(pod *corev1.Pod) bool { // TODO: Externalize
-	for _, cond := range pod.Status.Conditions {
-		if cond.Type == corev1.PodReady {
-			return cond.Status == corev1.ConditionTrue
-		}
-	}
-	return false
 }
 
 // createOrUpdateOwnedResource should be used to manage the lifecycle of namespace-scoped objects.

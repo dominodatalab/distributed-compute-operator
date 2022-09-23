@@ -178,3 +178,12 @@ const (
 	StoppingStatus batchv1.JobConditionType = "Stopping"
 	FailedStatus   batchv1.JobConditionType = "Failed"
 )
+
+func IsPodReady(pod corev1.Pod) bool {
+	for _, cond := range pod.Status.Conditions {
+		if cond.Type == corev1.PodReady {
+			return cond.Status == corev1.ConditionTrue
+		}
+	}
+	return false
+}

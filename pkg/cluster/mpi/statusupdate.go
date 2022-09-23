@@ -57,7 +57,7 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 	var failureReason = ""
 	for _, pod := range pods {
 		podNames = append(podNames, pod.Name)
-		running := isPodReady(pod)
+		running := dcv1alpha1.IsPodReady(pod)
 		if running {
 			runningPods[pod.UID] = nil
 			runningPodCnt++
@@ -151,16 +151,6 @@ func getPods(ctx *core.Context, cr *dcv1alpha1.MPICluster) ([]corev1.Pod, error)
 	}
 	err := ctx.Client.List(ctx, podList, listOpts...)
 	return podList.Items, err // first item is an empty array when err == nil
-}
-
-// isPodReady determines is the given Pod is in a "ready" state.
-func isPodReady(pod corev1.Pod) bool {
-	for _, cond := range pod.Status.Conditions {
-		if cond.Type == corev1.PodReady {
-			return cond.Status == corev1.ConditionTrue
-		}
-	}
-	return false
 }
 
 func getWorkerLastTerminatedState(pod corev1.Pod) *corev1.ContainerStateTerminated {
