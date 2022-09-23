@@ -33,6 +33,7 @@ type DaskClusterStatus struct {
 //+kubebuilder:subresource:status
 //+kubebuilder:subresource:scale:specpath=.spec.worker.replicas,statuspath=.status.workerReplicas,selectorpath=.status.workerSelector
 //+kubebuilder:printcolumn:name="Workers",type=integer,JSONPath=".spec.worker.replicas"
+//+kubebuilder:printcolumn:name="Status",type=string,JSONPath=".status.clusterStatus"
 //+kubebuilder:printcolumn:name="Age",type=date,JSONPath=".metadata.creationTimestamp"
 //+kubebuilder:printcolumn:name="Image",type=string,JSONPath=".spec.image"
 //+kubebuilder:printcolumn:name="Network Policy",type=boolean,JSONPath=".spec.networkPolicy.enabled",priority=10

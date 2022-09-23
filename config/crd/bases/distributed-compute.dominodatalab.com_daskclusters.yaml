@@ -22,6 +22,9 @@ spec:
     - jsonPath: .spec.worker.replicas
       name: Workers
       type: integer
+    - jsonPath: .status.clusterStatus
+      name: Status
+      type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
