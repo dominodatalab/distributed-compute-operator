@@ -1,7 +1,6 @@
 package v1alpha1
 
 import (
-	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -24,18 +23,6 @@ type MPIClusterSpec struct {
 
 	// WorkerPorts specifies the range of ports used by worker processes for communication.
 	WorkerPorts []int32 `json:"workerPorts,omitempty"`
-}
-
-// MPIClusterStatus defines the observed state of MPICluster.
-type MPIClusterStatus struct {
-	ClusterStatus batchv1.JobConditionType `json:"clusterStatus"`
-	// Reason may contain additional information when status is "Failed"
-	Reason    string       `json:"reason,omitempty"`
-	StartTime *metav1.Time `json:"startTime,omitempty"`
-	// Image is the canonical reference url to the cluster container image.
-	Image string `json:"image,omitempty"`
-	// Nodes are pods that comprise the cluster.
-	Nodes []string `json:"nodes,omitempty"`
 }
 
 //+kubebuilder:object:root=true
