@@ -126,12 +126,6 @@ func NewClusterMasterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 		MatchLabels: sc.Spec.NetworkPolicy.DashboardLabels,
 	}
 
-	namespaceSelector := metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"domino-platform": "true",
-		},
-	}
-
 	protocol := corev1.ProtocolTCP
 	masterDashboardPort := intstr.FromInt(int(sc.Spec.MasterWebPort))
 	clusterPort := intstr.FromInt(int(sc.Spec.ClusterPort))
@@ -167,7 +161,6 @@ func NewClusterMasterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 				{
 					From: []networkingv1.NetworkPolicyPeer{
 						{
-							NamespaceSelector: &namespaceSelector,
 							PodSelector:       &dashboardSelector,
 						},
 					},

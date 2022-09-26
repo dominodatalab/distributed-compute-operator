@@ -209,11 +209,6 @@ func TestNewClusterMasterNetworkPolicy(t *testing.T) {
 				{
 					From: []networkingv1.NetworkPolicyPeer{
 						{
-							NamespaceSelector: &metav1.LabelSelector{
-								MatchLabels: map[string]string{
-									"domino-platform": "true",
-								},
-							},
 							PodSelector: &metav1.LabelSelector{
 								MatchLabels: map[string]string{
 									"spark-client": "true",
