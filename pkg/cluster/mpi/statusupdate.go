@@ -7,7 +7,6 @@ import (
 
 	"k8s.io/apimachinery/pkg/types"
 
-	v1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -80,7 +79,7 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 
 	expectedPodCnt := int(*cr.Spec.Worker.Replicas)
 
-	var status v1.JobConditionType
+	var status dcv1alpha1.ClusterStatusType
 	switch {
 	case failureReason != "":
 		status = dcv1alpha1.FailedStatus

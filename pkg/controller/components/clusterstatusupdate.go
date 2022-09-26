@@ -7,8 +7,6 @@ import (
 	"strings"
 	"time"
 
-	v1 "k8s.io/api/batch/v1"
-
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -99,7 +97,7 @@ func (c *clusterStatusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result
 		modified = true
 	}
 
-	var status v1.JobConditionType
+	var status dcv1alpha1.ClusterStatusType
 	if masterPodFound {
 		if dcv1alpha1.IsPodReady(masterPod) {
 			status = dcv1alpha1.RunningStatus

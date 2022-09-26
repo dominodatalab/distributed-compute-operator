@@ -8,8 +8,6 @@ import (
 	"strings"
 	"time"
 
-	v1 "k8s.io/api/batch/v1"
-
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
@@ -468,7 +466,7 @@ func (r *SparkClusterReconciler) reconcileStatefulSets(ctx context.Context, sc *
 		log.V(1).Info("updating status", "path", ".status.workerSelector", "value", sc.Status.WorkerSelector)
 	}
 
-	var status v1.JobConditionType
+	var status dcv1alpha1.ClusterStatusType
 	masterPod, masterPodFound := r.getMasterPod(ctx, sc)
 	if masterPodFound {
 		if dcv1alpha1.IsPodReady(masterPod) {

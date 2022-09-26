@@ -8,8 +8,6 @@ import (
 	"strings"
 	"time"
 
-	v1 "k8s.io/api/batch/v1"
-
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
 	corev1 "k8s.io/api/core/v1"
@@ -345,7 +343,7 @@ func (r *RayClusterReconciler) reconcileStatefulSets(ctx context.Context, rc *dc
 	}
 
 	updateStatus := false
-	var status v1.JobConditionType
+	var status dcv1alpha1.ClusterStatusType
 	masterPod, masterPodFound := r.getMasterPod(ctx, rc)
 	if masterPodFound {
 		if dcv1alpha1.IsPodReady(masterPod) {

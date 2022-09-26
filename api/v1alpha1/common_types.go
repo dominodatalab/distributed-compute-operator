@@ -1,7 +1,6 @@
 package v1alpha1
 
 import (
-	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -154,10 +153,12 @@ type WorkloadConfig struct {
 	SecurityContext *corev1.SecurityContext `json:"securityContext,omitempty"`
 }
 
+type ClusterStatusType string
+
 // ClusterStatusConfig defines the observed state of a given cluster. The
 // controllers will generate and populate these fields during reconciliation.
 type ClusterStatusConfig struct {
-	ClusterStatus batchv1.JobConditionType `json:"clusterStatus,omitempty"`
+	ClusterStatus ClusterStatusType `json:"clusterStatus,omitempty"`
 	// Reason may contain additional information when status is "Failed"
 	Reason    string       `json:"reason,omitempty"`
 	StartTime *metav1.Time `json:"startTime,omitempty"`
@@ -172,11 +173,11 @@ type ClusterStatusConfig struct {
 }
 
 const (
-	PendingStatus  batchv1.JobConditionType = "Pending"
-	StartingStatus batchv1.JobConditionType = "Starting"
-	RunningStatus  batchv1.JobConditionType = "Running"
-	StoppingStatus batchv1.JobConditionType = "Stopping"
-	FailedStatus   batchv1.JobConditionType = "Failed"
+	PendingStatus  ClusterStatusType = "Pending"
+	StartingStatus ClusterStatusType = "Starting"
+	RunningStatus  ClusterStatusType = "Running"
+	StoppingStatus ClusterStatusType = "Stopping"
+	FailedStatus   ClusterStatusType = "Failed"
 )
 
 func IsPodReady(pod corev1.Pod) bool {
