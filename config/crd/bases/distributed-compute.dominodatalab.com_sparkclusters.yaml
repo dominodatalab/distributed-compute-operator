@@ -22,6 +22,9 @@ spec:
     - jsonPath: .spec.worker.replicas
       name: Workers
       type: integer
+    - jsonPath: .status.clusterStatus
+      name: Status
+      type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
@@ -6499,6 +6502,8 @@ spec:
             description: ClusterStatusConfig defines the observed state of a given
               cluster.
             properties:
+              clusterStatus:
+                type: string
               image:
                 description: Image is the canonical reference url to the cluster container
                   image.
@@ -6508,6 +6513,13 @@ spec:
                 items:
                   type: string
                 type: array
+              reason:
+                description: Reason may contain additional information when status
+                  is "Failed"
+                type: string
+              startTime:
+                format: date-time
+                type: string
               workerReplicas:
                 description: WorkerReplicas is the `scale.status.replicas` subresource
                   field.

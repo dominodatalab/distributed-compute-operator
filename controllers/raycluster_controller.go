@@ -126,6 +126,13 @@ func (r *RayClusterReconciler) manageFinalization(ctx context.Context, rc *dcv1a
 	}
 
 	if rc.GetDeletionTimestamp() != nil && registered {
+		rc.Status.ClusterStatus = dcv1alpha1.StoppingStatus
+		rc.Status.StartTime = nil
+		err := r.Status().Update(ctx, rc)
+		if err != nil {
+			return false, err
+		}
+
 		log.Info("executing finalization steps")
 		if err := r.deleteExternalStorage(ctx, rc); err != nil {
 			log.Error(err, "failed to clean up storage")
@@ -150,6 +157,9 @@ func (r *RayClusterReconciler) manageFinalization(ctx context.Context, rc *dcv1a
 // collectively comprise a Ray cluster. Each resource is controlled by a parent
 // RayCluster object so that full cleanup occurs during a delete operation.
 func (r *RayClusterReconciler) reconcileResources(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
+	if err := r.initializeStatus(ctx, rc); err != nil {
+		return err
+	}
 	if err := r.reconcileIstio(ctx, rc); err != nil {
 		return err
 	}
@@ -304,6 +314,15 @@ func (r *RayClusterReconciler) reconcileAutoscaler(ctx context.Context, rc *dcv1
 	return nil
 }
 
+func (r *RayClusterReconciler) initializeStatus(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
+	if rc.Status.ClusterStatus == "" {
+		rc.Status.ClusterStatus = dcv1alpha1.PendingStatus
+		return r.Status().Update(ctx, rc)
+	}
+
+	return nil
+}
+
 // reconcileStatefulSets creates separate Ray head and worker stateful sets
 // that will collectively comprise the execution agents of the cluster.
 func (r *RayClusterReconciler) reconcileStatefulSets(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
@@ -323,7 +342,50 @@ func (r *RayClusterReconciler) reconcileStatefulSets(ctx context.Context, rc *dc
 		return fmt.Errorf("failed to create worker stateful set: %w", err)
 	}
 
-	return nil
+	updateStatus := false
+	var status dcv1alpha1.ClusterStatusType
+	masterPod, masterPodFound := r.getMasterPod(ctx, rc)
+	if masterPodFound {
+		if dcv1alpha1.IsPodReady(masterPod) {
+			status = dcv1alpha1.RunningStatus
+		} else {
+			status = dcv1alpha1.StartingStatus
+		}
+	} else {
+		status = dcv1alpha1.PendingStatus
+	}
+	if rc.Status.ClusterStatus != status && rc.GetDeletionTimestamp() == nil {
+		updateStatus = true
+		rc.Status.ClusterStatus = status
+		if status == dcv1alpha1.RunningStatus {
+			tt := metav1.Now()
+			rc.Status.StartTime = &tt
+		} else {
+			rc.Status.StartTime = nil
+		}
+	}
+
+	if updateStatus {
+		err = r.Status().Update(ctx, rc)
+	}
+
+	return err
+}
+
+func (r *RayClusterReconciler) getMasterPod(ctx context.Context, rc *dcv1alpha1.RayCluster) (corev1.Pod, bool) {
+	opts := []client.ListOption{
+		client.InNamespace(rc.Namespace),
+		client.MatchingLabels(ray.MetadataLabelsWithComponent(rc, ray.ComponentHead)),
+	}
+	pods := &corev1.PodList{}
+	err := r.List(ctx, pods, opts...)
+	if err != nil && !apierrors.IsNotFound(err) {
+		r.Log.V(1).Error(err, "reading master status")
+	}
+	if len(pods.Items) == 0 {
+		return corev1.Pod{}, false
+	}
+	return pods.Items[0], true
 }
 
 // createOrUpdateOwnedResource should be used to manage the lifecycle of namespace-scoped objects.

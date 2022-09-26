@@ -89,6 +89,7 @@ var _ = Describe("RayCluster Controller", func() {
 				}
 				return cluster.Status
 			}, timeout).Should(Equal(dcv1alpha1.ClusterStatusConfig{
+				ClusterStatus:  dcv1alpha1.PendingStatus,
 				Nodes:          nil,
 				WorkerReplicas: 1,
 				WorkerSelector: "app.kubernetes.io/component=worker,app.kubernetes.io/instance=it,app.kubernetes.io/name=ray",

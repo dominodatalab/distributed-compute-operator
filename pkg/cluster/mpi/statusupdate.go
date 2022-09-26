@@ -7,7 +7,6 @@ import (
 
 	"k8s.io/apimachinery/pkg/types"
 
-	v1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,14 +17,6 @@ import (
 
 	"github.com/dominodatalab/distributed-compute-operator/pkg/controller/core"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
-)
-
-const (
-	PendingStatus  v1.JobConditionType = "Pending"
-	StartingStatus v1.JobConditionType = "Starting"
-	RunningStatus  v1.JobConditionType = "Running"
-	StoppingStatus v1.JobConditionType = "Stopping"
-	FailedStatus   v1.JobConditionType = "Failed"
 )
 
 const (
@@ -65,7 +56,7 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 	var failureReason = ""
 	for _, pod := range pods {
 		podNames = append(podNames, pod.Name)
-		running := isPodReady(pod)
+		running := dcv1alpha1.IsPodReady(pod)
 		if running {
 			runningPods[pod.UID] = nil
 			runningPodCnt++
@@ -88,23 +79,23 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 
 	expectedPodCnt := int(*cr.Spec.Worker.Replicas)
 
-	var status v1.JobConditionType
+	var status dcv1alpha1.ClusterStatusType
 	switch {
 	case failureReason != "":
-		status = FailedStatus
+		status = dcv1alpha1.FailedStatus
 	case runningPodCnt >= expectedPodCnt:
-		status = RunningStatus
+		status = dcv1alpha1.RunningStatus
 	case runningPodCnt == 0:
-		status = PendingStatus
+		status = dcv1alpha1.PendingStatus
 	default:
-		status = StartingStatus
+		status = dcv1alpha1.StartingStatus
 	}
 
 	if cr.Status.ClusterStatus != status {
 		modified = true
 		cr.Status.ClusterStatus = status
 		cr.Status.Reason = failureReason
-		if status == RunningStatus {
+		if status == dcv1alpha1.RunningStatus {
 			tt := metav1.Now()
 			cr.Status.StartTime = &tt
 		} else {
@@ -119,15 +110,16 @@ func (c statusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result, error)
 		}
 	}
 
-	requeue := status != RunningStatus && status != FailedStatus
+	requeue := status != dcv1alpha1.RunningStatus && status != dcv1alpha1.FailedStatus
 	return ctrl.Result{Requeue: requeue}, nil
 }
 
 func (c statusUpdateComponent) Finalize(ctx *core.Context) (ctrl.Result, bool, error) {
 	cr := objToMPICluster(ctx.Object)
 
-	if cr.Status.ClusterStatus != StoppingStatus {
-		cr.Status.ClusterStatus = StoppingStatus
+	if cr.Status.ClusterStatus != dcv1alpha1.StoppingStatus {
+		cr.Status.ClusterStatus = dcv1alpha1.StoppingStatus
+		cr.Status.StartTime = nil
 		err := ctx.Client.Status().Update(ctx, cr)
 		if err != nil {
 			return ctrl.Result{RequeueAfter: finalizerRetryPeriod}, false,
@@ -158,16 +150,6 @@ func getPods(ctx *core.Context, cr *dcv1alpha1.MPICluster) ([]corev1.Pod, error)
 	}
 	err := ctx.Client.List(ctx, podList, listOpts...)
 	return podList.Items, err // first item is an empty array when err == nil
-}
-
-// isPodReady determines is the given Pod is in a "ready" state.
-func isPodReady(pod corev1.Pod) bool {
-	for _, cond := range pod.Status.Conditions {
-		if cond.Type == corev1.PodReady {
-			return cond.Status == corev1.ConditionTrue
-		}
-	}
-	return false
 }
 
 func getWorkerLastTerminatedState(pod corev1.Pod) *corev1.ContainerStateTerminated {
