@@ -6477,8 +6477,6 @@ spec:
                 description: WorkerSelector is the `scale.status.selector` subresource
                   field.
                 type: string
-            required:
-            - clusterStatus
             type: object
         type: object
     served: true

@@ -157,7 +157,7 @@ type WorkloadConfig struct {
 // ClusterStatusConfig defines the observed state of a given cluster. The
 // controllers will generate and populate these fields during reconciliation.
 type ClusterStatusConfig struct {
-	ClusterStatus batchv1.JobConditionType `json:"clusterStatus"`
+	ClusterStatus batchv1.JobConditionType `json:"clusterStatus,omitempty"`
 	// Reason may contain additional information when status is "Failed"
 	Reason    string       `json:"reason,omitempty"`
 	StartTime *metav1.Time `json:"startTime,omitempty"`
