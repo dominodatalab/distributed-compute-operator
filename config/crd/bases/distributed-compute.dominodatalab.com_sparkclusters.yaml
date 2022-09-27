@@ -3312,6 +3312,9 @@ spec:
                       grants ingress access to the cluster client port(s
                     type: object
                   dashboardLabels:
+                    restrictToPlatformNamespace:
+                      type: boolean
+                      description: Whether to restrict dashboard access to the platform namespace
                     additionalProperties:
                       type: string
                     description: 'DashboardLabels defines the pod selector clause
@@ -3319,7 +3322,7 @@ spec:
                     type: object
                   enabled:
                     description: Enabled controls the creation of network policies
-                      that limit and provide ingress access to the clust
+                      that limit and provide ingress access to the cluster
                     type: boolean
                 type: object
               podSecurityContext:
