@@ -8,7 +8,6 @@ import (
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources"
-	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
 )
 
 func NewClusterWorkerNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.NetworkPolicy {
@@ -123,19 +122,12 @@ func NewClusterMasterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 		MatchLabels: MetadataLabelsWithComponent(sc, ComponentWorker),
 	}
 
-	dashboardSelector := metav1.LabelSelector{
-		MatchLabels: sc.Spec.NetworkPolicy.DashboardLabels,
+	dashboardPodSelector := metav1.LabelSelector{
+		MatchLabels: sc.Spec.NetworkPolicy.DashboardPodLabels,
 	}
 
-	var namespaceSelector = metav1.LabelSelector{ 
-		MatchLabels: map[string]string{ "": "" },
-	}
-	if !util.BoolPtrIsTrue(sc.Spec.NetworkPolicy.DashboardLabels.RestrictToPlatformNamespace) {
-		namespaceSelector = metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"domino-platform": "true",
-			},
-		}
+	dashboardNamespaceSelector := metav1.LabelSelector{
+		MatchLabels: sc.Spec.NetworkPolicy.DashboardNamespaceLabels,
 	}
 
 	protocol := corev1.ProtocolTCP
@@ -173,8 +165,8 @@ func NewClusterMasterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 				{
 					From: []networkingv1.NetworkPolicyPeer{
 						{
-							PodSelector:       &dashboardSelector,
-							NamespaceSelector: &namespaceSelector,
+							PodSelector:       &dashboardPodSelector,
+							NamespaceSelector: &dashboardNamespaceSelector,
 						},
 					},
 					Ports: []networkingv1.NetworkPolicyPort{

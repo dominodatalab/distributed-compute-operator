@@ -83,9 +83,9 @@ func (dc *DaskCluster) Default() {
 		log.Info("Setting default network policy client labels", "values", daskDefaultNetworkPolicyLabels)
 		spec.NetworkPolicy.ClientLabels = daskDefaultNetworkPolicyLabels
 	}
-	if spec.NetworkPolicy.DashboardLabels == nil {
+	if spec.NetworkPolicy.DashboardPodLabels == nil {
 		log.Info("Setting default network policy dashboard labels", "values", daskDefaultNetworkPolicyLabels)
-		spec.NetworkPolicy.DashboardLabels = daskDefaultNetworkPolicyLabels
+		spec.NetworkPolicy.DashboardPodLabels = daskDefaultNetworkPolicyLabels
 	}
 }
 

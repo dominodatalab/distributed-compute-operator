@@ -86,7 +86,10 @@ func (s *networkPolicyDS) ingressRules() []networkingv1.NetworkPolicyIngressRule
 				From: []networkingv1.NetworkPolicyPeer{
 					{
 						PodSelector: &metav1.LabelSelector{
-							MatchLabels: s.dc.Spec.NetworkPolicy.DashboardLabels,
+							MatchLabels: s.dc.Spec.NetworkPolicy.DashboardPodLabels,
+						},
+						NamespaceSelector: &metav1.LabelSelector{
+							MatchLabels: s.dc.Spec.NetworkPolicy.DashboardNamespaceLabels,
 						},
 					},
 				},
@@ -148,7 +151,10 @@ func (s *networkPolicyDS) ingressRules() []networkingv1.NetworkPolicyIngressRule
 				},
 				{
 					PodSelector: &metav1.LabelSelector{
-						MatchLabels: s.dc.Spec.NetworkPolicy.DashboardLabels,
+						MatchLabels: s.dc.Spec.NetworkPolicy.DashboardPodLabels,
+					},
+					NamespaceSelector: &metav1.LabelSelector{
+						MatchLabels: s.dc.Spec.NetworkPolicy.DashboardNamespaceLabels,
 					},
 				},
 			},

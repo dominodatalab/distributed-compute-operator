@@ -69,9 +69,9 @@ func (sc *SparkCluster) Default() {
 		log.Info("Setting default network policy client labels", "value", sparkDefaultNetworkPolicyClientLabels)
 		spec.NetworkPolicy.ClientLabels = sparkDefaultNetworkPolicyClientLabels
 	}
-	if spec.NetworkPolicy.DashboardLabels == nil {
+	if spec.NetworkPolicy.DashboardPodLabels == nil {
 		log.Info("Setting default network policy dashboard labels", "value", sparkDefaultNetworkPolicyClientLabels)
-		spec.NetworkPolicy.DashboardLabels = sparkDefaultNetworkPolicyClientLabels
+		spec.NetworkPolicy.DashboardPodLabels = sparkDefaultNetworkPolicyClientLabels
 	}
 	if spec.Worker.Replicas == nil {
 		log.Info("Setting default worker replicas", "value", *sparkDefaultWorkerReplicas)

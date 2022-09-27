@@ -57,7 +57,7 @@ func NewHeadClientNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.Network
 	return headNetworkPolicy(
 		rc,
 		rc.Spec.ClientServerPort,
-		rc.Spec.NetworkPolicy.ClientLabels,
+		rc.Spec.NetworkPolicy,
 		Component("client"),
 		descriptionClient,
 	)
@@ -70,13 +70,13 @@ func NewHeadDashboardNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.Netw
 	return headNetworkPolicy(
 		rc,
 		rc.Spec.DashboardPort,
-		rc.Spec.NetworkPolicy.DashboardLabels,
+		rc.Spec.NetworkPolicy,
 		Component("dashboard"),
 		descriptionDashboard,
 	)
 }
 
-func headNetworkPolicy(rc *dcv1alpha1.RayCluster, p int32, l map[string]string, c Component, desc string) *networkingv1.NetworkPolicy {
+func headNetworkPolicy(rc *dcv1alpha1.RayCluster, p int32, netPol dcv1alpha1.NetworkPolicyConfig, c Component, desc string) *networkingv1.NetworkPolicy {
 	proto := corev1.ProtocolTCP
 	targetPort := intstr.FromInt(int(p))
 
@@ -104,7 +104,10 @@ func headNetworkPolicy(rc *dcv1alpha1.RayCluster, p int32, l map[string]string, 
 					From: []networkingv1.NetworkPolicyPeer{
 						{
 							PodSelector: &metav1.LabelSelector{
-								MatchLabels: l,
+								MatchLabels: netPol.DashboardPodLabels,
+							},
+							NamespaceSelector: &metav1.LabelSelector{
+								MatchLabels: netPol.DashboardNamespaceLabels,
 							},
 						},
 					},
