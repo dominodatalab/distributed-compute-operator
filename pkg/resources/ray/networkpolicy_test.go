@@ -108,6 +108,9 @@ func TestNewHeadClientNetworkPolicy(t *testing.T) {
 									"server-client": "true",
 								},
 							},
+							NamespaceSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{},
+							},
 						},
 					},
 				},
@@ -123,8 +126,11 @@ func TestNewHeadClientNetworkPolicy(t *testing.T) {
 func TestNewHeadDashboardNetworkPolicy(t *testing.T) {
 	rc := rayClusterFixture()
 	rc.Spec.NetworkPolicy = dcv1alpha1.NetworkPolicyConfig{
-		DashboardLabels: map[string]string{
+		DashboardPodLabels: map[string]string{
 			"dashboard-client": "true",
+		},
+		DashboardNamespaceLabels: map[string]string{
+			"domino-platform": "true",
 		},
 	}
 	netpol := NewHeadDashboardNetworkPolicy(rc)
@@ -167,6 +173,11 @@ func TestNewHeadDashboardNetworkPolicy(t *testing.T) {
 							PodSelector: &metav1.LabelSelector{
 								MatchLabels: map[string]string{
 									"dashboard-client": "true",
+								},
+							},
+							NamespaceSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"domino-platform": "true",
 								},
 							},
 						},

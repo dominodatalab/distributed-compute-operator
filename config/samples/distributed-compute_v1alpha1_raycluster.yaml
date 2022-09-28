@@ -46,7 +46,8 @@ spec:
   # networkPolicy:
   #   enabled: true
   #   clientLabels: {}
-  #   dashboardLabels: {}
+  #   dashboardPodLabels: {}
+  #   dashboardNamespaceLabels: {}
 
   # serviceAccount:
   #   name: ""

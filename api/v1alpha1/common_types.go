@@ -43,9 +43,11 @@ type NetworkPolicyConfig struct {
 	// ClientLabels defines the pod selector clause that grants ingress access
 	// to the cluster client port(s).
 	ClientLabels map[string]string `json:"clientLabels,omitempty"`
-	// DashboardLabels defines the pod selector clause that grants ingress
-	// access to the cluster dashboard port.
-	DashboardPodLabels       map[string]string `json:"dashboardPodLabels,omitempty"`
+	// Defines the pod selector clause that grants ingress
+	// access to the cluster dashboard.
+	DashboardPodLabels map[string]string `json:"dashboardPodLabels,omitempty"`
+	// Defines the namespace selector clause that grants ingress
+	// access to the cluster dashboard.
 	DashboardNamespaceLabels map[string]string `json:"dashboardNamespaceLabels,omitempty"`
 }
 
