@@ -86,7 +86,6 @@ func headNetworkPolicy(
 	c Component,
 	desc string,
 ) *networkingv1.NetworkPolicy {
-	
 	proto := corev1.ProtocolTCP
 	targetPort := intstr.FromInt(int(p))
 
