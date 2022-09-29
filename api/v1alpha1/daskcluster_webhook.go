@@ -18,8 +18,8 @@ var (
 	daskDefaultWorkerPort    int32 = 3000
 	daskDefaultNannyPort     int32 = 3001
 
-	daskDefaultWorkerReplicas      = pointer.Int32(1)
-	daskDefaultEnableNetworkPolicy = pointer.Bool(true)
+	daskDefaultWorkerReplicas         = pointer.Int32(1)
+	daskDefaultEnableNetworkPolicy    = pointer.Bool(true)
 	daskDefaultNetworkPolicyPodLabels = map[string]string{
 		"dask-client": "true",
 	}

@@ -13,16 +13,16 @@ import (
 )
 
 var (
-	rayDefaultRedisPort           int32 = 6379
-	rayDefaultClientServerPort    int32 = 10001
-	rayDefaultObjectManagerPort   int32 = 2384
-	rayDefaultNodeManagerPort     int32 = 2385
-	rayDefaultGCSServerPort       int32 = 2386
-	rayDefaultDashboardPort       int32 = 8265
-	rayDefaultRedisShardPorts           = []int32{6380, 6381}
-	rayDefaultEnableDashboard           = pointer.BoolPtr(true)
-	rayDefaultEnableNetworkPolicy       = pointer.BoolPtr(true)
-	rayDefaultWorkerReplicas            = pointer.Int32Ptr(1)
+	rayDefaultRedisPort              int32 = 6379
+	rayDefaultClientServerPort       int32 = 10001
+	rayDefaultObjectManagerPort      int32 = 2384
+	rayDefaultNodeManagerPort        int32 = 2385
+	rayDefaultGCSServerPort          int32 = 2386
+	rayDefaultDashboardPort          int32 = 8265
+	rayDefaultRedisShardPorts              = []int32{6380, 6381}
+	rayDefaultEnableDashboard              = pointer.BoolPtr(true)
+	rayDefaultEnableNetworkPolicy          = pointer.BoolPtr(true)
+	rayDefaultWorkerReplicas               = pointer.Int32Ptr(1)
 	rayDefaultNetworkPolicyPodLabels       = map[string]string{
 		"ray-client": "true",
 	}
