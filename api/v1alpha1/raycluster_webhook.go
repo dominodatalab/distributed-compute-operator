@@ -23,7 +23,7 @@ var (
 	rayDefaultEnableDashboard           = pointer.BoolPtr(true)
 	rayDefaultEnableNetworkPolicy       = pointer.BoolPtr(true)
 	rayDefaultWorkerReplicas            = pointer.Int32Ptr(1)
-	rayDefaultNetworkPolicyLabels       = map[string]string{
+	rayDefaultNetworkPolicyPodLabels       = map[string]string{
 		"ray-client": "true",
 	}
 
@@ -90,12 +90,12 @@ func (rc *RayCluster) Default() {
 		rc.Spec.NetworkPolicy.Enabled = rayDefaultEnableNetworkPolicy
 	}
 	if spec.NetworkPolicy.ClientLabels == nil {
-		log.Info("Setting default network policy client server labels", "value", rayDefaultNetworkPolicyLabels)
-		rc.Spec.NetworkPolicy.ClientLabels = rayDefaultNetworkPolicyLabels
+		log.Info("Setting default network policy client server labels", "value", rayDefaultNetworkPolicyPodLabels)
+		rc.Spec.NetworkPolicy.ClientLabels = rayDefaultNetworkPolicyPodLabels
 	}
 	if spec.NetworkPolicy.DashboardPodLabels == nil {
-		log.Info("Setting default network policy dashboard labels", "value", rayDefaultNetworkPolicyLabels)
-		rc.Spec.NetworkPolicy.DashboardPodLabels = rayDefaultNetworkPolicyLabels
+		log.Info("Setting default network policy dashboard pod labels", "value", rayDefaultNetworkPolicyPodLabels)
+		rc.Spec.NetworkPolicy.DashboardPodLabels = rayDefaultNetworkPolicyPodLabels
 	}
 	if spec.Worker.Replicas == nil {
 		log.Info("Setting default worker replicas", "value", *rayDefaultWorkerReplicas)

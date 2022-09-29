@@ -21,7 +21,7 @@ var (
 	sparkDefaultDriverBlockManagerPort    int32 = 4042
 	sparkDefaultEnableNetworkPolicy             = pointer.BoolPtr(true)
 	sparkDefaultWorkerReplicas                  = pointer.Int32Ptr(1)
-	sparkDefaultNetworkPolicyClientLabels       = map[string]string{
+	sparkDefaultNetworkPolicyClientPodLabels       = map[string]string{
 		"spark-client": "true",
 	}
 	sparkDefaultImage = &OCIImageDefinition{
@@ -66,12 +66,12 @@ func (sc *SparkCluster) Default() {
 		spec.NetworkPolicy.Enabled = sparkDefaultEnableNetworkPolicy
 	}
 	if spec.NetworkPolicy.ClientLabels == nil {
-		log.Info("Setting default network policy client labels", "value", sparkDefaultNetworkPolicyClientLabels)
-		spec.NetworkPolicy.ClientLabels = sparkDefaultNetworkPolicyClientLabels
+		log.Info("Setting default network policy client labels", "value", sparkDefaultNetworkPolicyClientPodLabels)
+		spec.NetworkPolicy.ClientLabels = sparkDefaultNetworkPolicyClientPodLabels
 	}
 	if spec.NetworkPolicy.DashboardPodLabels == nil {
-		log.Info("Setting default network policy dashboard labels", "value", sparkDefaultNetworkPolicyClientLabels)
-		spec.NetworkPolicy.DashboardPodLabels = sparkDefaultNetworkPolicyClientLabels
+		log.Info("Setting default network policy dashboard pod labels", "value", sparkDefaultNetworkPolicyClientPodLabels)
+		spec.NetworkPolicy.DashboardPodLabels = sparkDefaultNetworkPolicyClientPodLabels
 	}
 	if spec.Worker.Replicas == nil {
 		log.Info("Setting default worker replicas", "value", *sparkDefaultWorkerReplicas)

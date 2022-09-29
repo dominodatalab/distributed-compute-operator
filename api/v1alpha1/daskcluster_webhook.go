@@ -20,7 +20,7 @@ var (
 
 	daskDefaultWorkerReplicas      = pointer.Int32(1)
 	daskDefaultEnableNetworkPolicy = pointer.Bool(true)
-	daskDefaultNetworkPolicyLabels = map[string]string{
+	daskDefaultNetworkPolicyPodLabels = map[string]string{
 		"dask-client": "true",
 	}
 
@@ -80,12 +80,12 @@ func (dc *DaskCluster) Default() {
 		spec.NetworkPolicy.Enabled = daskDefaultEnableNetworkPolicy
 	}
 	if spec.NetworkPolicy.ClientLabels == nil {
-		log.Info("Setting default network policy client labels", "values", daskDefaultNetworkPolicyLabels)
-		spec.NetworkPolicy.ClientLabels = daskDefaultNetworkPolicyLabels
+		log.Info("Setting default network policy client labels", "values", daskDefaultNetworkPolicyPodLabels)
+		spec.NetworkPolicy.ClientLabels = daskDefaultNetworkPolicyPodLabels
 	}
 	if spec.NetworkPolicy.DashboardPodLabels == nil {
-		log.Info("Setting default network policy dashboard labels", "values", daskDefaultNetworkPolicyLabels)
-		spec.NetworkPolicy.DashboardPodLabels = daskDefaultNetworkPolicyLabels
+		log.Info("Setting default network policy dashboard pod labels", "values", daskDefaultNetworkPolicyPodLabels)
+		spec.NetworkPolicy.DashboardPodLabels = daskDefaultNetworkPolicyPodLabels
 	}
 }
 
