@@ -93,7 +93,7 @@ var _ = Describe("RayCluster", func() {
 				Equal(map[string]string{"ray-client": "true"}),
 				`network policy client labels should equal [{"ray-client": "true"}]`,
 			)
-			Expect(rc.Spec.NetworkPolicy.DashboardPodLabels).To(
+			Expect(rc.Spec.NetworkPolicy.DashboardLabels).To(
 				Equal(map[string]string{"ray-client": "true"}),
 				`network policy dashboard pod labels should equal [{"ray-client": "true"}]`,
 			)
@@ -186,10 +186,10 @@ var _ = Describe("RayCluster", func() {
 				rc := rayFixture(testNS.Name)
 
 				expected := map[string]string{"dashboard-client": "true"}
-				rc.Spec.NetworkPolicy.DashboardPodLabels = expected
+				rc.Spec.NetworkPolicy.DashboardLabels = expected
 
 				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
-				Expect(rc.Spec.NetworkPolicy.DashboardPodLabels).To(Equal(expected))
+				Expect(rc.Spec.NetworkPolicy.DashboardLabels).To(Equal(expected))
 			})
 		})
 	})

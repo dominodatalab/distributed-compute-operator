@@ -94,7 +94,7 @@ var _ = Describe("SparkCluster", func() {
 				Equal(map[string]string{"spark-client": "true"}),
 				`network policy client labels should equal [{"spark-client": "true"}]`,
 			)
-			Expect(sc.Spec.NetworkPolicy.DashboardPodLabels).To(
+			Expect(sc.Spec.NetworkPolicy.DashboardLabels).To(
 				Equal(map[string]string{"spark-client": "true"}),
 				`network policy dashboard labels should equal [{"spark-client": "true"}]`,
 			)
@@ -155,10 +155,10 @@ var _ = Describe("SparkCluster", func() {
 				sc := sparkFixture(testNS.Name)
 
 				expected := map[string]string{"dashboard-client": "true"}
-				sc.Spec.NetworkPolicy.DashboardPodLabels = expected
+				sc.Spec.NetworkPolicy.DashboardLabels = expected
 
 				Expect(k8sClient.Create(ctx, sc)).To(Succeed())
-				Expect(sc.Spec.NetworkPolicy.DashboardPodLabels).To(Equal(expected))
+				Expect(sc.Spec.NetworkPolicy.DashboardLabels).To(Equal(expected))
 			})
 		})
 	})

@@ -145,7 +145,7 @@ func TestNewClusterWorkerNetworkPolicy(t *testing.T) {
 func TestNewClusterMasterNetworkPolicy(t *testing.T) {
 	rc := sparkClusterFixture()
 	rc.Spec.NetworkPolicy.ClientLabels = map[string]string{"app.kubernetes.io/instance": "spark-driver"}
-	rc.Spec.NetworkPolicy.DashboardPodLabels = map[string]string{"spark-client": "true"}
+	rc.Spec.NetworkPolicy.DashboardLabels = map[string]string{"spark-client": "true"}
 	rc.Spec.NetworkPolicy.DashboardNamespaceLabels = map[string]string{"domino-platform": "true"}
 
 	netpol := NewClusterMasterNetworkPolicy(rc)

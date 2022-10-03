@@ -28,7 +28,7 @@ func testDaskCluster() *dcv1alpha1.DaskCluster {
 						ClientLabels: map[string]string{
 							"test-client": "true",
 						},
-						DashboardPodLabels: map[string]string{
+						DashboardLabels: map[string]string{
 							"test-ui-client": "true",
 						},
 						DashboardNamespaceLabels: map[string]string{

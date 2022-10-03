@@ -71,7 +71,7 @@ func NewHeadDashboardNetworkPolicy(rc *dcv1alpha1.RayCluster) *networkingv1.Netw
 	return headNetworkPolicy(
 		rc,
 		rc.Spec.DashboardPort,
-		rc.Spec.NetworkPolicy.DashboardPodLabels,
+		rc.Spec.NetworkPolicy.DashboardLabels,
 		rc.Spec.NetworkPolicy.DashboardNamespaceLabels,
 		Component("dashboard"),
 		descriptionDashboard,

@@ -123,7 +123,7 @@ func NewClusterMasterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 	}
 
 	dashboardPodSelector := metav1.LabelSelector{
-		MatchLabels: sc.Spec.NetworkPolicy.DashboardPodLabels,
+		MatchLabels: sc.Spec.NetworkPolicy.DashboardLabels,
 	}
 
 	dashboardNamespaceSelector := metav1.LabelSelector{

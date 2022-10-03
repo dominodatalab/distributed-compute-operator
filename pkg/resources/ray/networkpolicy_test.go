@@ -126,7 +126,7 @@ func TestNewHeadClientNetworkPolicy(t *testing.T) {
 func TestNewHeadDashboardNetworkPolicy(t *testing.T) {
 	rc := rayClusterFixture()
 	rc.Spec.NetworkPolicy = dcv1alpha1.NetworkPolicyConfig{
-		DashboardPodLabels: map[string]string{
+		DashboardLabels: map[string]string{
 			"dashboard-client": "true",
 		},
 		DashboardNamespaceLabels: map[string]string{

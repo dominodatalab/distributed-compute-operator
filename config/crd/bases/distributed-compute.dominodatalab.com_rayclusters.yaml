@@ -3284,17 +3284,17 @@ spec:
                     description: ClientLabels defines the pod selector clause that
                       grants ingress access to the cluster client port(s
                     type: object
+                  dashboardLabels:
+                    additionalProperties:
+                      type: string
+                    description: Defines the pod selector clause that grants ingress
+                      access to the cluster dashboard.
+                    type: object
                   dashboardNamespaceLabels:
                     additionalProperties:
                       type: string
                     description: Defines the namespace selector clause that grants
                       ingress access to the cluster dashboard.
-                    type: object
-                  dashboardPodLabels:
-                    additionalProperties:
-                      type: string
-                    description: Defines the pod selector clause that grants ingress
-                      access to the cluster dashboard.
                     type: object
                   enabled:
                     description: Enabled controls the creation of network policies

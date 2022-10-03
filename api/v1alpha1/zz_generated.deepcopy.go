@@ -417,8 +417,8 @@ func (in *NetworkPolicyConfig) DeepCopyInto(out *NetworkPolicyConfig) {
 			(*out)[key] = val
 		}
 	}
-	if in.DashboardPodLabels != nil {
-		in, out := &in.DashboardPodLabels, &out.DashboardPodLabels
+	if in.DashboardLabels != nil {
+		in, out := &in.DashboardLabels, &out.DashboardLabels
 		*out = make(map[string]string, len(*in))
 		for key, val := range *in {
 			(*out)[key] = val

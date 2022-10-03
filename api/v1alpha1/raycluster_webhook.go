@@ -93,9 +93,9 @@ func (rc *RayCluster) Default() {
 		log.Info("Setting default network policy client server labels", "value", rayDefaultNetworkPolicyPodLabels)
 		rc.Spec.NetworkPolicy.ClientLabels = rayDefaultNetworkPolicyPodLabels
 	}
-	if spec.NetworkPolicy.DashboardPodLabels == nil {
+	if spec.NetworkPolicy.DashboardLabels == nil {
 		log.Info("Setting default network policy dashboard pod labels", "value", rayDefaultNetworkPolicyPodLabels)
-		rc.Spec.NetworkPolicy.DashboardPodLabels = rayDefaultNetworkPolicyPodLabels
+		rc.Spec.NetworkPolicy.DashboardLabels = rayDefaultNetworkPolicyPodLabels
 	}
 	if spec.Worker.Replicas == nil {
 		log.Info("Setting default worker replicas", "value", *rayDefaultWorkerReplicas)
