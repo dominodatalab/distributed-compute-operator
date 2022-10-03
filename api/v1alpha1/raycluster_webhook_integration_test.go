@@ -95,7 +95,7 @@ var _ = Describe("RayCluster", func() {
 			)
 			Expect(rc.Spec.NetworkPolicy.DashboardLabels).To(
 				Equal(map[string]string{"ray-client": "true"}),
-				`network policy dashboard labels should equal [{"ray-client": "true"}]`,
+				`network policy dashboard pod labels should equal [{"ray-client": "true"}]`,
 			)
 			Expect(rc.Spec.Worker.Replicas).To(
 				PointTo(BeNumerically("==", 1)),

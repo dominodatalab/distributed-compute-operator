@@ -46,9 +46,12 @@ type NetworkPolicyConfig struct {
 	// ClientLabels defines the pod selector clause that grants ingress access
 	// to the cluster client port(s).
 	ClientLabels map[string]string `json:"clientLabels,omitempty"`
-	// DashboardLabels defines the pod selector clause that grants ingress
-	// access to the cluster dashboard port.
+	// Defines the pod selector clause that grants ingress
+	// access to the cluster dashboard.
 	DashboardLabels map[string]string `json:"dashboardLabels,omitempty"`
+	// Defines the namespace selector clause that grants ingress
+	// access to the cluster dashboard.
+	DashboardNamespaceLabels map[string]string `json:"dashboardNamespaceLabels,omitempty"`
 }
 
 // OCIImageDefinition describes where and how to fetch a container image.

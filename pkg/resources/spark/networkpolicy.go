@@ -122,14 +122,12 @@ func NewClusterMasterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 		MatchLabels: MetadataLabelsWithComponent(sc, ComponentWorker),
 	}
 
-	dashboardSelector := metav1.LabelSelector{
+	dashboardPodSelector := metav1.LabelSelector{
 		MatchLabels: sc.Spec.NetworkPolicy.DashboardLabels,
 	}
 
-	namespaceSelector := metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"domino-platform": "true",
-		},
+	dashboardNamespaceSelector := metav1.LabelSelector{
+		MatchLabels: sc.Spec.NetworkPolicy.DashboardNamespaceLabels,
 	}
 
 	protocol := corev1.ProtocolTCP
@@ -167,8 +165,8 @@ func NewClusterMasterNetworkPolicy(sc *dcv1alpha1.SparkCluster) *networkingv1.Ne
 				{
 					From: []networkingv1.NetworkPolicyPeer{
 						{
-							NamespaceSelector: &namespaceSelector,
-							PodSelector:       &dashboardSelector,
+							PodSelector:       &dashboardPodSelector,
+							NamespaceSelector: &dashboardNamespaceSelector,
 						},
 					},
 					Ports: []networkingv1.NetworkPolicyPort{

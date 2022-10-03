@@ -31,6 +31,9 @@ func testDaskCluster() *dcv1alpha1.DaskCluster {
 						DashboardLabels: map[string]string{
 							"test-ui-client": "true",
 						},
+						DashboardNamespaceLabels: map[string]string{
+							"domino-platform": "true",
+						},
 					},
 					PodSecurityPolicy: "privileged",
 				},

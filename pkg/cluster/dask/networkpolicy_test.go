@@ -197,6 +197,11 @@ func TestNetworkPolicyDS_NetworkPolicy(t *testing.T) {
 										"test-ui-client": "true",
 									},
 								},
+								NamespaceSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"domino-platform": "true",
+									},
+								},
 							},
 						},
 					},

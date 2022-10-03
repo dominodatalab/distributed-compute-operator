@@ -13,15 +13,15 @@ import (
 )
 
 var (
-	sparkDefaultClusterPort               int32 = 7077
-	sparkDefaultMasterWebPort             int32 = 8080
-	sparkDefaultWorkerWebPort             int32 = 8081
-	sparkDefaultDriverUIPort              int32 = 4040
-	sparkDefaultDriverPort                int32 = 4041
-	sparkDefaultDriverBlockManagerPort    int32 = 4042
-	sparkDefaultEnableNetworkPolicy             = pointer.BoolPtr(true)
-	sparkDefaultWorkerReplicas                  = pointer.Int32Ptr(1)
-	sparkDefaultNetworkPolicyClientLabels       = map[string]string{
+	sparkDefaultClusterPort                  int32 = 7077
+	sparkDefaultMasterWebPort                int32 = 8080
+	sparkDefaultWorkerWebPort                int32 = 8081
+	sparkDefaultDriverUIPort                 int32 = 4040
+	sparkDefaultDriverPort                   int32 = 4041
+	sparkDefaultDriverBlockManagerPort       int32 = 4042
+	sparkDefaultEnableNetworkPolicy                = pointer.BoolPtr(true)
+	sparkDefaultWorkerReplicas                     = pointer.Int32Ptr(1)
+	sparkDefaultNetworkPolicyClientPodLabels       = map[string]string{
 		"spark-client": "true",
 	}
 	sparkDefaultImage = &OCIImageDefinition{
@@ -66,12 +66,12 @@ func (sc *SparkCluster) Default() {
 		spec.NetworkPolicy.Enabled = sparkDefaultEnableNetworkPolicy
 	}
 	if spec.NetworkPolicy.ClientLabels == nil {
-		log.Info("Setting default network policy client labels", "value", sparkDefaultNetworkPolicyClientLabels)
-		spec.NetworkPolicy.ClientLabels = sparkDefaultNetworkPolicyClientLabels
+		log.Info("Setting default network policy client labels", "value", sparkDefaultNetworkPolicyClientPodLabels)
+		spec.NetworkPolicy.ClientLabels = sparkDefaultNetworkPolicyClientPodLabels
 	}
 	if spec.NetworkPolicy.DashboardLabels == nil {
-		log.Info("Setting default network policy dashboard labels", "value", sparkDefaultNetworkPolicyClientLabels)
-		spec.NetworkPolicy.DashboardLabels = sparkDefaultNetworkPolicyClientLabels
+		log.Info("Setting default network policy dashboard pod labels", "value", sparkDefaultNetworkPolicyClientPodLabels)
+		spec.NetworkPolicy.DashboardLabels = sparkDefaultNetworkPolicyClientPodLabels
 	}
 	if spec.Worker.Replicas == nil {
 		log.Info("Setting default worker replicas", "value", *sparkDefaultWorkerReplicas)

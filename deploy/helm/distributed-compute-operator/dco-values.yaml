@@ -1,0 +1,44 @@
+USER-SUPPLIED VALUES:
+image:
+  registry: quay.io
+  repository: domino/distributed-compute-operator
+  tag: v0.6.5
+  pullPolicy: Always
+imagePullSecrets:
+- name: domino-quay-repos
+installCRDs: true
+istio:
+  cni: true
+  enabled: false
+  httpIdleTimeout:
+    timeout: 24h
+  install: false
+  rootConfigNamespace: istio-system
+mpi:
+  initImage:
+    registry: quay.io
+    repository: domino/distributed-compute-operator-mpi-init
+    tag: v0.6.5
+  syncImage:
+    registry: quay.io
+    repository: domino/distributed-compute-operator-mpi-sync
+    tag: v0.6.5
+networkPolicy:
+  enabled: true
+nodeSelector:
+  dominodatalab.com/node-pool: default
+podAnnotations: {}
+podEnv: []
+podLabels: {}
+podSecurityPolicy:
+  enabled: true
+priorityClassName: domino-default
+prometheus:
+  enabled: true
+  namespaceLabels:
+    domino-platform: "true"
+rbac:
+  pspEnabled: true
+replicaCount: 1
+securityContextConstraints:
+  enabled: false

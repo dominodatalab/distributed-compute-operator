@@ -13,17 +13,17 @@ import (
 )
 
 var (
-	rayDefaultRedisPort           int32 = 6379
-	rayDefaultClientServerPort    int32 = 10001
-	rayDefaultObjectManagerPort   int32 = 2384
-	rayDefaultNodeManagerPort     int32 = 2385
-	rayDefaultGCSServerPort       int32 = 2386
-	rayDefaultDashboardPort       int32 = 8265
-	rayDefaultRedisShardPorts           = []int32{6380, 6381}
-	rayDefaultEnableDashboard           = pointer.BoolPtr(true)
-	rayDefaultEnableNetworkPolicy       = pointer.BoolPtr(true)
-	rayDefaultWorkerReplicas            = pointer.Int32Ptr(1)
-	rayDefaultNetworkPolicyLabels       = map[string]string{
+	rayDefaultRedisPort              int32 = 6379
+	rayDefaultClientServerPort       int32 = 10001
+	rayDefaultObjectManagerPort      int32 = 2384
+	rayDefaultNodeManagerPort        int32 = 2385
+	rayDefaultGCSServerPort          int32 = 2386
+	rayDefaultDashboardPort          int32 = 8265
+	rayDefaultRedisShardPorts              = []int32{6380, 6381}
+	rayDefaultEnableDashboard              = pointer.BoolPtr(true)
+	rayDefaultEnableNetworkPolicy          = pointer.BoolPtr(true)
+	rayDefaultWorkerReplicas               = pointer.Int32Ptr(1)
+	rayDefaultNetworkPolicyPodLabels       = map[string]string{
 		"ray-client": "true",
 	}
 
@@ -90,12 +90,12 @@ func (rc *RayCluster) Default() {
 		rc.Spec.NetworkPolicy.Enabled = rayDefaultEnableNetworkPolicy
 	}
 	if spec.NetworkPolicy.ClientLabels == nil {
-		log.Info("Setting default network policy client server labels", "value", rayDefaultNetworkPolicyLabels)
-		rc.Spec.NetworkPolicy.ClientLabels = rayDefaultNetworkPolicyLabels
+		log.Info("Setting default network policy client server labels", "value", rayDefaultNetworkPolicyPodLabels)
+		rc.Spec.NetworkPolicy.ClientLabels = rayDefaultNetworkPolicyPodLabels
 	}
 	if spec.NetworkPolicy.DashboardLabels == nil {
-		log.Info("Setting default network policy dashboard labels", "value", rayDefaultNetworkPolicyLabels)
-		rc.Spec.NetworkPolicy.DashboardLabels = rayDefaultNetworkPolicyLabels
+		log.Info("Setting default network policy dashboard pod labels", "value", rayDefaultNetworkPolicyPodLabels)
+		rc.Spec.NetworkPolicy.DashboardLabels = rayDefaultNetworkPolicyPodLabels
 	}
 	if spec.Worker.Replicas == nil {
 		log.Info("Setting default worker replicas", "value", *rayDefaultWorkerReplicas)

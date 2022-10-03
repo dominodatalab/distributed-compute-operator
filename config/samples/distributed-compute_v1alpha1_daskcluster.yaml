@@ -25,6 +25,7 @@ spec:
   #   enabled: true
   #   clientLabels: {}
   #   dashboardLabels: {}
+  #   dashboardNamespaceLabels: {}
 
   # serviceAccount:
   #   name: ""
