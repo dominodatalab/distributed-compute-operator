@@ -11,6 +11,8 @@ import (
 )
 
 const nobodyUID int64 = 65534
+const DefaultRunAsNonRoot = true
+const DefaultSELinuxOptionsType = "spc_t"
 
 var (
 	daskDefaultSchedulerPort int32 = 8786
@@ -25,7 +27,11 @@ var (
 	}
 
 	daskDefaultPodSecurityContext = &corev1.PodSecurityContext{
-		RunAsUser: pointer.Int64Ptr(nobodyUID),
+		RunAsUser:    pointer.Int64Ptr(nobodyUID),
+		RunAsNonRoot: pointer.BoolPtr(DefaultRunAsNonRoot),
+		SELinuxOptions: &corev1.SELinuxOptions{
+			Type: *pointer.StringPtr(DefaultSELinuxOptionsType),
+		},
 	}
 
 	daskDefaultImage = &OCIImageDefinition{

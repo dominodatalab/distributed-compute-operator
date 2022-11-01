@@ -99,9 +99,15 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 	if context == nil {
 		const DefaultUser = 1001
 		const DefaultFSGroup = 1001
+		const DefaultRunAsNonRoot = true
+		const DefaultSELinuxOptionsType = "spc_t"
 		context = &corev1.PodSecurityContext{
-			RunAsUser: pointer.Int64Ptr(DefaultUser),
-			FSGroup:   pointer.Int64Ptr(DefaultFSGroup),
+			RunAsUser:    pointer.Int64Ptr(DefaultUser),
+			FSGroup:      pointer.Int64Ptr(DefaultFSGroup),
+			RunAsNonRoot: pointer.BoolPtr(DefaultRunAsNonRoot),
+			SELinuxOptions: &corev1.SELinuxOptions{
+				Type: *pointer.StringPtr(DefaultSELinuxOptionsType),
+			},
 		}
 	}
 	podSpec := getPodSpec(sc,

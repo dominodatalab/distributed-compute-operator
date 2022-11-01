@@ -631,8 +631,12 @@ func testCommonFeatures(t *testing.T, comp Component) {
 
 	t.Run("security_context", func(t *testing.T) {
 		rc := rayClusterFixture()
+		const DefaultSELinuxOptionsType = "spc_t"
 		rc.Spec.PodSecurityContext = &corev1.PodSecurityContext{
 			RunAsUser: pointer.Int64Ptr(0),
+			SELinuxOptions: &corev1.SELinuxOptions{
+				Type: *pointer.StringPtr(DefaultSELinuxOptionsType),
+			},
 		}
 
 		actual, err := NewStatefulSet(rc, comp, false)
