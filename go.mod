@@ -1,6 +1,6 @@
 module github.com/dominodatalab/distributed-compute-operator
 
-go 1.17
+go 1.18
 
 require (
 	github.com/banzaicloud/k8s-objectmatcher v1.5.1
