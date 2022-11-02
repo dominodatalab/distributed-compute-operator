@@ -94,6 +94,8 @@ podSecurityContext:
   runAsUser: 1000
   fsGroup: 1000
   # fsGroup: 2000
+  seLinuxOptions:
+    type: spc_t
 
 securityContext:
   allowPrivilegeEscalation: false
