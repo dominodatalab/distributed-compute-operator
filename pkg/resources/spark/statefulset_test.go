@@ -114,8 +114,10 @@ func TestNewStatefulSet(t *testing.T) {
 								},
 							},
 							SecurityContext: &corev1.PodSecurityContext{
-								RunAsUser: pointer.Int64Ptr(1001),
-								FSGroup:   pointer.Int64Ptr(1001),
+								RunAsUser:      pointer.Int64Ptr(1001),
+								FSGroup:        pointer.Int64Ptr(1001),
+								RunAsNonRoot:   pointer.BoolPtr(true),
+								SELinuxOptions: &corev1.SELinuxOptions{Type: *pointer.StringPtr("spc_t")},
 							},
 						},
 					},
@@ -227,8 +229,10 @@ func TestNewStatefulSet(t *testing.T) {
 								},
 							},
 							SecurityContext: &corev1.PodSecurityContext{
-								RunAsUser: pointer.Int64Ptr(1001),
-								FSGroup:   pointer.Int64Ptr(1001),
+								RunAsUser:      pointer.Int64Ptr(1001),
+								FSGroup:        pointer.Int64Ptr(1001),
+								RunAsNonRoot:   pointer.BoolPtr(true),
+								SELinuxOptions: &corev1.SELinuxOptions{Type: *pointer.StringPtr("spc_t")},
 							},
 						},
 					},
@@ -472,7 +476,9 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		rc := sparkClusterFixture()
 		const DefaultSELinuxOptionsType = "spc_t"
 		rc.Spec.PodSecurityContext = &corev1.PodSecurityContext{
-			RunAsUser: pointer.Int64Ptr(0),
+			RunAsUser:    pointer.Int64Ptr(0),
+			FSGroup:      pointer.Int64Ptr(0),
+			RunAsNonRoot: pointer.BoolPtr(false),
 			SELinuxOptions: &corev1.SELinuxOptions{
 				Type: *pointer.StringPtr(DefaultSELinuxOptionsType),
 			},
