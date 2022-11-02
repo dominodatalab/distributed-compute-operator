@@ -18,7 +18,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.19.1
+        go-version: 1.18.6
 
     - name: Cache go modules and build data
       uses: actions/cache@v2
@@ -196,7 +196,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.19.1
+          go-version: 1.18.6
 
       - name: Publish Github release
         uses: goreleaser/goreleaser-action@v2
