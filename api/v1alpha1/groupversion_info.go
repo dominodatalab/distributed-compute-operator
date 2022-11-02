@@ -1,6 +1,6 @@
 // Package v1alpha1 contains API Schema definitions for the distributed-compute v1alpha1 API group
-//+kubebuilder:object:generate=true
-//+groupName=distributed-compute.dominodatalab.com
+// +kubebuilder:object:generate=true
+// +groupName=distributed-compute.dominodatalab.com
 package v1alpha1
 
 import (
