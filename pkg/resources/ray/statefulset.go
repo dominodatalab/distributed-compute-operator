@@ -123,14 +123,14 @@ func NewStatefulSet(rc *dcv1alpha1.RayCluster, comp Component, istioEnabled bool
 							VolumeMounts:    volumeMounts,
 							Resources:       nodeAttrs.Resources,
 							LivenessProbe: &corev1.Probe{
-								Handler: corev1.Handler{
+								ProbeHandler: corev1.ProbeHandler{
 									TCPSocket: &corev1.TCPSocketAction{
 										Port: intstr.FromInt(int(rc.Spec.NodeManagerPort)),
 									},
 								},
 							},
 							ReadinessProbe: &corev1.Probe{
-								Handler: corev1.Handler{
+								ProbeHandler: corev1.ProbeHandler{
 									TCPSocket: &corev1.TCPSocketAction{
 										Port: intstr.FromInt(int(rc.Spec.NodeManagerPort)),
 									},

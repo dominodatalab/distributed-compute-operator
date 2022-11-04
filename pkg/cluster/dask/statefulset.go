@@ -239,7 +239,7 @@ func (s *statefulSetDS) resources() corev1.ResourceRequirements {
 
 func (s *statefulSetDS) probe() *corev1.Probe {
 	return &corev1.Probe{
-		Handler: corev1.Handler{
+		ProbeHandler: corev1.ProbeHandler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path: "/health",
 				Port: intstr.FromString("dashboard"),

@@ -206,7 +206,7 @@ func getPodSpec(sc *dcv1alpha1.SparkCluster,
 				VolumeMounts:    volumeMounts,
 				Resources:       nodeAttrs.Resources,
 				LivenessProbe: &corev1.Probe{
-					Handler: corev1.Handler{
+					ProbeHandler: corev1.ProbeHandler{
 						HTTPGet: &corev1.HTTPGetAction{
 							Path: "/",
 							Port: port,
@@ -214,7 +214,7 @@ func getPodSpec(sc *dcv1alpha1.SparkCluster,
 					},
 				},
 				ReadinessProbe: &corev1.Probe{
-					Handler: corev1.Handler{
+					ProbeHandler: corev1.ProbeHandler{
 						HTTPGet: &corev1.HTTPGetAction{
 							Path: "/",
 							Port: port,
