@@ -26,9 +26,9 @@ jobs:
         path: |
           ~/go/pkg/mod
           ~/.cache/go-build
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        key: ${{ runner.os }}-go119-${{ hashFiles('**/go.sum') }}
         restore-keys: |
-          ${{ runner.os }}-go-
+          ${{ runner.os }}-go119-
 
     - name: Cache build tools
       uses: actions/cache@v2
@@ -36,7 +36,7 @@ jobs:
         path: |
           bin
           testbin
-        key: ${{ runner.os }}-go-${{ hashFiles('Makefile') }}
+        key: ${{ runner.os }}-go119-${{ hashFiles('Makefile') }}
 
     - name: Build
       run: make build
