@@ -100,7 +100,7 @@ kustomize: ## Download kustomize locally if necessary.
 
 GOIMPORTS = $(shell pwd)/bin/goimports
 goimports: ## Download goimports locally if necessary.
-	$(call go-get-tool,$(GOIMPORTS),golang.org/x/tools/cmd/goimports)
+	$(call go-get-tool,$(GOIMPORTS),golang.org/x/tools/cmd/goimports@latest)
 
 GOLANGCI_LINT = $(shell pwd)/bin/golangci-lint
 golangci-lint: ## Download golangci-lint locally if necessary.
@@ -129,7 +129,7 @@ TMP_DIR=$$(mktemp -d) ;\
 cd $$TMP_DIR ;\
 go mod init tmp ;\
 echo "Downloading $(2)" ;\
-GOBIN=$(PROJECT_DIR)/bin go get $(2) ;\
+GOBIN=$(PROJECT_DIR)/bin go install $(2) ;\
 rm -rf $$TMP_DIR ;\
 }
 endef
