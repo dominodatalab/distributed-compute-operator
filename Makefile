@@ -107,7 +107,7 @@ golangci-lint: ## Download golangci-lint locally if necessary.
 	@[ -f $(GOLANGCI_LINT) ] || { \
 		set -e ;\
 		echo "Installing golangci-lint" ;\
-		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(PROJECT_DIR)/bin v1.38.0 ;\
+		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(PROJECT_DIR)/bin v1.50.1 ;\
 	}
 
 HELM = $(shell pwd)/bin/helm
