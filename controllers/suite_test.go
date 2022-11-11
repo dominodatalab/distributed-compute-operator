@@ -87,7 +87,7 @@ var _ = BeforeSuite(func() {
 
 	go func() {
 		err = k8sManager.Start(ctx)
-		Expect(err).ToNot(HaveOccurred(), err.Error())
+		Expect(err).ToNot(HaveOccurred())
 	}()
 }, 60)
 
