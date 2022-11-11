@@ -54,7 +54,7 @@ linters:
     - gofmt
     - goimports
     - golint
-      #   - gomnd  ## TODO fix errors
+    - gomnd
     - goprintffuncname
     - gosec
     - gosimple

@@ -11,6 +11,8 @@ import (
 	"github.com/dominodatalab/distributed-compute-operator/pkg/manager"
 )
 
+const WebhookPort = 9443
+
 var (
 	namespaces           []string
 	probeAddr            string
@@ -49,8 +51,10 @@ func init() {
 	zapOpts.BindFlags(fs)
 
 	startCmd.Flags().AddGoFlagSet(fs)
-	startCmd.Flags().StringSliceVar(&namespaces, "namespaces", nil, "Only reconcile resources in these namespaces")
-	startCmd.Flags().IntVar(&webhookPort, "webhook-server-port", 9443, "Webhook server will bind to this port")
+	startCmd.Flags().StringSliceVar(&namespaces, "namespaces", nil,
+		"Only reconcile resources in these namespaces")
+	startCmd.Flags().IntVar(&webhookPort, "webhook-server-port", WebhookPort,
+		"Webhook server will bind to this port")
 	startCmd.Flags().StringVar(&metricsAddr, "metrics-bind-address", ":8080",
 		"Metrics endpoint will bind to this address")
 	startCmd.Flags().StringVar(&probeAddr, "health-probe-bind-address", ":8081",
