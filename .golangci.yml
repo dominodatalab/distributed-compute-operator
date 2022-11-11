@@ -18,8 +18,6 @@ linters-settings:
     min-complexity: 25
   goimports:
     local-prefixes: github.com/dominodatalab/distributed-compute-operator
-  golint:
-    min-confidence: 0
   gomnd:
     settings:
       mnd:
@@ -40,7 +38,6 @@ linters:
   disable-all: true
   enable:
     - bodyclose
-    - deadcode
     - depguard
     - dogsled
     - dupl
@@ -49,12 +46,12 @@ linters:
     - exhaustive
     - funlen
     - goconst
-#   - gocritic  ## TODO fix errors
+    - gocritic
     - gocyclo
     - gofmt
     - goimports
-    - golint
-      #   - gomnd  ## TODO fix errors
+    - revive
+    - gomnd
     - goprintffuncname
     - gosec
     - gosimple
@@ -65,17 +62,13 @@ linters:
     - nakedret
     - nestif
     - noctx
-#   - nolintlint  ## conflicts with gofmt linter:w
-    - rowserrcheck
-    - scopelint
+    - exportloopref
     - staticcheck
-    - structcheck
     - stylecheck
     - typecheck
     - unconvert
     - unparam
     - unused
-    - varcheck
     - whitespace
 
 issues:
