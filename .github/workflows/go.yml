@@ -18,7 +18,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.17.1
+        go-version: 1.19.3
 
     - name: Cache go modules and build data
       uses: actions/cache@v2
@@ -26,9 +26,9 @@ jobs:
         path: |
           ~/go/pkg/mod
           ~/.cache/go-build
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        key: ${{ runner.os }}-go119-${{ hashFiles('**/go.sum') }}
         restore-keys: |
-          ${{ runner.os }}-go-
+          ${{ runner.os }}-go119-
 
     - name: Cache build tools
       uses: actions/cache@v2
@@ -36,7 +36,7 @@ jobs:
         path: |
           bin
           testbin
-        key: ${{ runner.os }}-go-${{ hashFiles('Makefile') }}
+        key: ${{ runner.os }}-go119-${{ hashFiles('Makefile') }}
 
     - name: Build
       run: make build
@@ -196,7 +196,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17.1
+          go-version: 1.19.3
 
       - name: Publish Github release
         uses: goreleaser/goreleaser-action@v2

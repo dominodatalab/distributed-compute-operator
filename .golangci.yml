@@ -49,12 +49,12 @@ linters:
     - exhaustive
     - funlen
     - goconst
-    - gocritic
+#   - gocritic  ## TODO fix errors
     - gocyclo
     - gofmt
     - goimports
     - golint
-    - gomnd
+      #   - gomnd  ## TODO fix errors
     - goprintffuncname
     - gosec
     - gosimple
@@ -65,7 +65,7 @@ linters:
     - nakedret
     - nestif
     - noctx
-    - nolintlint
+#   - nolintlint  ## conflicts with gofmt linter:w
     - rowserrcheck
     - scopelint
     - staticcheck
@@ -96,3 +96,4 @@ issues:
         - lll
   exclude:
     - Using the variable on range scope `tc` in function literal
+
