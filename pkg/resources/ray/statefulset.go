@@ -80,9 +80,12 @@ func NewStatefulSet(rc *dcv1alpha1.RayCluster, comp Component, istioEnabled bool
 	labels := p.processLabels()
 	annotations := p.processAnnotations()
 	serviceName := p.processServiceName()
-	envVars := append(defaultEnv, rc.Spec.EnvVars...)
-	volumes := append(defaultVolumes, nodeAttrs.Volumes...)
-	volumeMounts := append(defaultVolumeMounts, nodeAttrs.VolumeMounts...)
+	envVars := defaultEnv
+	envVars = append(envVars, rc.Spec.EnvVars...)
+	volumes := defaultVolumes
+	volumes = append(volumes, nodeAttrs.Volumes...)
+	volumeMounts := defaultVolumeMounts
+	volumeMounts = append(volumeMounts, nodeAttrs.VolumeMounts...)
 	pvcTemplates := processPVCTemplates(rc, nodeAttrs.VolumeClaimTemplates)
 
 	sts := &appsv1.StatefulSet{

@@ -46,7 +46,7 @@ linters:
     - exhaustive
     - funlen
     - goconst
-#   - gocritic  ## TODO fix errors
+    - gocritic
     - gocyclo
     - gofmt
     - goimports
