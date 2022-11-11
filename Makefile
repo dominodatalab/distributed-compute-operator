@@ -50,7 +50,7 @@ fmt: goimports ## Run formatter against code.
 lint: golangci-lint ## Run linters against code.
 	$(GOLANGCI_LINT) run
 
-ENVTEST_VERSION = 1.20.x!
+ENVTEST_VERSION = 1.24.x!
 ENVTEST_ASSETS_DIR = $(shell pwd)/testbin
 test: setup-envtest manifests generate fmt ## Run full test suite.
 	$(shell eval "$(SETUP_ENVTEST) --bin-dir $(ENVTEST_ASSETS_DIR) use --print env $(ENVTEST_VERSION)"); go test ./... -race -covermode atomic -coverprofile cover.out
