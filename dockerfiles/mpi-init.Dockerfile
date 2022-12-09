@@ -1,6 +1,7 @@
 # A specific version of the Linux OS here is very important, because it defines versions
 # of core libraries (libc etc) the compiled binaries will be linked against.
 # FYI, debian-9.13 -> libc-2.24
+# OSRP not neccessary here because it's just the build environment, see the final image FROM at the bottom
 FROM quay.io/domino/debian:9.13-20210202-2325
 
 ARG OPENSSH_VERSION=8.8p1
@@ -60,7 +61,7 @@ RUN \
 
 # The final image only contains built artifacts.
 # The base image should be up-to-date, but a specific version is not important.
-FROM quay.io/domino/debian:10.11-20220914-0744
+FROM quay.io/domino/debian:10.11-20221208-1806
 WORKDIR /root
 COPY --from=0 /root/worker-utils.tgz ./
 CMD tar -C / -xf /root/worker-utils.tgz
