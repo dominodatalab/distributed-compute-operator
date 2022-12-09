@@ -7,13 +7,14 @@ image:
 imagePullSecrets:
 - name: domino-quay-repos
 installCRDs: true
-istio:
-  cni: true
-  enabled: false
-  httpIdleTimeout:
-    timeout: 24h
-  install: false
-  rootConfigNamespace: istio-system
+global:
+  istio:
+    cni: true
+    enabled: false
+    httpIdleTimeout:
+      timeout: 24h
+    install: false
+    rootConfigNamespace: istio-system
 mpi:
   initImage:
     registry: quay.io

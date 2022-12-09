@@ -2,6 +2,26 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+global:
+  istio:
+    # Enable support for environments with Istio installed
+    enabled: false
+    # Elevate pod execution permissions so that Istio's init container can modify
+    # network settings when CNI plugin is NOT installed
+    cniPluginInstalled: true
+    # namespace for istio mesh-level settings
+    rootConfigNamespace: istio-config
+    # set the HTTP connection idle timeout for pods managed by the distributed-compute-operator
+    httpIdleTimeout:
+      # the timeout to set. Leave empty for istio default.
+      timeout: ""
+      # If timeout and namespaces are set, sets the timeout only in given namespaces.
+      # If timeout is set but namespaces is empty:
+      #   - if config.watchNamespaces is empty, then timeout is set across the whole istio mesh
+      #   - else timeout is set for namespaces in config.watchNamespaces
+      # If any namespaces in the istio mesh are unaffected by this setting, they get istio default.
+      namespaces: []
+
 # Number of controller instances to run
 replicaCount: 1
 
@@ -31,25 +51,6 @@ config:
   logStacktraceLevel: panic
   # Development mode enables debug logging, console output and stacktraces suitable for troubleshooting
   logDevelopmentMode: false
-
-istio:
-  # Enable support for environments with Istio installed
-  enabled: false
-  # Elevate pod execution permissions so that Istio's init container can modify
-  # network settings when CNI plugin is NOT installed
-  cniPluginInstalled: true
-  # namespace for istio mesh-level settings
-  rootConfigNamespace: istio-config
-  # set the HTTP connection idle timeout for pods managed by the distributed-compute-operator
-  httpIdleTimeout:
-    # the timeout to set. Leave empty for istio default.
-    timeout: ""
-    # If timeout and namespaces are set, sets the timeout only in given namespaces.
-    # If timeout is set but namespaces is empty:
-    #   - if config.watchNamespaces is empty, then timeout is set across the whole istio mesh
-    #   - else timeout is set for namespaces in config.watchNamespaces
-    # If any namespaces in the istio mesh are unaffected by this setting, they get istio default.
-    namespaces: []
 
 podSecurityPolicy:
   # Create custom PSP for operator

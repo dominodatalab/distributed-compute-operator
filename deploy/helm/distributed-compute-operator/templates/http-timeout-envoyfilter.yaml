@@ -1,8 +1,8 @@
-{{- if and (.Values.istio.enabled) (.Values.istio.httpIdleTimeout.timeout)  }}
+{{- if and (.Values.global.istio.enabled) (.Values.global.istio.httpIdleTimeout.timeout)  }}
 {{- $commonFullname := include "common.names.fullname" . }}
-{{- $justRootConfigNamespace := list .Values.istio.rootConfigNamespace }}
+{{- $justRootConfigNamespace := list .Values.global.istio.rootConfigNamespace }}
 {{- $defaultNamespaces := .Values.config.watchNamespaces | default $justRootConfigNamespace }}
-{{- $namespaces := .Values.istio.httpIdleTimeout.namespaces | default $defaultNamespaces }}
+{{- $namespaces := .Values.global.istio.httpIdleTimeout.namespaces | default $defaultNamespaces }}
 {{- range $namespace := $namespaces }}
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
@@ -27,7 +27,7 @@ spec:
         typed_config:
           "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager"
           common_http_protocol_options:
-            idle_timeout: {{ $.Values.istio.httpIdleTimeout.timeout }}
+            idle_timeout: {{ $.Values.global.istio.httpIdleTimeout.timeout }}
   - applyTo: NETWORK_FILTER
     match:
       listener:
@@ -40,6 +40,6 @@ spec:
         name: envoy.filters.network.tcp_proxy
         typed_config:
           '@type': type.googleapis.com/envoy.config.filter.network.tcp_proxy.v2.TcpProxy
-          idle_timeout: {{ $.Values.istio.httpIdleTimeout.timeout }}
+          idle_timeout: {{ $.Values.global.istio.httpIdleTimeout.timeout }}
 {{- end }}
 {{- end }}
