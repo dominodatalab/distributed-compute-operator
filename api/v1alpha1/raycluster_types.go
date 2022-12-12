@@ -46,6 +46,8 @@ type RayClusterSpec struct {
 	DashboardPort int32 `json:"dashboardPort,omitempty"`
 	// EnableDashboard starts the dashboard web UI.
 	EnableDashboard *bool `json:"enableDashboard,omitempty"`
+	// ApiProxyPort is the port through which cluster nodes connect to the API proxy.
+	ApiProxyPort int32 `json:"apiProxyPort,omitempty"`
 }
 
 //+kubebuilder:object:root=true

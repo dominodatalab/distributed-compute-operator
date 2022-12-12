@@ -62,6 +62,11 @@ spec:
           spec:
             description: MPIClusterSpec defines the desired state of MPICluster.
             properties:
+              apiProxyPort:
+                description: ApiProxyPort is the port through which cluster nodes
+                  connect to the API proxy.
+                format: int32
+                type: integer
               envVars:
                 description: EnvVars added to all every cluster container.
                 items:

@@ -32,6 +32,7 @@ spec:
   # imagePullSecrets: []
   # podSecurityPolicy: ""
   # istioMutualTLSMode: ""
+  # apiProxyPort: 8899
 
   worker:
     # replicas: 1

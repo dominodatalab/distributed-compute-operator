@@ -66,6 +66,8 @@ type SparkClusterSpec struct {
 	MasterWebPort int32 `json:"masterWebPort,omitempty"`
 	// WorkerWebPort is the port for the worker web UI.
 	WorkerWebPort int32 `json:"workerWebPort,omitempty"`
+	// ApiProxyPort is the port through which cluster nodes connect to the API proxy.
+	ApiProxyPort int32 `json:"apiProxyPort,omitempty"`
 }
 
 //+kubebuilder:object:root=true

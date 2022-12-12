@@ -9,6 +9,7 @@ spec:
   # clusterPort: 7077
   # masterWebPort: 8080
   # workerWebPort: 8081
+  # apiProxyPort: 8899
 
   # image:
   #   registry: ""

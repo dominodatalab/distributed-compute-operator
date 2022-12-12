@@ -7,6 +7,7 @@ spec:
   # dashboardPort: 8787
   # workerPort: 3000
   # nannyPort: 3001
+  # apiProxyPort: 8899
 
   # image:
   #   registry: ""

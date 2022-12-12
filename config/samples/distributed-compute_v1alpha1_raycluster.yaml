@@ -8,6 +8,7 @@ spec:
   # redisShardPorts:
   # - 6380
   # - 6381
+  # apiProxyPort: 8899
 
   # port used to connect clients to ray
   # clientServerPort: 10001

@@ -57,6 +57,11 @@ spec:
           spec:
             description: DaskClusterSpec defines the desired state of DaskCluster.
             properties:
+              apiProxyPort:
+                description: ApiProxyPort is the port through which cluster nodes
+                  connect to the API proxy.
+                format: int32
+                type: integer
               autoscaling:
                 description: Autoscaling parameters used to scale up/down cluster
                   nodes.
