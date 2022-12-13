@@ -27,7 +27,9 @@ func MPICluster(mgr ctrl.Manager, webhooksEnabled bool, cfg *Config) error {
 		Component("networkpolicy-worker", mpi.NetworkPolicyWorker()).
 		Component("networkpolicy-client", mpi.NetworkPolicyClient()).
 		Component("workers", mpi.StatefulSet(cfg.MPIInitImage, cfg.MPISyncImage)).
-		Component("statusupdate", mpi.StatusUpdate())
+		Component("statusupdate", mpi.StatusUpdate()).
+		Component("service-api-proxy", mpi.APIProxyService()).
+		Component("networkpolicy-api-proxy", mpi.APIProxyNetworkPolicy())
 
 	if webhooksEnabled {
 		reconciler.WithWebhooks()
