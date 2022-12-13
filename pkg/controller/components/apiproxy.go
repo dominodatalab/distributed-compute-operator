@@ -17,12 +17,12 @@ import (
 )
 
 const (
-	defaultApiProxyPort        = 8899
+	defaultAPIProxyPort        = 8899
 	targetServicePort          = 8899
 	apiProxyPortName           = "api-proxy"
 	component                  = "api-proxy"
-	executionIdLabel           = "dominodatalab.com/execution-id"
-	projectIdLabel             = "dominodatalab.com/project-id"
+	executionIDLabel           = "dominodatalab.com/execution-id"
+	projectIDLabel             = "dominodatalab.com/project-id"
 	datasourceProxyClientLabel = "datasource-proxy-client"
 )
 
@@ -31,20 +31,20 @@ type APIProxyServiceComponent struct {
 	Meta         *metadata.Provider
 }
 
-func executionId(obj client.Object) string {
-	return obj.GetLabels()[executionIdLabel]
+func executionID(obj client.Object) string {
+	return obj.GetLabels()[executionIDLabel]
 }
 
-func projectId(obj client.Object) string {
-	return obj.GetLabels()[projectIdLabel]
+func projectID(obj client.Object) string {
+	return obj.GetLabels()[projectIDLabel]
 }
 
 func instanceName(obj client.Object) string {
-	return fmt.Sprintf("%s-%s", component, executionId(obj))
+	return fmt.Sprintf("%s-%s", component, executionID(obj))
 }
 
 func runPodName(obj client.Object) string {
-	return fmt.Sprintf("run-%s", executionId(obj))
+	return fmt.Sprintf("run-%s", executionID(obj))
 }
 
 func runPodSelector(obj client.Object) map[string]string {
@@ -61,7 +61,7 @@ func (c APIProxyServiceComponent) Reconcile(ctx *core.Context) (ctrl.Result, err
 
 	apiProxyPort := c.APIProxyPort(&obj)
 	if apiProxyPort == 0 {
-		apiProxyPort = defaultApiProxyPort
+		apiProxyPort = defaultAPIProxyPort
 	}
 
 	ports := []corev1.ServicePort{{
@@ -112,13 +112,13 @@ func (c APIProxyNetworkPolicyComponent) Reconcile(ctx *core.Context) (ctrl.Resul
 
 	p := c.APIProxyPort(&obj)
 	if p == 0 {
-		p = defaultApiProxyPort
+		p = defaultAPIProxyPort
 	}
 	apiProxyPort := intstr.FromInt(int(p))
 
 	targetSelector := map[string]string{
-		executionIdLabel:           executionId(obj),
-		projectIdLabel:             projectId(obj),
+		executionIDLabel:           executionID(obj),
+		projectIDLabel:             projectID(obj),
 		datasourceProxyClientLabel: "true",
 	}
 

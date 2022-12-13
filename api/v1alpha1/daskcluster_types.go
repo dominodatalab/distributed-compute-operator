@@ -22,8 +22,8 @@ type DaskClusterSpec struct {
 	WorkerPort    int32 `json:"workerPort,omitempty"`
 	NannyPort     int32 `json:"nannyPort,omitempty"`
 
-	// ApiProxyPort is the port through which cluster nodes connect to the API proxy.
-	ApiProxyPort int32 `json:"apiProxyPort,omitempty"`
+	// APIProxyPort is the port through which cluster nodes connect to the API proxy.
+	APIProxyPort int32 `json:"apiProxyPort,omitempty"`
 }
 
 // DaskClusterStatus defines the observed state of DaskCluster

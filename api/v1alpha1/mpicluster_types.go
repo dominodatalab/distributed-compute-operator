@@ -23,8 +23,8 @@ type MPIClusterSpec struct {
 
 	// WorkerPorts specifies the range of ports used by worker processes for communication.
 	WorkerPorts []int32 `json:"workerPorts,omitempty"`
-	// ApiProxyPort is the port through which cluster nodes connect to the API proxy.
-	ApiProxyPort int32 `json:"apiProxyPort,omitempty"`
+	// APIProxyPort is the port through which cluster nodes connect to the API proxy.
+	APIProxyPort int32 `json:"apiProxyPort,omitempty"`
 }
 
 //+kubebuilder:object:root=true

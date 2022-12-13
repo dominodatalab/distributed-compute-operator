@@ -10,7 +10,7 @@ import (
 func APIProxyService() core.OwnedComponent {
 	return components.APIProxyServiceComponent{
 		APIProxyPort: func(obj *client.Object) int32 {
-			return objToMPICluster(*obj).Spec.ApiProxyPort
+			return objToMPICluster(*obj).Spec.APIProxyPort
 		},
 		Meta: meta,
 	}
@@ -19,7 +19,7 @@ func APIProxyService() core.OwnedComponent {
 func APIProxyNetworkPolicy() core.OwnedComponent {
 	return components.APIProxyNetworkPolicyComponent{
 		APIProxyPort: func(obj *client.Object) int32 {
-			return objToMPICluster(*obj).Spec.ApiProxyPort
+			return objToMPICluster(*obj).Spec.APIProxyPort
 		},
 		Meta: meta,
 	}
