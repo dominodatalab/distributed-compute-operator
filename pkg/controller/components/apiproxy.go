@@ -78,7 +78,7 @@ func (c APIProxyServiceComponent) Reconcile(ctx *core.Context) (ctrl.Result, err
 			Labels:    c.Meta.StandardLabelsWithComponent(obj, component, nil),
 		},
 		Spec: corev1.ServiceSpec{
-			ClusterIP:             corev1.ClusterIPNone,
+			//			ClusterIP:             corev1.ClusterIPNone,
 			Selector:              runPodSelector(obj),
 			Ports:                 ports,
 			InternalTrafficPolicy: &internalTrafficPolicy,
