@@ -31,25 +31,23 @@ type APIProxyServiceComponent struct {
 	Meta         *metadata.Provider
 }
 
-func executionID(obj client.Object) string {
-	return obj.GetLabels()[executionIDLabel]
+func executionID(obj *client.Object) string {
+	return (*obj).GetLabels()[executionIDLabel]
 }
 
-func projectID(obj client.Object) string {
-	return obj.GetLabels()[projectIDLabel]
-}
-
-func instanceName(obj client.Object) string {
-	return fmt.Sprintf("%s-%s", component, executionID(obj))
-}
-
-func runPodName(obj client.Object) string {
-	return fmt.Sprintf("run-%s", executionID(obj))
-}
-
-func runPodSelector(obj client.Object) map[string]string {
+func runPodSelector(obj *client.Object) map[string]string {
+	runPodName := fmt.Sprintf("run-%s", executionID(obj))
 	return map[string]string{
-		metadata.ApplicationInstanceLabelKey: runPodName(obj),
+		metadata.ApplicationInstanceLabelKey: runPodName,
+	}
+}
+
+func createResourceMeta(obj *client.Object, componentMeta *metadata.Provider) metav1.ObjectMeta {
+	instanceName := fmt.Sprintf("%s-%s", component, executionID(obj))
+	return metav1.ObjectMeta{
+		Name:      instanceName,
+		Namespace: (*obj).GetNamespace(),
+		Labels:    componentMeta.StandardLabelsWithComponent(*obj, component, nil),
 	}
 }
 
@@ -72,14 +70,10 @@ func (c APIProxyServiceComponent) Reconcile(ctx *core.Context) (ctrl.Result, err
 	}}
 
 	svc := &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      instanceName(obj),
-			Namespace: obj.GetNamespace(),
-			Labels:    c.Meta.StandardLabelsWithComponent(obj, component, nil),
-		},
+		ObjectMeta: createResourceMeta(&obj, c.Meta),
 		Spec: corev1.ServiceSpec{
 			//			ClusterIP:             corev1.ClusterIPNone,
-			Selector:              runPodSelector(obj),
+			Selector:              runPodSelector(&obj),
 			Ports:                 ports,
 			InternalTrafficPolicy: &internalTrafficPolicy,
 			Type:                  corev1.ServiceTypeClusterIP,
@@ -117,38 +111,28 @@ func (c APIProxyNetworkPolicyComponent) Reconcile(ctx *core.Context) (ctrl.Resul
 	apiProxyPort := intstr.FromInt(int(p))
 
 	targetSelector := map[string]string{
-		executionIDLabel:           executionID(obj),
-		projectIDLabel:             projectID(obj),
+		executionIDLabel:           obj.GetLabels()[executionIDLabel],
+		projectIDLabel:             obj.GetLabels()[projectIDLabel],
 		datasourceProxyClientLabel: "true",
 	}
 
-	ingressRules := []networkingv1.NetworkPolicyIngressRule{
-		{
-			From: []networkingv1.NetworkPolicyPeer{
-				{
-					PodSelector: &metav1.LabelSelector{
-						MatchLabels: targetSelector,
-					},
-				},
+	ingressRules := []networkingv1.NetworkPolicyIngressRule{{
+		From: []networkingv1.NetworkPolicyPeer{{
+			PodSelector: &metav1.LabelSelector{
+				MatchLabels: targetSelector,
 			},
-			Ports: []networkingv1.NetworkPolicyPort{
-				{
-					Port:     &apiProxyPort,
-					Protocol: &tcpProto,
-				},
-			},
-		},
-	}
+		}},
+		Ports: []networkingv1.NetworkPolicyPort{{
+			Port:     &apiProxyPort,
+			Protocol: &tcpProto,
+		}},
+	}}
 
 	svc := &networkingv1.NetworkPolicy{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      instanceName(obj),
-			Namespace: obj.GetNamespace(),
-			Labels:    c.Meta.StandardLabelsWithComponent(obj, component, nil),
-		},
+		ObjectMeta: createResourceMeta(&obj, c.Meta),
 		Spec: networkingv1.NetworkPolicySpec{
 			PodSelector: metav1.LabelSelector{
-				MatchLabels: runPodSelector(obj),
+				MatchLabels: runPodSelector(&obj),
 			},
 			Ingress: ingressRules,
 			PolicyTypes: []networkingv1.PolicyType{
