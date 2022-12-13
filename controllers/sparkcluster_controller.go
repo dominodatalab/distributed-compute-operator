@@ -245,6 +245,9 @@ func (r *SparkClusterReconciler) reconcileResources(ctx context.Context, sc *dcv
 	if err := r.reconcileConfigMap(ctx, sc); err != nil {
 		return err
 	}
+	//if err := r.reconcileApiProxy(ctx, sc); err != nil {
+	//	return err
+	//}
 
 	return r.reconcileStatefulSets(ctx, sc)
 }
@@ -298,6 +301,50 @@ func (r *SparkClusterReconciler) reconcileConfigMap(ctx context.Context, sc *dcv
 
 	return nil
 }
+
+//func apiProxy() core.Component {
+//	return components.ApiProxy(func(obj client.Object) components.ApiProxyDataSource {
+//		return &apiProxyDS{sc: sparkCluster(obj)}
+//	})
+//}
+//
+//func sparkCluster(obj client.Object) *dcv1alpha1.SparkCluster {
+//	return obj.(*dcv1alpha1.SparkCluster)
+//}
+//
+//type apiProxyDS struct {
+//	sc *dcv1alpha1.SparkCluster
+//}
+//
+//func (c *apiProxyDS) Service() *corev1.Service {
+//	// TODO
+//	return &corev1.Service{
+//		ObjectMeta: metav1.ObjectMeta{
+//			Name:      spark.InstanceObjectName(c.sc.Name, spark.ComponentNone),
+//			Namespace: c.sc.Namespace,
+//			Labels:    spark.AddGlobalLabels(spark.MetadataLabels(c.sc), c.sc.Spec.GlobalLabels),
+//		},
+//	}
+//}
+//
+//func (c *apiProxyDS) NetworkPolicy() *networkingv1.NetworkPolicy {
+//	// TODO
+//	return &networkingv1.NetworkPolicy{
+//		ObjectMeta: metav1.ObjectMeta{
+//			Name:      spark.InstanceObjectName(c.sc.Name, spark.ComponentNone),
+//			Namespace: c.sc.Namespace,
+//			Labels:    spark.AddGlobalLabels(spark.MetadataLabels(c.sc), c.sc.Spec.GlobalLabels),
+//		},
+//	}
+//}
+//
+//func (c *apiProxyDS) Port() int32 {
+//	return 0
+//}
+//
+//func (r *SparkClusterReconciler) reconcileApiProxy(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+//	apiProxy().Reconcile(&ctx)
+//}
 
 // reconcileServiceAccount creates a new dedicated service account for a Spark
 // cluster unless a different service account name is provided in the spec.
