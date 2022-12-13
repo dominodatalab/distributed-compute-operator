@@ -27,7 +27,10 @@ const (
 )
 
 func executionID(obj *client.Object) string {
-	return (*obj).GetLabels()[executionIDLabel]
+	if executionID, ok := (*obj).GetLabels()[executionIDLabel]; ok {
+		return executionID
+	}
+	return "unknown-execution-id" // OK for testing
 }
 
 func runPodSelector(obj *client.Object) map[string]string {
