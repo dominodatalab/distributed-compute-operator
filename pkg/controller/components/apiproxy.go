@@ -128,7 +128,7 @@ func (c APIProxyNetworkPolicyComponent) Reconcile(ctx *core.Context) (ctrl.Resul
 		}},
 	}}
 
-	svc := &networkingv1.NetworkPolicy{
+	netpol := &networkingv1.NetworkPolicy{
 		ObjectMeta: createResourceMeta(&obj, c.Meta),
 		Spec: networkingv1.NetworkPolicySpec{
 			PodSelector: metav1.LabelSelector{
@@ -141,7 +141,7 @@ func (c APIProxyNetworkPolicyComponent) Reconcile(ctx *core.Context) (ctrl.Resul
 		},
 	}
 
-	err := actions.CreateOrUpdateOwnedResource(ctx, obj, svc)
+	err := actions.CreateOrUpdateOwnedResource(ctx, obj, netpol)
 	if err != nil {
 		err = fmt.Errorf("cannot reconcile service: %w", err)
 	}

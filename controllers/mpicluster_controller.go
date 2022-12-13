@@ -23,13 +23,13 @@ func MPICluster(mgr ctrl.Manager, webhooksEnabled bool, cfg *Config) error {
 		Component("rolebinding", mpi.RoleBindingPodSecurityPolicy()).
 		Component("configmap", mpi.ConfigMap()).
 		Component("service-worker", mpi.ServiceWorker()).
+		Component("service-api-proxy", mpi.APIProxyService()).
 		Component("service-client", mpi.ServiceClient()).
 		Component("networkpolicy-worker", mpi.NetworkPolicyWorker()).
 		Component("networkpolicy-client", mpi.NetworkPolicyClient()).
+		Component("networkpolicy-api-proxy", mpi.APIProxyNetworkPolicy()).
 		Component("workers", mpi.StatefulSet(cfg.MPIInitImage, cfg.MPISyncImage)).
-		Component("statusupdate", mpi.StatusUpdate()).
-		Component("service-api-proxy", mpi.APIProxyService()).
-		Component("networkpolicy-api-proxy", mpi.APIProxyNetworkPolicy())
+		Component("statusupdate", mpi.StatusUpdate())
 
 	if webhooksEnabled {
 		reconciler.WithWebhooks()
