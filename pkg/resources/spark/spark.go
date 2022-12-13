@@ -3,6 +3,10 @@ package spark
 import (
 	"fmt"
 
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/dominodatalab/distributed-compute-operator/pkg/cluster/metadata"
+
 	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
@@ -78,4 +82,14 @@ func SelectorLabels(sc *dcv1alpha1.SparkCluster) map[string]string {
 // SelectorLabelsWithComponent returns a resource component selector clause for spark resources.
 func SelectorLabelsWithComponent(sc *dcv1alpha1.SparkCluster, comp Component) map[string]string {
 	return resources.SelectorLabelsWithComponent(ApplicationName, sc.Name, string(comp))
+}
+
+var Meta = metadata.NewProvider(
+	ApplicationName,
+	func(obj client.Object) string { return objToSparkCluster(obj).Spec.Image.Tag },
+	func(obj client.Object) map[string]string { return objToSparkCluster(obj).Spec.GlobalLabels },
+)
+
+func objToSparkCluster(obj client.Object) *dcv1alpha1.SparkCluster {
+	return obj.(*dcv1alpha1.SparkCluster)
 }

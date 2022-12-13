@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dominodatalab/distributed-compute-operator/pkg/controller/components"
+
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
@@ -245,6 +247,9 @@ func (r *SparkClusterReconciler) reconcileResources(ctx context.Context, sc *dcv
 	if err := r.reconcileConfigMap(ctx, sc); err != nil {
 		return err
 	}
+	if err := r.reconcileAPIProxy(ctx, sc); err != nil {
+		return err
+	}
 
 	return r.reconcileStatefulSets(ctx, sc)
 }
@@ -294,6 +299,22 @@ func (r *SparkClusterReconciler) reconcileConfigMap(ctx context.Context, sc *dcv
 		if err := r.createOrUpdateOwnedResource(ctx, sc, keytabCM); err != nil {
 			return fmt.Errorf("failed to reconcile keytab configmap: %w", err)
 		}
+	}
+
+	return nil
+}
+
+func (r *SparkClusterReconciler) reconcileAPIProxy(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+	obj := client.Object(sc)
+
+	apiProxyService := components.NewAPIProxyServiceComponent(&obj, sc.Spec.APIProxyPort, spark.Meta)
+	if err := r.createOrUpdateOwnedResource(ctx, sc, apiProxyService); err != nil {
+		return fmt.Errorf("failed to reconcile api-proxy Service: %w", err)
+	}
+
+	apiProxyNetworkPolicy := components.NewAPIProxyNetworkPolicyComponent(&obj, sc.Spec.APIProxyPort, spark.Meta)
+	if err := r.createOrUpdateOwnedResource(ctx, sc, apiProxyNetworkPolicy); err != nil {
+		return fmt.Errorf("failed to reconcile api-proxy Network Policy: %w", err)
 	}
 
 	return nil

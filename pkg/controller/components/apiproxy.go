@@ -26,11 +26,6 @@ const (
 	datasourceProxyClientLabel = "datasource-proxy-client"
 )
 
-type APIProxyServiceComponent struct {
-	APIProxyPort func(obj *client.Object) int32
-	Meta         *metadata.Provider
-}
-
 func executionID(obj *client.Object) string {
 	return (*obj).GetLabels()[executionIDLabel]
 }
@@ -42,7 +37,7 @@ func runPodSelector(obj *client.Object) map[string]string {
 	}
 }
 
-func createResourceMeta(obj *client.Object, componentMeta *metadata.Provider) metav1.ObjectMeta {
+func newResourceMeta(obj *client.Object, componentMeta *metadata.Provider) metav1.ObjectMeta {
 	instanceName := fmt.Sprintf("%s-%s", component, executionID(obj))
 	return metav1.ObjectMeta{
 		Name:      instanceName,
@@ -51,14 +46,11 @@ func createResourceMeta(obj *client.Object, componentMeta *metadata.Provider) me
 	}
 }
 
-func (c APIProxyServiceComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
-	obj := ctx.Object
-
-	internalTrafficPolicy := corev1.ServiceInternalTrafficPolicyCluster
-	ipFamilyPolicy := corev1.IPFamilyPolicySingleStack
-
-	apiProxyPort := c.APIProxyPort(&obj)
-	if apiProxyPort == 0 {
+func NewAPIProxyServiceComponent(obj *client.Object, port int32, meta *metadata.Provider) *corev1.Service {
+	var apiProxyPort int32
+	if port != 0 {
+		apiProxyPort = port
+	} else {
 		apiProxyPort = defaultAPIProxyPort
 	}
 
@@ -69,11 +61,13 @@ func (c APIProxyServiceComponent) Reconcile(ctx *core.Context) (ctrl.Result, err
 		Protocol:   corev1.ProtocolTCP,
 	}}
 
-	svc := &corev1.Service{
-		ObjectMeta: createResourceMeta(&obj, c.Meta),
+	internalTrafficPolicy := corev1.ServiceInternalTrafficPolicyCluster
+	ipFamilyPolicy := corev1.IPFamilyPolicySingleStack
+
+	return &corev1.Service{
+		ObjectMeta: newResourceMeta(obj, meta),
 		Spec: corev1.ServiceSpec{
-			//			ClusterIP:             corev1.ClusterIPNone,
-			Selector:              runPodSelector(&obj),
+			Selector:              runPodSelector(obj),
 			Ports:                 ports,
 			InternalTrafficPolicy: &internalTrafficPolicy,
 			Type:                  corev1.ServiceTypeClusterIP,
@@ -82,6 +76,16 @@ func (c APIProxyServiceComponent) Reconcile(ctx *core.Context) (ctrl.Result, err
 			SessionAffinity:       corev1.ServiceAffinityNone,
 		},
 	}
+}
+
+type APIProxyServiceComponent struct {
+	APIProxyPort func(obj *client.Object) int32
+	Meta         *metadata.Provider
+}
+
+func (c APIProxyServiceComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
+	obj := ctx.Object
+	svc := NewAPIProxyServiceComponent(&obj, c.APIProxyPort(&obj), c.Meta)
 
 	err := actions.CreateOrUpdateOwnedResource(ctx, obj, svc)
 	if err != nil {
@@ -100,21 +104,21 @@ type APIProxyNetworkPolicyComponent struct {
 	Meta         *metadata.Provider
 }
 
-func (c APIProxyNetworkPolicyComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
-	obj := ctx.Object
-	tcpProto := corev1.ProtocolTCP
-
-	p := c.APIProxyPort(&obj)
-	if p == 0 {
-		p = defaultAPIProxyPort
+func NewAPIProxyNetworkPolicyComponent(obj *client.Object, port int32, meta *metadata.Provider) *networkingv1.NetworkPolicy {
+	var apiProxyPort intstr.IntOrString
+	if port != 0 {
+		apiProxyPort = intstr.FromInt(int(port))
+	} else {
+		apiProxyPort = intstr.FromInt(defaultAPIProxyPort)
 	}
-	apiProxyPort := intstr.FromInt(int(p))
 
 	targetSelector := map[string]string{
-		executionIDLabel:           obj.GetLabels()[executionIDLabel],
-		projectIDLabel:             obj.GetLabels()[projectIDLabel],
+		executionIDLabel:           (*obj).GetLabels()[executionIDLabel],
+		projectIDLabel:             (*obj).GetLabels()[projectIDLabel],
 		datasourceProxyClientLabel: "true",
 	}
+
+	tcpProto := corev1.ProtocolTCP
 
 	ingressRules := []networkingv1.NetworkPolicyIngressRule{{
 		From: []networkingv1.NetworkPolicyPeer{{
@@ -128,11 +132,11 @@ func (c APIProxyNetworkPolicyComponent) Reconcile(ctx *core.Context) (ctrl.Resul
 		}},
 	}}
 
-	netpol := &networkingv1.NetworkPolicy{
-		ObjectMeta: createResourceMeta(&obj, c.Meta),
+	return &networkingv1.NetworkPolicy{
+		ObjectMeta: newResourceMeta(obj, meta),
 		Spec: networkingv1.NetworkPolicySpec{
 			PodSelector: metav1.LabelSelector{
-				MatchLabels: runPodSelector(&obj),
+				MatchLabels: runPodSelector(obj),
 			},
 			Ingress: ingressRules,
 			PolicyTypes: []networkingv1.PolicyType{
@@ -140,8 +144,13 @@ func (c APIProxyNetworkPolicyComponent) Reconcile(ctx *core.Context) (ctrl.Resul
 			},
 		},
 	}
+}
 
-	err := actions.CreateOrUpdateOwnedResource(ctx, obj, netpol)
+func (c APIProxyNetworkPolicyComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
+	obj := ctx.Object
+	netPol := NewAPIProxyNetworkPolicyComponent(&obj, c.APIProxyPort(&obj), c.Meta)
+
+	err := actions.CreateOrUpdateOwnedResource(ctx, obj, netPol)
 	if err != nil {
 		err = fmt.Errorf("cannot reconcile service: %w", err)
 	}
