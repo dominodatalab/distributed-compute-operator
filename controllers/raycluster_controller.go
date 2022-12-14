@@ -1,3 +1,4 @@
+//nolint:dupl
 package controllers
 
 import (
@@ -7,6 +8,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/dominodatalab/distributed-compute-operator/pkg/controller/components"
 
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
@@ -178,6 +181,9 @@ func (r *RayClusterReconciler) reconcileResources(ctx context.Context, rc *dcv1a
 	if err := r.reconcileAutoscaler(ctx, rc); err != nil {
 		return err
 	}
+	if err := r.reconcileAPIProxy(ctx, rc); err != nil {
+		return err
+	}
 
 	return r.reconcileStatefulSets(ctx, rc)
 }
@@ -200,6 +206,22 @@ func (r *RayClusterReconciler) reconcileIstio(ctx context.Context, rc *dcv1alpha
 	}
 	if err := r.createOrUpdateOwnedResource(ctx, rc, peerAuth); err != nil {
 		return fmt.Errorf("failed to reconcile peer authentication: %w", err)
+	}
+
+	return nil
+}
+
+func (r *RayClusterReconciler) reconcileAPIProxy(ctx context.Context, sc *dcv1alpha1.RayCluster) error {
+	obj := client.Object(sc)
+
+	apiProxyService := components.NewAPIProxyServiceComponent(&obj, sc.Spec.APIProxyPort, ray.Meta)
+	if err := r.createOrUpdateOwnedResource(ctx, sc, apiProxyService); err != nil {
+		return fmt.Errorf("failed to reconcile api-proxy Service: %w", err)
+	}
+
+	apiProxyNetworkPolicy := components.NewAPIProxyNetworkPolicyComponent(&obj, sc.Spec.APIProxyPort, ray.Meta)
+	if err := r.createOrUpdateOwnedResource(ctx, sc, apiProxyNetworkPolicy); err != nil {
+		return fmt.Errorf("failed to reconcile api-proxy Network Policy: %w", err)
 	}
 
 	return nil
