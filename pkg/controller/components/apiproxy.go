@@ -19,7 +19,7 @@ import (
 const (
 	defaultAPIProxyPort        = 8899
 	targetServicePort          = 8899
-	apiProxyPortName           = "api-proxy"
+	apiProxyPortName           = "http-api-proxy"
 	component                  = "api-proxy"
 	executionIDLabel           = "dominodatalab.com/execution-id"
 	projectIDLabel             = "dominodatalab.com/project-id"
@@ -41,7 +41,8 @@ func runPodSelector(obj *client.Object) map[string]string {
 }
 
 func newResourceMeta(obj *client.Object, componentMeta *metadata.Provider) metav1.ObjectMeta {
-	instanceName := fmt.Sprintf("%s-%s", component, executionID(obj))
+	//instanceName := fmt.Sprintf("%s-%s", component, executionID(obj))
+	instanceName := componentMeta.InstanceName(*obj, metadata.ComponentNone)
 	return metav1.ObjectMeta{
 		Name:      instanceName,
 		Namespace: (*obj).GetNamespace(),
@@ -64,19 +65,12 @@ func NewAPIProxyServiceComponent(obj *client.Object, port int32, meta *metadata.
 		Protocol:   corev1.ProtocolTCP,
 	}}
 
-	internalTrafficPolicy := corev1.ServiceInternalTrafficPolicyCluster
-	ipFamilyPolicy := corev1.IPFamilyPolicySingleStack
-
 	return &corev1.Service{
 		ObjectMeta: newResourceMeta(obj, meta),
 		Spec: corev1.ServiceSpec{
-			Selector:              runPodSelector(obj),
-			Ports:                 ports,
-			InternalTrafficPolicy: &internalTrafficPolicy,
-			Type:                  corev1.ServiceTypeClusterIP,
-			IPFamilies:            []corev1.IPFamily{corev1.IPv4Protocol},
-			IPFamilyPolicy:        &ipFamilyPolicy,
-			SessionAffinity:       corev1.ServiceAffinityNone,
+			Selector: runPodSelector(obj),
+			Ports:    ports,
+			Type:     corev1.ServiceTypeClusterIP,
 		},
 	}
 }
