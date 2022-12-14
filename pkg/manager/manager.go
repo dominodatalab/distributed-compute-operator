@@ -66,8 +66,6 @@ func Start(cfg *controllers.Config) error {
 
 	enableWebHooks := os.Getenv("ENABLE_WEBHOOKS") != "false" // TODO: add to config
 
-	println("*** WH=%s", enableWebHooks)
-
 	for _, builder := range controllers.BuilderFuncs {
 		if err = builder(mgr, enableWebHooks, cfg); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", builder)
