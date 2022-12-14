@@ -17,13 +17,10 @@ import (
 )
 
 const (
-	defaultAPIProxyPort        = 8899
-	targetServicePort          = 8899
-	apiProxyPortName           = "http-api-proxy"
-	component                  = "api-proxy"
-	executionIDLabel           = "dominodatalab.com/execution-id"
-	projectIDLabel             = "dominodatalab.com/project-id"
-	datasourceProxyClientLabel = "datasource-proxy-client"
+	defaultAPIProxyPort = 8899
+	targetServicePort   = 8899
+	apiProxyPortName    = "http-api-proxy"
+	component           = "api-proxy"
 )
 
 func newResourceMeta(obj *client.Object, componentMeta *metadata.Provider) metav1.ObjectMeta {
@@ -102,18 +99,12 @@ func NewAPIProxyNetworkPolicyComponent(
 		apiProxyPort = intstr.FromInt(defaultAPIProxyPort)
 	}
 
-	targetSelector := map[string]string{
-		executionIDLabel:           (*obj).GetLabels()[executionIDLabel],
-		projectIDLabel:             (*obj).GetLabels()[projectIDLabel],
-		datasourceProxyClientLabel: "true",
-	}
-
 	tcpProto := corev1.ProtocolTCP
 
 	ingressRules := []networkingv1.NetworkPolicyIngressRule{{
 		From: []networkingv1.NetworkPolicyPeer{{
 			PodSelector: &metav1.LabelSelector{
-				MatchLabels: targetSelector,
+				MatchLabels: meta.MatchLabels(*obj),
 			},
 		}},
 		Ports: []networkingv1.NetworkPolicyPort{{
