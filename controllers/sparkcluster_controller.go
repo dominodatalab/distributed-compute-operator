@@ -308,12 +308,14 @@ func (r *SparkClusterReconciler) reconcileConfigMap(ctx context.Context, sc *dcv
 func (r *SparkClusterReconciler) reconcileAPIProxy(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
 	obj := client.Object(sc)
 
-	apiProxyService := components.NewAPIProxyServiceComponent(&obj, sc.Spec.APIProxyPort, spark.Meta)
+	apiProxyService := components.NewAPIProxyServiceComponent(
+		&obj, sc.Spec.APIProxyPort, sc.Spec.NetworkPolicy.ClientLabels, spark.Meta)
 	if err := r.createOrUpdateOwnedResource(ctx, sc, apiProxyService); err != nil {
 		return fmt.Errorf("failed to reconcile api-proxy Service: %w", err)
 	}
 
-	apiProxyNetworkPolicy := components.NewAPIProxyNetworkPolicyComponent(&obj, sc.Spec.APIProxyPort, spark.Meta)
+	apiProxyNetworkPolicy := components.NewAPIProxyNetworkPolicyComponent(
+		&obj, sc.Spec.APIProxyPort, sc.Spec.NetworkPolicy.ClientLabels, spark.Meta)
 	if err := r.createOrUpdateOwnedResource(ctx, sc, apiProxyNetworkPolicy); err != nil {
 		return fmt.Errorf("failed to reconcile api-proxy Network Policy: %w", err)
 	}

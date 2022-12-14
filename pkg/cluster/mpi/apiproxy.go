@@ -12,6 +12,9 @@ func APIProxyService() core.OwnedComponent {
 		APIProxyPort: func(obj *client.Object) int32 {
 			return objToMPICluster(*obj).Spec.APIProxyPort
 		},
+		ClientLabels: func(obj *client.Object) map[string]string {
+			return objToMPICluster(*obj).Spec.NetworkPolicy.ClientLabels
+		},
 		Meta: meta,
 	}
 }
@@ -20,6 +23,9 @@ func APIProxyNetworkPolicy() core.OwnedComponent {
 	return components.APIProxyNetworkPolicyComponent{
 		APIProxyPort: func(obj *client.Object) int32 {
 			return objToMPICluster(*obj).Spec.APIProxyPort
+		},
+		ClientLabels: func(obj *client.Object) map[string]string {
+			return objToMPICluster(*obj).Spec.NetworkPolicy.ClientLabels
 		},
 		Meta: meta,
 	}

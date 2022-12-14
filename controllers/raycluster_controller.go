@@ -214,12 +214,14 @@ func (r *RayClusterReconciler) reconcileIstio(ctx context.Context, rc *dcv1alpha
 func (r *RayClusterReconciler) reconcileAPIProxy(ctx context.Context, sc *dcv1alpha1.RayCluster) error {
 	obj := client.Object(sc)
 
-	apiProxyService := components.NewAPIProxyServiceComponent(&obj, sc.Spec.APIProxyPort, ray.Meta)
+	apiProxyService := components.NewAPIProxyServiceComponent(
+		&obj, sc.Spec.APIProxyPort, sc.Spec.NetworkPolicy.ClientLabels, ray.Meta)
 	if err := r.createOrUpdateOwnedResource(ctx, sc, apiProxyService); err != nil {
 		return fmt.Errorf("failed to reconcile api-proxy Service: %w", err)
 	}
 
-	apiProxyNetworkPolicy := components.NewAPIProxyNetworkPolicyComponent(&obj, sc.Spec.APIProxyPort, ray.Meta)
+	apiProxyNetworkPolicy := components.NewAPIProxyNetworkPolicyComponent(
+		&obj, sc.Spec.APIProxyPort, sc.Spec.NetworkPolicy.ClientLabels, ray.Meta)
 	if err := r.createOrUpdateOwnedResource(ctx, sc, apiProxyNetworkPolicy); err != nil {
 		return fmt.Errorf("failed to reconcile api-proxy Network Policy: %w", err)
 	}
