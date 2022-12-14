@@ -41,7 +41,6 @@ func runPodSelector(obj *client.Object) map[string]string {
 }
 
 func newResourceMeta(obj *client.Object, componentMeta *metadata.Provider) metav1.ObjectMeta {
-	//instanceName := fmt.Sprintf("%s-%s", component, executionID(obj))
 	instanceName := componentMeta.InstanceName(*obj, metadata.ComponentNone)
 	return metav1.ObjectMeta{
 		Name:      instanceName,
