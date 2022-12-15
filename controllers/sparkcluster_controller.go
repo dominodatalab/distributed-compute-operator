@@ -248,7 +248,7 @@ func (r *SparkClusterReconciler) reconcileResources(ctx context.Context, sc *dcv
 	if err := r.reconcileConfigMap(ctx, sc); err != nil {
 		return err
 	}
-	if err := r.reconcileAPIProxy(ctx, sc); err != nil {
+	if err := r.reconcileClientPorts(ctx, sc); err != nil {
 		return err
 	}
 
@@ -305,19 +305,19 @@ func (r *SparkClusterReconciler) reconcileConfigMap(ctx context.Context, sc *dcv
 	return nil
 }
 
-func (r *SparkClusterReconciler) reconcileAPIProxy(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+func (r *SparkClusterReconciler) reconcileClientPorts(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
 	obj := client.Object(sc)
 
-	apiProxyService := components.NewAPIProxyServiceComponent(
+	clientPortsService := components.NewClientPortsServiceComponent(
 		&obj, sc.Spec.AdditionalClientPorts, sc.Spec.NetworkPolicy.ClientLabels, spark.Meta)
-	if err := r.createOrUpdateOwnedResource(ctx, sc, apiProxyService); err != nil {
-		return fmt.Errorf("failed to reconcile api-proxy Service: %w", err)
+	if err := r.createOrUpdateOwnedResource(ctx, sc, clientPortsService); err != nil {
+		return fmt.Errorf("failed to reconcile client ports Service: %w", err)
 	}
 
-	apiProxyNetworkPolicy := components.NewAPIProxyNetworkPolicyComponent(
+	clientPortsNetworkPolicy := components.NewClientPortsNetworkPolicyComponent(
 		&obj, sc.Spec.AdditionalClientPorts, sc.Spec.NetworkPolicy.ClientLabels, spark.Meta)
-	if err := r.createOrUpdateOwnedResource(ctx, sc, apiProxyNetworkPolicy); err != nil {
-		return fmt.Errorf("failed to reconcile api-proxy Network Policy: %w", err)
+	if err := r.createOrUpdateOwnedResource(ctx, sc, clientPortsNetworkPolicy); err != nil {
+		return fmt.Errorf("failed to reconcile client ports Network Policy: %w", err)
 	}
 
 	return nil

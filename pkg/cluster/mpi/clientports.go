@@ -8,8 +8,8 @@ import (
 	"github.com/dominodatalab/distributed-compute-operator/pkg/controller/core"
 )
 
-func APIProxyService() core.OwnedComponent {
-	return components.APIProxyServiceComponent{
+func ClientPortsService() core.OwnedComponent {
+	return components.ClientPortsServiceComponent{
 		ClientPorts: func(obj *client.Object) []corev1.ServicePort {
 			return objToMPICluster(*obj).Spec.AdditionalClientPorts
 		},
@@ -20,8 +20,8 @@ func APIProxyService() core.OwnedComponent {
 	}
 }
 
-func APIProxyNetworkPolicy() core.OwnedComponent {
-	return components.APIProxyNetworkPolicyComponent{
+func ClientPortsNetworkPolicy() core.OwnedComponent {
+	return components.ClientPortsNetworkPolicyComponent{
 		ClientPorts: func(obj *client.Object) []corev1.ServicePort {
 			return objToMPICluster(*obj).Spec.AdditionalClientPorts
 		},

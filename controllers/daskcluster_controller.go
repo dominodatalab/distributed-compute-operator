@@ -22,10 +22,10 @@ func DaskCluster(mgr ctrl.Manager, webhooksEnabled bool, cfg *Config) error {
 		Component("rolebinding-podsecuritypolicy", dask.RoleBindingPodSecurityPolicy()).
 		Component("service-scheduler", dask.ServiceScheduler()).
 		Component("service-worker", dask.ServiceWorker()).
-		Component("service-api-proxy", dask.APIProxyService()).
+		Component("service-proxy", dask.ClientPortsService()).
 		Component("networkpolicy-scheduler", dask.NetworkPolicyScheduler()).
 		Component("networkpolicy-worker", dask.NetworkPolicyWorker()).
-		Component("networkpolicy-api-proxy", dask.APIProxyNetworkPolicy()).
+		Component("networkpolicy-proxy", dask.ClientPortsNetworkPolicy()).
 		Component("statefulset-scheduler", dask.StatefulSetScheduler()).
 		Component("statefulset-worker", dask.StatefulSetWorker()).
 		Component("horizontalpodautoscaler", dask.HorizontalPodAutoscaler()).

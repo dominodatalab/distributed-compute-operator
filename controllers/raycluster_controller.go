@@ -181,7 +181,7 @@ func (r *RayClusterReconciler) reconcileResources(ctx context.Context, rc *dcv1a
 	if err := r.reconcileAutoscaler(ctx, rc); err != nil {
 		return err
 	}
-	if err := r.reconcileAPIProxy(ctx, rc); err != nil {
+	if err := r.reconcileClientPorts(ctx, rc); err != nil {
 		return err
 	}
 
@@ -211,19 +211,19 @@ func (r *RayClusterReconciler) reconcileIstio(ctx context.Context, rc *dcv1alpha
 	return nil
 }
 
-func (r *RayClusterReconciler) reconcileAPIProxy(ctx context.Context, sc *dcv1alpha1.RayCluster) error {
+func (r *RayClusterReconciler) reconcileClientPorts(ctx context.Context, sc *dcv1alpha1.RayCluster) error {
 	obj := client.Object(sc)
 
-	apiProxyService := components.NewAPIProxyServiceComponent(
+	clientPortsService := components.NewClientPortsServiceComponent(
 		&obj, sc.Spec.AdditionalClientPorts, sc.Spec.NetworkPolicy.ClientLabels, ray.Meta)
-	if err := r.createOrUpdateOwnedResource(ctx, sc, apiProxyService); err != nil {
-		return fmt.Errorf("failed to reconcile api-proxy Service: %w", err)
+	if err := r.createOrUpdateOwnedResource(ctx, sc, clientPortsService); err != nil {
+		return fmt.Errorf("failed to reconcile client ports Service: %w", err)
 	}
 
-	apiProxyNetworkPolicy := components.NewAPIProxyNetworkPolicyComponent(
+	clientPortsNetworkPolicy := components.NewClientPortsNetworkPolicyComponent(
 		&obj, sc.Spec.AdditionalClientPorts, sc.Spec.NetworkPolicy.ClientLabels, ray.Meta)
-	if err := r.createOrUpdateOwnedResource(ctx, sc, apiProxyNetworkPolicy); err != nil {
-		return fmt.Errorf("failed to reconcile api-proxy Network Policy: %w", err)
+	if err := r.createOrUpdateOwnedResource(ctx, sc, clientPortsNetworkPolicy); err != nil {
+		return fmt.Errorf("failed to reconcile client ports Network Policy: %w", err)
 	}
 
 	return nil

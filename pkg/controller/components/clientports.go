@@ -17,9 +17,9 @@ import (
 )
 
 const (
-	component               = "api-proxy"
-	defaultAPIProxyPort     = 8899
-	defaultAPIProxyPortName = "http-api-proxy"
+	component             = "proxy"
+	defaultClientPort     = 8899
+	defaultClientPortName = "http-proxy"
 )
 
 func newResourceMeta(obj *client.Object, componentMeta *metadata.Provider) metav1.ObjectMeta {
@@ -30,7 +30,7 @@ func newResourceMeta(obj *client.Object, componentMeta *metadata.Provider) metav
 	}
 }
 
-func NewAPIProxyServiceComponent(
+func NewClientPortsServiceComponent(
 	obj *client.Object,
 	ports []corev1.ServicePort,
 	clientLabels map[string]string,
@@ -41,9 +41,9 @@ func NewAPIProxyServiceComponent(
 	} else {
 		// TODO: Perhaps remove after Nucleus is set up to supply the API proxy port
 		clientPorts = []corev1.ServicePort{{
-			Name:       defaultAPIProxyPortName,
-			Port:       defaultAPIProxyPort,
-			TargetPort: intstr.FromInt(defaultAPIProxyPort),
+			Name:       defaultClientPortName,
+			Port:       defaultClientPort,
+			TargetPort: intstr.FromInt(defaultClientPort),
 			Protocol:   corev1.ProtocolTCP,
 		}}
 	}
@@ -58,15 +58,15 @@ func NewAPIProxyServiceComponent(
 	}
 }
 
-type APIProxyServiceComponent struct {
+type ClientPortsServiceComponent struct {
 	ClientPorts  func(obj *client.Object) []corev1.ServicePort
 	ClientLabels func(obj *client.Object) map[string]string
 	Meta         *metadata.Provider
 }
 
-func (c APIProxyServiceComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
+func (c ClientPortsServiceComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
 	obj := ctx.Object
-	svc := NewAPIProxyServiceComponent(&obj, c.ClientPorts(&obj), c.ClientLabels(&obj), c.Meta)
+	svc := NewClientPortsServiceComponent(&obj, c.ClientPorts(&obj), c.ClientLabels(&obj), c.Meta)
 
 	err := actions.CreateOrUpdateOwnedResource(ctx, obj, svc)
 	if err != nil {
@@ -76,17 +76,17 @@ func (c APIProxyServiceComponent) Reconcile(ctx *core.Context) (ctrl.Result, err
 	return ctrl.Result{}, err
 }
 
-func (c APIProxyServiceComponent) Kind() client.Object {
+func (c ClientPortsServiceComponent) Kind() client.Object {
 	return &corev1.Service{}
 }
 
-type APIProxyNetworkPolicyComponent struct {
+type ClientPortsNetworkPolicyComponent struct {
 	ClientPorts  func(obj *client.Object) []corev1.ServicePort
 	ClientLabels func(obj *client.Object) map[string]string
 	Meta         *metadata.Provider
 }
 
-func NewAPIProxyNetworkPolicyComponent(
+func NewClientPortsNetworkPolicyComponent(
 	obj *client.Object,
 	ports []corev1.ServicePort,
 	clientLabels map[string]string,
@@ -97,9 +97,9 @@ func NewAPIProxyNetworkPolicyComponent(
 	} else {
 		// TODO: Perhaps remove after Nucleus is set up to supply the API proxy port
 		clientPorts = []corev1.ServicePort{{
-			Name:       defaultAPIProxyPortName,
-			Port:       defaultAPIProxyPort,
-			TargetPort: intstr.FromInt(defaultAPIProxyPort),
+			Name:       defaultClientPortName,
+			Port:       defaultClientPort,
+			TargetPort: intstr.FromInt(defaultClientPort),
 			Protocol:   corev1.ProtocolTCP,
 		}}
 	}
@@ -136,9 +136,9 @@ func NewAPIProxyNetworkPolicyComponent(
 	}
 }
 
-func (c APIProxyNetworkPolicyComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
+func (c ClientPortsNetworkPolicyComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
 	obj := ctx.Object
-	netPol := NewAPIProxyNetworkPolicyComponent(&obj, c.ClientPorts(&obj), c.ClientLabels(&obj), c.Meta)
+	netPol := NewClientPortsNetworkPolicyComponent(&obj, c.ClientPorts(&obj), c.ClientLabels(&obj), c.Meta)
 
 	err := actions.CreateOrUpdateOwnedResource(ctx, obj, netPol)
 	if err != nil {
@@ -148,6 +148,6 @@ func (c APIProxyNetworkPolicyComponent) Reconcile(ctx *core.Context) (ctrl.Resul
 	return ctrl.Result{}, err
 }
 
-func (c APIProxyNetworkPolicyComponent) Kind() client.Object {
+func (c ClientPortsNetworkPolicyComponent) Kind() client.Object {
 	return &networkingv1.NetworkPolicy{}
 }
