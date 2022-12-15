@@ -3,6 +3,10 @@ package ray
 import (
 	"fmt"
 
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/dominodatalab/distributed-compute-operator/pkg/cluster/metadata"
+
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
@@ -68,4 +72,14 @@ func AddGlobalLabels(labels map[string]string, globalLabels map[string]string) m
 		labels = util.MergeStringMaps(globalLabels, labels)
 	}
 	return labels
+}
+
+var Meta = metadata.NewProvider(
+	ApplicationName,
+	func(obj client.Object) string { return objToRayCluster(obj).Spec.Image.Tag },
+	func(obj client.Object) map[string]string { return objToRayCluster(obj).Spec.GlobalLabels },
+)
+
+func objToRayCluster(obj client.Object) *dcv1alpha1.RayCluster {
+	return obj.(*dcv1alpha1.RayCluster)
 }

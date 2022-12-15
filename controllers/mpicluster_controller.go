@@ -23,9 +23,11 @@ func MPICluster(mgr ctrl.Manager, webhooksEnabled bool, cfg *Config) error {
 		Component("rolebinding", mpi.RoleBindingPodSecurityPolicy()).
 		Component("configmap", mpi.ConfigMap()).
 		Component("service-worker", mpi.ServiceWorker()).
+		Component("service-proxy", mpi.ClientPortsService()).
 		Component("service-client", mpi.ServiceClient()).
 		Component("networkpolicy-worker", mpi.NetworkPolicyWorker()).
 		Component("networkpolicy-client", mpi.NetworkPolicyClient()).
+		Component("networkpolicy-proxy", mpi.ClientPortsNetworkPolicy()).
 		Component("workers", mpi.StatefulSet(cfg.MPIInitImage, cfg.MPISyncImage)).
 		Component("statusupdate", mpi.StatusUpdate())
 

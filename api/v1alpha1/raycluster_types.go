@@ -1,6 +1,9 @@
 package v1alpha1
 
-import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 // RayClusterWorker defines worker-specific pod settings.
 type RayClusterWorker struct {
@@ -46,6 +49,8 @@ type RayClusterSpec struct {
 	DashboardPort int32 `json:"dashboardPort,omitempty"`
 	// EnableDashboard starts the dashboard web UI.
 	EnableDashboard *bool `json:"enableDashboard,omitempty"`
+	// AdditionalClientPorts are extra ports through which cluster nodes could connect to the client.
+	AdditionalClientPorts []corev1.ServicePort `json:"additionalClientPorts,omitempty"`
 }
 
 //+kubebuilder:object:root=true

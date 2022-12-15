@@ -8,6 +8,12 @@ spec:
   # workerPort: 3000
   # nannyPort: 3001
 
+  # additionalClientPorts:
+  #   - name: http-api-proxy
+  #     port: 8899
+  #     targetPort: 8899
+  #     protocol: TCP
+
   # image:
   #   registry: ""
   #   repository: daskdev/dask

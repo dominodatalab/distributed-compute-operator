@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -21,6 +22,9 @@ type DaskClusterSpec struct {
 	DashboardPort int32 `json:"dashboardPort,omitempty"`
 	WorkerPort    int32 `json:"workerPort,omitempty"`
 	NannyPort     int32 `json:"nannyPort,omitempty"`
+
+	// AdditionalClientPorts are extra ports through which cluster nodes could connect to the client.
+	AdditionalClientPorts []corev1.ServicePort `json:"additionalClientPorts,omitempty"`
 }
 
 // DaskClusterStatus defines the observed state of DaskCluster

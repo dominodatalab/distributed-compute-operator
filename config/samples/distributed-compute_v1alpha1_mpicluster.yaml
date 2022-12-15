@@ -33,6 +33,12 @@ spec:
   # podSecurityPolicy: ""
   # istioMutualTLSMode: ""
 
+  # additionalClientPorts:
+  #   - name: http-api-proxy
+  #     port: 8899
+  #     targetPort: 8899
+  #     protocol: TCP
+
   worker:
     # replicas: 1
     sharedSSHSecret: ""

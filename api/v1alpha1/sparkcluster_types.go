@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -66,6 +67,8 @@ type SparkClusterSpec struct {
 	MasterWebPort int32 `json:"masterWebPort,omitempty"`
 	// WorkerWebPort is the port for the worker web UI.
 	WorkerWebPort int32 `json:"workerWebPort,omitempty"`
+	// AdditionalClientPorts are extra ports through which cluster nodes could connect to the client.
+	AdditionalClientPorts []corev1.ServicePort `json:"additionalClientPorts,omitempty"`
 }
 
 //+kubebuilder:object:root=true

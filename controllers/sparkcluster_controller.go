@@ -1,3 +1,4 @@
+//nolint:dupl
 package controllers
 
 import (
@@ -7,6 +8,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/dominodatalab/distributed-compute-operator/pkg/controller/components"
 
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
@@ -245,6 +248,9 @@ func (r *SparkClusterReconciler) reconcileResources(ctx context.Context, sc *dcv
 	if err := r.reconcileConfigMap(ctx, sc); err != nil {
 		return err
 	}
+	if err := r.reconcileClientPorts(ctx, sc); err != nil {
+		return err
+	}
 
 	return r.reconcileStatefulSets(ctx, sc)
 }
@@ -294,6 +300,24 @@ func (r *SparkClusterReconciler) reconcileConfigMap(ctx context.Context, sc *dcv
 		if err := r.createOrUpdateOwnedResource(ctx, sc, keytabCM); err != nil {
 			return fmt.Errorf("failed to reconcile keytab configmap: %w", err)
 		}
+	}
+
+	return nil
+}
+
+func (r *SparkClusterReconciler) reconcileClientPorts(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
+	obj := client.Object(sc)
+
+	clientPortsService := components.NewClientPortsServiceComponent(
+		&obj, sc.Spec.AdditionalClientPorts, sc.Spec.NetworkPolicy.ClientLabels, spark.Meta)
+	if err := r.createOrUpdateOwnedResource(ctx, sc, clientPortsService); err != nil {
+		return fmt.Errorf("failed to reconcile client ports Service: %w", err)
+	}
+
+	clientPortsNetworkPolicy := components.NewClientPortsNetworkPolicyComponent(
+		&obj, sc.Spec.AdditionalClientPorts, sc.Spec.NetworkPolicy.ClientLabels, spark.Meta)
+	if err := r.createOrUpdateOwnedResource(ctx, sc, clientPortsNetworkPolicy); err != nil {
+		return fmt.Errorf("failed to reconcile client ports Network Policy: %w", err)
 	}
 
 	return nil

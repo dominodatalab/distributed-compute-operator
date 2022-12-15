@@ -10,6 +10,12 @@ spec:
   # masterWebPort: 8080
   # workerWebPort: 8081
 
+  # additionalClientPorts:
+  #   - name: http-api-proxy
+  #     port: 8899
+  #     targetPort: 8899
+  #     protocol: TCP
+
   # image:
   #   registry: ""
   #   repository: bitnami/spark
