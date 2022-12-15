@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -23,8 +24,8 @@ type MPIClusterSpec struct {
 
 	// WorkerPorts specifies the range of ports used by worker processes for communication.
 	WorkerPorts []int32 `json:"workerPorts,omitempty"`
-	// APIProxyPort is the port through which cluster nodes connect to the API proxy.
-	APIProxyPort int32 `json:"apiProxyPort,omitempty"`
+	// AdditionalClientPorts are extra ports through which cluster nodes could connect to the client.
+	AdditionalClientPorts []corev1.ServicePort `json:"additionalClientPorts,omitempty"`
 }
 
 //+kubebuilder:object:root=true

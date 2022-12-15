@@ -7,7 +7,12 @@ spec:
   # dashboardPort: 8787
   # workerPort: 3000
   # nannyPort: 3001
-  # apiProxyPort: 8899
+
+  # additionalClientPorts:
+  #   - name: http-api-proxy
+  #     port: 8899
+  #     targetPort: 8899
+  #     protocol: TCP
 
   # image:
   #   registry: ""

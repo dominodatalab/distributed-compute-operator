@@ -1,6 +1,7 @@
 package mpi
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/dominodatalab/distributed-compute-operator/pkg/controller/components"
@@ -9,8 +10,8 @@ import (
 
 func APIProxyService() core.OwnedComponent {
 	return components.APIProxyServiceComponent{
-		APIProxyPort: func(obj *client.Object) int32 {
-			return objToMPICluster(*obj).Spec.APIProxyPort
+		ClientPorts: func(obj *client.Object) []corev1.ServicePort {
+			return objToMPICluster(*obj).Spec.AdditionalClientPorts
 		},
 		ClientLabels: func(obj *client.Object) map[string]string {
 			return objToMPICluster(*obj).Spec.NetworkPolicy.ClientLabels
@@ -21,8 +22,8 @@ func APIProxyService() core.OwnedComponent {
 
 func APIProxyNetworkPolicy() core.OwnedComponent {
 	return components.APIProxyNetworkPolicyComponent{
-		APIProxyPort: func(obj *client.Object) int32 {
-			return objToMPICluster(*obj).Spec.APIProxyPort
+		ClientPorts: func(obj *client.Object) []corev1.ServicePort {
+			return objToMPICluster(*obj).Spec.AdditionalClientPorts
 		},
 		ClientLabels: func(obj *client.Object) map[string]string {
 			return objToMPICluster(*obj).Spec.NetworkPolicy.ClientLabels

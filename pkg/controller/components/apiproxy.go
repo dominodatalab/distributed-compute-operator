@@ -17,10 +17,9 @@ import (
 )
 
 const (
-	defaultAPIProxyPort = 8899
-	targetServicePort   = 8899
-	apiProxyPortName    = "http-api-proxy"
-	component           = "api-proxy"
+	component               = "api-proxy"
+	defaultAPIProxyPort     = 8899
+	defaultAPIProxyPortName = "http-api-proxy"
 )
 
 func newResourceMeta(obj *client.Object, componentMeta *metadata.Provider) metav1.ObjectMeta {
@@ -33,42 +32,41 @@ func newResourceMeta(obj *client.Object, componentMeta *metadata.Provider) metav
 
 func NewAPIProxyServiceComponent(
 	obj *client.Object,
-	port int32,
+	ports []corev1.ServicePort,
 	clientLabels map[string]string,
 	meta *metadata.Provider) *corev1.Service {
-	var apiProxyPort int32
-	if port != 0 {
-		apiProxyPort = port
+	var clientPorts []corev1.ServicePort
+	if len(ports) > 0 {
+		clientPorts = ports
 	} else {
-		apiProxyPort = defaultAPIProxyPort
+		// TODO: Perhaps remove after Nucleus is set up to supply the API proxy port
+		clientPorts = []corev1.ServicePort{{
+			Name:       defaultAPIProxyPortName,
+			Port:       defaultAPIProxyPort,
+			TargetPort: intstr.FromInt(defaultAPIProxyPort),
+			Protocol:   corev1.ProtocolTCP,
+		}}
 	}
-
-	ports := []corev1.ServicePort{{
-		Name:       apiProxyPortName,
-		Port:       apiProxyPort,
-		TargetPort: intstr.FromInt(targetServicePort),
-		Protocol:   corev1.ProtocolTCP,
-	}}
 
 	return &corev1.Service{
 		ObjectMeta: newResourceMeta(obj, meta),
 		Spec: corev1.ServiceSpec{
 			Selector: clientLabels,
-			Ports:    ports,
+			Ports:    clientPorts,
 			Type:     corev1.ServiceTypeClusterIP,
 		},
 	}
 }
 
 type APIProxyServiceComponent struct {
-	APIProxyPort func(obj *client.Object) int32
+	ClientPorts  func(obj *client.Object) []corev1.ServicePort
 	ClientLabels func(obj *client.Object) map[string]string
 	Meta         *metadata.Provider
 }
 
 func (c APIProxyServiceComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
 	obj := ctx.Object
-	svc := NewAPIProxyServiceComponent(&obj, c.APIProxyPort(&obj), c.ClientLabels(&obj), c.Meta)
+	svc := NewAPIProxyServiceComponent(&obj, c.ClientPorts(&obj), c.ClientLabels(&obj), c.Meta)
 
 	err := actions.CreateOrUpdateOwnedResource(ctx, obj, svc)
 	if err != nil {
@@ -83,23 +81,37 @@ func (c APIProxyServiceComponent) Kind() client.Object {
 }
 
 type APIProxyNetworkPolicyComponent struct {
-	APIProxyPort func(obj *client.Object) int32
+	ClientPorts  func(obj *client.Object) []corev1.ServicePort
 	ClientLabels func(obj *client.Object) map[string]string
 	Meta         *metadata.Provider
 }
 
 func NewAPIProxyNetworkPolicyComponent(
-	obj *client.Object, port int32,
+	obj *client.Object,
+	ports []corev1.ServicePort,
 	clientLabels map[string]string,
 	meta *metadata.Provider) *networkingv1.NetworkPolicy {
-	var apiProxyPort intstr.IntOrString
-	if port != 0 {
-		apiProxyPort = intstr.FromInt(int(port))
+	var clientPorts []corev1.ServicePort
+	if len(ports) > 0 {
+		clientPorts = ports
 	} else {
-		apiProxyPort = intstr.FromInt(defaultAPIProxyPort)
+		// TODO: Perhaps remove after Nucleus is set up to supply the API proxy port
+		clientPorts = []corev1.ServicePort{{
+			Name:       defaultAPIProxyPortName,
+			Port:       defaultAPIProxyPort,
+			TargetPort: intstr.FromInt(defaultAPIProxyPort),
+			Protocol:   corev1.ProtocolTCP,
+		}}
 	}
 
-	tcpProto := corev1.ProtocolTCP
+	portCount := len(clientPorts)
+	networkPorts := make([]networkingv1.NetworkPolicyPort, portCount)
+	for i := 0; i < portCount; i++ {
+		networkPorts[i] = networkingv1.NetworkPolicyPort{
+			Port:     &(clientPorts[i].TargetPort),
+			Protocol: &(clientPorts[i].Protocol),
+		}
+	}
 
 	ingressRules := []networkingv1.NetworkPolicyIngressRule{{
 		From: []networkingv1.NetworkPolicyPeer{{
@@ -107,10 +119,7 @@ func NewAPIProxyNetworkPolicyComponent(
 				MatchLabels: meta.MatchLabels(*obj),
 			},
 		}},
-		Ports: []networkingv1.NetworkPolicyPort{{
-			Port:     &apiProxyPort,
-			Protocol: &tcpProto,
-		}},
+		Ports: networkPorts,
 	}}
 
 	return &networkingv1.NetworkPolicy{
@@ -129,7 +138,7 @@ func NewAPIProxyNetworkPolicyComponent(
 
 func (c APIProxyNetworkPolicyComponent) Reconcile(ctx *core.Context) (ctrl.Result, error) {
 	obj := ctx.Object
-	netPol := NewAPIProxyNetworkPolicyComponent(&obj, c.APIProxyPort(&obj), c.ClientLabels(&obj), c.Meta)
+	netPol := NewAPIProxyNetworkPolicyComponent(&obj, c.ClientPorts(&obj), c.ClientLabels(&obj), c.Meta)
 
 	err := actions.CreateOrUpdateOwnedResource(ctx, obj, netPol)
 	if err != nil {
