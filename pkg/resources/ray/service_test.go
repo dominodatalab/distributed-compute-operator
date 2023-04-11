@@ -44,7 +44,7 @@ func TestNewClientService(t *testing.T) {
 	assert.Equal(t, expected, svc)
 
 	t.Run("with_dashboard_enabled", func(t *testing.T) {
-		rc.Spec.EnableDashboard = pointer.BoolPtr(true)
+		rc.Spec.EnableDashboard = pointer.Bool(true)
 		svc := NewClientService(rc)
 
 		expected.Spec.Ports = append(expected.Spec.Ports, corev1.ServicePort{

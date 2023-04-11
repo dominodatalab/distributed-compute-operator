@@ -4,7 +4,7 @@ package components
 import (
 	"fmt"
 
-	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -13,7 +13,7 @@ import (
 )
 
 type HorizontalPodAutoscalerDataSource interface {
-	HorizontalPodAutoscaler() *autoscalingv2beta2.HorizontalPodAutoscaler
+	HorizontalPodAutoscaler() *autoscalingv2.HorizontalPodAutoscaler
 	Delete() bool
 }
 
@@ -28,7 +28,7 @@ type horizontalPodAutoscaler struct {
 }
 
 func (c *horizontalPodAutoscaler) Kind() client.Object {
-	return &autoscalingv2beta2.HorizontalPodAutoscaler{}
+	return &autoscalingv2.HorizontalPodAutoscaler{}
 }
 
 func (c *horizontalPodAutoscaler) Reconcile(ctx *core.Context) (ctrl.Result, error) {

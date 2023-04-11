@@ -44,7 +44,7 @@ func TestNewStatefulSet(t *testing.T) {
 				},
 				Spec: appsv1.StatefulSetSpec{
 					ServiceName: "test-id-ray-head",
-					Replicas:    pointer.Int32Ptr(1),
+					Replicas:    pointer.Int32(1),
 					Selector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"app.kubernetes.io/name":      "ray",
@@ -147,14 +147,14 @@ func TestNewStatefulSet(t *testing.T) {
 										},
 									},
 									LivenessProbe: &corev1.Probe{
-										Handler: corev1.Handler{
+										ProbeHandler: corev1.ProbeHandler{
 											TCPSocket: &corev1.TCPSocketAction{
 												Port: intstr.FromInt(2385),
 											},
 										},
 									},
 									ReadinessProbe: &corev1.Probe{
-										Handler: corev1.Handler{
+										ProbeHandler: corev1.ProbeHandler{
 											TCPSocket: &corev1.TCPSocketAction{
 												Port: intstr.FromInt(2385),
 											},
@@ -185,7 +185,7 @@ func TestNewStatefulSet(t *testing.T) {
 
 		t.Run("enable_dashboard", func(t *testing.T) {
 			rc := rayClusterFixture()
-			rc.Spec.EnableDashboard = pointer.BoolPtr(true)
+			rc.Spec.EnableDashboard = pointer.Bool(true)
 			rc.Spec.DashboardPort = 8265
 
 			actual, err := NewStatefulSet(rc, ComponentHead, false)
@@ -222,7 +222,7 @@ func TestNewStatefulSet(t *testing.T) {
 				},
 				Spec: appsv1.StatefulSetSpec{
 					ServiceName: "test-id-ray-worker",
-					Replicas:    pointer.Int32Ptr(5),
+					Replicas:    pointer.Int32(5),
 					Selector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"app.kubernetes.io/name":      "ray",
@@ -301,14 +301,14 @@ func TestNewStatefulSet(t *testing.T) {
 										},
 									},
 									LivenessProbe: &corev1.Probe{
-										Handler: corev1.Handler{
+										ProbeHandler: corev1.ProbeHandler{
 											TCPSocket: &corev1.TCPSocketAction{
 												Port: intstr.FromInt(2385),
 											},
 										},
 									},
 									ReadinessProbe: &corev1.Probe{
-										Handler: corev1.Handler{
+										ProbeHandler: corev1.ProbeHandler{
 											TCPSocket: &corev1.TCPSocketAction{
 												Port: intstr.FromInt(2385),
 											},
@@ -352,7 +352,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 
 	t.Run("object_store_memory", func(t *testing.T) {
 		rc := rayClusterFixture()
-		rc.Spec.ObjectStoreMemoryBytes = pointer.Int64Ptr(100 * 1 << 20)
+		rc.Spec.ObjectStoreMemoryBytes = pointer.Int64(100 * 1 << 20)
 
 		actual, err := NewStatefulSet(rc, comp, false)
 		require.NoError(t, err)
@@ -459,7 +459,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		elem := dcv1alpha1.PersistentVolumeClaimTemplate{
 			Name: "stuffz",
 			Spec: corev1.PersistentVolumeClaimSpec{
-				StorageClassName: pointer.StringPtr("test-gpu"),
+				StorageClassName: pointer.String("test-gpu"),
 			},
 		}
 		input := []dcv1alpha1.PersistentVolumeClaimTemplate{elem}
@@ -632,7 +632,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 	t.Run("security_context", func(t *testing.T) {
 		rc := rayClusterFixture()
 		rc.Spec.PodSecurityContext = &corev1.PodSecurityContext{
-			RunAsUser: pointer.Int64Ptr(0),
+			RunAsUser: pointer.Int64(0),
 		}
 
 		actual, err := NewStatefulSet(rc, comp, false)

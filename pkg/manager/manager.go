@@ -18,7 +18,6 @@ import (
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/controllers"
-	"github.com/dominodatalab/distributed-compute-operator/pkg/logging"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -77,7 +76,7 @@ func Start(cfg *controllers.Config) error {
 
 	if err = (&controllers.RayClusterReconciler{
 		Client:       mgr.GetClient(),
-		Log:          logging.New(ctrl.Log.WithName("controllers").WithName("RayCluster")),
+		Log:          ctrl.Log.WithName("controllers").WithName("RayCluster"),
 		Scheme:       mgr.GetScheme(),
 		IstioEnabled: cfg.IstioEnabled,
 	}).SetupWithManager(mgr); err != nil {
@@ -87,7 +86,7 @@ func Start(cfg *controllers.Config) error {
 
 	if err = (&controllers.SparkClusterReconciler{
 		Client:       mgr.GetClient(),
-		Log:          logging.New(ctrl.Log.WithName("controllers").WithName("SparkCluster")),
+		Log:          ctrl.Log.WithName("controllers").WithName("SparkCluster"),
 		Scheme:       mgr.GetScheme(),
 		IstioEnabled: cfg.IstioEnabled,
 	}).SetupWithManager(mgr); err != nil {

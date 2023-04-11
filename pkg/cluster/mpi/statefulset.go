@@ -337,7 +337,7 @@ func createWorkerContainer(cr *dcv1alpha1.MPICluster, image string, mounts []cor
 	environment = append(environment, workerEnvironmentExtras(cr)...)
 
 	probe := &corev1.Probe{
-		Handler: corev1.Handler{
+		ProbeHandler: corev1.ProbeHandler{
 			TCPSocket: &corev1.TCPSocketAction{
 				Port: intstr.FromInt(sshdPort),
 			},
@@ -366,7 +366,7 @@ func createWorkerContainer(cr *dcv1alpha1.MPICluster, image string, mounts []cor
 
 func createSidecarContainer(cr *dcv1alpha1.MPICluster, image string, mounts []corev1.VolumeMount) corev1.Container {
 	probe := &corev1.Probe{
-		Handler: corev1.Handler{
+		ProbeHandler: corev1.ProbeHandler{
 			TCPSocket: &corev1.TCPSocketAction{
 				Port: intstr.FromInt(rsyncPort),
 			},

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
 
@@ -19,7 +19,7 @@ func TestHorizontalPodAutoscaler(t *testing.T) {
 		dc.Spec.Autoscaling = &dcv1alpha1.Autoscaling{}
 
 		actual := ds.HorizontalPodAutoscaler()
-		expected := &autoscalingv2beta2.HorizontalPodAutoscaler{
+		expected := &autoscalingv2.HorizontalPodAutoscaler{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-dask",
 				Namespace: "ns",
@@ -30,8 +30,8 @@ func TestHorizontalPodAutoscaler(t *testing.T) {
 					"app.kubernetes.io/version":    "test-tag",
 				},
 			},
-			Spec: autoscalingv2beta2.HorizontalPodAutoscalerSpec{
-				ScaleTargetRef: autoscalingv2beta2.CrossVersionObjectReference{
+			Spec: autoscalingv2.HorizontalPodAutoscalerSpec{
+				ScaleTargetRef: autoscalingv2.CrossVersionObjectReference{
 					Kind:       "DaskCluster",
 					Name:       "test",
 					APIVersion: "distributed-compute.dominodatalab.com/v1test1",
@@ -45,7 +45,7 @@ func TestHorizontalPodAutoscaler(t *testing.T) {
 	})
 
 	t.Run("min_replicas", func(t *testing.T) {
-		expected := pointer.Int32Ptr(7)
+		expected := pointer.Int32(7)
 		dc.Spec.Autoscaling = &dcv1alpha1.Autoscaling{
 			MinReplicas: expected,
 		}
@@ -64,20 +64,20 @@ func TestHorizontalPodAutoscaler(t *testing.T) {
 
 	t.Run("avg_cpu_util", func(t *testing.T) {
 		dc.Spec.Autoscaling = &dcv1alpha1.Autoscaling{
-			AverageCPUUtilization: pointer.Int32Ptr(75),
+			AverageCPUUtilization: pointer.Int32(75),
 		}
 
 		ds := horizontalPodAutoscalerDS{dc: dc}
 		hpa := ds.HorizontalPodAutoscaler()
 
-		expected := []autoscalingv2beta2.MetricSpec{
+		expected := []autoscalingv2.MetricSpec{
 			{
 				Type: "Resource",
-				Resource: &autoscalingv2beta2.ResourceMetricSource{
+				Resource: &autoscalingv2.ResourceMetricSource{
 					Name: "cpu",
-					Target: autoscalingv2beta2.MetricTarget{
+					Target: autoscalingv2.MetricTarget{
 						Type:               "Utilization",
-						AverageUtilization: pointer.Int32Ptr(75),
+						AverageUtilization: pointer.Int32(75),
 					},
 				},
 			},
@@ -87,20 +87,20 @@ func TestHorizontalPodAutoscaler(t *testing.T) {
 
 	t.Run("avg_memory_util", func(t *testing.T) {
 		dc.Spec.Autoscaling = &dcv1alpha1.Autoscaling{
-			AverageMemoryUtilization: pointer.Int32Ptr(75),
+			AverageMemoryUtilization: pointer.Int32(75),
 		}
 
 		ds := horizontalPodAutoscalerDS{dc: dc}
 		hpa := ds.HorizontalPodAutoscaler()
 
-		expected := []autoscalingv2beta2.MetricSpec{
+		expected := []autoscalingv2.MetricSpec{
 			{
 				Type: "Resource",
-				Resource: &autoscalingv2beta2.ResourceMetricSource{
+				Resource: &autoscalingv2.ResourceMetricSource{
 					Name: "memory",
-					Target: autoscalingv2beta2.MetricTarget{
+					Target: autoscalingv2.MetricTarget{
 						Type:               "Utilization",
-						AverageUtilization: pointer.Int32Ptr(75),
+						AverageUtilization: pointer.Int32(75),
 					},
 				},
 			},
@@ -110,15 +110,15 @@ func TestHorizontalPodAutoscaler(t *testing.T) {
 
 	t.Run("scale_down_behavior", func(t *testing.T) {
 		dc.Spec.Autoscaling = &dcv1alpha1.Autoscaling{
-			ScaleDownStabilizationWindowSeconds: pointer.Int32Ptr(60),
+			ScaleDownStabilizationWindowSeconds: pointer.Int32(60),
 		}
 
 		ds := horizontalPodAutoscalerDS{dc: dc}
 		hpa := ds.HorizontalPodAutoscaler()
 
-		expected := &autoscalingv2beta2.HorizontalPodAutoscalerBehavior{
-			ScaleDown: &autoscalingv2beta2.HPAScalingRules{
-				StabilizationWindowSeconds: pointer.Int32Ptr(60),
+		expected := &autoscalingv2.HorizontalPodAutoscalerBehavior{
+			ScaleDown: &autoscalingv2.HPAScalingRules{
+				StabilizationWindowSeconds: pointer.Int32(60),
 			},
 		}
 		assert.Equal(t, expected, hpa.Spec.Behavior)

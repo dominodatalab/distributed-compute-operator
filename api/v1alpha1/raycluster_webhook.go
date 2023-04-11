@@ -20,9 +20,9 @@ var (
 	rayDefaultGCSServerPort          int32 = 2386
 	rayDefaultDashboardPort          int32 = 8265
 	rayDefaultRedisShardPorts              = []int32{6380, 6381}
-	rayDefaultEnableDashboard              = pointer.BoolPtr(true)
-	rayDefaultEnableNetworkPolicy          = pointer.BoolPtr(true)
-	rayDefaultWorkerReplicas               = pointer.Int32Ptr(1)
+	rayDefaultEnableDashboard              = pointer.Bool(true)
+	rayDefaultEnableNetworkPolicy          = pointer.Bool(true)
+	rayDefaultWorkerReplicas               = pointer.Int32(1)
 	rayDefaultNetworkPolicyPodLabels       = map[string]string{
 		"ray-client": "true",
 	}

@@ -3,8 +3,8 @@ package spark
 import (
 	"testing"
 
-	protobuftypes "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/assert"
+	spb "google.golang.org/protobuf/types/known/structpb"
 	networkingv1alpha3 "istio.io/api/networking/v1alpha3"
 	apinetworkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,24 +17,24 @@ func TestNewEnvoyFilter(t *testing.T) {
 
 		patch := networkingv1alpha3.EnvoyFilter_Patch{
 			Operation: networkingv1alpha3.EnvoyFilter_Patch_MERGE,
-			Value: &protobuftypes.Struct{
-				Fields: map[string]*protobuftypes.Value{
+			Value: &spb.Struct{
+				Fields: map[string]*spb.Value{
 					"name": {
-						Kind: &protobuftypes.Value_StringValue{
+						Kind: &spb.Value_StringValue{
 							StringValue: "envoy.filters.network.tcp_proxy",
 						},
 					},
 					"typed_config": {
-						Kind: &protobuftypes.Value_StructValue{
-							StructValue: &protobuftypes.Struct{
-								Fields: map[string]*protobuftypes.Value{
+						Kind: &spb.Value_StructValue{
+							StructValue: &spb.Struct{
+								Fields: map[string]*spb.Value{
 									"@type": {
-										Kind: &protobuftypes.Value_StringValue{
+										Kind: &spb.Value_StringValue{
 											StringValue: "type.googleapis.com/envoy.extensions.filters.network.tcp_proxy.v3.TcpProxy",
 										},
 									},
 									"idle_timeout": {
-										Kind: &protobuftypes.Value_StringValue{
+										Kind: &spb.Value_StringValue{
 											StringValue: "0s",
 										},
 									},

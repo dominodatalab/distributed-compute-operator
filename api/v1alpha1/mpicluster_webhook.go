@@ -76,7 +76,7 @@ func (j *MPICluster) ValidateCreate() error {
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
-func (j *MPICluster) ValidateUpdate(old runtime.Object) error {
+func (j *MPICluster) ValidateUpdate(_ runtime.Object) error {
 	mpiClusterLogger.WithValues("mpicluster", client.ObjectKeyFromObject(j)).Info("Validating update")
 
 	// TODO: reject all updates to spec, or certain fields?

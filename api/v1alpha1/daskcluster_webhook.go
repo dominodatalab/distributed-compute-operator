@@ -25,7 +25,7 @@ var (
 	}
 
 	daskDefaultPodSecurityContext = &corev1.PodSecurityContext{
-		RunAsUser: pointer.Int64Ptr(nobodyUID),
+		RunAsUser: pointer.Int64(nobodyUID),
 	}
 
 	daskDefaultImage = &OCIImageDefinition{
@@ -100,7 +100,7 @@ func (dc *DaskCluster) ValidateCreate() error {
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (dc *DaskCluster) ValidateUpdate(old runtime.Object) error {
+func (dc *DaskCluster) ValidateUpdate(_ runtime.Object) error {
 	daskLogger.WithValues("daskcluster", client.ObjectKeyFromObject(dc)).Info("Validating update")
 	return dc.validateDaskCluster()
 }

@@ -16,6 +16,6 @@ func NewServiceAccount(sc *dcv1alpha1.SparkCluster) *corev1.ServiceAccount {
 			Namespace: sc.Namespace,
 			Labels:    AddGlobalLabels(MetadataLabels(sc), sc.Spec.GlobalLabels),
 		},
-		AutomountServiceAccountToken: pointer.BoolPtr(false),
+		AutomountServiceAccountToken: pointer.Bool(false),
 	}
 }

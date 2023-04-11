@@ -3,7 +3,7 @@ package spark
 import (
 	"fmt"
 
-	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -14,51 +14,51 @@ import (
 //
 // The metrics-server needs to be launched separately and the worker deployment
 // requires cpu resource requests in order for this object to have any effect.
-func NewHorizontalPodAutoscaler(sc *dcv1alpha1.SparkCluster) (*autoscalingv2beta2.HorizontalPodAutoscaler, error) {
+func NewHorizontalPodAutoscaler(sc *dcv1alpha1.SparkCluster) (*autoscalingv2.HorizontalPodAutoscaler, error) {
 	autoscaling := sc.Spec.Autoscaling
 	if autoscaling == nil {
 		return nil, fmt.Errorf("cannot build HPA without autoscaling config")
 	}
 
-	var behavior *autoscalingv2beta2.HorizontalPodAutoscalerBehavior
+	var behavior *autoscalingv2.HorizontalPodAutoscalerBehavior
 	if autoscaling.ScaleDownStabilizationWindowSeconds != nil {
-		behavior = &autoscalingv2beta2.HorizontalPodAutoscalerBehavior{
-			ScaleDown: &autoscalingv2beta2.HPAScalingRules{
+		behavior = &autoscalingv2.HorizontalPodAutoscalerBehavior{
+			ScaleDown: &autoscalingv2.HPAScalingRules{
 				StabilizationWindowSeconds: autoscaling.ScaleDownStabilizationWindowSeconds,
 			},
 		}
 	}
 
-	var metrics []autoscalingv2beta2.MetricSpec
+	var metrics []autoscalingv2.MetricSpec
 	if autoscaling.AverageCPUUtilization != nil {
-		metrics = append(metrics, autoscalingv2beta2.MetricSpec{
-			Type: autoscalingv2beta2.ResourceMetricSourceType,
-			Resource: &autoscalingv2beta2.ResourceMetricSource{
+		metrics = append(metrics, autoscalingv2.MetricSpec{
+			Type: autoscalingv2.ResourceMetricSourceType,
+			Resource: &autoscalingv2.ResourceMetricSource{
 				Name: corev1.ResourceCPU,
-				Target: autoscalingv2beta2.MetricTarget{
-					Type:               autoscalingv2beta2.UtilizationMetricType,
+				Target: autoscalingv2.MetricTarget{
+					Type:               autoscalingv2.UtilizationMetricType,
 					AverageUtilization: autoscaling.AverageCPUUtilization,
 				},
 			},
 		})
 	}
 	if autoscaling.AverageMemoryUtilization != nil {
-		metrics = append(metrics, autoscalingv2beta2.MetricSpec{
-			Type: autoscalingv2beta2.ResourceMetricSourceType,
-			Resource: &autoscalingv2beta2.ResourceMetricSource{
+		metrics = append(metrics, autoscalingv2.MetricSpec{
+			Type: autoscalingv2.ResourceMetricSourceType,
+			Resource: &autoscalingv2.ResourceMetricSource{
 				Name: corev1.ResourceMemory,
-				Target: autoscalingv2beta2.MetricTarget{
-					Type:               autoscalingv2beta2.UtilizationMetricType,
+				Target: autoscalingv2.MetricTarget{
+					Type:               autoscalingv2.UtilizationMetricType,
 					AverageUtilization: autoscaling.AverageMemoryUtilization,
 				},
 			},
 		})
 	}
 
-	hpa := &autoscalingv2beta2.HorizontalPodAutoscaler{
+	hpa := &autoscalingv2.HorizontalPodAutoscaler{
 		ObjectMeta: HorizontalPodAutoscalerObjectMeta(sc),
-		Spec: autoscalingv2beta2.HorizontalPodAutoscalerSpec{
-			ScaleTargetRef: autoscalingv2beta2.CrossVersionObjectReference{
+		Spec: autoscalingv2.HorizontalPodAutoscalerSpec{
+			ScaleTargetRef: autoscalingv2.CrossVersionObjectReference{
 				APIVersion: sc.APIVersion,
 				Kind:       sc.Kind,
 				Name:       sc.Name,

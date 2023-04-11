@@ -42,7 +42,7 @@ func rayClusterFixture() *dcv1alpha1.RayCluster {
 			WorkerPorts:       []int32{11000, 11001},
 			DashboardPort:     8265,
 			Worker: dcv1alpha1.RayClusterWorker{
-				Replicas: pointer.Int32Ptr(5),
+				Replicas: pointer.Int32(5),
 			},
 		},
 	}
