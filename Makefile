@@ -6,6 +6,8 @@ SHELL := /bin/bash
 
 # Image URL to use all building/pushing image targets
 IMG ?= ghcr.io/dominodatalab/distributed-compute-operator:latest
+MPI_INIT_IMG ?= quay.io/domino/distributed-compute-operator-mpi-init:latest
+MPI_SYNC_IMG ?= quay.io/domino/distributed-compute-operator-mpi-sync:latest
 # Produce CRDs that work with Kubernetes 1.16+ and supports defaulting, api
 # version conversion, and field pruning.
 CRD_OPTIONS ?= "crd:crdVersions=v1,maxDescLen=100"
@@ -62,6 +64,10 @@ build: generate fmt ## Build manager binary.
 
 run: manifests generate fmt ## Run a controller from your host.
 	go run ./main.go start
+
+docker-build-mpi:
+	docker build -t $(MPI_INIT_IMG) ./dockerfiles --file ./dockerfiles/mpi-init.Dockerfile
+	docker build -t $(MPI_SYNC_IMG) ./dockerfiles --file ./dockerfiles/mpi-sync.Dockerfile
 
 docker-build: ## Build docker image with the manager.
 	docker build -t ${IMG} .
