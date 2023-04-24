@@ -20,17 +20,23 @@ fi
 if ! id $DOMINO_UID >/dev/null 2>&1; then
 	useradd -u $DOMINO_UID -g $DOMINO_GID -mN -s /bin/bash -d "$DOMINO_HOME_DIR" $DOMINO_USER
 else
-    # Change username of user with matching userid if needed
+	# Change username of user with matching userid if needed
 	EXISTING_USER=$(id -nu $DOMINO_UID)
 	if [ "$EXISTING_USER" != "$DOMINO_USER" ]; then
 		usermod -l $DOMINO_USER $EXISTING_USER
 	fi
 
+	# Change groupname of group with matching groupid if needed
+	EXISTING_GROUP=$(id -ng $DOMINO_GID)
+	if [ "$EXISTING_GROUP" != "$DOMINO_GROUP" ]; then
+		groupmod --new-name $DOMINO_GROUP $EXISTING_GROUP
+	fi
+
 	# Change home directory (idempotent)
 	usermod -d "$DOMINO_HOME_DIR" $DOMINO_USER
 
-    # Add to domino group (idempotent)
-    usermod -a -G $DOMINO_GROUP $DOMINO_USER
+	# Add to domino group (idempotent)
+	usermod -a -G $DOMINO_GROUP $DOMINO_USER
 fi
 
 
@@ -81,4 +87,4 @@ AllowUsers $DOMINO_USER
 EOF
 chmod 444 "$CONFIG_DIR/sshd_config"
 
-su -c "$INSTALL_DIR/sbin/sshd -f \"$CONFIG_DIR/sshd_config\" -De" - $DOMINO_USER 
+su -c "$INSTALL_DIR/sbin/sshd -f \"$CONFIG_DIR/sshd_config\" -De" - $DOMINO_USER
