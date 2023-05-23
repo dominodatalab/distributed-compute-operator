@@ -2,7 +2,7 @@ USER-SUPPLIED VALUES:
 image:
   registry: quay.io
   repository: domino/distributed-compute-operator
-  tag: v0.6.5
+  tag: v0.7.0
   pullPolicy: Always
 imagePullSecrets:
 - name: domino-quay-repos
@@ -19,11 +19,11 @@ mpi:
   initImage:
     registry: quay.io
     repository: domino/distributed-compute-operator-mpi-init
-    tag: v0.6.5
+    tag: v0.7.0
   syncImage:
     registry: quay.io
     repository: domino/distributed-compute-operator-mpi-sync
-    tag: v0.6.5
+    tag: v0.7.0
 networkPolicy:
   enabled: true
 nodeSelector:
