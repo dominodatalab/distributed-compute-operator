@@ -16,6 +16,6 @@ func NewServiceAccount(rc *dcv1alpha1.RayCluster) *corev1.ServiceAccount {
 			Namespace: rc.Namespace,
 			Labels:    AddGlobalLabels(MetadataLabels(rc), rc.Spec.GlobalLabels),
 		},
-		AutomountServiceAccountToken: pointer.BoolPtr(false),
+		AutomountServiceAccountToken: pointer.Bool(false),
 	}
 }

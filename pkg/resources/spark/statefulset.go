@@ -100,8 +100,8 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 		const DefaultUser = 1001
 		const DefaultFSGroup = 1001
 		context = &corev1.PodSecurityContext{
-			RunAsUser: pointer.Int64Ptr(DefaultUser),
-			FSGroup:   pointer.Int64Ptr(DefaultFSGroup),
+			RunAsUser: pointer.Int64(DefaultUser),
+			FSGroup:   pointer.Int64(DefaultFSGroup),
 		}
 	}
 	podSpec := getPodSpec(sc,
@@ -124,7 +124,7 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 		},
 		Spec: appsv1.StatefulSetSpec{
 			ServiceName: InstanceObjectName(sc.Name, comp),
-			Replicas:    pointer.Int32Ptr(replicas),
+			Replicas:    pointer.Int32(replicas),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: SelectorLabelsWithComponent(sc, comp),
 			},
@@ -206,7 +206,7 @@ func getPodSpec(sc *dcv1alpha1.SparkCluster,
 				VolumeMounts:    volumeMounts,
 				Resources:       nodeAttrs.Resources,
 				LivenessProbe: &corev1.Probe{
-					Handler: corev1.Handler{
+					ProbeHandler: corev1.ProbeHandler{
 						HTTPGet: &corev1.HTTPGetAction{
 							Path: "/",
 							Port: port,
@@ -214,7 +214,7 @@ func getPodSpec(sc *dcv1alpha1.SparkCluster,
 					},
 				},
 				ReadinessProbe: &corev1.Probe{
-					Handler: corev1.Handler{
+					ProbeHandler: corev1.ProbeHandler{
 						HTTPGet: &corev1.HTTPGetAction{
 							Path: "/",
 							Port: port,

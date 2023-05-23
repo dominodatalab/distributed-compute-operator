@@ -96,7 +96,7 @@ func NewStatefulSet(rc *dcv1alpha1.RayCluster, comp Component, istioEnabled bool
 		},
 		Spec: appsv1.StatefulSetSpec{
 			ServiceName: serviceName,
-			Replicas:    pointer.Int32Ptr(replicas),
+			Replicas:    pointer.Int32(replicas),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: SelectorLabelsWithComponent(rc, comp),
 			},
@@ -126,14 +126,14 @@ func NewStatefulSet(rc *dcv1alpha1.RayCluster, comp Component, istioEnabled bool
 							VolumeMounts:    volumeMounts,
 							Resources:       nodeAttrs.Resources,
 							LivenessProbe: &corev1.Probe{
-								Handler: corev1.Handler{
+								ProbeHandler: corev1.ProbeHandler{
 									TCPSocket: &corev1.TCPSocketAction{
 										Port: intstr.FromInt(int(rc.Spec.NodeManagerPort)),
 									},
 								},
 							},
 							ReadinessProbe: &corev1.Probe{
-								Handler: corev1.Handler{
+								ProbeHandler: corev1.ProbeHandler{
 									TCPSocket: &corev1.TCPSocketAction{
 										Port: intstr.FromInt(int(rc.Spec.NodeManagerPort)),
 									},

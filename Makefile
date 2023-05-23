@@ -98,11 +98,11 @@ setup-envtest: ## Download setup-envtest locally if necessary.
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
 controller-gen: ## Download controller-gen locally if necessary.
-	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.7.0)
+	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.11.3)
 
 KUSTOMIZE = $(shell pwd)/bin/kustomize
 kustomize: ## Download kustomize locally if necessary.
-	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.8.7)
+	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v5@v5.0.1)
 
 GOIMPORTS = $(shell pwd)/bin/goimports
 goimports: ## Download goimports locally if necessary.
@@ -113,7 +113,7 @@ golangci-lint: ## Download golangci-lint locally if necessary.
 	@[ -f $(GOLANGCI_LINT) ] || { \
 		set -e ;\
 		echo "Installing golangci-lint" ;\
-		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(PROJECT_DIR)/bin v1.50.1 ;\
+		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(PROJECT_DIR)/bin v1.52.2 ;\
 	}
 
 HELM = $(shell pwd)/bin/helm
@@ -123,7 +123,7 @@ helm: ## Download helm locally if necessary.
 		echo "Installing helm" ;\
 		mkdir -p $(PROJECT_DIR)/bin ;\
 		export HELM_INSTALL_DIR=$(PROJECT_DIR)/bin ;\
-		curl -sSfL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | $(SHELL) -s -- --no-sudo --version v3.9.3 ;\
+		curl -sSfL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | $(SHELL) -s -- --no-sudo --version v3.11.2 ;\
 	}
 
 # go-get-tool will 'go get' any package $2 and install it to $1.

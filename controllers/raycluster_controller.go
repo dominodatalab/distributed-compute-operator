@@ -11,6 +11,7 @@ import (
 
 	"github.com/dominodatalab/distributed-compute-operator/pkg/controller/components"
 
+	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
 	corev1 "k8s.io/api/core/v1"
@@ -30,7 +31,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
-	"github.com/dominodatalab/distributed-compute-operator/pkg/logging"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/istio"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/ray"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
@@ -39,7 +39,7 @@ import (
 // RayClusterReconciler reconciles RayCluster objects.
 type RayClusterReconciler struct {
 	client.Client
-	Log          logging.ContextLogger
+	Log          logr.Logger
 	Scheme       *runtime.Scheme
 	IstioEnabled bool
 }
@@ -70,7 +70,8 @@ func (r *RayClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 // Reconcile implements state reconciliation logic for RayCluster objects.
 func (r *RayClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	ctx, log := r.Log.NewContext(ctx, "raycluster", req.NamespacedName)
+	log := r.Log.WithValues("raycluster", req.NamespacedName)
+	ctx = logr.NewContext(ctx, log)
 
 	log.V(2).Info("reconciliation loop triggered")
 
@@ -113,7 +114,7 @@ func (r *RayClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 // absent and remove it during a delete request after performing the required
 // finalization steps.
 func (r *RayClusterReconciler) manageFinalization(ctx context.Context, rc *dcv1alpha1.RayCluster) (bool, error) {
-	log := r.Log.FromContext(ctx)
+	log := logr.FromContextOrDiscard(ctx)
 	registered := controllerutil.ContainsFinalizer(rc, DistributedComputeFinalizer)
 
 	if rc.GetDeletionTimestamp().IsZero() && !registered {
@@ -432,7 +433,7 @@ func (r *RayClusterReconciler) createOrUpdateOwnedResource(ctx context.Context, 
 	}
 	gvk := gvks[0]
 
-	log := r.Log.FromContext(ctx)
+	log := logr.FromContextOrDiscard(ctx)
 
 	found := controlled.DeepCopyObject().(client.Object)
 	if err = r.Get(ctx, client.ObjectKeyFromObject(controlled), found); err != nil {
@@ -473,7 +474,7 @@ func (r *RayClusterReconciler) createOrUpdateOwnedResource(ctx context.Context, 
 
 // deleteIfExists will delete one or more Kubernetes objects if they exist.
 func (r *RayClusterReconciler) deleteIfExists(ctx context.Context, objs ...client.Object) error {
-	log := r.Log.FromContext(ctx)
+	log := logr.FromContextOrDiscard(ctx)
 
 	for _, obj := range objs {
 		if err := r.Get(ctx, client.ObjectKeyFromObject(obj), obj); err != nil {
@@ -535,7 +536,7 @@ func (r *RayClusterReconciler) modifyStatusNodes(ctx context.Context, rc *dcv1al
 		return false, nil
 	}
 
-	log := r.Log.FromContext(ctx)
+	log := logr.FromContextOrDiscard(ctx)
 
 	log.V(1).Info("modifying status", "path", ".status.nodes", "value", podNames)
 	rc.Status.Nodes = podNames
@@ -560,7 +561,7 @@ func (r *RayClusterReconciler) modifyStatusWorkerFields(ctx context.Context, rc 
 		return false, err
 	}
 
-	log := r.Log.FromContext(ctx)
+	log := logr.FromContextOrDiscard(ctx)
 
 	var modified bool
 	if rc.Status.WorkerSelector != selector.String() {
@@ -583,7 +584,7 @@ func (r *RayClusterReconciler) modifyStatusWorkerFields(ctx context.Context, rc 
 // a cluster instance using selector labels. this should find all the claims
 // created by both the head and worker stateful sets.
 func (r *RayClusterReconciler) deleteExternalStorage(ctx context.Context, rc *dcv1alpha1.RayCluster) error {
-	log := r.Log.FromContext(ctx)
+	log := logr.FromContextOrDiscard(ctx)
 
 	ns := rc.Namespace
 	labels := ray.SelectorLabels(rc)

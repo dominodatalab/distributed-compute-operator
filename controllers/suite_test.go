@@ -16,7 +16,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
-	"github.com/dominodatalab/distributed-compute-operator/pkg/logging"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -72,7 +71,7 @@ var _ = BeforeSuite(func() {
 	err = (&RayClusterReconciler{
 		Client:       k8sClient,
 		Scheme:       k8sManager.GetScheme(),
-		Log:          logging.New(ctrl.Log.WithName("controllers").WithName("RayCluster")),
+		Log:          ctrl.Log.WithName("controllers").WithName("RayCluster"),
 		IstioEnabled: false,
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
@@ -80,7 +79,7 @@ var _ = BeforeSuite(func() {
 	err = (&SparkClusterReconciler{
 		Client:       k8sClient,
 		Scheme:       k8sManager.GetScheme(),
-		Log:          logging.New(ctrl.Log.WithName("controllers").WithName("SparkCluster")),
+		Log:          ctrl.Log.WithName("controllers").WithName("SparkCluster"),
 		IstioEnabled: false,
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())

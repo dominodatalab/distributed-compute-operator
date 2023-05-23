@@ -35,7 +35,7 @@ func sparkClusterFixture() *dcv1alpha1.SparkCluster {
 			WorkerWebPort:     8081,
 			WorkerMemoryLimit: "4505m",
 			Worker: dcv1alpha1.SparkClusterWorker{
-				Replicas: pointer.Int32Ptr(5),
+				Replicas: pointer.Int32(5),
 			},
 		},
 	}

@@ -140,7 +140,7 @@ func validatePorts(portMap map[string]int32) field.ErrorList {
 	var errs field.ErrorList
 	fp := field.NewPath("spec")
 
-	ports := sets.Int32{}
+	ports := sets.Set[int32]{}
 	for name, port := range portMap {
 		if ports.Has(port) {
 			errs = append(errs, field.Duplicate(fp.Child(name), port))

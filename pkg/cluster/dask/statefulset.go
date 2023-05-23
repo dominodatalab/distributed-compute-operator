@@ -239,7 +239,7 @@ func (s *statefulSetDS) resources() corev1.ResourceRequirements {
 
 func (s *statefulSetDS) probe() *corev1.Probe {
 	return &corev1.Probe{
-		Handler: corev1.Handler{
+		ProbeHandler: corev1.ProbeHandler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path: "/health",
 				Port: intstr.FromString("dashboard"),
@@ -283,7 +283,7 @@ func (c *schedulerConfig) podConfig() dcv1alpha1.WorkloadConfig {
 }
 
 func (c *schedulerConfig) replicas() *int32 {
-	return pointer.Int32Ptr(1)
+	return pointer.Int32(1)
 }
 
 func (c *schedulerConfig) commandArgs() []string {

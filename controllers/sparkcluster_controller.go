@@ -32,7 +32,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
-	"github.com/dominodatalab/distributed-compute-operator/pkg/logging"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/istio"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/resources/spark"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
@@ -45,13 +44,13 @@ var (
 	// SparkPatchAnnotator applies state annotations to owned components.
 	SparkPatchAnnotator = patch.NewAnnotator(SparkLastAppliedConfig)
 	// SparkPatchMaker calculates changes to state annotations on owned components.
-	SparkPatchMaker = patch.NewPatchMaker(SparkPatchAnnotator)
+	SparkPatchMaker = patch.NewPatchMaker(SparkPatchAnnotator, &patch.K8sStrategicMergePatcher{}, &patch.BaseJSONMergePatcher{})
 )
 
 // SparkClusterReconciler reconciles SparkCluster objects.
 type SparkClusterReconciler struct {
 	client.Client
-	Log          logging.ContextLogger
+	Log          logr.Logger
 	Scheme       *runtime.Scheme
 	IstioEnabled bool
 }
@@ -86,7 +85,8 @@ const SparkFinalizerName = "distributed-compute.dominodatalab.com/dco-finalizer"
 
 // Reconcile implements state reconciliation logic for SparkCluster objects.
 func (r *SparkClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	ctx, log := r.setLogger(ctx, r.Log.WithValues("sparkcluster", req.NamespacedName))
+	log := r.Log.WithValues("sparkcluster", req.NamespacedName)
+	ctx = logr.NewContext(ctx, log)
 
 	log.V(2).Info("reconciliation loop triggered")
 
@@ -473,7 +473,7 @@ func (r *SparkClusterReconciler) reconcileStatefulSets(ctx context.Context, sc *
 		return err
 	}
 
-	log := r.getLogger(ctx)
+	log := logr.FromContextOrDiscard(ctx)
 
 	// update autoscaling fields
 	var updateStatus bool
@@ -527,7 +527,7 @@ func (r *SparkClusterReconciler) getMasterPod(ctx context.Context, sc *dcv1alpha
 	pods := &corev1.PodList{}
 	err := r.List(ctx, pods, opts...)
 	if err != nil && !apierrors.IsNotFound(err) {
-		r.getLogger(ctx).V(1).Error(err, "reading master status")
+		logr.FromContextOrDiscard(ctx).V(1).Error(err, "reading master status")
 	}
 	if len(pods.Items) == 0 {
 		return corev1.Pod{}, false
@@ -555,7 +555,7 @@ func (r *SparkClusterReconciler) createOrUpdateOwnedResource(ctx context.Context
 	}
 	gvk := gvks[0]
 
-	log := r.Log.FromContext(ctx)
+	log := logr.FromContextOrDiscard(ctx)
 
 	found := controlled.DeepCopyObject().(client.Object)
 	if err = r.Get(ctx, client.ObjectKeyFromObject(controlled), found); err != nil {
@@ -596,7 +596,7 @@ func (r *SparkClusterReconciler) createOrUpdateOwnedResource(ctx context.Context
 
 // deleteIfExists will delete one or more Kubernetes objects if they exist.
 func (r *SparkClusterReconciler) deleteIfExists(ctx context.Context, objs ...client.Object) error {
-	log := r.getLogger(ctx)
+	log := logr.FromContextOrDiscard(ctx)
 
 	for _, obj := range objs {
 		err := r.Get(ctx, client.ObjectKeyFromObject(obj), obj)
@@ -644,23 +644,4 @@ func (r *SparkClusterReconciler) updateStatus(ctx context.Context, sc *dcv1alpha
 	}
 
 	return nil
-}
-
-type loggerKeyType int
-
-const loggerKey loggerKeyType = iota
-
-func (r *SparkClusterReconciler) setLogger(ctx context.Context, logger logr.Logger) (context.Context, logr.Logger) {
-	return context.WithValue(ctx, loggerKey, logger), logger
-}
-
-func (r *SparkClusterReconciler) getLogger(ctx context.Context) logr.Logger {
-	if ctx == nil {
-		return r.Log
-	}
-	if ctxLogger, ok := ctx.Value(loggerKey).(logr.Logger); ok {
-		return ctxLogger
-	}
-
-	return r.Log
 }

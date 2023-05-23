@@ -67,8 +67,8 @@ var _ = Describe("RayCluster Controller", func() {
 					Kind:               reflect.TypeOf(*cluster).Name(),
 					Name:               cluster.Name,
 					UID:                cluster.UID,
-					Controller:         pointer.BoolPtr(true),
-					BlockOwnerDeletion: pointer.BoolPtr(true),
+					Controller:         pointer.Bool(true),
+					BlockOwnerDeletion: pointer.Bool(true),
 				}))
 			}
 
@@ -207,19 +207,19 @@ func createCluster(ctx context.Context, name string) (client.ObjectKey, *dcv1alp
 						Tag:        "bar",
 					},
 					NetworkPolicy: dcv1alpha1.NetworkPolicyConfig{
-						Enabled: pointer.BoolPtr(true),
+						Enabled: pointer.Bool(true),
 					},
 					PodSecurityPolicy: psp.Name,
 				},
 				Autoscaling: &dcv1alpha1.Autoscaling{
-					MinReplicas:              pointer.Int32Ptr(1),
+					MinReplicas:              pointer.Int32(1),
 					MaxReplicas:              1,
-					AverageCPUUtilization:    pointer.Int32Ptr(50),
-					AverageMemoryUtilization: pointer.Int32Ptr(50),
+					AverageCPUUtilization:    pointer.Int32(50),
+					AverageMemoryUtilization: pointer.Int32(50),
 				},
 			},
 			Worker: dcv1alpha1.RayClusterWorker{
-				Replicas: pointer.Int32Ptr(1),
+				Replicas: pointer.Int32(1),
 			},
 			Port:              6379,
 			ClientServerPort:  10001,

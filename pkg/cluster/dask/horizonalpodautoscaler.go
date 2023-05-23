@@ -1,7 +1,7 @@
 package dask
 
 import (
-	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -22,8 +22,8 @@ type horizontalPodAutoscalerDS struct {
 	dc *dcv1alpha1.DaskCluster
 }
 
-func (s *horizontalPodAutoscalerDS) HorizontalPodAutoscaler() *autoscalingv2beta2.HorizontalPodAutoscaler {
-	hpa := &autoscalingv2beta2.HorizontalPodAutoscaler{
+func (s *horizontalPodAutoscalerDS) HorizontalPodAutoscaler() *autoscalingv2.HorizontalPodAutoscaler {
+	hpa := &autoscalingv2.HorizontalPodAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      meta.InstanceName(s.dc, metadata.ComponentNone),
 			Namespace: s.dc.Namespace,
@@ -36,43 +36,43 @@ func (s *horizontalPodAutoscalerDS) HorizontalPodAutoscaler() *autoscalingv2beta
 		return hpa
 	}
 
-	var behavior *autoscalingv2beta2.HorizontalPodAutoscalerBehavior
+	var behavior *autoscalingv2.HorizontalPodAutoscalerBehavior
 	if as.ScaleDownStabilizationWindowSeconds != nil {
-		behavior = &autoscalingv2beta2.HorizontalPodAutoscalerBehavior{
-			ScaleDown: &autoscalingv2beta2.HPAScalingRules{
+		behavior = &autoscalingv2.HorizontalPodAutoscalerBehavior{
+			ScaleDown: &autoscalingv2.HPAScalingRules{
 				StabilizationWindowSeconds: as.ScaleDownStabilizationWindowSeconds,
 			},
 		}
 	}
 
-	var metrics []autoscalingv2beta2.MetricSpec
+	var metrics []autoscalingv2.MetricSpec
 	if as.AverageCPUUtilization != nil {
-		metrics = append(metrics, autoscalingv2beta2.MetricSpec{
-			Type: autoscalingv2beta2.ResourceMetricSourceType,
-			Resource: &autoscalingv2beta2.ResourceMetricSource{
+		metrics = append(metrics, autoscalingv2.MetricSpec{
+			Type: autoscalingv2.ResourceMetricSourceType,
+			Resource: &autoscalingv2.ResourceMetricSource{
 				Name: corev1.ResourceCPU,
-				Target: autoscalingv2beta2.MetricTarget{
-					Type:               autoscalingv2beta2.UtilizationMetricType,
+				Target: autoscalingv2.MetricTarget{
+					Type:               autoscalingv2.UtilizationMetricType,
 					AverageUtilization: s.dc.Spec.Autoscaling.AverageCPUUtilization,
 				},
 			},
 		})
 	}
 	if as.AverageMemoryUtilization != nil {
-		metrics = append(metrics, autoscalingv2beta2.MetricSpec{
-			Type: autoscalingv2beta2.ResourceMetricSourceType,
-			Resource: &autoscalingv2beta2.ResourceMetricSource{
+		metrics = append(metrics, autoscalingv2.MetricSpec{
+			Type: autoscalingv2.ResourceMetricSourceType,
+			Resource: &autoscalingv2.ResourceMetricSource{
 				Name: corev1.ResourceMemory,
-				Target: autoscalingv2beta2.MetricTarget{
-					Type:               autoscalingv2beta2.UtilizationMetricType,
+				Target: autoscalingv2.MetricTarget{
+					Type:               autoscalingv2.UtilizationMetricType,
 					AverageUtilization: s.dc.Spec.Autoscaling.AverageMemoryUtilization,
 				},
 			},
 		})
 	}
 
-	hpa.Spec = autoscalingv2beta2.HorizontalPodAutoscalerSpec{
-		ScaleTargetRef: autoscalingv2beta2.CrossVersionObjectReference{
+	hpa.Spec = autoscalingv2.HorizontalPodAutoscalerSpec{
+		ScaleTargetRef: autoscalingv2.CrossVersionObjectReference{
 			Kind:       s.dc.Kind,
 			Name:       s.dc.Name,
 			APIVersion: s.dc.APIVersion,

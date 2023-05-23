@@ -14,13 +14,13 @@ var defaultCalculateOpts = []patch.CalculateOption{
 
 type Patch struct {
 	Annotator     *patch.Annotator
-	Maker         *patch.PatchMaker
+	Maker         patch.Maker
 	CalculateOpts []patch.CalculateOption
 }
 
 func NewPatch(gvk schema.GroupVersionKind) *Patch {
 	a := patch.NewAnnotator(path.Join(gvk.Group, "last-applied"))
-	m := patch.NewPatchMaker(a)
+	m := patch.NewPatchMaker(a, &patch.K8sStrategicMergePatcher{}, &patch.BaseJSONMergePatcher{})
 
 	return &Patch{
 		Annotator:     a,

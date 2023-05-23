@@ -24,7 +24,7 @@ func TestNewServiceAccount(t *testing.T) {
 				"app.kubernetes.io/managed-by": "distributed-compute-operator",
 			},
 		},
-		AutomountServiceAccountToken: pointer.BoolPtr(false),
+		AutomountServiceAccountToken: pointer.Bool(false),
 	}
 	assert.Equal(t, expected, sa)
 }

@@ -19,8 +19,8 @@ var (
 	sparkDefaultDriverUIPort                 int32 = 4040
 	sparkDefaultDriverPort                   int32 = 4041
 	sparkDefaultDriverBlockManagerPort       int32 = 4042
-	sparkDefaultEnableNetworkPolicy                = pointer.BoolPtr(true)
-	sparkDefaultWorkerReplicas                     = pointer.Int32Ptr(1)
+	sparkDefaultEnableNetworkPolicy                = pointer.Bool(true)
+	sparkDefaultWorkerReplicas                     = pointer.Int32(1)
 	sparkDefaultNetworkPolicyClientPodLabels       = map[string]string{
 		"spark-client": "true",
 	}
