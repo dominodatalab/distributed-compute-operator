@@ -100,6 +100,7 @@ jobs:
       id: docker_build
       uses: docker/build-push-action@v4
       with:
+        platforms: linux/amd64,linux/arm64
         push: true
         tags: ${{ steps.docker_prep.outputs.tags }}
         cache-to: type=registry,ref=${{ steps.docker_prep.outputs.image }}:buildcache,mode=max
@@ -119,6 +120,7 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: "{{defaultContext}}:dockerfiles"
+        platforms: linux/amd64,linux/arm64
         file: mpi-init.Dockerfile
         push: true
         tags: ${{ steps.docker_prep.outputs.tags_mpi_init }}
@@ -137,6 +139,7 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: "{{defaultContext}}:dockerfiles"
+        platforms: linux/amd64,linux/arm64
         file: mpi-sync.Dockerfile
         push: true
         tags: ${{ steps.docker_prep.outputs.tags_mpi_sync }}
