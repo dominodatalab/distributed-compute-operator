@@ -14,7 +14,7 @@ import (
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
-	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
@@ -65,7 +65,7 @@ func (r *SparkClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&rbacv1.Role{}).
 		Owns(&rbacv1.RoleBinding{}).
 		Owns(&networkingv1.NetworkPolicy{}).
-		Owns(&autoscalingv2beta2.HorizontalPodAutoscaler{}).
+		Owns(&autoscalingv2.HorizontalPodAutoscaler{}).
 		Owns(&corev1.ConfigMap{}).
 		Complete(r)
 }
@@ -423,7 +423,7 @@ func (r *SparkClusterReconciler) reconcilePodSecurityPolicyRBAC(ctx context.Cont
 // targets Spark worker pods.
 func (r *SparkClusterReconciler) reconcileAutoscaler(ctx context.Context, sc *dcv1alpha1.SparkCluster) error {
 	if sc.Spec.Autoscaling == nil {
-		hpa := &autoscalingv2beta2.HorizontalPodAutoscaler{
+		hpa := &autoscalingv2.HorizontalPodAutoscaler{
 			ObjectMeta: spark.HorizontalPodAutoscalerObjectMeta(sc),
 		}
 		return r.deleteIfExists(ctx, hpa)

@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
-	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
@@ -45,7 +45,7 @@ var _ = Describe("RayCluster Controller", func() {
 				{"dashboard network policy", "it-ray-dashboard", &networkingv1.NetworkPolicy{}},
 				{"pod security policy role", "it-ray", &rbacv1.Role{}},
 				{"pod security policy role binding", "it-ray", &rbacv1.RoleBinding{}},
-				{"horizontal pod autoscaler", "it-ray", &autoscalingv2beta2.HorizontalPodAutoscaler{}},
+				{"horizontal pod autoscaler", "it-ray", &autoscalingv2.HorizontalPodAutoscaler{}},
 				{"head stateful set", "it-ray-head", &appsv1.StatefulSet{}},
 				{"worker stateful set", "it-ray-worker", &appsv1.StatefulSet{}},
 			}
@@ -114,7 +114,7 @@ var _ = Describe("RayCluster Controller", func() {
 
 			By("deleting the horizontal pod autoscaler when disabled")
 			key := types.NamespacedName{Name: "update-ray", Namespace: cluster.Namespace}
-			autoscaler := &autoscalingv2beta2.HorizontalPodAutoscaler{}
+			autoscaler := &autoscalingv2.HorizontalPodAutoscaler{}
 
 			Eventually(func() error {
 				return k8sClient.Get(ctx, key, autoscaler)
