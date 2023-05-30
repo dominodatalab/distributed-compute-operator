@@ -6,7 +6,7 @@ require (
 	github.com/banzaicloud/k8s-objectmatcher v1.8.0
 	github.com/docker/distribution v2.8.1+incompatible
 	github.com/go-logr/logr v1.2.4
-	github.com/gogo/protobuf v1.3.2
+	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.2
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.24.1
@@ -25,6 +25,8 @@ require (
 	sigs.k8s.io/controller-runtime v0.14.6
 	sigs.k8s.io/yaml v1.3.0
 )
+
+require google.golang.org/protobuf v1.30.0
 
 require (
 	emperror.dev/errors v0.8.1 // indirect
@@ -96,7 +98,6 @@ require (
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
-	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
-	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
@@ -44,7 +44,7 @@ var _ = Describe("SparkCluster Controller", func() {
 				{"master network policy", name + "-spark-master", &networkingv1.NetworkPolicy{}},
 				{"pod security policy role", name + "-spark", &rbacv1.Role{}},
 				{"pod security policy role binding", name + "-spark", &rbacv1.RoleBinding{}},
-				{"horizontal pod autoscaler", name + "-spark", &autoscalingv2beta2.HorizontalPodAutoscaler{}},
+				{"horizontal pod autoscaler", name + "-spark", &autoscalingv2.HorizontalPodAutoscaler{}},
 				{"head statefulset", name + "-spark-master", &appsv1.StatefulSet{}},
 				{"worker statefulset", name + "-spark-worker", &appsv1.StatefulSet{}},
 				{"framework configmap", name + "-framework-spark", &corev1.ConfigMap{}},
