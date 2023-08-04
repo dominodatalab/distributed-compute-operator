@@ -1,4 +1,4 @@
-FROM quay.io/domino/debian:10.11-360356
+FROM quay.io/domino/debian:10.11-368763
 
 ARG DOMINO_UID=12574
 ARG DOMINO_USER=domino
