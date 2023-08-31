@@ -140,3 +140,5 @@ mpi:
     registry: quay.io
     repository: domino/distributed-compute-operator-mpi-sync
     tag: main
+
+  clusterDomain: cluster.local

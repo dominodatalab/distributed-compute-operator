@@ -17,7 +17,7 @@ metadata:
 spec:
   dnsNames:
     - {{ include "dco.webhook.service" . }}.{{ .Release.Namespace }}.svc
-    - {{ include "dco.webhook.service" . }}.{{ .Release.Namespace }}.svc.cluster.local
+    - {{ include "dco.webhook.service" . }}.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}
   issuerRef:
     kind: Issuer
     name: {{ include "dco.webhook.issuer" . }}
