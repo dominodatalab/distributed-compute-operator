@@ -63,6 +63,51 @@ func TestNewEnvoyFilter(t *testing.T) {
 				},
 				Patch: &patch,
 			},
+			{
+				ApplyTo: networkingv1alpha3.EnvoyFilter_NETWORK_FILTER,
+				Match: &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
+					Context: networkingv1alpha3.EnvoyFilter_ANY,
+					ObjectTypes: &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
+						Listener: &networkingv1alpha3.EnvoyFilter_ListenerMatch{
+							FilterChain: &networkingv1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
+								Filter: &networkingv1alpha3.EnvoyFilter_ListenerMatch_FilterMatch{
+									Name: "envoy.filters.network.http_connection_manager",
+								},
+							},
+						},
+					},
+				},
+				Patch: &networkingv1alpha3.EnvoyFilter_Patch{
+					Operation: networkingv1alpha3.EnvoyFilter_Patch_MERGE,
+					Value: &spb.Struct{
+						Fields: map[string]*spb.Value{
+							"name": {
+								Kind: &spb.Value_StringValue{
+									StringValue: "envoy.filters.network.http_connection_manager",
+								},
+							},
+							"typed_config": {
+								Kind: &spb.Value_StructValue{
+									StructValue: &spb.Struct{
+										Fields: map[string]*spb.Value{
+											"@type": {
+												Kind: &spb.Value_StringValue{
+													StringValue: "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
+												},
+											},
+											"idle_timeout": {
+												Kind: &spb.Value_StringValue{
+													StringValue: "0s",
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		}
 
 		workloadSelector := networkingv1alpha3.WorkloadSelector{
