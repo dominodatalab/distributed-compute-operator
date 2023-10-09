@@ -11,44 +11,44 @@ import (
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 )
 
-const TcpFilterName = "envoy.filters.network.tcp_proxy"
-const HttpFilterName = "envoy.filters.network.http_connection_manager"
+const TCPFilterName = "envoy.filters.network.tcp_proxy"
+const HTTPFilterName = "envoy.filters.network.http_connection_manager"
 
 // NewEnvoyFilter creates a new EnvoyFilter resource to set idle_timeout for Istio-enabled deployments
 func NewEnvoyFilter(sc *dcv1alpha1.SparkCluster) *apinetworkingv1alpha3.EnvoyFilter {
-	matchTcp := networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
+	matchTCP := networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
 		Context: networkingv1alpha3.EnvoyFilter_ANY,
 		ObjectTypes: &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
 			Listener: &networkingv1alpha3.EnvoyFilter_ListenerMatch{
 				FilterChain: &networkingv1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
 					Filter: &networkingv1alpha3.EnvoyFilter_ListenerMatch_FilterMatch{
-						Name: TcpFilterName,
+						Name: TCPFilterName,
 					},
 				},
 			},
 		},
 	}
 
-	matchHttp := networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
+	matchHTTP := networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
 		Context: networkingv1alpha3.EnvoyFilter_ANY,
 		ObjectTypes: &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
 			Listener: &networkingv1alpha3.EnvoyFilter_ListenerMatch{
 				FilterChain: &networkingv1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
 					Filter: &networkingv1alpha3.EnvoyFilter_ListenerMatch_FilterMatch{
-						Name: HttpFilterName,
+						Name: HTTPFilterName,
 					},
 				},
 			},
 		},
 	}
 
-	patchTcp := networkingv1alpha3.EnvoyFilter_Patch{
+	patchTCP := networkingv1alpha3.EnvoyFilter_Patch{
 		Operation: networkingv1alpha3.EnvoyFilter_Patch_MERGE,
 		Value: &spb.Struct{
 			Fields: map[string]*spb.Value{
 				"name": {
 					Kind: &spb.Value_StringValue{
-						StringValue: TcpFilterName,
+						StringValue: TCPFilterName,
 					},
 				},
 				"typed_config": {
@@ -73,13 +73,13 @@ func NewEnvoyFilter(sc *dcv1alpha1.SparkCluster) *apinetworkingv1alpha3.EnvoyFil
 		},
 	}
 
-	patchHttp := networkingv1alpha3.EnvoyFilter_Patch{
+	patchHTTP := networkingv1alpha3.EnvoyFilter_Patch{
 		Operation: networkingv1alpha3.EnvoyFilter_Patch_MERGE,
 		Value: &spb.Struct{
 			Fields: map[string]*spb.Value{
 				"name": {
 					Kind: &spb.Value_StringValue{
-						StringValue: HttpFilterName,
+						StringValue: HTTPFilterName,
 					},
 				},
 				"typed_config": {
@@ -107,13 +107,13 @@ func NewEnvoyFilter(sc *dcv1alpha1.SparkCluster) *apinetworkingv1alpha3.EnvoyFil
 	configPatches := []*networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch{
 		{
 			ApplyTo: networkingv1alpha3.EnvoyFilter_NETWORK_FILTER,
-			Match:   &matchTcp,
-			Patch:   &patchTcp,
+			Match:   &matchTCP,
+			Patch:   &patchTCP,
 		},
 		{
 			ApplyTo: networkingv1alpha3.EnvoyFilter_NETWORK_FILTER,
-			Match:   &matchHttp,
-			Patch:   &patchHttp,
+			Match:   &matchHTTP,
+			Patch:   &patchHTTP,
 		},
 	}
 
