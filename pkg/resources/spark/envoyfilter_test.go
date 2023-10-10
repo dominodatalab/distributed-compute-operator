@@ -35,7 +35,7 @@ func TestNewEnvoyFilter(t *testing.T) {
 									},
 									"idle_timeout": {
 										Kind: &spb.Value_StringValue{
-											StringValue: "0s",
+											StringValue: "1234s",
 										},
 									},
 								},
@@ -97,7 +97,7 @@ func TestNewEnvoyFilter(t *testing.T) {
 											},
 											"idle_timeout": {
 												Kind: &spb.Value_StringValue{
-													StringValue: "0s",
+													StringValue: "1234s",
 												},
 											},
 										},
