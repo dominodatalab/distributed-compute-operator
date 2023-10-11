@@ -91,9 +91,17 @@ func NewEnvoyFilter(sc *dcv1alpha1.SparkCluster) *apinetworkingv1alpha3.EnvoyFil
 										StringValue: "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
 									},
 								},
-								"idle_timeout": {
-									Kind: &spb.Value_StringValue{
-										StringValue: "0s",
+								"common_http_protocol_options": {
+									Kind: &spb.Value_StructValue{
+										StructValue: &spb.Struct{
+											Fields: map[string]*spb.Value{
+												"idle_timeout": {
+													Kind: &spb.Value_StringValue{
+														StringValue: "0s",
+													},
+												},
+											},
+										},
 									},
 								},
 							},
