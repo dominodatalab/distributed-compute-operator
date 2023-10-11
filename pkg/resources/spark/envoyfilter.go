@@ -62,7 +62,7 @@ func NewEnvoyFilter(sc *dcv1alpha1.SparkCluster) *apinetworkingv1alpha3.EnvoyFil
 								},
 								"idle_timeout": {
 									Kind: &spb.Value_StringValue{
-										StringValue: "1234s",
+										StringValue: "0s",
 									},
 								},
 							},
@@ -93,7 +93,7 @@ func NewEnvoyFilter(sc *dcv1alpha1.SparkCluster) *apinetworkingv1alpha3.EnvoyFil
 								},
 								"idle_timeout": {
 									Kind: &spb.Value_StringValue{
-										StringValue: "1234s",
+										StringValue: "0s",
 									},
 								},
 							},
