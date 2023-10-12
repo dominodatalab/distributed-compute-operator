@@ -4,7 +4,6 @@ go 1.21
 
 require (
 	github.com/banzaicloud/k8s-objectmatcher v1.8.0
-	github.com/docker/distribution v2.8.3+incompatible
 	github.com/go-logr/logr v1.2.4
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.2
@@ -26,7 +25,10 @@ require (
 	sigs.k8s.io/yaml v1.3.0
 )
 
-require google.golang.org/protobuf v1.30.0
+require (
+	github.com/distribution/reference v0.5.0
+	google.golang.org/protobuf v1.30.0
+)
 
 require (
 	emperror.dev/errors v0.8.1 // indirect
@@ -37,7 +39,6 @@ require (
 	github.com/coreos/go-semver v0.3.1 // indirect
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/distribution/reference v0.5.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.10.2 // indirect
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
@@ -90,11 +91,11 @@ require (
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
-	golang.org/x/net v0.9.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/oauth2 v0.7.0 // indirect
-	golang.org/x/sys v0.7.0 // indirect
-	golang.org/x/term v0.7.0 // indirect
-	golang.org/x/text v0.9.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/term v0.13.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
