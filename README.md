@@ -58,7 +58,7 @@ that can be used to test every feature supported by this operator.
 1. Install [minikube] and create a new cluster.
 
     ```shell
-    # tested using minikube v1.17.1 and k8s v1.20.2
+    # tested using minikube v1.17.1 and k8s v1.21.3
     $ minikube start \
         --cpus=6 --memory=16384 --driver=hyperkit \
         --extra-config=apiserver.enable-admission-plugins=PodSecurityPolicy \

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/docker/distribution/reference"
+	"github.com/distribution/reference"
 
 	"github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 )
