@@ -3,7 +3,7 @@ package ray
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 )
@@ -16,6 +16,6 @@ func NewServiceAccount(rc *dcv1alpha1.RayCluster) *corev1.ServiceAccount {
 			Namespace: rc.Namespace,
 			Labels:    AddGlobalLabels(MetadataLabels(rc), rc.Spec.GlobalLabels),
 		},
-		AutomountServiceAccountToken: pointer.Bool(false),
+		AutomountServiceAccountToken: ptr.To(false),
 	}
 }

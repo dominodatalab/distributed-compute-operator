@@ -4,10 +4,11 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 const nobodyUID int64 = 65534
@@ -18,14 +19,14 @@ var (
 	daskDefaultWorkerPort    int32 = 3000
 	daskDefaultNannyPort     int32 = 3001
 
-	daskDefaultWorkerReplicas         = pointer.Int32(1)
-	daskDefaultEnableNetworkPolicy    = pointer.Bool(true)
+	daskDefaultWorkerReplicas         = ptr.To(int32(1))
+	daskDefaultEnableNetworkPolicy    = ptr.To(true)
 	daskDefaultNetworkPolicyPodLabels = map[string]string{
 		"dask-client": "true",
 	}
 
 	daskDefaultPodSecurityContext = &corev1.PodSecurityContext{
-		RunAsUser: pointer.Int64(nobodyUID),
+		RunAsUser: ptr.To(nobodyUID),
 	}
 
 	daskDefaultImage = &OCIImageDefinition{
@@ -76,7 +77,7 @@ func (dc *DaskCluster) Default() {
 		spec.PodSecurityContext = daskDefaultPodSecurityContext
 	}
 	if spec.NetworkPolicy.Enabled == nil {
-		log.Info("Setting enable network policy flag", "value", pointer.Bool(true))
+		log.Info("Setting enable network policy flag", "value", ptr.To(true))
 		spec.NetworkPolicy.Enabled = daskDefaultEnableNetworkPolicy
 	}
 	if spec.NetworkPolicy.ClientLabels == nil {
@@ -94,21 +95,21 @@ func (dc *DaskCluster) Default() {
 var _ webhook.Validator = &DaskCluster{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (dc *DaskCluster) ValidateCreate() error {
+func (dc *DaskCluster) ValidateCreate() (admission.Warnings, error) {
 	daskLogger.WithValues("daskcluster", client.ObjectKeyFromObject(dc)).Info("Validating create")
-	return dc.validateDaskCluster()
+	return admission.Warnings{}, dc.validateDaskCluster()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (dc *DaskCluster) ValidateUpdate(_ runtime.Object) error {
+func (dc *DaskCluster) ValidateUpdate(_ runtime.Object) (admission.Warnings, error) {
 	daskLogger.WithValues("daskcluster", client.ObjectKeyFromObject(dc)).Info("Validating update")
-	return dc.validateDaskCluster()
+	return admission.Warnings{}, dc.validateDaskCluster()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type.
-func (dc *DaskCluster) ValidateDelete() error {
+func (dc *DaskCluster) ValidateDelete() (admission.Warnings, error) {
 	// NOTE: not used, just here for interface compliance.
-	return nil
+	return admission.Warnings{}, nil
 }
 
 func (dc *DaskCluster) validateDaskCluster() error {

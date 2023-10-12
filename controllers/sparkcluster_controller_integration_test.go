@@ -15,7 +15,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
@@ -178,7 +178,7 @@ func createAndBasicTest(ctx context.Context, name string) {
 						Tag:        "bar",
 					},
 					NetworkPolicy: dcv1alpha1.NetworkPolicyConfig{
-						Enabled:      pointer.Bool(true),
+						Enabled:      ptr.To(true),
 						ClientLabels: map[string]string{"app.kubernetes.io/instance": "spark-driver"},
 					},
 					KerberosKeytab: &dcv1alpha1.KerberosKeytabConfig{
@@ -188,10 +188,10 @@ func createAndBasicTest(ctx context.Context, name string) {
 					PodSecurityPolicy: psp.Name,
 				},
 				Autoscaling: &dcv1alpha1.Autoscaling{
-					MinReplicas:              pointer.Int32(1),
+					MinReplicas:              ptr.To(int32(1)),
 					MaxReplicas:              1,
-					AverageCPUUtilization:    pointer.Int32(50),
-					AverageMemoryUtilization: pointer.Int32(50),
+					AverageCPUUtilization:    ptr.To(int32(50)),
+					AverageMemoryUtilization: ptr.To(int32(50)),
 				},
 			},
 			Master: dcv1alpha1.SparkClusterNode{
@@ -205,7 +205,7 @@ func createAndBasicTest(ctx context.Context, name string) {
 						"w1": "v1",
 					},
 				},
-				Replicas: pointer.Int32(1),
+				Replicas: ptr.To(int32(1)),
 			},
 			ClusterPort:   7077,
 			MasterWebPort: 80,

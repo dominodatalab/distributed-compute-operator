@@ -10,7 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 )
@@ -44,7 +44,7 @@ func TestNewStatefulSet(t *testing.T) {
 				},
 				Spec: appsv1.StatefulSetSpec{
 					ServiceName: "test-id-spark-master",
-					Replicas:    pointer.Int32(1),
+					Replicas:    ptr.To(int32(1)),
 					Selector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"app.kubernetes.io/name":      "spark",
@@ -114,8 +114,8 @@ func TestNewStatefulSet(t *testing.T) {
 								},
 							},
 							SecurityContext: &corev1.PodSecurityContext{
-								RunAsUser: pointer.Int64(1001),
-								FSGroup:   pointer.Int64(1001),
+								RunAsUser: ptr.To(int64(1001)),
+								FSGroup:   ptr.To(int64(1001)),
 							},
 						},
 					},
@@ -149,7 +149,7 @@ func TestNewStatefulSet(t *testing.T) {
 				},
 				Spec: appsv1.StatefulSetSpec{
 					ServiceName: "test-id-spark-worker",
-					Replicas:    pointer.Int32(5),
+					Replicas:    ptr.To(int32(5)),
 					Selector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"app.kubernetes.io/name":      "spark",
@@ -223,8 +223,8 @@ func TestNewStatefulSet(t *testing.T) {
 								},
 							},
 							SecurityContext: &corev1.PodSecurityContext{
-								RunAsUser: pointer.Int64(1001),
-								FSGroup:   pointer.Int64(1001),
+								RunAsUser: ptr.To(int64(1001)),
+								FSGroup:   ptr.To(int64(1001)),
 							},
 						},
 					},
@@ -467,7 +467,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 	t.Run("security_context", func(t *testing.T) {
 		rc := sparkClusterFixture()
 		rc.Spec.PodSecurityContext = &corev1.PodSecurityContext{
-			RunAsUser: pointer.Int64(0),
+			RunAsUser: ptr.To(int64(0)),
 		}
 
 		actual, err := NewStatefulSet(rc, comp)
@@ -492,7 +492,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 		elem := dcv1alpha1.PersistentVolumeClaimTemplate{
 			Name: "stuffz",
 			Spec: corev1.PersistentVolumeClaimSpec{
-				StorageClassName: pointer.String("test-gpu"),
+				StorageClassName: ptr.To("test-gpu"),
 			},
 		}
 		input := []dcv1alpha1.PersistentVolumeClaimTemplate{elem}
@@ -535,7 +535,7 @@ func testCommonFeatures(t *testing.T, comp Component) {
 			SparkClusterNode: dcv1alpha1.SparkClusterNode{
 				DefaultConfiguration: fcWorker,
 			},
-			Replicas: pointer.Int32(2),
+			Replicas: ptr.To(int32(2)),
 		}
 
 		expectedVolumes := []corev1.Volume{

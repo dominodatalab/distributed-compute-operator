@@ -8,7 +8,7 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func TestNetworkPolicyDS_NetworkPolicy(t *testing.T) {
@@ -229,12 +229,12 @@ func TestNetworkPolicyDS_Delete(t *testing.T) {
 		},
 		{
 			name:    "enabled",
-			input:   pointer.Bool(true),
+			input:   ptr.To(true),
 			outcome: false,
 		},
 		{
 			name:    "disabled",
-			input:   pointer.Bool(false),
+			input:   ptr.To(false),
 			outcome: true,
 		},
 	}

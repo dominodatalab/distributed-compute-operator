@@ -8,7 +8,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func sparkFixture(nsName string) *SparkCluster {
@@ -135,7 +135,7 @@ var _ = Describe("SparkCluster", func() {
 		Context("Network policies", func() {
 			It("are not enabled when false", func() {
 				sc := sparkFixture(testNS.Name)
-				sc.Spec.NetworkPolicy.Enabled = pointer.Bool(false)
+				sc.Spec.NetworkPolicy.Enabled = ptr.To(false)
 
 				Expect(k8sClient.Create(ctx, sc)).To(Succeed())
 				Expect(sc.Spec.NetworkPolicy.Enabled).To(PointTo(Equal(false)))
@@ -171,7 +171,7 @@ var _ = Describe("SparkCluster", func() {
 
 		It("requires a positive worker replica count", func() {
 			sc := sparkFixture(testNS.Name)
-			sc.Spec.Worker.Replicas = pointer.Int32(-10)
+			sc.Spec.Worker.Replicas = ptr.To(int32(-10))
 
 			Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())
 		})
@@ -264,10 +264,10 @@ var _ = Describe("SparkCluster", func() {
 			It("requires min replicas to be > 0 when provided", func() {
 				sc := clusterWithAutoscaling()
 
-				sc.Spec.Autoscaling.MinReplicas = pointer.Int32(0)
+				sc.Spec.Autoscaling.MinReplicas = ptr.To(int32(0))
 				Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())
 
-				sc.Spec.Autoscaling.MinReplicas = pointer.Int32(1)
+				sc.Spec.Autoscaling.MinReplicas = ptr.To(int32(1))
 				Expect(k8sClient.Create(ctx, sc)).To(Succeed())
 			})
 
@@ -281,11 +281,11 @@ var _ = Describe("SparkCluster", func() {
 			It("requires max replicas to be > min replicas", func() {
 				sc := clusterWithAutoscaling()
 
-				sc.Spec.Autoscaling.MinReplicas = pointer.Int32(2)
+				sc.Spec.Autoscaling.MinReplicas = ptr.To(int32(2))
 				sc.Spec.Autoscaling.MaxReplicas = 1
 				Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())
 
-				sc.Spec.Autoscaling.MinReplicas = pointer.Int32(1)
+				sc.Spec.Autoscaling.MinReplicas = ptr.To(int32(1))
 				sc.Spec.Autoscaling.MaxReplicas = 2
 				Expect(k8sClient.Create(ctx, sc)).To(Succeed())
 			})
@@ -293,30 +293,30 @@ var _ = Describe("SparkCluster", func() {
 			It("requires average cpu utilization to be > 0", func() {
 				sc := clusterWithAutoscaling()
 
-				sc.Spec.Autoscaling.AverageCPUUtilization = pointer.Int32(0)
+				sc.Spec.Autoscaling.AverageCPUUtilization = ptr.To(int32(0))
 				Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())
 
-				sc.Spec.Autoscaling.AverageCPUUtilization = pointer.Int32(75)
+				sc.Spec.Autoscaling.AverageCPUUtilization = ptr.To(int32(75))
 				Expect(k8sClient.Create(ctx, sc)).To(Succeed())
 			})
 
 			It("requires average memory utilization to be > 0", func() {
 				sc := clusterWithAutoscaling()
 
-				sc.Spec.Autoscaling.AverageMemoryUtilization = pointer.Int32(0)
+				sc.Spec.Autoscaling.AverageMemoryUtilization = ptr.To(int32(0))
 				Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())
 
-				sc.Spec.Autoscaling.AverageMemoryUtilization = pointer.Int32(75)
+				sc.Spec.Autoscaling.AverageMemoryUtilization = ptr.To(int32(75))
 				Expect(k8sClient.Create(ctx, sc)).To(Succeed())
 			})
 
 			It("requires scale down stabilization to be >= 0 when provided", func() {
 				sc := clusterWithAutoscaling()
 
-				sc.Spec.Autoscaling.ScaleDownStabilizationWindowSeconds = pointer.Int32(-1)
+				sc.Spec.Autoscaling.ScaleDownStabilizationWindowSeconds = ptr.To(int32(-1))
 				Expect(k8sClient.Create(ctx, sc)).ToNot(Succeed())
 
-				sc.Spec.Autoscaling.ScaleDownStabilizationWindowSeconds = pointer.Int32(0)
+				sc.Spec.Autoscaling.ScaleDownStabilizationWindowSeconds = ptr.To(int32(0))
 				Expect(k8sClient.Create(ctx, sc)).To(Succeed())
 			})
 		})

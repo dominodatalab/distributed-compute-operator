@@ -8,7 +8,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
@@ -96,7 +96,7 @@ func NewStatefulSet(rc *dcv1alpha1.RayCluster, comp Component, istioEnabled bool
 		},
 		Spec: appsv1.StatefulSetSpec{
 			ServiceName: serviceName,
-			Replicas:    pointer.Int32(replicas),
+			Replicas:    ptr.To(replicas),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: SelectorLabelsWithComponent(rc, comp),
 			},

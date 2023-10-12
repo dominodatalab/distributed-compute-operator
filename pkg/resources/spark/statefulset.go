@@ -8,7 +8,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/pkg/util"
@@ -97,11 +97,11 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 
 	context := sc.Spec.PodSecurityContext //TODO: Chart defaults a specific security context if enabled. Always setting for now
 	if context == nil {
-		const DefaultUser = 1001
-		const DefaultFSGroup = 1001
+		const DefaultUser = int64(1001)
+		const DefaultFSGroup = int64(1001)
 		context = &corev1.PodSecurityContext{
-			RunAsUser: pointer.Int64(DefaultUser),
-			FSGroup:   pointer.Int64(DefaultFSGroup),
+			RunAsUser: ptr.To(DefaultUser),
+			FSGroup:   ptr.To(DefaultFSGroup),
 		}
 	}
 	podSpec := getPodSpec(sc,
@@ -124,7 +124,7 @@ func NewStatefulSet(sc *dcv1alpha1.SparkCluster, comp Component) (*appsv1.Statef
 		},
 		Spec: appsv1.StatefulSetSpec{
 			ServiceName: InstanceObjectName(sc.Name, comp),
-			Replicas:    pointer.Int32(replicas),
+			Replicas:    ptr.To(replicas),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: SelectorLabelsWithComponent(sc, comp),
 			},

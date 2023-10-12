@@ -17,7 +17,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
@@ -67,8 +67,8 @@ var _ = Describe("RayCluster Controller", func() {
 					Kind:               reflect.TypeOf(*cluster).Name(),
 					Name:               cluster.Name,
 					UID:                cluster.UID,
-					Controller:         pointer.Bool(true),
-					BlockOwnerDeletion: pointer.Bool(true),
+					Controller:         ptr.To(true),
+					BlockOwnerDeletion: ptr.To(true),
 				}))
 			}
 
@@ -207,19 +207,19 @@ func createCluster(ctx context.Context, name string) (client.ObjectKey, *dcv1alp
 						Tag:        "bar",
 					},
 					NetworkPolicy: dcv1alpha1.NetworkPolicyConfig{
-						Enabled: pointer.Bool(true),
+						Enabled: ptr.To(true),
 					},
 					PodSecurityPolicy: psp.Name,
 				},
 				Autoscaling: &dcv1alpha1.Autoscaling{
-					MinReplicas:              pointer.Int32(1),
+					MinReplicas:              ptr.To(int32(1)),
 					MaxReplicas:              1,
-					AverageCPUUtilization:    pointer.Int32(50),
-					AverageMemoryUtilization: pointer.Int32(50),
+					AverageCPUUtilization:    ptr.To(int32(50)),
+					AverageMemoryUtilization: ptr.To(int32(50)),
 				},
 			},
 			Worker: dcv1alpha1.RayClusterWorker{
-				Replicas: pointer.Int32(1),
+				Replicas: ptr.To(int32(1)),
 			},
 			Port:              6379,
 			ClientServerPort:  10001,

@@ -7,7 +7,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
@@ -283,7 +283,7 @@ func (c *schedulerConfig) podConfig() dcv1alpha1.WorkloadConfig {
 }
 
 func (c *schedulerConfig) replicas() *int32 {
-	return pointer.Int32(1)
+	return ptr.To(int32(1))
 }
 
 func (c *schedulerConfig) commandArgs() []string {
