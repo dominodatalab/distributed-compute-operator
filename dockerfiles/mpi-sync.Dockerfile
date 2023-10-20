@@ -1,4 +1,4 @@
-FROM cgr.dev/dominodatalab.com/wolfi-base:1@sha256:0d8fcaa8f8424a0819cf6fb6418bcc82ecfb67ecec6671729f62e725ff27db1d
+FROM quay.io/domino/debian:12.2-renovate-1ffc0fd64e4cf81b4bb70eb937.3dee8e6
 
 ARG DOMINO_UID=12574
 ARG DOMINO_USER=domino
@@ -19,21 +19,23 @@ ARG ALLENV="\$RSYNC_RUN_DIR,\$DOMINO_ETC,\$RSYNC_CONFIG_FILE"
 WORKDIR /root
 
 RUN \
-    apk update && \
-    apk upgrade --no-cache && \
-    apk add --no-cache rsync gettext procps && \
+	apt-get update && \
+	apt-get -y install \
+		rsync \
+		gettext-base \
+		procps && \
+	rm -rf /var/lib/apt/lists/* && \
 	mkdir -p \
 		"$DOMINO_DIR" \
 		"$DOMINO_BIN" \
 		"$DOMINO_ETC" \
-		"$RSYNC_RUN_DIR" \
-		"$RSYNC_MNT_DIR"
+		"$RSYNC_RUN_DIR"
 
 ADD $RSYNC_START_SCRIPT $RSYNC_CONFIG_FILE ./
 
 RUN \
-	addgroup -g $DOMINO_GID -S $DOMINO_GROUP && \
-	adduser -u $DOMINO_UID -G $DOMINO_GROUP -D -s /bin/sh $DOMINO_USER && \
+	groupadd -g $DOMINO_GID $DOMINO_GROUP && \
+	useradd -u $DOMINO_UID -g $DOMINO_GID -mN -s /bin/bash $DOMINO_USER && \
 	envsubst "$ALLENV" < "$RSYNC_START_SCRIPT" > "$DOMINO_BIN/$RSYNC_START_SCRIPT" && \
 	envsubst "$ALLENV" < "$RSYNC_CONFIG_FILE" > "$DOMINO_ETC/$RSYNC_CONFIG_FILE" && \
 	chown -R $DOMINO_USER:$DOMINO_GROUP "$RSYNC_RUN_DIR" && \
