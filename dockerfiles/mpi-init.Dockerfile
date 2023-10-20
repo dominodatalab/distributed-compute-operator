@@ -25,8 +25,7 @@ RUN \
 	mkdir -p \
 		${INSTALL_DIR} \
 		${INSTALL_BIN} && \
-	gpg --import -q openssh.gpgkey > /dev/null && \
-	rm -f *.gpgkey
+    gpg --keyserver keyserver.ubuntu.com --recv-keys 7168B983815A5EEF59A4ADFD2A3F414E736060BA
 
 # Download an compile openssh
 RUN \
