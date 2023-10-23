@@ -11,10 +11,7 @@ global:
   istio:
     cni: true
     enabled: false
-    httpIdleTimeout:
-      timeout: 24h
     install: false
-    rootConfigNamespace: istio-system
 mpi:
   initImage:
     registry: quay.io
