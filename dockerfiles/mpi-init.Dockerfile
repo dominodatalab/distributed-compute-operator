@@ -2,7 +2,7 @@
 # of core libraries (libc etc) the compiled binaries will be linked against.
 # FYI, debian-9.13 -> libc-2.24
 # OSRP not neccessary here because it's just the build environment, see the final image FROM at the bottom
-FROM quay.io/domino/debian:10.11-368763
+FROM quay.io/domino/debian:12.2-renovate-1ffc0fd64e4cf81b4bb70eb937.latest
 
 ARG OPENSSH_VERSION=8.8p1
 ARG OPENSSH_URL=https://mirrors.mit.edu/pub/OpenBSD/OpenSSH/portable/openssh-${OPENSSH_VERSION}.tar.gz
