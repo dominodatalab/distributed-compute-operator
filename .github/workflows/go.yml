@@ -124,7 +124,7 @@ jobs:
           org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
 
     - name: Build and push Docker image
-      id: docker_build
+      id: docker_build_test
       uses: docker/build-push-action@v4
       with:
         platforms: linux/amd64,linux/arm64
