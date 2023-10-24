@@ -1,4 +1,4 @@
-FROM cgr.dev/dominodatalab.com/wolfi-base:1@sha256:0d8fcaa8f8424a0819cf6fb6418bcc82ecfb67ecec6671729f62e725ff27db1d
+FROM cgr.dev/dominodatalab.com/chainguard-base@sha256:c14b2aaf63b842a3e65f9af82f1d9dcfa22907c07bbc41f9bdd733a1566dbb36
 
 ARG DOMINO_UID=12574
 ARG DOMINO_USER=domino

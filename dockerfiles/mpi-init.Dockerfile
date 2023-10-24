@@ -2,9 +2,9 @@
 # of core libraries (libc etc) the compiled binaries will be linked against.
 # FYI, debian-9.13 -> libc-2.24
 # OSRP not neccessary here because it's just the build environment, see the final image FROM at the bottom
-FROM quay.io/domino/debian:12.2-renovate-1ffc0fd64e4cf81b4bb70eb937.3dee8e6
+FROM quay.io/domino/debian:10.11-368763
 
-ARG OPENSSH_VERSION=9.5p1
+ARG OPENSSH_VERSION=8.8p1
 ARG OPENSSH_URL=https://mirrors.mit.edu/pub/OpenBSD/OpenSSH/portable/openssh-${OPENSSH_VERSION}.tar.gz
 ARG OPENSSH_SIG_URL=https://mirrors.mit.edu/pub/OpenBSD/OpenSSH/portable/openssh-${OPENSSH_VERSION}.tar.gz.asc
 
@@ -25,7 +25,7 @@ RUN \
 	mkdir -p \
 		${INSTALL_DIR} \
 		${INSTALL_BIN} && \
-    gpg --keyserver keyserver.ubuntu.com --recv-keys 7168B983815A5EEF59A4ADFD2A3F414E736060BA
+	gpg --keyserver keyserver.ubuntu.com --recv-keys 7168B983815A5EEF59A4ADFD2A3F414E736060BA
 
 # Download an compile openssh
 RUN \
@@ -59,8 +59,7 @@ RUN \
 		${INSTALL_DIR}/sbin
 
 # The final image only contains built artifacts.
-# The base image should be up-to-date, but a specific version is not important.
-FROM quay.io/domino/debian:12.2-renovate-1ffc0fd64e4cf81b4bb70eb937.3dee8e6
+FROM cgr.dev/dominodatalab.com/chainguard-base@sha256:c14b2aaf63b842a3e65f9af82f1d9dcfa22907c07bbc41f9bdd733a1566dbb36
 WORKDIR /root
 COPY --from=0 /root/worker-utils.tgz ./
 CMD tar -C / -xf /root/worker-utils.tgz
