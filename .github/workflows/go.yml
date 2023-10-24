@@ -50,6 +50,7 @@ jobs:
     - name: Login to Chainguard
       uses: chainguard-dev/actions/setup-chainctl@main
       with:
+        registry: cgr.dev
         identity: ef5308042a6f84ce75a16851c7ca7d59cce7934e/d4570839c4acfda9
 
     - name: Login to Github Container Registry
