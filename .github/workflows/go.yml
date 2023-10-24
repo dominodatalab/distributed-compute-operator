@@ -57,6 +57,11 @@ jobs:
         username: ${{ secrets.QUAY_USERNAME }}
         password: ${{ secrets.QUAY_PASSWORD }}
 
+    - name: Login to Chainguard
+      uses: chainguard-dev/actions/setup-chainctl@main
+      with:
+        identity: dco-repo
+
     - name: Prepare Docker image
       id: docker_prep
       run: |
