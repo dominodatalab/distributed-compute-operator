@@ -106,25 +106,6 @@ jobs:
         echo "tags_mpi_sync=${TAGS_MPI_SYNC}" >> $GITHUB_OUTPUT
         echo "created=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
 
-    - name: Build Docker image
-      id: docker_build
-      uses: docker/build-push-action@v4
-      with:
-        platforms: linux/amd64,linux/arm64
-        push: false
-        tags: ${{ steps.docker_prep.outputs.tags }}
-        cache-to: type=registry,ref=${{ steps.docker_prep.outputs.image }}:buildcache,mode=max
-        cache-from: type=registry,ref=${{ steps.docker_prep.outputs.image }}:buildcache
-        labels: |
-          org.opencontainers.image.title=${{ github.event.repository.name }}
-          org.opencontainers.image.description=${{ steps.docker_prep.outputs.description }}
-          org.opencontainers.image.url=${{ github.event.repository.html_url }}
-          org.opencontainers.image.source=${{ github.event.repository.clone_url }}
-          org.opencontainers.image.version=${{ steps.docker_prep.outputs.version }}
-          org.opencontainers.image.created=${{ steps.docker_prep.outputs.created }}
-          org.opencontainers.image.revision=${{ github.sha }}
-          org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
-
     - name: Build and push Docker image
       id: docker_build_test
       uses: docker/build-push-action@v4

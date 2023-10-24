@@ -4,7 +4,7 @@
 # OSRP not neccessary here because it's just the build environment, see the final image FROM at the bottom
 FROM quay.io/domino/debian:10.11-368763
 
-ARG OPENSSH_VERSION=8.8p1
+ARG OPENSSH_VERSION=9.3p1
 ARG OPENSSH_URL=https://mirrors.mit.edu/pub/OpenBSD/OpenSSH/portable/openssh-${OPENSSH_VERSION}.tar.gz
 ARG OPENSSH_SIG_URL=https://mirrors.mit.edu/pub/OpenBSD/OpenSSH/portable/openssh-${OPENSSH_VERSION}.tar.gz.asc
 
@@ -12,8 +12,6 @@ ARG INSTALL_DIR=/opt/domino/mpi-cluster
 ARG INSTALL_BIN=${INSTALL_DIR}/bin
 
 WORKDIR /root
-
-ADD *.gpgkey ./
 
 # Install common dependencies for the compiler and setting things up
 RUN \
@@ -59,7 +57,7 @@ RUN \
 		${INSTALL_DIR}/sbin
 
 # The final image only contains built artifacts.
-FROM cgr.dev/dominodatalab.com/chainguard-base@sha256:c14b2aaf63b842a3e65f9af82f1d9dcfa22907c07bbc41f9bdd733a1566dbb36
+FROM cgr.dev/dominodatalab.com/chainguard-base@sha256:065544ff1f51546f7d1621b29c0ad41ee11084f3df3ad2a59c1fefb940dd3431
 WORKDIR /root
 COPY --from=0 /root/worker-utils.tgz ./
 CMD tar -C / -xf /root/worker-utils.tgz
