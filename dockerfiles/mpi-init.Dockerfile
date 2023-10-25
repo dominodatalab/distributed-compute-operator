@@ -4,7 +4,7 @@
 # OSRP not neccessary here because it's just the build environment, see the final image FROM at the bottom
 FROM quay.io/domino/debian:10.11-368763
 
-ARG OPENSSH_VERSION=9.3p1
+ARG OPENSSH_VERSION=8.8p1
 ARG OPENSSH_URL=https://mirrors.mit.edu/pub/OpenBSD/OpenSSH/portable/openssh-${OPENSSH_VERSION}.tar.gz
 ARG OPENSSH_SIG_URL=https://mirrors.mit.edu/pub/OpenBSD/OpenSSH/portable/openssh-${OPENSSH_VERSION}.tar.gz.asc
 
@@ -57,7 +57,8 @@ RUN \
 		${INSTALL_DIR}/sbin
 
 # The final image only contains built artifacts.
-FROM cgr.dev/dominodatalab.com/chainguard-base@sha256:065544ff1f51546f7d1621b29c0ad41ee11084f3df3ad2a59c1fefb940dd3431
+# The base image should be up-to-date, but a specific version is not important.
+FROM quay.io/domino/debian:10.11-368763
 WORKDIR /root
 COPY --from=0 /root/worker-utils.tgz ./
 CMD tar -C / -xf /root/worker-utils.tgz
