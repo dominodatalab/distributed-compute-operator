@@ -7,10 +7,6 @@ on:
   pull_request:
     branches: [ main ]
 
-permissions:
-  contents: read
-  id-token: write  # This is needed for OIDC federation.
-
 jobs:
   build:
     runs-on: ubuntu-latest
