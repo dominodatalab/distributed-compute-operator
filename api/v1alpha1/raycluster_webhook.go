@@ -5,11 +5,12 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 var (
@@ -20,9 +21,9 @@ var (
 	rayDefaultGCSServerPort          int32 = 2386
 	rayDefaultDashboardPort          int32 = 8265
 	rayDefaultRedisShardPorts              = []int32{6380, 6381}
-	rayDefaultEnableDashboard              = pointer.Bool(true)
-	rayDefaultEnableNetworkPolicy          = pointer.Bool(true)
-	rayDefaultWorkerReplicas               = pointer.Int32(1)
+	rayDefaultEnableDashboard              = ptr.To(true)
+	rayDefaultEnableNetworkPolicy          = ptr.To(true)
+	rayDefaultWorkerReplicas               = ptr.To(int32(1))
 	rayDefaultNetworkPolicyPodLabels       = map[string]string{
 		"ray-client": "true",
 	}
@@ -112,21 +113,21 @@ func (rc *RayCluster) Default() {
 var _ webhook.Validator = &RayCluster{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
-func (rc *RayCluster) ValidateCreate() error {
+func (rc *RayCluster) ValidateCreate() (admission.Warnings, error) {
 	rayLogger.WithValues("raycluster", client.ObjectKeyFromObject(rc)).Info("Validating create")
-	return rc.validateRayCluster()
+	return admission.Warnings{}, rc.validateRayCluster()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
-func (rc *RayCluster) ValidateUpdate(runtime.Object) error {
+func (rc *RayCluster) ValidateUpdate(runtime.Object) (admission.Warnings, error) {
 	rayLogger.WithValues("raycluster", client.ObjectKeyFromObject(rc)).Info("Validating update")
-	return rc.validateRayCluster()
+	return admission.Warnings{}, rc.validateRayCluster()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type.
-func (rc *RayCluster) ValidateDelete() error {
+func (rc *RayCluster) ValidateDelete() (admission.Warnings, error) {
 	// NOTE: not used, just here for interface compliance.
-	return nil
+	return admission.Warnings{}, nil
 }
 
 func (rc *RayCluster) validateRayCluster() error {

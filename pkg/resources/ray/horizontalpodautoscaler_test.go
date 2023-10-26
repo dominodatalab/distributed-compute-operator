@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 )
@@ -47,7 +47,7 @@ func TestNewHorizontalPodAutoscaler(t *testing.T) {
 	t.Run("min_replicas", func(t *testing.T) {
 		rc := rayClusterFixture()
 
-		expected := pointer.Int32(7)
+		expected := ptr.To(int32(7))
 		rc.Spec.Autoscaling = &dcv1alpha1.Autoscaling{
 			MinReplicas: expected,
 		}
@@ -75,7 +75,7 @@ func TestNewHorizontalPodAutoscaler(t *testing.T) {
 	t.Run("avg_cpu_util", func(t *testing.T) {
 		rc := rayClusterFixture()
 		rc.Spec.Autoscaling = &dcv1alpha1.Autoscaling{
-			AverageCPUUtilization: pointer.Int32(75),
+			AverageCPUUtilization: ptr.To(int32(75)),
 		}
 
 		hpa, err := NewHorizontalPodAutoscaler(rc)
@@ -88,7 +88,7 @@ func TestNewHorizontalPodAutoscaler(t *testing.T) {
 					Name: "cpu",
 					Target: autoscalingv2.MetricTarget{
 						Type:               "Utilization",
-						AverageUtilization: pointer.Int32(75),
+						AverageUtilization: ptr.To(int32(75)),
 					},
 				},
 			},
@@ -99,7 +99,7 @@ func TestNewHorizontalPodAutoscaler(t *testing.T) {
 	t.Run("avg_memory_util", func(t *testing.T) {
 		rc := rayClusterFixture()
 		rc.Spec.Autoscaling = &dcv1alpha1.Autoscaling{
-			AverageMemoryUtilization: pointer.Int32(75),
+			AverageMemoryUtilization: ptr.To(int32(75)),
 		}
 
 		hpa, err := NewHorizontalPodAutoscaler(rc)
@@ -112,7 +112,7 @@ func TestNewHorizontalPodAutoscaler(t *testing.T) {
 					Name: "memory",
 					Target: autoscalingv2.MetricTarget{
 						Type:               "Utilization",
-						AverageUtilization: pointer.Int32(75),
+						AverageUtilization: ptr.To(int32(75)),
 					},
 				},
 			},
@@ -123,7 +123,7 @@ func TestNewHorizontalPodAutoscaler(t *testing.T) {
 	t.Run("scale_down_behavior", func(t *testing.T) {
 		rc := rayClusterFixture()
 		rc.Spec.Autoscaling = &dcv1alpha1.Autoscaling{
-			ScaleDownStabilizationWindowSeconds: pointer.Int32(60),
+			ScaleDownStabilizationWindowSeconds: ptr.To(int32(60)),
 		}
 
 		hpa, err := NewHorizontalPodAutoscaler(rc)
@@ -131,7 +131,7 @@ func TestNewHorizontalPodAutoscaler(t *testing.T) {
 
 		expected := &autoscalingv2.HorizontalPodAutoscalerBehavior{
 			ScaleDown: &autoscalingv2.HPAScalingRules{
-				StabilizationWindowSeconds: pointer.Int32(60),
+				StabilizationWindowSeconds: ptr.To(int32(60)),
 			},
 		}
 		assert.Equal(t, expected, hpa.Spec.Behavior)

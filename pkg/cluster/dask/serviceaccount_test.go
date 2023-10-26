@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func TestServiceAccountDS_ServiceAccount(t *testing.T) {
@@ -26,7 +26,7 @@ func TestServiceAccountDS_ServiceAccount(t *testing.T) {
 				"app.kubernetes.io/version":    "test-tag",
 			},
 		},
-		AutomountServiceAccountToken: pointer.Bool(false),
+		AutomountServiceAccountToken: ptr.To(false),
 	}
 
 	require.Equal(t, expected, actual)
@@ -34,7 +34,7 @@ func TestServiceAccountDS_ServiceAccount(t *testing.T) {
 	dc.Spec.ServiceAccount.AutomountServiceAccountToken = true
 	actual = ds.ServiceAccount()
 
-	assert.Equal(t, actual.AutomountServiceAccountToken, pointer.Bool(true))
+	assert.Equal(t, actual.AutomountServiceAccountToken, ptr.To(true))
 }
 
 func TestServiceAccountDS_Delete(t *testing.T) {

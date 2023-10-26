@@ -3,7 +3,7 @@ package dask
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
@@ -31,7 +31,7 @@ func (s *serviceAccountDS) ServiceAccount() *corev1.ServiceAccount {
 			Namespace: s.dc.Namespace,
 			Labels:    meta.StandardLabels(s.dc),
 		},
-		AutomountServiceAccountToken: pointer.Bool(s.dc.Spec.ServiceAccount.AutomountServiceAccountToken),
+		AutomountServiceAccountToken: ptr.To(s.dc.Spec.ServiceAccount.AutomountServiceAccountToken),
 	}
 }
 

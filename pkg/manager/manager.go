@@ -15,6 +15,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	dcv1alpha1 "github.com/dominodatalab/distributed-compute-operator/api/v1alpha1"
 	"github.com/dominodatalab/distributed-compute-operator/controllers"
@@ -33,17 +36,31 @@ var (
 func Start(cfg *controllers.Config) error {
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&cfg.ZapOptions)))
 
-	mgrOpts := ctrl.Options{
-		Scheme:                 scheme,
-		MetricsBindAddress:     cfg.MetricsAddr,
-		Port:                   cfg.WebhookServerPort,
+	mgrOpts := manager.Options{
+		Scheme: scheme,
+		Metrics: server.Options{
+			BindAddress: cfg.MetricsAddr,
+		},
+		WebhookServer: webhook.NewServer(webhook.Options{
+			Port: cfg.WebhookServerPort,
+		}),
 		HealthProbeBindAddress: cfg.HealthProbeAddr,
 		LeaderElection:         cfg.EnableLeaderElection,
 		LeaderElectionID:       leaderElectionID,
 	}
+
 	if len(cfg.Namespaces) > 0 {
 		setupLog.Info("Limiting reconciliation watch", "namespaces", cfg.Namespaces)
-		mgrOpts.NewCache = cache.MultiNamespacedCacheBuilder(cfg.Namespaces)
+		// TODO: double check this - MultiNamespacedCacheBuilder is removed
+		// mgrOpts.NewCache = cache.MultiNamespacedCacheBuilder(cfg.Namespaces)
+		// https://github.com/kubernetes-sigs/controller-runtime/pull/2157
+		namespaces := map[string]cache.Config{}
+		for _, n := range cfg.Namespaces {
+			namespaces[n] = cache.Config{}
+		}
+		mgrOpts.Cache = cache.Options{
+			DefaultNamespaces: namespaces,
+		}
 	} else {
 		setupLog.Info("Watching all namespaces")
 	}

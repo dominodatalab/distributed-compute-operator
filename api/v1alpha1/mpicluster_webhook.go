@@ -4,15 +4,16 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 var (
-	mpiDefaultWorkerReplicas      = pointer.Int32(1)
-	mpiDefaultEnableNetworkPolicy = pointer.Bool(true)
+	mpiDefaultWorkerReplicas      = ptr.To(int32(1))
+	mpiDefaultEnableNetworkPolicy = ptr.To(true)
 
 	mpiDefaultImage = &OCIImageDefinition{
 		Repository: "horovod/horovod",
@@ -52,7 +53,7 @@ func (j *MPICluster) Default() {
 var _ webhook.Validator = &MPICluster{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
-func (j *MPICluster) ValidateCreate() error {
+func (j *MPICluster) ValidateCreate() (admission.Warnings, error) {
 	mpiClusterLogger.WithValues("mpicluster", client.ObjectKeyFromObject(j)).Info("Validating create")
 
 	var errList field.ErrorList
@@ -72,11 +73,11 @@ func (j *MPICluster) ValidateCreate() error {
 	if errs := validateSharedSSHSecret(j.Spec.Worker.SharedSSHSecret); errs != nil {
 		errList = append(errList, errs...)
 	}
-	return invalidIfNotEmpty("MPICluster", j.Name, errList)
+	return admission.Warnings{}, invalidIfNotEmpty("MPICluster", j.Name, errList)
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
-func (j *MPICluster) ValidateUpdate(_ runtime.Object) error {
+func (j *MPICluster) ValidateUpdate(_ runtime.Object) (admission.Warnings, error) {
 	mpiClusterLogger.WithValues("mpicluster", client.ObjectKeyFromObject(j)).Info("Validating update")
 
 	// TODO: reject all updates to spec, or certain fields?
@@ -86,11 +87,11 @@ func (j *MPICluster) ValidateUpdate(_ runtime.Object) error {
 	//
 	// return apierrors.NewForbidden(schema.GroupResource{}, j.Name, errors.New(""))
 
-	return nil
+	return admission.Warnings{}, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type.
-func (j *MPICluster) ValidateDelete() error {
+func (j *MPICluster) ValidateDelete() (admission.Warnings, error) {
 	// NOTE: not used, just here for interface compliance.
-	return nil
+	return admission.Warnings{}, nil
 }

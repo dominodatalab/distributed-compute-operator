@@ -8,7 +8,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func rayFixture(nsName string) *RayCluster {
@@ -157,7 +157,7 @@ var _ = Describe("RayCluster", func() {
 
 		It("does not enable the dashboard when false", func() {
 			rc := rayFixture(testNS.Name)
-			rc.Spec.EnableDashboard = pointer.Bool(false)
+			rc.Spec.EnableDashboard = ptr.To(false)
 
 			Expect(k8sClient.Create(ctx, rc)).To(Succeed())
 			Expect(rc.Spec.EnableDashboard).To(PointTo(Equal(false)))
@@ -166,7 +166,7 @@ var _ = Describe("RayCluster", func() {
 		Context("Network policies", func() {
 			It("are not enabled when false", func() {
 				rc := rayFixture(testNS.Name)
-				rc.Spec.NetworkPolicy.Enabled = pointer.Bool(false)
+				rc.Spec.NetworkPolicy.Enabled = ptr.To(false)
 
 				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
 				Expect(rc.Spec.NetworkPolicy.Enabled).To(PointTo(Equal(false)))
@@ -202,14 +202,14 @@ var _ = Describe("RayCluster", func() {
 
 		It("requires a positive worker replica count", func() {
 			rc := rayFixture(testNS.Name)
-			rc.Spec.Worker.Replicas = pointer.Int32(-1)
+			rc.Spec.Worker.Replicas = ptr.To(int32(-1))
 
 			Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 		})
 
 		It("requires a minimum of 75MB for object store memory", func() {
 			rc := rayFixture(testNS.Name)
-			rc.Spec.ObjectStoreMemoryBytes = pointer.Int64(74 * 1024 * 1024)
+			rc.Spec.ObjectStoreMemoryBytes = ptr.To(int64(74 * 1024 * 1024))
 
 			Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 		})
@@ -298,10 +298,10 @@ var _ = Describe("RayCluster", func() {
 			It("requires min replicas to be > 0 when provided", func() {
 				rc := clusterWithAutoscaling()
 
-				rc.Spec.Autoscaling.MinReplicas = pointer.Int32(0)
+				rc.Spec.Autoscaling.MinReplicas = ptr.To(int32(0))
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 
-				rc.Spec.Autoscaling.MinReplicas = pointer.Int32(1)
+				rc.Spec.Autoscaling.MinReplicas = ptr.To(int32(1))
 				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
 			})
 
@@ -315,11 +315,11 @@ var _ = Describe("RayCluster", func() {
 			It("requires max replicas to be > min replicas", func() {
 				rc := clusterWithAutoscaling()
 
-				rc.Spec.Autoscaling.MinReplicas = pointer.Int32(2)
+				rc.Spec.Autoscaling.MinReplicas = ptr.To(int32(2))
 				rc.Spec.Autoscaling.MaxReplicas = 1
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 
-				rc.Spec.Autoscaling.MinReplicas = pointer.Int32(1)
+				rc.Spec.Autoscaling.MinReplicas = ptr.To(int32(1))
 				rc.Spec.Autoscaling.MaxReplicas = 2
 				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
 			})
@@ -327,30 +327,30 @@ var _ = Describe("RayCluster", func() {
 			It("requires average cpu utilization to be > 0", func() {
 				rc := clusterWithAutoscaling()
 
-				rc.Spec.Autoscaling.AverageCPUUtilization = pointer.Int32(0)
+				rc.Spec.Autoscaling.AverageCPUUtilization = ptr.To(int32(0))
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 
-				rc.Spec.Autoscaling.AverageCPUUtilization = pointer.Int32(75)
+				rc.Spec.Autoscaling.AverageCPUUtilization = ptr.To(int32(75))
 				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
 			})
 
 			It("requires average memory utilization to be > 0", func() {
 				rc := clusterWithAutoscaling()
 
-				rc.Spec.Autoscaling.AverageMemoryUtilization = pointer.Int32(0)
+				rc.Spec.Autoscaling.AverageMemoryUtilization = ptr.To(int32(0))
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 
-				rc.Spec.Autoscaling.AverageMemoryUtilization = pointer.Int32(75)
+				rc.Spec.Autoscaling.AverageMemoryUtilization = ptr.To(int32(75))
 				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
 			})
 
 			It("requires scale down stabilization to be >= 0 when provided", func() {
 				rc := clusterWithAutoscaling()
 
-				rc.Spec.Autoscaling.ScaleDownStabilizationWindowSeconds = pointer.Int32(-1)
+				rc.Spec.Autoscaling.ScaleDownStabilizationWindowSeconds = ptr.To(int32(-1))
 				Expect(k8sClient.Create(ctx, rc)).ToNot(Succeed())
 
-				rc.Spec.Autoscaling.ScaleDownStabilizationWindowSeconds = pointer.Int32(0)
+				rc.Spec.Autoscaling.ScaleDownStabilizationWindowSeconds = ptr.To(int32(0))
 				Expect(k8sClient.Create(ctx, rc)).To(Succeed())
 			})
 		})

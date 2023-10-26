@@ -7,7 +7,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func TestNewClientService(t *testing.T) {
@@ -44,7 +44,7 @@ func TestNewClientService(t *testing.T) {
 	assert.Equal(t, expected, svc)
 
 	t.Run("with_dashboard_enabled", func(t *testing.T) {
-		rc.Spec.EnableDashboard = pointer.Bool(true)
+		rc.Spec.EnableDashboard = ptr.To(true)
 		svc := NewClientService(rc)
 
 		expected.Spec.Ports = append(expected.Spec.Ports, corev1.ServicePort{

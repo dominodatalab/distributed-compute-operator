@@ -10,7 +10,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -83,7 +83,7 @@ func (c *clusterStatusUpdateComponent) Reconcile(ctx *core.Context) (ctrl.Result
 		csc.WorkerSelector = selector.String()
 		modified = true
 	}
-	if replicas := pointer.Int32Deref(sts.Spec.Replicas, 0); csc.WorkerReplicas != replicas {
+	if replicas := ptr.Deref(sts.Spec.Replicas, 0); csc.WorkerReplicas != replicas {
 		csc.WorkerReplicas = replicas
 		modified = true
 	}

@@ -5,11 +5,12 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 var (
@@ -19,8 +20,8 @@ var (
 	sparkDefaultDriverUIPort                 int32 = 4040
 	sparkDefaultDriverPort                   int32 = 4041
 	sparkDefaultDriverBlockManagerPort       int32 = 4042
-	sparkDefaultEnableNetworkPolicy                = pointer.Bool(true)
-	sparkDefaultWorkerReplicas                     = pointer.Int32(1)
+	sparkDefaultEnableNetworkPolicy                = ptr.To(true)
+	sparkDefaultWorkerReplicas                     = ptr.To(int32(1))
 	sparkDefaultNetworkPolicyClientPodLabels       = map[string]string{
 		"spark-client": "true",
 	}
@@ -108,21 +109,21 @@ func (sc *SparkCluster) Default() {
 var _ webhook.Validator = &SparkCluster{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
-func (sc *SparkCluster) ValidateCreate() error {
+func (sc *SparkCluster) ValidateCreate() (admission.Warnings, error) {
 	sparkLogger.WithValues("sparkcluster", client.ObjectKeyFromObject(sc)).Info("Validating create")
-	return sc.validateSparkCluster()
+	return admission.Warnings{}, sc.validateSparkCluster()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
-func (sc *SparkCluster) ValidateUpdate(runtime.Object) error {
+func (sc *SparkCluster) ValidateUpdate(runtime.Object) (admission.Warnings, error) {
 	sparkLogger.WithValues("sparkcluster", client.ObjectKeyFromObject(sc)).Info("Validating update")
-	return sc.validateSparkCluster()
+	return admission.Warnings{}, sc.validateSparkCluster()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type.
-func (sc *SparkCluster) ValidateDelete() error {
+func (sc *SparkCluster) ValidateDelete() (admission.Warnings, error) {
 	// NOTE: not used, just here for interface compliance.
-	return nil
+	return admission.Warnings{}, nil
 }
 
 func (sc *SparkCluster) validateSparkCluster() error {
