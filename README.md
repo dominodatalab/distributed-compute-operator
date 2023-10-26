@@ -22,6 +22,10 @@
   </a>
 </p>
 
+# IMPORTANT
+
+This repository has now been archived.  No further work will be merged here.
+
 # Distributed Compute Operator
 
 Kubernetes operator providing Ray|Spark|Dask clusters on-demand via [Custom Resource Definitions][custom resources].
